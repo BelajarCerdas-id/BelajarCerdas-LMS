@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Middleware\AuthMiddleware;
+use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -19,11 +20,12 @@ Route::fallback(function () {
 
 Route::get('/', fn () => redirect('/login'));
 
-// ROUTES LOGIN
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// middleware redirect if authenticated
+Route::middleware([RedirectIfAuthenticated::class])->group(function () {
+    Route::get('/login', [AuthController::class, 'loginView'])->name('login');
+});
 
+// routes auth login & logout
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
