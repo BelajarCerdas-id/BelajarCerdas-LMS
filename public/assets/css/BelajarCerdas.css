@@ -1,0 +1,65 @@
+/* dropdown sidebar administrator */
+.sidebar-beranda-administrator {
+    width: 250px;
+    background-color: #005B94;
+    color: white;
+    height: 100vh;
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* sembunyikan dropdown */
+.content-dropdown,
+.content-dropdown-button-profile {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    font-size: 12px;
+}
+
+/* hover text */
+.list-item .content-menu:hover,
+.toggle-menu-sidebar:hover,
+.content-dropdown .link-href:hover {
+    color: orange;
+}
+
+/* ketika aktif, text orange */
+.list-item.active .toggle-menu-sidebar,
+.link-href.active,
+.list-item.active i {
+    color: orange;
+}
+
+/* open untuk dropdown utama */
+.list-item.show .content-dropdown {
+    opacity: 1;
+}
+
+.list-item-button-profile.show .content-dropdown-button-profile {
+    opacity: 1;
+    max-height: 400px;
+}
+
+/* rotate untuk button profile navbar */
+.list-item-button-profile.show #rotate {
+    transform: rotate(-180deg);
+}
+
+.list-item.show #rotate {
+    transform: rotate(-180deg);
+}
+
+/* rotate untuk dropdown sub menu */
+.content-dropdown.show #rotate2 {
+    transform: rotate(-180deg);
+}
+
+/* rotate untuk dropdown navbar-components (homepage dll) */
+.list-item.show #rotate-navbar-component {
+    transform: rotate(90deg);
+}

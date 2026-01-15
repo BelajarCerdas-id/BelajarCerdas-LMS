@@ -10,6 +10,9 @@
     <!-- Your compiled app.css (includes Tailwind, DaisyUI if configured) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Your custom BelajarCerdas.css (consider merging into app.css if possible) -->
+    <link rel="stylesheet" href="{{ asset('assets/css/BelajarCerdas.css') }}">
+
     <!-- jQuery CDN -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

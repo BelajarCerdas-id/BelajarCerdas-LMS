@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    // function login
     public function login(Request $request)
     {
         // 1. VALIDATOR (untuk AJAX)
@@ -65,5 +66,16 @@ class AuthController extends Controller
             'status' => true,
             'redirect' => url('/beranda')
         ]);
+    }
+
+    // function logout
+    public function logout(Request $request)
+    {
+        Auth::logout(); // Ini akan meng-logout user secara resmi dari sistem auth
+
+        $request->session()->invalidate(); // menghapus semua sesi lama
+        $request->session()->regenerateToken(); // mencegah CSRF reuse dari sesi lama
+
+        return redirect('/');
     }
 }
