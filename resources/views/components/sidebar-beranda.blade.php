@@ -60,7 +60,7 @@
                     @endif
                 </header>
 
-                <div class="list-item-button-profile m-2 z-9999">
+                <div class="list-item-button-profile m-2 z-40">
                     <div class="dropdown-menu hidden lg:block">
                         <div class="toggle-menu-button-profile flex items-center gap-3.5 relative cursor-pointer">
                             <div class="flex items-center justify-between gap-2.5 w-55 h-14 rounded-[20px] p-2.5 bg-[#005B94]">
@@ -97,7 +97,7 @@
                 </div>
 
                 <!-- profile button rounded mobile -->
-                <div class="list-item-button-profile relative lg:hidden z-9999">
+                <div class="list-item-button-profile relative lg:hidden z-40">
                     <div class="dropdown-menu">
                         <div class="toggle-menu-button-profile cursor-pointer">
                             <i class="fas fa-circle-user text-4xl text-[#005B94]"></i>
@@ -137,7 +137,7 @@
                 <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="" class="w-30 ml-4">
             </a>
         </div>
-        <div class="flex items-center gap-8 text-2xl relative top-1 z-9999">
+        <div class="flex items-center gap-8 text-2xl relative top-1 z-40">
             <!-- profile button rounded -->
             <div class="list-item-button-profile relative md:hidden">
                 <div class="dropdown-menu">
