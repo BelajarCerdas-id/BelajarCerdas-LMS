@@ -39,4 +39,18 @@ Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kel
 Route::middleware([AuthMiddleware::class])->group(function () {
     // DASHBOARD
     Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
+
+    // ROUTES LMS FEATURE
+    // views (administrator)
+    Route::get('/lms/school-subscription', [LmsController::class, 'lmsSchoolSubscriptionView'])->name('lms.schoolSubscription.view');
+
+    // routes activate school subscription
+    Route::put('/lms/school-subscription/{subscriptionId}/activate', [LmsController::class, 'lmsSchoolSubscriptionActivate'])->name('lms.schoolSubscription.activate');
+
+    // paginate
+    Route::get('/lms/school-subscription/paginate', [LmsController::class, 'paginateLmsSchoolSubscription'])->name('lms.schoolSubscription.paginate');
 });
+
+// ROUTES SCHOOL PARTNER
+Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
+Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
