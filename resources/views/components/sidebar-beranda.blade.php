@@ -16,6 +16,19 @@
                         <i class="fas fa-house"></i>
                         <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[13px]">Beranda</a>
                     </div>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-school-flag text-[12px]"></i>
+                                <span class="text-[14px]">School Partner</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate"></i>
+                            </div>
+                            <div class="content-dropdown">
+                                <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex flex-col px-2 py-2 text-[13px]">LMS</a>
+                            </div>
+                        </div>
+                    </li>
                 </div>
             </li>
         </ul>
@@ -47,7 +60,7 @@
                     @endif
                 </header>
 
-                <div class="list-item-button-profile m-2">
+                <div class="list-item-button-profile m-2 z-9999">
                     <div class="dropdown-menu hidden lg:block">
                         <div class="toggle-menu-button-profile flex items-center gap-3.5 relative cursor-pointer">
                             <div class="flex items-center justify-between gap-2.5 w-55 h-14 rounded-[20px] p-2.5 bg-[#005B94]">
@@ -84,7 +97,7 @@
                 </div>
 
                 <!-- profile button rounded mobile -->
-                <div class="list-item-button-profile relative lg:hidden">
+                <div class="list-item-button-profile relative lg:hidden z-9999">
                     <div class="dropdown-menu">
                         <div class="toggle-menu-button-profile cursor-pointer">
                             <i class="fas fa-circle-user text-4xl text-[#005B94]"></i>
@@ -121,10 +134,10 @@
                 <i class="fas fa-bars text-2xl relative top-1 cursor-pointer"></i>
             </label>
             <a href="{{ route('beranda') }}">
-                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="a" class="w-30 ml-4">
+                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="" class="w-30 ml-4">
             </a>
         </div>
-        <div class="flex items-center gap-8 text-2xl relative top-1">
+        <div class="flex items-center gap-8 text-2xl relative top-1 z-9999">
             <!-- profile button rounded -->
             <div class="list-item-button-profile relative md:hidden">
                 <div class="dropdown-menu">
@@ -185,6 +198,19 @@
                             <div class="content-menu text-sm flex items-center gap-3">
                                 <i class="fas fa-house"></i>
                                 <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[13px]">Beranda</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-school-flag text-[12px]"></i>
+                                <span class="text-[14px]">School Partner</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate"></i>
+                            </div>
+                            <div class="content-dropdown">
+                                <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex flex-col px-2 py-2 text-[13px]">LMS</a>
                             </div>
                         </div>
                     </li>
