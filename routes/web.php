@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LmsController;
+use App\Http\Controllers\MasterAcademicController;
+use App\Http\Controllers\SchoolPartnerController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +31,9 @@ Route::middleware([RedirectIfAuthenticated::class])->group(function () {
 // routes auth login & logout
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// ROUTES DROPDOWN KELAS, DLL
+Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kelas by fase
 
 // MIDDLEWARE LOGIN
 Route::middleware([AuthMiddleware::class])->group(function () {
