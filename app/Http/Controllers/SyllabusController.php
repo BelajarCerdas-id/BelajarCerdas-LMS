@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\SyllabusCrud;
 use App\Models\Fase;
+use App\Models\Kelas;
 use App\Models\Kurikulum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -201,4 +202,102 @@ class SyllabusController extends Controller
         ]);
     }
 
+    // function management kelas view
+    public function kelasView($curriculumName, $curriculumId, $faseId)
+    {
+        $dataKelas = Kelas::where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
+
+        return view('syllabus-services.list-kelas', compact('curriculumName', 'curriculumId', 'faseId', 'dataKelas'));
+    }
+
+    // function paginate management kelas
+    public function paginateSyllabusKelas($curriculumName, $curriculumId, $faseId)
+    {
+        $getSyllabusKelas = Kelas::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)
+        ->where('kurikulum_id', $curriculumId)
+        ->orderBy('created_at', 'asc')->paginate(20);
+
+        return response()->json([
+            'data' => $getSyllabusKelas->items(),
+            'links' => (string) $getSyllabusKelas->links(),
+            'mapelDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
+        ]);
+    }
+
+    // function management kelas store
+    public function kelasStore(Request $request, $curriculumId, $faseId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'kelas' => [
+                'required',
+                Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+            ],
+        ], [
+            'kelas.required' => 'Harap masukkan kelas.',
+            'kelas.unique' => 'Kelas telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = Kelas::create([
+            'user_id' => $user->id,
+            'kelas' => $request->kelas,
+            'kode' => $request->kelas,
+            'fase_id' => $faseId,
+            'kurikulum_id' => $curriculumId,
+        ]);
+
+        broadcast(new SyllabusCrud('kelas', 'create', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Kelas berhasil ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    // function management kelas edit
+    public function kelasEdit(Request $request, $curriculumId, $faseId, $kelasId)
+    {
+        $user = Auth::user();
+
+        $dataKelas = Kelas::findOrFail($kelasId);
+
+        $validator = Validator::make($request->all(), [
+            'kelas' => [
+                'required', Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+            ],
+        ], [
+            'kelas.required' => 'Harap masukkan kelas.',
+            'kelas.unique' => 'Kelas telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataKelas->update([
+            'user_id' => $user->id,
+            'kelas' => $request->kelas,
+            'kode' => $request->kelas,
+        ]);
+
+        broadcast(new SyllabusCrud('kelas', 'update', $dataKelas))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Kelas berhasil diubah.',
+            'data' => $dataKelas
+        ]);
+    }
 }
