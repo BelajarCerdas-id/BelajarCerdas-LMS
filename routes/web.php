@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
 use App\Http\Controllers\SchoolPartnerController;
+use App\Http\Controllers\SyllabusController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,17 @@ Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kel
 Route::middleware([AuthMiddleware::class])->group(function () {
     // DASHBOARD
     Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
+
+    //ROUTES SYLLABUS-SERVICES
+    // VIEWS
+    Route::get('/syllabus/curriculum', [SyllabusController::class, 'curriculumView'])->name('kurikulum.view');
+
+    // CRUD Kurikulum
+    Route::post('/syllabus/curriculum/store', [SyllabusController::class, 'curiculumStore'])->name('kurikulum.store');
+    Route::post('/syllabus/curriculum/edit/{curriculumId}', [SyllabusController::class, 'curiculumEdit'])->name('kurikulum.edit');
+
+    // PAGINATE SYLLABUS-SERVICES
+    Route::get('/paginate-syllabus-service-kurikulum', [SyllabusController::class, 'paginateSyllabusCuriculum'])->name('syllabus.kurikulum');
 
     // ROUTES LMS FEATURE
     // views (administrator)
