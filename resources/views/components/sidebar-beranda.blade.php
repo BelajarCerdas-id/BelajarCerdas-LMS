@@ -18,6 +18,17 @@
                     </div>
 
                     <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
+                                <div class="">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
                         <div class="dropdown-menu w-full flex flex-col items-start">
                             <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
                                 <i class="fa-solid fa-school-flag text-[12px]"></i>
@@ -198,6 +209,17 @@
                             <div class="content-menu text-sm flex items-center gap-3">
                                 <i class="fas fa-house"></i>
                                 <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[13px]">Beranda</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
+                                <div class="">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
                             </div>
                         </div>
                     </li>
