@@ -36,6 +36,11 @@ class Fase extends Model
         return $this->hasMany(Mapel::class, 'fase_id');
     }
 
+    public function Bab()
+    {
+        return $this->hasMany(Bab::class, 'fase_id');
+    }
+
     public function SchoolClass()
     {
         return $this->hasOne(SchoolClass::class, 'fase_id');

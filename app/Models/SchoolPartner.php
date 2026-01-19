@@ -55,4 +55,9 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(Mapel::class, 'school_partner_id');
     }
+
+    public function Bab()
+    {
+        return $this->hasMany(Bab::class, 'school_partner_id');
+    }
 }

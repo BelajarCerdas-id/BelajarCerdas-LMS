@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\SyllabusCrud;
+use App\Models\Bab;
 use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
@@ -421,5 +422,135 @@ class SyllabusController extends Controller
             'message' => 'Status Mata Pelajaran Berhasil Diubah',
             'data' => $dataMapel
         ]);
+    }
+
+    // function management bab view
+    public function babView($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        $dataBab = Bab::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
+        ->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
+
+        return view('syllabus-services.list-bab', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId', 'dataBab'));
+    }
+
+    // function paginate management bab
+    public function paginateSyllabusBab($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        // Query dengan filter lengkap
+        $getSyllabusBab = Bab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)
+        ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
+        ->orderBy('created_at', 'asc')->paginate(20);
+
+        return response()->json([
+            'data' => $getSyllabusBab->items(),
+            'links' => (string) $getSyllabusBab->links(),
+            'subBabDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+        ]);
+    }
+
+
+    // function management bab store
+    public function babStore(Request $request, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        $user = Auth::user();
+        $validator = Validator::make($request->all(), [
+            'nama_bab' => [
+                'required',
+                Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+                ->where('mapel_id', $mapelId)
+            ],
+            'semester' => 'required',
+        ], [
+            'nama_bab.required' => 'Harap masukkan bab.',
+            'nama_bab.unique' => 'Bab telah terdaftar.',
+            'semester.required' => 'Harap pilih semester.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = Bab::create([
+            'user_id' => $user->id,
+            'nama_bab' => $request->nama_bab,
+            'semester' => $request->semester,
+            'kode' => $request->nama_bab,
+            'kelas_id' => $kelasId,
+            'mapel_id' => $mapelId,
+            'fase_id' => $faseId,
+            'kurikulum_id' => $curriculumId,
+        ]);
+
+        broadcast(new SyllabusCrud('bab', 'create', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bab berhasil ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    // function management bab edit
+    public function babEdit(Request $request, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        $user = Auth::user();
+
+        $dataBab = Bab::findOrFail($babId);
+
+        $validator = Validator::make($request->all(), [
+            'nama_bab' => [
+                'required',
+                Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+                ->where('mapel_id', $mapelId)
+            ],
+            'semester' => 'required',
+        ], [
+            'nama_bab.required' => 'Harap masukkan bab.',
+            'nama_bab.unique' => 'Bab telah terdaftar.',
+            'semester.required' => 'Harap pilih semester.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataBab->update([
+            'user_id' => $user->id,
+            'nama_bab' => $request->nama_bab,
+            'semester' => $request->semester,
+            'kode' => $request->nama_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('bab', 'update', $dataBab))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bab berhasil diubah.',
+            'data' => $dataBab
+        ]);
+    }
+
+    // function management bab activate
+    public function babActivate(Request $request, $babId)
+    {
+        $request->validate([
+            'status_bab' => 'required|in:active,inactive',
+        ]);
+
+        $bab = Bab::findOrFail($babId);
+
+        $bab->update([
+            'status_bab' => $request->status_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('bab', 'activate', $bab))->toOthers();
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 }

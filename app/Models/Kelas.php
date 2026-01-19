@@ -22,6 +22,11 @@ class Kelas extends Model
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
+    public function Bab()
+    {
+        return $this->hasMany(Bab::class, 'kelas_id');
+    }
+
     public function Mapel()
     {
         return $this->hasMany(Mapel::class, 'kelas_id');

@@ -5,19 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Mapel extends Model
+class Bab extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'mata_pelajaran',
+        'nama_bab',
         'kode',
+        'semester',
+        'mapel_id',
         'kelas_id',
         'fase_id',
         'kurikulum_id',
         'school_partner_id',
-        'status_mata_pelajaran',
+        'status_bab',
     ];
 
     public function UserAccount()
@@ -25,9 +27,9 @@ class Mapel extends Model
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
-    public function Bab()
+    public function Mapel()
     {
-        return $this->hasMany(Bab::class, 'mapel_id');
+        return $this->belongsTo(Mapel::class, 'mapel_id');
     }
 
     public function Kelas()

@@ -35,4 +35,9 @@ class Kurikulum extends Model
     {
         return $this->hasMany(Mapel::class, 'kurikulum_id');
     }
+
+    public function Bab()
+    {
+        return $this->hasMany(Bab::class, 'kurikulum_id');
+    }
 }
