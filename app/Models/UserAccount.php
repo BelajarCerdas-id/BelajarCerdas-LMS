@@ -52,6 +52,10 @@ class UserAccount extends Authenticatable
         return $this->hasMany(Kelas::class, 'user_id');
     }
 
+    public function Mapel() {
+        return $this->hasMany(Mapel::class, 'user_id');
+    }
+
     // LMS FEATURE
     public function SchoolClass() {
         return $this->hasOne(SchoolClass::class, 'wali_kelas_id');

@@ -5,16 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Kelas extends Model
+class Mapel extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'kelas',
+        'mata_pelajaran',
         'kode',
+        'kelas_id',
         'fase_id',
         'kurikulum_id',
+        'school_partner_id',
+        'status_mata_pelajaran',
     ];
 
     public function UserAccount()
@@ -22,9 +25,9 @@ class Kelas extends Model
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
-    public function Mapel()
+    public function Kelas()
     {
-        return $this->hasMany(Mapel::class, 'kelas_id');
+        return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
     public function Fase()
@@ -37,8 +40,8 @@ class Kelas extends Model
         return $this->belongsTo(Kurikulum::class, 'kurikulum_id');
     }
 
-    public function SchoolClass()
+    public function SchoolPartner()
     {
-        return $this->hasOne(SchoolClass::class, 'kelas_id');
+        return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
 }

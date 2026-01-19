@@ -6,6 +6,7 @@ use App\Events\SyllabusCrud;
 use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
+use App\Models\Mapel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -298,6 +299,127 @@ class SyllabusController extends Controller
             'status' => 'success',
             'message' => 'Kelas berhasil diubah.',
             'data' => $dataKelas
+        ]);
+    }
+
+    // function management mapel view
+    public function mapelView($curriculumName, $curriculumId, $faseId, $kelasId)
+    {
+        $dataMapel = Mapel::where('kelas_id', $kelasId)->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
+
+        return view('syllabus-services.list-mapel', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'dataMapel'));
+    }
+
+    // function paginate management mapel
+    public function paginateSyllabusMapel($curriculumName, $curriculumId, $faseId, $kelasId)
+    {
+
+        // Query dengan filter lengkap
+        $getSyllabusMapel = Mapel::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+            ->where('kelas_id', $kelasId)
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
+
+        return response()->json([
+            'data' => $getSyllabusMapel->items(),
+            'links' => (string) $getSyllabusMapel->links(),
+            'babDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
+        ]);
+    }
+
+    public function mapelStore(Request $request, $curriculumId, $faseId, $kelasId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'mata_pelajaran' => [
+                'required',
+                Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+            ],
+        ], [
+            'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
+            'mata_pelajaran.unique' => 'Mata pelajaran telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = Mapel::create([
+            'user_id' => $user->id,
+            'mata_pelajaran' => $request->mata_pelajaran,
+            'kode' => $request->mata_pelajaran,
+            'kelas_id' => $kelasId,
+            'fase_id' => $faseId,
+            'kurikulum_id' => $curriculumId,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'create', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata Pelajaran berhasil ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    public function mapelEdit(Request $request, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        $user = Auth::user();
+
+        $dataMapel = Mapel::findOrFail($mapelId);
+
+        $validator = Validator::make($request->all(), [
+            'mata_pelajaran' => [
+                'required', Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)
+            ],
+        ], [
+            'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
+            'mata_pelajaran.unique' => 'Mata pelajaran telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataMapel->update([
+            'user_id' => $user->id,
+            'mata_pelajaran' => $request->mata_pelajaran,
+            'kode' => $request->mata_pelajaran,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'update', $dataMapel))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata Pelajaran berhasil diubah.',
+            'data' => $dataMapel
+        ]);
+    }
+
+    public function mapelActivate(Request $request, $mapelId)
+    {
+        $request->validate([
+            'status_mata_pelajaran' => 'required|in:active,inactive',
+        ]);
+
+        $dataMapel = Mapel::findOrFail($mapelId);
+        $dataMapel->update([
+            'status_mata_pelajaran' => $request->status_mata_pelajaran,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'activate', $dataMapel))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status Mata Pelajaran Berhasil Diubah',
+            'data' => $dataMapel
         ]);
     }
 }

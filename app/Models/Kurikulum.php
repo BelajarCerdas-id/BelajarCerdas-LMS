@@ -30,4 +30,9 @@ class Kurikulum extends Model
     {
         return $this->hasMany(Kelas::class, 'kurikulum_id');
     }
+
+    public function Mapel()
+    {
+        return $this->hasMany(Mapel::class, 'kurikulum_id');
+    }
 }

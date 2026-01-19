@@ -49,4 +49,10 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(SchoolMajor::class, 'school_partner_id');
     }
+
+    // SYLLABUS
+    public function Mapel()
+    {
+        return $this->hasMany(Mapel::class, 'school_partner_id');
+    }
 }
