@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\SyllabusCrud;
+use App\Imports\Syllabus\SyllabusSheetImport;
 use App\Models\Bab;
 use App\Models\Fase;
 use App\Models\Kelas;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SyllabusController extends Controller
 {
@@ -677,5 +680,42 @@ class SyllabusController extends Controller
 
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
+    }
+
+    // function bulkUpload syllabus (EXCEL)
+    public function bulkUploadSyllabus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulkUpload-syllabus' => 'required|file|mimes:xlsx,xls,csv|max:100000',
+        ], [
+            'bulkUpload-syllabus.required' => 'File tidak boleh kosong.',
+            'bulkUpload-syllabus.mimes' => 'Format file harus .xlsx.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => $validator->errors(),
+                    'excel_validation_errors' => [],
+                ]
+            ], 422);
+        }
+
+        try {
+            $userId = Auth::id();
+            Excel::import(new SyllabusSheetImport($userId, $request->file('bulkUpload-syllabus')), $request->file('bulkUpload-syllabus'));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Import syllabus berhasil.',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => [],
+                    'excel_validation_errors' => $e->errors()['import'] ?? [],
+                ]
+            ], 422);
+        }
     }
 }
