@@ -210,7 +210,7 @@ $('#submit-button-edit-fase').on('click', function (e) {
     btn.prop('disabled', true);
 
     $.ajax({
-        url: `/syllabus/curiculum/fase/edit/${curriculumId}/${faseId}`,
+        url: `/syllabus/curriculum/fase/edit/${curriculumId}/${faseId}`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

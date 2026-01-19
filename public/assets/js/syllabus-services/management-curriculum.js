@@ -31,7 +31,7 @@ function fetchFilteredDataSyllabusCurriculum(page = 1) {
 
                     const updatedAt = item.updated_at ? `${formatDate(item.updated_at)}, ${timeFormatter.format(new Date(item.updated_at))}` : 'Tanggal tidak tersedia';
 
-                    let faseDetail = data.faseDetail.replace(':nama_kurikulum', item.nama_kurikulum).replace(':id', item.id);
+                    let faseDetail = data.faseDetail.replace(':curriculumName', item.nama_kurikulum).replace(':curriculumId', item.id);
 
                     $('#tableListSyllabusCurriculum').append(`
                         <tr class="text-xs">

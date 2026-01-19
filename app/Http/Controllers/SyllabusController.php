@@ -30,7 +30,7 @@ class SyllabusController extends Controller
         return response()->json([
             'data' => $getSyllabusCuriculum->items(),
             'links' => (string) $getSyllabusCuriculum->links(),
-            'faseDetail' => '/syllabus/curiculum/:nama_kurikulum/:id/fase',
+            'faseDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/fase',
         ]);
     }
 
@@ -127,7 +127,7 @@ class SyllabusController extends Controller
         return response()->json([
             'data' => $getSyllabusFase->items(),
             'links' => (string) $getSyllabusFase->links(),
-            'kelasDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/kelas',
+            'kelasDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/:faseId/kelas',
         ]);
     }
 
@@ -223,7 +223,7 @@ class SyllabusController extends Controller
         return response()->json([
             'data' => $getSyllabusKelas->items(),
             'links' => (string) $getSyllabusKelas->links(),
-            'mapelDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
+            'mapelDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
         ]);
     }
 
@@ -325,7 +325,7 @@ class SyllabusController extends Controller
         return response()->json([
             'data' => $getSyllabusMapel->items(),
             'links' => (string) $getSyllabusMapel->links(),
-            'babDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
+            'babDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
         ]);
     }
 
@@ -445,7 +445,7 @@ class SyllabusController extends Controller
         return response()->json([
             'data' => $getSyllabusBab->items(),
             'links' => (string) $getSyllabusBab->links(),
-            'subBabDetail' => '/syllabus/curiculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+            'subBabDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
 
