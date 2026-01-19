@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('fase.view', [$curriculumName, $curriculumId, $faseId]),
+    'linkBackButton' => route('fase.view', [$curriculumName, $curriculumId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Kelas',
 ]);
