@@ -8,6 +8,7 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
+use App\Models\SubBab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -550,6 +551,130 @@ class SyllabusController extends Controller
         ]);
 
         broadcast(new SyllabusCrud('bab', 'activate', $bab))->toOthers();
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
+    }
+
+    // function management sub bab view
+    public function subBabView($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        return view('syllabus-services.list-sub-bab', compact( 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId',  'babId'));
+    }
+
+    // function paginate management sub bab
+    public function paginateSyllabusSubBab($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        // Query dengan filter lengkap
+        $getSyllabusSubBab = SubBab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+            ->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
+
+        return response()->json([
+            'data' => $getSyllabusSubBab->items(),
+            'links' => (string) $getSyllabusSubBab->links(),
+        ]);
+    }
+
+
+    // function management sub bab store
+    public function subBabStore(Request $request, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'sub_bab' => [
+                'required',
+                Rule::unique('sub_babs', 'sub_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+                ->where('mapel_id', $mapelId)->where('bab_id', $babId)
+            ],
+        ], [
+            'sub_bab.required' => 'Harap masukkan sub bab.',
+            'sub_bab.unique' => 'Sub Bab telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = SubBab::create([
+            'user_id' => $user->id,
+            'sub_bab' => $request->sub_bab,
+            'kode' => $request->sub_bab,
+            'bab_id' => $babId,
+            'kelas_id' => $kelasId,
+            'mapel_id' => $mapelId,
+            'fase_id' => $faseId,
+            'kurikulum_id' => $curriculumId,
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'delete', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sub Bab berhasil ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    // function management sub bab edit
+    public function subBabEdit(Request $request, $curriculumId, $faseId, $kelasId, $mapelId, $babId, $subBabId)
+    {
+        $user = Auth::user();
+
+        $dataSubBab = SubBab::findOrFail($subBabId);
+
+        $validator = Validator::make($request->all(), [
+            'sub_bab' => [
+                'required',
+                Rule::unique('sub_babs', 'sub_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+                ->where('mapel_id', $mapelId)->where('bab_id', $babId)
+            ],
+        ], [
+            'sub_bab.required' => 'Harap masukkan sub bab.',
+            'sub_bab.unique' => 'Sub Bab telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataSubBab->update([
+            'user_id' => $user->id,
+            'sub_bab' => $request->sub_bab,
+            'kode' => $request->sub_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'update', $dataSubBab))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sub Bab berhasil diubah.',
+            'data' => $dataSubBab
+        ]);
+    }
+
+    // function management sub bab activate
+    public function subBabActivate(Request $request, $subBabId)
+    {
+        $request->validate([
+            'status_sub_bab' => 'required|in:active,inactive',
+        ]);
+
+        $subBab = SubBab::findOrFail($subBabId);
+
+        $subBab->update([
+            'status_sub_bab' => $request->status_sub_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'activate', $subBab))->toOthers();
+
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }

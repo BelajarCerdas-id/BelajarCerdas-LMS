@@ -25,6 +25,11 @@ class Mapel extends Model
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
+    public function SubBab()
+    {
+        return $this->hasMany(SubBab::class, 'mapel_id');
+    }
+
     public function Bab()
     {
         return $this->hasMany(Bab::class, 'mapel_id');

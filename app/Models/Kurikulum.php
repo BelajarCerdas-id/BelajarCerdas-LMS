@@ -40,4 +40,9 @@ class Kurikulum extends Model
     {
         return $this->hasMany(Bab::class, 'kurikulum_id');
     }
+
+    public function SubBab()
+    {
+        return $this->hasMany(SubBab::class, 'kurikulum_id');
+    }
 }
