@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'LMS Management Role',
-    'linkBackButton' => route('lms.schoolSubscription.view'),
+    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ])
 
