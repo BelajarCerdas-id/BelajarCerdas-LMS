@@ -92,6 +92,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // views (administrator)
     Route::get('/lms/school-subscription', [LmsController::class, 'lmsSchoolSubscriptionView'])->name('lms.schoolSubscription.view');
 
+    // routes academic management
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management', [LmsController::class, 'lmsAcademicManagementView'])->name('lms.academicManagement.view');
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/paginate', [LmsController::class, 'paginateLmsAcademicManagement'])->name('lms.academicManagement.paginate');
+
     // route management role account
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account', [LmsController::class, 'lmsManagementRolesView'])->name('lms.managementRoles.view');
 

@@ -29,9 +29,8 @@ function paginateLmsSchoolSubscription(search_school, page = 1) {
                     // Format tanggal mulai dan akhir
                     const startDate = item.school_lms_subscription?.start_date ? formatDate(item.school_lms_subscription?.start_date) : 'Tanggal tidak tersedia';
                     const endDate = item.school_lms_subscription?.end_date ? formatDate(item.school_lms_subscription?.end_date) : 'Tanggal tidak tersedia';
-                    
-                    // untuk link detail siswa pada school partner lms yang dilihat
-                    const lmsManagementUsers = response.lmsManagementUsers.replace(':schoolName', item.nama_sekolah).replace(':schoolId', item.id);
+
+                    const lmsAcademicManagement = response.lmsAcademicManagement.replace(':schoolName', item.nama_sekolah).replace(':schoolId', item.id);
 
                     $('#tbody-school-partner-list').append(`
                         <tr>
@@ -51,7 +50,7 @@ function paginateLmsSchoolSubscription(search_school, page = 1) {
                                 </label>
                             </td>
                             <td class="border border-gray-300 px-3 py-2">
-                                <a href="${lmsManagementUsers}" class="flex items-center justify-center gap-2 text-xs text-[#4189E0] font-bold">
+                                <a href="${lmsAcademicManagement}" class="flex items-center justify-center gap-2 text-xs text-[#4189E0] font-bold">
                                     Lihat Detail
                                 </a>
                             </td>

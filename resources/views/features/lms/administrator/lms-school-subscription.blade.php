@@ -44,7 +44,7 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">NIK Kepala Sekolah</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Masa Aktif LMS</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Management Users</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Manajemen Akademik</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-school-partner-list">

@@ -8,6 +8,7 @@ use App\Events\LmsManagementClass;
 use App\Events\LmsManagementMajors;
 use App\Events\LmsManagementStudentInClass;
 use App\Models\Fase;
+use App\Models\Kurikulum;
 use App\Models\SchoolClass;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolMajor;
@@ -104,7 +105,7 @@ class LmsController extends Controller
             'links' => (string) $paginated->links(),
             'current_page' => $paginated->currentPage(),
             'per_page' => $paginated->perPage(),
-            'lmsManagementUsers' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account',
+            'lmsAcademicManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management',
         ]);
     }
 
@@ -123,6 +124,37 @@ class LmsController extends Controller
             'status' => 'success',
             'message' => 'Subscription status updated successfully',
             'subscription' => $subscription
+        ]);
+    }
+
+    // function lms academic management
+    public function lmsAcademicManagementView($schoolName, $schoolId)
+    {
+        return view('features.lms.administrator.academic-management.lms-academic-management', compact('schoolName', 'schoolId'));
+    }
+
+    // function paginate lms academic management
+    public function paginateLmsAcademicManagement($schoolName, $schoolId)
+    {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->get();
+
+        $groupedRoles = $users->groupBy('role');
+
+        $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
+
+        $countUsers = $users->count();
+
+        return response()->json([
+            'data' => $groupedRoles->values(),
+            'schoolIdentity' => $getSchool,
+            'countUsers' => $countUsers,
+            'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/',
         ]);
     }
 
