@@ -33,8 +33,13 @@ Route::middleware([RedirectIfAuthenticated::class])->group(function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ROUTES DROPDOWN KELAS, DLL
+// ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
 Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kelas by fase
+
+Route::get('/kurikulum/{curriculumId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']); // kelas by kurikulum
+Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas
+Route::get('/mapel/{mapelId}/bab', [MasterAcademicController::class, 'getBabByMapel']); // bab by mapel
+Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabByBab']); // sub bab by bab
 
 // MIDDLEWARE LOGIN
 Route::middleware([AuthMiddleware::class])->group(function () {
@@ -169,6 +174,13 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // paginate users by major and no major
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-class/{classId}/management-majors/{majorId}/management-students/paginate', [LmsController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.major');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-class/{classId}/management-students/paginate', [LmsController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.noMajor');
+
+    // ROUTES QUESTION BANK MANAGEMENT
+    // view
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management', [LmsController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view');
+
+    // bank soal store
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/store', [LmsController::class, 'lmsQuestionBankManagementStore'])->name('lms.questionBankManagement.store');
 });
 
 // ROUTES SCHOOL PARTNER

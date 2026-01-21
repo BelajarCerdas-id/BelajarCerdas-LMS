@@ -63,6 +63,7 @@ function managementAcademic() {
                     `;
 
                     const lmsRoleManagement = response.lmsRoleManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {
@@ -78,6 +79,22 @@ function managementAcademic() {
                             ],
                             link: {
                                 href: lmsRoleManagement,
+                            }
+                        },
+                        {
+                            key: 'question_bank',
+                            title: 'Question Bank Management',
+                            icon: 'fa-solid fa-file-circle-question',
+                            description: 'Bank soal',
+                            items: [
+                                'Soal UH',
+                                'Ujian & Remed ASTS',
+                                'Pengayaan ASTS',
+                                'Ujian & Remed ASAS',
+                                'Pengayaan ASAS'
+                            ],
+                            link: {
+                                href: lmsQuestionBankManagement,
                             }
                         },
                     ];

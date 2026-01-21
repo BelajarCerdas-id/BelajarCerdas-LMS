@@ -16,6 +16,7 @@ use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
 use App\Models\StudentSchoolClass;
 use App\Models\UserAccount;
+use App\Services\LMS\BankSoalWordImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -155,6 +156,7 @@ class LmsController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/',
+            'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/question-bank-management/',
         ]);
     }
 
@@ -1089,5 +1091,19 @@ class LmsController extends Controller
             'status' => 'success',
             'message' => 'Berhasil memindahkan jurusan',
         ]);
+    }
+
+    // function question bank management view
+    public function lmsQuestionBankManagementView($schoolName, $schoolId)
+    {
+        $getCurriculum = Kurikulum::all();
+
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management', compact('schoolName', 'schoolId', 'getCurriculum'));
+    }
+
+    // function bank soal store UH, ASTS, ASAS
+    public function lmsQuestionBankManagementStore(Request $request)
+    {
+        return app(BankSoalWordImportService::class)->bankSoalImportService($request);
     }
 }
