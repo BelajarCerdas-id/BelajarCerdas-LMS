@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ActivateQuestionBankPG;
+use App\Events\BankSoalLmsUploaded;
 use App\Events\LmsSchoolSubscription;
 use App\Events\LmsManagementAccount;
 use App\Events\LmsManagementClass;
@@ -9,6 +11,7 @@ use App\Events\LmsManagementMajors;
 use App\Events\LmsManagementStudentInClass;
 use App\Models\Fase;
 use App\Models\Kurikulum;
+use App\Models\LmsQuestionBank;
 use App\Models\SchoolClass;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolMajor;
@@ -18,6 +21,7 @@ use App\Models\StudentSchoolClass;
 use App\Models\UserAccount;
 use App\Services\LMS\BankSoalWordImportService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -1094,16 +1098,90 @@ class LmsController extends Controller
     }
 
     // function question bank management view
-    public function lmsQuestionBankManagementView($schoolName, $schoolId)
+    public function lmsQuestionBankManagementView($schoolName = null, $schoolId = null)
     {
         $getCurriculum = Kurikulum::all();
 
         return view('features.lms.administrator.question-bank-management.lms-question-bank-management', compact('schoolName', 'schoolId', 'getCurriculum'));
     }
 
+    // function paginate bank soal
+    public function paginateLmsQuestionBankManagement(Request $request, $schoolName = null, $schoolId = null)
+    {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->get();
+
+        $getQuestions = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile','Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'SchoolPartner'])
+        ->orderBy('created_at', 'desc');
+
+        if ($schoolId) {
+            $getQuestions->where(function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId)
+                ->orWhereNull('school_partner_id');
+            });
+        } else {
+            $getQuestions->whereNull('school_partner_id');
+        }
+
+        $rows = $getQuestions->get()->groupBy(fn ($q) => $q->sub_bab_id.'-'.$q->school_partner_id)->values();
+
+        // Pagination manual
+        $page = $request->get('page', 1);
+        $perPage = 20;
+
+        $paged = $rows->slice(
+            ($page - 1) * $perPage,
+            $perPage
+        )->values();
+
+        $paginated = new LengthAwarePaginator(
+            $paged,
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
+
+        $countUsers = $users->count();
+
+        return response()->json([
+            'data' => $paginated->values(),
+            'links' => (string) $paginated->links(),
+            'current_page' => $paginated->currentPage(),
+            'per_page' => $paginated->perPage(),
+            'schoolIdentity' => $getSchool,
+            'countUsers' => $countUsers,
+            'source' => $source ?? null,
+            'lmsReviewQuestion' => '/lms/question-bank-management/source/:source/review/:subBabId',
+            'lmsReviewQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/:subBabId/:schoolName/:schoolId',
+        ]);
+    }
+
     // function bank soal store UH, ASTS, ASAS
     public function lmsQuestionBankManagementStore(Request $request)
     {
         return app(BankSoalWordImportService::class)->bankSoalImportService($request);
+    }
+
+    // function activate bank soal
+    public function lmsActivateQuestionBank(Request $request, $subBabId, $source)
+    {
+        $affectedRows = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)->update([
+            'status_bank_soal' => $request->status_bank_soal
+        ]);
+
+        broadcast(new ActivateQuestionBankPG($subBabId,$source,$request->status_bank_soal,$affectedRows))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Berhasil mengubah status bank soal',
+        ]);
     }
 }

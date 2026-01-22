@@ -8,8 +8,6 @@ $('#btn-submit-bank-soal').on('click', function (e) {
 
     const schoolName = $('#bank-soal-form').data('school-name');
     const schoolId = $('#bank-soal-form').data('school-id');
-    if (!schoolName) return;
-    if (!schoolId) return;
 
     if (isProcessing) return;
     isProcessing = true;
@@ -18,7 +16,9 @@ $('#btn-submit-bank-soal').on('click', function (e) {
     btn.prop('disabled', true);
 
     $.ajax({
-        url: `/lms/school-subscription/${schoolName}/${schoolId}/question-bank-management/store`,
+        url: schoolId
+            ? `/lms/school-subscription/${schoolName}/${schoolId}/question-bank-management/store`
+            : `/lms/question-bank-management/store`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -75,7 +75,6 @@ $('#btn-submit-bank-soal').on('click', function (e) {
             btn.prop('disabled', false);
 
             paginateBankSoal();
-            paginateBankSoalDetail();
         },
         error: function (xhr) {
             if (xhr.status === 422) {
