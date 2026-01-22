@@ -56,4 +56,10 @@ class Bab extends Model
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
+
+    // LMS QUESTION BANK
+    public function LmsQuestionBank()
+    {
+        return $this->hasMany(LmsQuestionBank::class, 'bab_id');
+    }
 }

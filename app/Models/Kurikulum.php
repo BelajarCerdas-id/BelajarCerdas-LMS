@@ -45,4 +45,10 @@ class Kurikulum extends Model
     {
         return $this->hasMany(SubBab::class, 'kurikulum_id');
     }
+
+    // LMS QUESTION BANK
+    public function LmsQuestionBank()
+    {
+        return $this->hasMany(LmsQuestionBank::class, 'kurikulum_id');
+    }
 }

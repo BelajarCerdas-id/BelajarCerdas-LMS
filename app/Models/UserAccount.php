@@ -68,4 +68,8 @@ class UserAccount extends Authenticatable
     public function StudentSchoolClass() {
         return $this->hasMany(StudentSchoolClass::class, 'student_id');
     }
+
+    public function LmsQuestionBank() {
+        return $this->hasMany(LmsQuestionBank::class, 'user_id');
+    }
 }
