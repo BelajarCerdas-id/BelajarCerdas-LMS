@@ -1,100 +1,101 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Pastikan script berjalan hanya setelah seluruh halaman dimuat
 
-    const mainToggles = document.querySelectorAll(".toggle-menu-sidebar"); // Ambil semua tombol toggle dropdown utama
-    const subToggles = document.querySelectorAll(".toggle-menu-sidebar2"); // Ambil semua toggle untuk sub-dropdown (jika ada)
+    const mainToggles = document.querySelectorAll(".toggle-menu-sidebar");
+    const subToggles = document.querySelectorAll(".toggle-sub-menu-sidebar");
 
-    // Fungsi untuk menutup semua dropdown utama, kecuali elemen yang sedang aktif (optional)
-    function closeAllMainDropdowns(except = null) {
+    function closeAllMain(except = null) {
         document.querySelectorAll(".list-item").forEach(item => {
-            if (item !== except)
-                item.classList.remove("show"); // Hanya hapus class 'show', biarkan 'active' tetap
-            const dropdown = item.querySelector('.content-dropdown'); // Ambil content dropdown
-            if (dropdown) {
-                dropdown.style.maxHeight = "0"; // Tutup dropdown
+            if (item !== except) {
+                item.classList.remove("show");
+                const dropdown = item.querySelector(".content-dropdown");
+                if (dropdown) dropdown.style.maxHeight = "0";
             }
         });
     }
 
-    // Fungsi untuk menutup semua sub-dropdown (jika ada)
-    function closeAllSubDropdowns(except = null) {
-        document.querySelectorAll(".list-content-dropdown").forEach(dropdown => {
-            if (dropdown !== except)
-                dropdown.classList.remove("show");
+    function closeAllSub(except = null) {
+        document.querySelectorAll(".list-content-dropdown").forEach(el => {
+            if (el !== except) {
+                el.classList.remove("show");
+                el.style.maxHeight = "0";
+            }
         });
     }
 
-    // Event listener untuk toggle dropdown utama
+    // ===== MAIN DROPDOWN =====
     mainToggles.forEach(toggle => {
-        toggle.addEventListener("click", (e) => {
-            e.preventDefault(); // Cegah perilaku default <a href>
-            const parent = toggle.closest('.list-item'); // Ambil parent list-item
-            const dropdown = parent.querySelector('.content-dropdown'); // Ambil content dropdown
-            const isOpen = parent.classList.contains("show"); // Cek apakah sudah terbuka
-
-            closeAllMainDropdowns(); // Tutup semua dropdown lainnya (kecuali yang diklik)
-
-            if (!isOpen) {
-                parent.classList.add("show"); // Buka dropdown yang diklik
-                if (dropdown) {
-                    dropdown.style.maxHeight = dropdown.scrollHeight + "px"; // Atur tinggi maksimum dropdown
-                }
-            } else {
-                parent.classList.remove("show"); // Tutup dropdown yang diklik
-                if (dropdown) {
-                    dropdown.style.maxHeight = "0"; // Tutup dropdown
-                }
-            }
-
-            // Catatan: tidak menambah/menghapus class 'active' di sini.
-            // Class 'active' hanya diatur berdasarkan URL agar tetap stabil.
-        });
-    });
-
-    // Event listener untuk toggle sub-dropdown (jika ada nested dropdown)
-    subToggles.forEach(toggle => {
-        toggle.addEventListener("click", (e) => {
+        toggle.addEventListener("click", e => {
             e.preventDefault();
-            const subDropdown = toggle.nextElementSibling;
 
-            // Pastikan elemen setelah toggle adalah dropdown yang valid
-            if (!subDropdown || !subDropdown.classList.contains("list-content-dropdown"))
-                return;
+            const item = toggle.closest(".list-item");
+            const dropdown = item.querySelector(".content-dropdown");
+            const isOpen = item.classList.contains("show");
 
-            const isOpen = subDropdown.classList.contains("show");
-
-            closeAllSubDropdowns(); // Tutup semua sub-dropdown lain
+            closeAllMain(item);
 
             if (!isOpen) {
-                subDropdown.classList.add("show"); // Tampilkan sub-dropdown yang diklik
+                item.classList.add("show");
+                dropdown.style.maxHeight = "none";
+            } else {
+                item.classList.remove("show");
+                dropdown.style.maxHeight = "0";
             }
         });
     });
 
-    // Auto aktifkan menu berdasarkan URL yang sedang dibuka
-    const currentUrl = window.location.href;
-    const allLinks = document.querySelectorAll(".link-href"); // Ambil semua link
+    // ===== SUB DROPDOWN =====
+    subToggles.forEach(toggle => {
+        toggle.addEventListener("click", e => {
+            e.preventDefault();
+            e.stopPropagation();
 
-    allLinks.forEach(link => {
-        // Cek apakah href dari <a> cocok dengan URL saat ini
-        if (link.href === currentUrl || currentUrl.startsWith(link.href + '/')) {
-            link.classList.add("active"); // Tandai <a> sebagai aktif
+            const sub = toggle.nextElementSibling;
+            if (!sub) return;
 
-            const contentDropdown = link.closest(".content-dropdown");
-            if (contentDropdown) {
-                contentDropdown.classList.add("show"); // Pastikan dropdown terbuka
-                contentDropdown.style.maxHeight = contentDropdown.scrollHeight + "px"; // Atur tinggi maksimum dropdown yang di active
+            const isOpen = sub.classList.contains("show");
+            closeAllSub(sub);
 
-                const listItem = contentDropdown.closest(".list-item");
-                if (listItem) {
-                    listItem.classList.add("show", "active"); // Tandai list-item parent sebagai aktif
-                }
+            if (!isOpen) {
+                sub.classList.add("show");
+                sub.style.maxHeight = sub.scrollHeight + "px";
+                toggle.classList.add("show");
+            } else {
+                sub.classList.remove("show");
+                sub.style.maxHeight = "0";
+                toggle.classList.remove("show");
+            }
+        });
+    });
+
+    // ===== AUTO ACTIVE URL =====
+    const currentUrl = location.href.replace(/\/$/, "");
+
+    document.querySelectorAll(".link-href").forEach(link => {
+        const linkUrl = link.href.replace(/\/$/, "");
+
+        if (currentUrl === linkUrl || currentUrl.startsWith(linkUrl + "/")) {
+
+            link.classList.add("active");
+
+            const subDropdown = link.closest(".list-content-dropdown");
+            const subToggle = subDropdown?.previousElementSibling;
+            const mainDropdown = link.closest(".content-dropdown");
+            const listItem = link.closest(".list-item");
+
+            // buka parent
+            listItem?.classList.add("show", "active");
+            if (mainDropdown) {
+                mainDropdown.style.maxHeight = "none";
             }
 
-            const directListItem = link.closest(".list-item");
-            if (directListItem && !link.closest(".content-dropdown")) {
-                directListItem.classList.add("active"); // Kalau <a> langsung di list-item tanpa dropdown
+            // buka sub
+            if (subDropdown) {
+                subDropdown.classList.add("show");
+                subDropdown.style.maxHeight = subDropdown.scrollHeight + "px";
             }
+
+            subToggle?.classList.add("show", "active");
         }
     });
+
 });

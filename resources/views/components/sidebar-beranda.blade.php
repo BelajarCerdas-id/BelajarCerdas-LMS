@@ -9,39 +9,68 @@
                 <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="" class="w-50 h-32">
             </div>
         </a>
-        <ul class="max-h-screen overflow-y-auto">
-            <li class="list-item m-2 pb-3">
-                <div class="dropdown-menu">
-                    <div class="content-menu text-sm flex items-center gap-3">
-                        <i class="fas fa-house"></i>
-                        <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[13px]">Beranda</a>
-                    </div>
-
-                    <li class="list-item m-2 pb-3">
-                        <div class="dropdown-menu">
-                            <div class="content-menu text-sm flex items-center gap-3">
-                                <div class="">
-                                    <i class="fa-solid fa-layer-group"></i>
-                                </div>
-                                <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
-                            </div>
-                        </div>
-                    </li>
-
-                    <li class="list-item m-2 pb-3">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
-                                <i class="fa-solid fa-school-flag text-[12px]"></i>
-                                <span class="text-[14px]">School Partner</span>
-                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate"></i>
-                            </div>
-                            <div class="content-dropdown">
-                                <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex flex-col px-2 py-2 text-[13px]">LMS</a>
-                            </div>
-                        </div>
-                    </li>
+        <ul class="max-h-screen overflow-y-auto pb-3">
+            <div class="dropdown-menu">
+                <div class="content-menu text-sm flex items-center gap-3 pb-4 px-3.75">
+                    <i class="fas fa-house"></i>
+                    <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[14px]">Beranda</a>
                 </div>
-            </li>
+
+                <li class="list-item pb-4">
+                    <div class="dropdown-menu">
+                        <div class="content-menu text-sm flex items-center gap-3 px-3.75">
+                            <div class="">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[14px]">Management Curriculum</a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4 px-4">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                            <i class="fa-solid fa-book-bookmark text-[14px]"></i>
+                            <span class="text-[14px]">Belajar Cerdas LMS</span>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6 w-full">
+                            <div class="flex flex-col">
+                                <div
+                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                    <span>Question</span>
+                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                </div>
+
+                                <div class="list-content-dropdown pl-4">
+                                    <a href="{{ route('lms.questionBankManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
+                                        Manage Question
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4 px-4">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                            <i class="fa-solid fa-school-flag text-[12px]"></i>
+                            <span class="text-[14px]">School Partner</span>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6">
+                            <a href="{{ route('lms.schoolSubscription.view') }}"
+                                class="link-href flex py-2 text-[14px]">
+                                LMS
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            </div>
         </ul>
     </aside>
 
@@ -82,7 +111,7 @@
                                         <span class="text-[11px] text-white font-semibold leading-6">{{ Str::limit(Auth::user()->role ?? '', 20) }}</span>
                                     </div>
                                 </div>
-                                <i id="rotate" class="fas fa-chevron-down text-white opacity-85 transition-all duration-400"></i>
+                                <i id="rotate-icon" class="fas fa-chevron-down text-white opacity-85 transition-all duration-400"></i>
                             </div>
                         </div>
                         <div
@@ -226,10 +255,37 @@
 
                     <li class="list-item m-2 pb-3">
                         <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-book-bookmark text-[14px]"></i>
+                                <span class="text-[14px]">Belajar Cerdas LMS</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
+                            </div>
+
+                            <div class="content-dropdown px-2 w-full">
+                                <div class="flex flex-col">
+                                    <div
+                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[13px]">
+                                        <span>Question</span>
+                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                    </div>
+
+                                    <div class="list-content-dropdown pl-4">
+                                        <a href="{{ route('lms.questionBankManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
+                                            Manage Question
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
                             <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
                                 <i class="fa-solid fa-school-flag text-[12px]"></i>
                                 <span class="text-[14px]">School Partner</span>
-                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate"></i>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
                             </div>
                             <div class="content-dropdown">
                                 <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex flex-col px-2 py-2 text-[13px]">LMS</a>

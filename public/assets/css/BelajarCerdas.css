@@ -8,7 +8,6 @@ body {
     background-color: #005B94;
     color: white;
     height: 100vh;
-    padding: 10px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
@@ -17,6 +16,7 @@ body {
 
 /* sembunyikan dropdown */
 .content-dropdown,
+.list-content-dropdown,
 .content-dropdown-button-profile {
     max-height: 0;
     overflow: hidden;
@@ -34,6 +34,7 @@ body {
 
 /* ketika aktif, text orange */
 .list-item.active .toggle-menu-sidebar,
+.toggle-sub-menu-sidebar.active,
 .link-href.active,
 .list-item.active i {
     color: orange;
@@ -44,26 +45,31 @@ body {
     opacity: 1;
 }
 
+.list-content-dropdown.show {
+    opacity: 1;
+}
+
+/* hover */
+.toggle-sub-menu-sidebar:hover,
+.list-content-dropdown .link-href:hover {
+    color: orange;
+}
+
 .list-item-button-profile.show .content-dropdown-button-profile {
     opacity: 1;
     max-height: 400px;
 }
 
 /* rotate untuk button profile navbar */
-.list-item-button-profile.show #rotate {
+.list-item-button-profile.show #rotate-icon {
     transform: rotate(-180deg);
 }
 
-.list-item.show #rotate {
+.list-item.show #rotate-icon {
     transform: rotate(-180deg);
 }
 
 /* rotate untuk dropdown sub menu */
-.content-dropdown.show #rotate2 {
+.toggle-sub-menu-sidebar.show #rotate-icon-2 {
     transform: rotate(-180deg);
-}
-
-/* rotate untuk dropdown navbar-components (homepage dll) */
-.list-item.show #rotate-navbar-component {
-    transform: rotate(90deg);
 }
