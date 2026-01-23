@@ -87,6 +87,13 @@ function paginateBankSoal(page = 1) {
 
                         let lmsReviewQuestion = '';
 
+                        if (schoolId) {
+                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':source', first.question_source).replace(':subBabId', first.sub_bab_id)
+                                .replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                        } else {
+                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':subBabId', first.sub_bab_id);
+                        }
+
                         $('#tbody-bank-soal-list').append(`
                             <tr>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + 1 }</td>
@@ -118,6 +125,12 @@ function paginateBankSoal(page = 1) {
                                         </div>
                                         <ul tabindex="0"
                                             class="dropdown-content menu bg-base-100 rounded-box w-max p-2 shadow-sm z-9999">
+                                            <li class="text-md">
+                                                <a href="${lmsReviewQuestion}" class="btn-review-content">
+                                                    <i class="fa-solid fa-eye text-[#0071BC]"></i>
+                                                    Review Question
+                                                </a>
+                                            </li>
                                             <li onclick="historyQuestion(this)"
                                                 data-nama_lengkap="${first.user_account?.office_profile?.nama_lengkap || first.user_account?.school_staff_profile?.nama_lengkap}"
                                                 data-status="${first.user_account?.role ?? '-'}" data-updated_at="${updatedAt}" data-school_name="${first.school_partner?.nama_sekolah ?? ''}"

@@ -1184,4 +1184,39 @@ class LmsController extends Controller
             'message' => 'Berhasil mengubah status bank soal',
         ]);
     }
+
+    // function bank soal detail view
+    public function lmsQuestionBankManagementDetailView($source, $subBabId, $schoolName = null, $schoolId = null)
+    {
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-detail', compact('source', 'subBabId', 'schoolName', 'schoolId'));
+    }
+
+    // function paginate bank soal detail
+    public function paginateReviewQuestionBank($source, $subBabId, $schoolName = null, $schoolId = null)
+    {
+        $getQuestions = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'SchoolPartner'])
+            ->where('sub_bab_id', $subBabId)->where('question_source', $source);
+
+        $grouped = $getQuestions->get()->groupBy('questions');
+
+        $videoIds = [];
+
+        // Loop untuk mendapatkan ID video dari URL
+        foreach ($grouped as $groupedSoal) {
+            $videoId = null;
+
+            // Cari explanation yang mengandung url video menggunakan regex, lalu mengambil 1 data pertama dari masing" array group soal.
+            if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]{11})|youtube\.com\/.*v=([a-zA-Z0-9_-]{11})/', $groupedSoal[0]['explanation'], $matches)) {
+                $videoId = $matches[1] ?? $matches[2];
+            }
+
+            // Menyiapkan array untuk ID video
+            $videoIds[] = $videoId;
+        }
+
+        return response()->json([
+            'data' => $grouped->values(),
+            'videoIds' => $videoIds,
+        ]);
+    }
 }

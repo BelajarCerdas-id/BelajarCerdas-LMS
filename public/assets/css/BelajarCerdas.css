@@ -73,3 +73,14 @@ body {
 .toggle-sub-menu-sidebar.show #rotate-icon-2 {
     transform: rotate(-180deg);
 }
+
+/* style for accordion question */
+#grid-list-soal ul {
+    list-style: disc !important;
+    padding-left: 15px;
+}
+
+#grid-list-soal ol{
+    list-style: decimal !important;
+    padding-left: 24px;
+}
