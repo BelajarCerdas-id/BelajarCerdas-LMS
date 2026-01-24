@@ -22,7 +22,7 @@ class SyllabusController extends Controller
     // function management kurikulum view
     public function curriculumView()
     {
-        return view('syllabus-services.list-kurikulum');
+        return view('syllabus-services.default.list-kurikulum');
     }
 
     // paginate management kurikulum
@@ -118,7 +118,7 @@ class SyllabusController extends Controller
     {
         $dataFase = Fase::where('kurikulum_id', $curriculumId)->get();
 
-        return view('syllabus-services.list-fase', compact( 'curriculumName', 'curriculumId', 'dataFase'));
+        return view('syllabus-services.default.list-fase', compact( 'curriculumName', 'curriculumId', 'dataFase'));
     }
 
     // function paginate management fase
@@ -213,7 +213,7 @@ class SyllabusController extends Controller
     {
         $dataKelas = Kelas::where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
 
-        return view('syllabus-services.list-kelas', compact('curriculumName', 'curriculumId', 'faseId', 'dataKelas'));
+        return view('syllabus-services.default.list-kelas', compact('curriculumName', 'curriculumId', 'faseId', 'dataKelas'));
     }
 
     // function paginate management kelas
@@ -312,7 +312,7 @@ class SyllabusController extends Controller
     {
         $dataMapel = Mapel::where('kelas_id', $kelasId)->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
 
-        return view('syllabus-services.list-mapel', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'dataMapel'));
+        return view('syllabus-services.default.list-mapel', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'dataMapel'));
     }
 
     // function paginate management mapel
@@ -434,7 +434,7 @@ class SyllabusController extends Controller
         $dataBab = Bab::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
         ->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
 
-        return view('syllabus-services.list-bab', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId', 'dataBab'));
+        return view('syllabus-services.default.list-bab', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId', 'dataBab'));
     }
 
     // function paginate management bab
@@ -561,7 +561,7 @@ class SyllabusController extends Controller
     // function management sub bab view
     public function subBabView($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        return view('syllabus-services.list-sub-bab', compact( 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId',  'babId'));
+        return view('syllabus-services.default.list-sub-bab', compact( 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId',  'babId'));
     }
 
     // function paginate management sub bab
