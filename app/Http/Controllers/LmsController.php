@@ -162,6 +162,7 @@ class LmsController extends Controller
             'countUsers' => $countUsers,
             'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/',
             'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/question-bank-management/',
+            'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/kurikulum',
         ]);
     }
 

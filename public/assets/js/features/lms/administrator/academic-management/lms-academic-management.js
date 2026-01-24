@@ -64,6 +64,7 @@ function managementAcademic() {
 
                     const lmsRoleManagement = response.lmsRoleManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {
@@ -79,6 +80,18 @@ function managementAcademic() {
                             ],
                             link: {
                                 href: lmsRoleManagement,
+                            }
+                        },
+                        {
+                            key: 'curriculum',
+                            title: 'Curriculum Management',
+                            icon: 'fa-solid fa-sitemap',
+                            description: 'Struktur & hirarki kurikulum pembelajaran',
+                            items: [
+                                'Struktur Kurikulum'
+                            ],
+                            link: {
+                                href: lmsCurriculumManagementBySchool,
                             }
                         },
                         {
