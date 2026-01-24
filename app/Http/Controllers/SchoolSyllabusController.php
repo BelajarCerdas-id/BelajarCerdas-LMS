@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fase;
+use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\SchoolPartner;
 use App\Models\UserAccount;
@@ -71,6 +72,38 @@ class SchoolSyllabusController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'kelasDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/kelas',
+        ]);
+    }
+
+    // function kelas view
+    public function kelasView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId)
+    {
+        return view('syllabus-services.school.list-kelas', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId'));
+    }
+
+    // function paginate kelas
+    public function paginateKelas($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId)
+    {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->get();
+
+        $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->where('id', $schoolId)->first();
+
+        $dataKelas = Kelas::where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->orderBy('created_at', 'asc')->paginate(20);
+
+        $countUsers = $users->count();
+
+        return response()->json([
+            'data' => $dataKelas->items(),
+            'links' => (string) $dataKelas->links(),
+            'schoolIdentity' => $getSchool,
+            'countUsers' => $countUsers,
+            'mapelDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
         ]);
     }
 }
