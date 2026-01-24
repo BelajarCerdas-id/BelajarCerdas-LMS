@@ -122,7 +122,7 @@
     <p>You do not have access to this pages.</p>
 @endif
 
-<script src="{{ asset('assets/js/syllabus-services/management-fase.js') }}"></script> <!--- paginate fase ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-fase.js') }}"></script> <!--- paginate fase ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

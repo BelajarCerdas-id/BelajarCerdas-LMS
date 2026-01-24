@@ -110,7 +110,7 @@
     <p>You do not have access to this pages.</p>
 @endif
 
-<script src="{{ asset('assets/js/syllabus-services/management-kelas.js') }}"></script> <!--- paginate kelas ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-kelas.js') }}"></script> <!--- paginate kelas ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

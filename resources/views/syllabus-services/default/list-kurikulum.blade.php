@@ -181,7 +181,7 @@
 @endif
 
 
-<script src="{{ asset('assets/js/syllabus-services/management-curriculum.js') }}"></script> <!--- paginate kurikulum ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-curriculum.js') }}"></script> <!--- paginate kurikulum ---->
 <script src="{{ asset('assets/js/syllabus-services/form-action-bulkUpload-syllabus.js') }}"></script> <!--- form action bulkUpload syllabus ---->
 
 <!--- COMPONENTS ---->

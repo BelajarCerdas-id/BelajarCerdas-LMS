@@ -117,7 +117,7 @@
     <p>You do not have access to this pages.</p>
 @endif
 
-<script src="{{ asset('assets/js/syllabus-services/management-mapel.js') }}"></script> <!--- paginate mapel ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-mapel.js') }}"></script> <!--- paginate mapel ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

@@ -159,7 +159,7 @@
     <p>You do not have access to this pages.</p>
 @endif
 
-<script src="{{ asset('assets/js/syllabus-services/management-bab.js') }}"></script> <!--- paginate bab ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-bab.js') }}"></script> <!--- paginate bab ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

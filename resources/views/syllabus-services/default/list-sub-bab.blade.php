@@ -117,7 +117,7 @@
     <p>You do not have access to this pages.</p>
 @endif
 
-<script src="{{ asset('assets/js/syllabus-services/management-sub-bab.js') }}"></script> <!--- paginate sub bab ---->
+<script src="{{ asset('assets/js/syllabus-services/default/management-sub-bab.js') }}"></script> <!--- paginate sub bab ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
