@@ -108,3 +108,31 @@ body {
     width: 400px;
     display: block;
 }
+
+/* sidebar beranda siswa  */
+.sidebar-beranda-student {
+    width: 290px;
+    background-color: #0071BC;
+    color: white;
+    height: 100vh;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.list-menu-sidebar-dekstop-student a.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 6px solid #ffffff;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.list-menu-sidebar-mobile-student a.active {
+    background-color: #0071BC;
+    border-left: 6px solid #ffffff;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+}
