@@ -122,8 +122,43 @@ function paginateBankSoalDetail() {
                             <div>${textAfterImage}</div>
                         </div>
                     `;
+                        
+                    let buttonEditQuestion = '';
+                    let lmsEditQuestion = '';
+                        
+                    if (schoolId) {
+                        lmsEditQuestion = response.lmsEditQuestionBySchool.replace(':source', source).replace(':subBabId', subBabId).replace(':questionId', first.id).replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    } else {
+                        lmsEditQuestion = response.lmsEditQuestion.replace(':source', source).replace(':subBabId', subBabId).replace(':questionId', first.id);
+                    }
+
+                    if (schoolId) {
+                        if (first.school_partner_id) {
+                            buttonEditQuestion = `
+                                <div class="w-full flex justify-end gap-2 items-center">
+                                    <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
+                                        <span>Edit</span>
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                </div>
+                            `;
+                        } else {
+                            buttonEditQuestion = '';
+                        }
+                    } else {
+                        buttonEditQuestion = `
+                            <div class="w-full flex justify-end gap-2 items-center">
+                                <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
+                                    <span>Edit</span>
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
 
                     const card = `
+                        ${buttonEditQuestion}
+                        
                         <div class="wrapper-content-accordion-questions bg-white border border-gray-300 px-5 mt-5 rounded-[7px]">
 
                                 <div class="toggleButton-questions w-full flex items-center justify-between bg-transparent border-none outline-none cursor-pointer py-3.75">

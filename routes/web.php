@@ -185,12 +185,27 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
     Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/{subBabId}/{schoolName}/{schoolId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
 
+    // edit question bank no school partner & school partner
+    Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/{questionId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
+
+    // form question bank edit no school partner & school partner
+    Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/reivew/{subBabId}/{questionId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/reivew/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
+
     // crud bank soal
     // upload bank soal no school partner & school partner
     Route::post('/lms/question-bank-management/store', [LmsController::class, 'lmsQuestionBankManagementStore'])->name('lms.questionBankManagement.store.noSchoolPartner');
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/store', [LmsController::class, 'lmsQuestionBankManagementStore'])->name('lms.questionBankManagement.store.schoolPartner');
 
+    // edit & delete image bank soal with ckeditor
+    Route::post('/lms/bank-soal/edit-image', [LmsController::class, 'editImageBankSoal'])->name('lms.editImage');
+    Route::post('/lms/bank-soal/delete-image/endpoint', [LmsController::class, 'deleteImageBankSoal'])->name('lms.deleteImage');
+
     Route::put('/lms/school-subscription/question-bank-management/{subBabId}/source/{source}/activate', [LmsController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate');
+
+    // edit bank soal no school partner & school partner submit form
+    Route::post('/lms/question-bank-management/{questionId}/edit', [LmsController::class, 'lmsQuestionBankManagementEdit'])->name('lms.questionBankManagement.edit');
 
     // paginate
     // question bank management no school partner & school partner

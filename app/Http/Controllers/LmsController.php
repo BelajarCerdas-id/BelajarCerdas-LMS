@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ActivateQuestionBankPG;
+use App\Events\BankSoalLmsEditPG;
 use App\Events\BankSoalLmsUploaded;
 use App\Events\LmsSchoolSubscription;
 use App\Events\LmsManagementAccount;
@@ -1217,6 +1218,143 @@ class LmsController extends Controller
         return response()->json([
             'data' => $grouped->values(),
             'videoIds' => $videoIds,
+            'lmsEditQuestion' => '/lms/question-bank-management/source/:source/review/:subBabId/:questionId/edit',
+            'lmsEditQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/:subBabId/:questionId/:schoolName/:schoolId/edit',
         ]);
     }
+
+    // function edit question view
+    public function lmsQuestionBankManagementEditView($source, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    {
+        // Mengambil data soal berdasarkan ID
+        $editQuestion = LmsQuestionBank::find($questionId);
+
+        if (!$editQuestion) {
+            if ($schoolId) {
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $subBabId, $schoolName, $schoolId]);
+            } else {
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $subBabId]);
+            }
+        }
+
+        // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
+        $dataSoal = LmsQuestionBank::where('questions', $editQuestion->questions)->get()->groupBy('questions');
+
+        // Simpan hasil pengelompokan ke variabel baru
+        $groupedSoal = $dataSoal;
+
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
+        'schoolName', 'schoolId'));
+    }
+
+    // form edit question
+    public function formEditQuestion($source, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    {
+        $editQuestion = LmsQuestionBank::find($questionId);
+
+        if (!$editQuestion) {
+            if ($schoolId) {
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $subBabId, $schoolName, $schoolId]);
+            } else {
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $subBabId]);
+            }
+        }
+
+        // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
+        $dataSoal = LmsQuestionBank::where('questions', $editQuestion->questions)->get()->groupBy('questions');
+
+        // Simpan hasil pengelompokan ke variabel baru
+        $groupedSoal = $dataSoal;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $groupedSoal,
+            'editQuestion' => $editQuestion,
+        ]);
+    }
+
+    // function bankSoal edit question
+    public function lmsQuestionBankManagementEdit(Request $request, $questionId)
+    {
+        $validator = Validator::make($request->all(), [
+            'questions' => 'required',
+            'options_value.*' => 'required',
+            'answer_key' => 'required',
+            'difficulty' => 'required',
+            'explanation' => 'required',
+        ], [
+            'questions.required' => 'Harap isi pertanyaan soal.',
+            'options_value.*.required' => 'Harap isi jawaban soal.',
+            'answer_key.required' => 'Harap isi jawaban soal.',
+            'difficulty.required' => 'Harap isi difficulty soal.',
+            'explanation.required' => 'Harap isi pembahasan soal.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $question = LmsQuestionBank::find($questionId);
+
+        $dataQuestion = LmsQuestionBank::where('questions', $question->questions)->get()->groupBy('questions');
+
+        // Simpan hasil pengelompokan ke variabel baru
+        $groupedSoal = $dataQuestion;
+
+        foreach($groupedSoal as $key => $value) {
+            foreach($value as $soal) {
+                $soal->update([
+                    'questions' => $request->questions,
+                    'answer_key' => $request->answer_key,
+                    'options_value' => $request->options_value[$soal->id], // untuk each option_value masing" options
+                    'difficulty' => $request->difficulty,
+                    'explanation' => $request->explanation,
+                ]);
+            }
+        }
+
+        broadcast(new BankSoalLmsEditPG($groupedSoal, $questionId))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Soal berhasil diupdate',
+            'data' => $groupedSoal
+        ]);
+    }
+
+    // function edit image bank soal (for ckeditor)
+    public function editImageBankSoal(Request $request) {
+        if ($request->hasFile('upload')) {
+            $originName = $request->file('upload')->getClientOriginalName();
+            $fileName = pathInfo($originName, PATHINFO_FILENAME);
+            $extension = $request->file('upload')->getClientOriginalExtension();
+            $fileName = $fileName . '_' . time() . '.' . $extension;
+
+            $request->file('upload')->move(public_path('lms-docx-image'), $fileName);
+
+            $url = "/lms-docx-image/$fileName";
+            return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
+        }
+    }
+
+    // function delete image bank soal (for ckeditor)
+    public function deleteImageBankSoal(Request $request) {
+        $request->validate([
+            'imageUrl' => 'required|url',
+        ]);
+
+        $imagePath = str_replace(asset(''), '', $request->imageUrl); // Hapus base URL
+        $fullImagePath = public_path($imagePath);
+
+        if (file_exists($fullImagePath)) {
+            unlink($fullImagePath); // Hapus gambar
+            return response()->json(['message' => 'Gambar berhasil dihapus']);
+        }
+
+        return response()->json(['message' => 'Gambar tidak ditemukan'], 404);
+    }
+
 }

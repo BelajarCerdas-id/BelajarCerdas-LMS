@@ -41,3 +41,6 @@
 @endif
 
 <script src="{{ asset('assets/js/Features/lms/administrator/question-bank-management/paginate-question-bank-management-detail.js') }}"></script> <!--- paginate lms question bank detail ---->
+
+<!--- PUSHER LISTENER ---->
+<script src="{{ asset('assets/js/pusher-listener/lms/question-bank/review-question-pg-listener.js') }}"></script> <!--- pusher listener insert bank soal and edit soal in bankSoal detail ---->
