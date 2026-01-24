@@ -1,0 +1,40 @@
+@include('components/sidebar-beranda', [
+    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
+    'headerSideNav' => 'Kurikulum',
+]);
+@if (Auth::user()->role === 'Administrator')
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
+        <div class="my-15 mx-7.5">
+            <!---- Table list data kurikulum  ---->
+            <div id="container-curriculum-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
+                <table id="table-curriculum-management" class="min-w-full text-sm border-collapse">
+                    <thead class="thead-table-curriculum-management hidden bg-gray-50 shadow-inner">
+                        <tr>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs w-[60%] lg:w-[80%]">
+                                Kurikulum
+                            </th>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
+                                Detail
+                            </th>
+                        </tr>
+                    </thead>
+                        <tbody id="tbody-curriculum-management">
+                            <!-- show data in ajax -->
+                        </tbody>
+                </table>
+            </div>
+            <div class="pagination-container-curriculum-management flex justify-center my-4 sm:my-0"></div>
+
+            <div id="empty-message-curriculum-management" class="w-full h-96 hidden">
+                <span class="w-full h-full flex items-center justify-center">
+                    Tidak ada Kurikulum.
+                </span>
+            </div>
+        </div>
+    </div>
+@else
+    <p>You do not have access to this pages.</p>
+@endif
+
+<script src="{{ asset('assets/js/syllabus-services/school/curriculum-management.js') }}"></script> <!--- paginate kurikulum ---->

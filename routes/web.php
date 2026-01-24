@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
 use App\Http\Controllers\SchoolPartnerController;
+use App\Http\Controllers\SchoolSyllabusController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -92,6 +93,13 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // BULKUPLOAD SYLLABUS
     Route::post('/syllabus/bulkupload/syllabus', [SyllabusController::class, 'bulkUploadSyllabus'])->name('syllabus.bulkupload');
+
+    // ROUTES SCHOOL CURRICULUM MANAGEMENT HIERARCHY
+    // views
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/kurikulum', [SchoolSyllabusController::class, 'curriculumView'])->name('schoolCurriculumManagement.view');
+
+    // paginate
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/kurikulum/paginate', [SchoolSyllabusController::class, 'paginateCurriculum'])->name('schoolCurriculumManagement.paginate');
 
     // ROUTES LMS FEATURE
     // views (administrator)
