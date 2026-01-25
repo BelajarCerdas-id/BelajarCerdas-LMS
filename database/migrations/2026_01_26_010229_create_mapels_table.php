@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
             $table->foreignId('fase_id')->nullable()->constrained('fases')->onDelete('cascade');
             $table->foreignId('kurikulum_id')->constrained('kurikulums')->onDelete('cascade');
+            $table->foreignId('school_partner_id')->nullable()->constrained('school_partners');
             $table->enum('status_mata_pelajaran', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });

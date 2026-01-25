@@ -49,6 +49,11 @@ class Mapel extends Model
     {
         return $this->belongsTo(Kurikulum::class, 'kurikulum_id');
     }
+
+    public function SchoolPartner()
+    {
+        return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
+    }
     
     // LMS QUESTION BANK
     public function LmsQuestionBank()
