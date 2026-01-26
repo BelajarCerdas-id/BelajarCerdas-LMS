@@ -9,9 +9,12 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
+use App\Models\SchoolMapel;
+use App\Models\SchoolPartner;
 use App\Models\SubBab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -361,6 +364,35 @@ class SyllabusController extends Controller
             'fase_id' => $faseId,
             'kurikulum_id' => $curriculumId,
         ]);
+
+        // Ambil nama kelas dari relasi Kelas (contoh: "kelas 7") dan samakan formatnya
+        $kelasName = strtolower($data->Kelas->kelas);
+
+        // Mapping jenjang → daftar kelas yang valid di jenjang tersebut
+        $mappingClasses = [
+            'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+            'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+            'SMP' => ['kelas 7','kelas 8','kelas 9'],
+            'MTS' => ['kelas 7','kelas 8','kelas 9'],
+            'SMA' => ['kelas 10','kelas 11','kelas 12'],
+            'SMK' => ['kelas 10','kelas 11','kelas 12'],
+            'MA'  => ['kelas 10','kelas 11','kelas 12'],
+            'MAK' => ['kelas 10','kelas 11','kelas 12'],
+        ];
+
+        // Ambil jenjang yang memang memiliki kelas tersebut (misal kelas 7 → SMP, MTS)
+        $allowedJenjangs = collect($mappingClasses)->filter(fn ($kelasList) => in_array($kelasName, $kelasList))->keys();
+    
+        // Ambil semua sekolah dengan jenjang yang sesuai
+        $schools = SchoolPartner::whereIn(DB::raw('UPPER(jenjang_sekolah)'), $allowedJenjangs)->get();
+
+        // Hubungkan mapel global ke semua sekolah yang sesuai jenjangnya
+        $schools->each(function ($school) use ($data) {
+            SchoolMapel::firstOrCreate([
+                'mapel_id' => $data->id,
+                'school_partner_id' => $school->id,
+            ]);
+        });
 
         broadcast(new SyllabusCrud('mapel', 'create', $data))->toOthers();
 
