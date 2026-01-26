@@ -5,7 +5,9 @@ namespace App\Imports\SchoolPartnerHandler;
 use App\Events\LmsSchoolSubscription;
 use App\Models\FeaturePrice;
 use App\Models\Feature;
+use App\Models\Mapel;
 use App\Models\SchoolLmsSubscription;
+use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
 use App\Models\Transaction;
@@ -261,6 +263,34 @@ class LmsHandler
                     default:
                         throw new \Exception("Hanya dapat membuat akun kepala sekolah pada saat proses transaksi.");
                 }
+
+                $jenjang = strtoupper(trim($schoolPartner->jenjang_sekolah));
+
+                $mappingClasses = [
+                    'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                    'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                    'SMP' => ['kelas 7','kelas 8','kelas 9'],
+                    'MTS' => ['kelas 7','kelas 8','kelas 9'],
+                    'SMA' => ['kelas 10','kelas 11','kelas 12'],
+                    'SMK' => ['kelas 10','kelas 11','kelas 12'],
+                    'MA'  => ['kelas 10','kelas 11','kelas 12'],
+                    'MAK' => ['kelas 10','kelas 11','kelas 12'],
+                ];
+
+                $allowedKelas = $mappingClasses[$jenjang] ?? [];
+
+                $defaultMapels = Mapel::whereNull('school_partner_id')
+                    ->whereHas('Kelas', function ($q) use ($allowedKelas) {
+                        $q->whereIn(DB::raw('LOWER(kelas)'), $allowedKelas);
+                    })
+                    ->get();
+
+                $defaultMapels->each(function ($mapel) use ($schoolPartner) {
+                    SchoolMapel::firstOrCreate([
+                        'school_partner_id' => $schoolPartner->id,
+                        'mapel_id' => $mapel->id,
+                    ]);
+                });
 
                 /* =======================
                  * TRANSACTION
