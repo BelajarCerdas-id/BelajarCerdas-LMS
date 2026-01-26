@@ -71,4 +71,10 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(LmsQuestionBank::class, 'school_partner_id');
     }
+
+    // LMS SCHOOL MAPEL
+    public function SchoolMapel()
+    {
+        return $this->hasMany(SchoolMapel::class, 'school_partner_id');
+    }
 }

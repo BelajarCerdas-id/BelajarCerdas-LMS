@@ -60,4 +60,10 @@ class Mapel extends Model
     {
         return $this->hasMany(LmsQuestionBank::class, 'mapel_id');
     }
+
+    // LMS SCHOOL MAPEL
+    public function SchoolMapel()
+    {
+        return $this->hasMany(SchoolMapel::class, 'mapel_id');
+    }
 }

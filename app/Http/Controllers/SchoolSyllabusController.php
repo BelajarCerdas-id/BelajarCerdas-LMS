@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SyllabusCrud;
 use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
+use App\Models\Mapel;
+use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
 use App\Models\UserAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class SchoolSyllabusController extends Controller
 {
@@ -104,6 +110,185 @@ class SchoolSyllabusController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'mapelDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
+        ]);
+    }
+
+    // function mapel view
+    public function mapelView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
+    {
+        return view('syllabus-services.school.list-mapel', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId'));
+    }
+
+    // function paginate mapel
+    public function paginateMapel($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
+    {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->get();
+
+        $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->where('id', $schoolId)->first();
+
+        $customMapelIds = Mapel::where('school_partner_id', $schoolId)->where('kurikulum_id', $curriculumId)->where('fase_id', $faseId)
+        ->where('kelas_id', $kelasId)->pluck('id');
+
+        $dataSchoolMapel = Mapel::with([
+            'UserAccount.SchoolStaffProfile',
+            'UserAccount.OfficeProfile',
+            'SchoolPartner',
+            'SchoolMapel' => function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            }
+        ])
+        ->where('kurikulum_id', $curriculumId)
+        ->where('fase_id', $faseId)
+        ->where('kelas_id', $kelasId)
+        ->where(function ($query) use ($schoolId, $customMapelIds) {
+
+            $query->where('school_partner_id', $schoolId);
+
+            $query->orWhere(function ($q) use ($customMapelIds) {
+                $q->whereNull('school_partner_id');
+
+                if ($customMapelIds->isNotEmpty()) {
+                    $q->whereNotIn('id', $customMapelIds);
+                }
+            });
+
+        })
+        ->orderByRaw('school_partner_id IS NULL')
+        ->orderBy('created_at', 'asc')
+        ->paginate(20);
+
+            
+        $countUsers = $users->count();
+
+        return response()->json([
+            'data' => $dataSchoolMapel->items(),
+            'links' => (string) $dataSchoolMapel->links(),
+            'schoolIdentity' => $getSchool,
+            'countUsers' => $countUsers,
+            'babDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
+        ]);
+    }
+
+    // function mapel store
+    public function mapelStore(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'mata_pelajaran' => [
+                'required',
+                Rule::unique('mapels', 'mata_pelajaran')
+                    ->where(function ($query) use ($schoolId, $kelasId, $curriculumId) {
+                        $query->where('kelas_id', $kelasId)
+                            ->where('kurikulum_id', $curriculumId)
+                            ->where(function ($q) use ($schoolId) {
+                                $q->where('school_partner_id', $schoolId)
+                                    ->orWhereNull('school_partner_id');
+                            });
+                    }),
+            ],
+        ], [
+            'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
+            'mata_pelajaran.unique' => 'Mata pelajaran telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = Mapel::create([
+            'user_id' => $user->id,
+            'mata_pelajaran' => $request->mata_pelajaran,
+            'kode' => $request->mata_pelajaran,
+            'kelas_id' => $kelasId,
+            'fase_id' => $faseId,
+            'kurikulum_id' => $curriculumId,
+            'school_partner_id' => $schoolId
+        ]);
+
+        $schoolMapel = SchoolMapel::create([
+            'school_partner_id' => $schoolId,
+            'mapel_id' => $data->id,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'create', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata Pelajaran berhasil ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    // function mapel edit
+    public function mapelEdit(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'mata_pelajaran' => [
+                'required',
+                Rule::unique('mapels', 'mata_pelajaran')
+                    ->where(function ($query) use ($schoolId, $kelasId, $curriculumId) {
+                        $query->where('kelas_id', $kelasId)
+                            ->where('kurikulum_id', $curriculumId)
+                            ->where(function ($q) use ($schoolId) {
+                                $q->where('school_partner_id', $schoolId)
+                                    ->orWhereNull('school_partner_id');
+                            });
+                    }),
+            ],
+        ], [
+            'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
+            'mata_pelajaran.unique' => 'Mata pelajaran telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = Mapel::findOrFail($mapelId);
+
+        $data->update([
+            'user_id' => $user->id,
+            'mata_pelajaran' => $request->mata_pelajaran,
+            'kode' => $request->mata_pelajaran,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'update', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mata Pelajaran berhasil diubah.',
+            'data' => $data
+        ]);
+    }
+
+    // function mapel activate
+    public function mapelActivate(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
+    {
+        $data = SchoolMapel::where('id', $mapelId)->update([
+            'is_active' => $request->is_active,
+        ]);
+
+        broadcast(new SyllabusCrud('mapel', 'activate', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status Mata Pelajaran Berhasil Diubah.',
+            'data' => $data
         ]);
     }
 }
