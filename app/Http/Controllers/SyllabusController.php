@@ -320,7 +320,7 @@ class SyllabusController extends Controller
     {
 
         // Query dengan filter lengkap
-        $getSyllabusMapel = Mapel::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+        $getSyllabusMapel = Mapel::whereNull('school_partner_id')->with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
             ->where('kelas_id', $kelasId)
             ->orderBy('created_at', 'asc')
             ->paginate(20);
