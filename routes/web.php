@@ -248,6 +248,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // paginate review question bank no school partner & school partner
     Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.questionBankManagementDetail.paginate.noSchoolPartner');
     Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/school-subscription/{schoolName}/{schoolId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.reviewQuestionBank.paginate.schoolPartner');
+
+    // ROUTES STUDENT LMS
+    Route::get('/lms/{role}/{schoolName}/{schoolId}', [LmsController::class, 'lmsStudentView'])->name('lms.student.view');
 });
 
 // ROUTES SCHOOL PARTNER

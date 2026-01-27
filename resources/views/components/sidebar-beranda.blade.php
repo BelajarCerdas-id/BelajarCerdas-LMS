@@ -15,9 +15,20 @@
             <ul class="mt-14 space-y-4 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('beranda') }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
                         <i class="fa-solid fa-home"></i>
                         <span>Beranda</span>
+                    </a>
+                </li>
+                <li class="list-menu-sidebar-dekstop-student">
+                    <a href="{{ route('lms.student.view', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
+                    ]) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                        <i class="fa-solid fa-school-flag"></i>
+                        <span>LMS</span>
                     </a>
                 </li>
             </ul>
@@ -50,7 +61,7 @@
                         <a href="{{ $linkBackButton }}">
                             @if (isset($backButton))
                                 <div class="flex items-center gap-2">
-                                    <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
+                                    <button class="font-bold text-xl cursor-pointer text-white">{!! $backButton !!}</button>
                                     <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                                 </div>
                             @endif
