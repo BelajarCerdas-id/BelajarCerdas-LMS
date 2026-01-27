@@ -10,6 +10,7 @@ use App\Models\Kurikulum;
 use App\Models\Mapel;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
+use App\Models\SubBab;
 use App\Models\UserAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -441,6 +442,158 @@ class SchoolSyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Status Mata Pelajaran Berhasil Diubah.',
+            'data' => $data
+        ]);
+    }
+
+    // function sub bab view
+    public function subBabView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        return view('syllabus-services.school.list-sub-bab', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 
+        'kelasId', 'mapelId', 'babId'));
+    }
+
+    // function paginate sub bab
+    public function paginateSubBab($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->get();
+
+        $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->where('id', $schoolId)->first();
+
+        $getSubBab = SubBab::with(['UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'SchoolPartner'])->where('fase_id', $faseId)
+        ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
+        ->orderBy('created_at', 'asc')->paginate(20);
+
+        $countUsers = $users->count();
+
+        $bab = Bab::where('id', $babId)->first();
+
+        return response()->json([
+            'data' => $getSubBab->items(),
+            'links' => (string) $getSubBab->links(),
+            'schoolIdentity' => $getSchool,
+            'countUsers' => $countUsers,
+            'bab' => $bab,
+            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+        ]);
+    }
+
+    // function sub bab store
+    public function subBabStore(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'sub_bab' => [
+                'required',
+                Rule::unique('sub_babs', 'sub_bab')
+                    ->where(function ($query) use ($schoolId, $kelasId, $mapelId, $babId, $curriculumId) {
+                        $query->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
+                            ->where('kurikulum_id', $curriculumId)
+                            ->where(function ($q) use ($schoolId) {
+                                $q->where('school_partner_id', $schoolId)
+                                    ->orWhereNull('school_partner_id');
+                            });
+                    }),
+            ],
+        ], [
+            'sub_bab.required' => 'Harap masukkan sub bab.',
+            'sub_bab.unique' => 'Sub bab telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = SubBab::create([
+            'user_id' => $user->id,
+            'sub_bab' => $request->sub_bab,
+            'kode' => $request->sub_bab,
+            'kelas_id' => $kelasId,
+            'fase_id' => $faseId,
+            'mapel_id' => $mapelId,
+            'bab_id' => $babId,
+            'kurikulum_id' => $curriculumId,
+            'school_partner_id' => $schoolId
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'store', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sub bab Berhasil Ditambahkan.',
+            'data' => $data
+        ]);
+    }
+
+    // function sub bab edit
+    public function subBabEdit(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId, $subBabId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'sub_bab' => [
+                'required',
+                Rule::unique('sub_babs', 'sub_bab')
+                    ->where(function ($query) use ($schoolId, $kelasId, $mapelId, $babId, $curriculumId) {
+                        $query->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
+                            ->where('kurikulum_id', $curriculumId)
+                            ->where(function ($q) use ($schoolId) {
+                                $q->where('school_partner_id', $schoolId)
+                                    ->orWhereNull('school_partner_id');
+                            });
+                    }),
+            ],
+        ], [
+            'sub_bab.required' => 'Harap masukkan sub bab.',
+            'sub_bab.unique' => 'Sub bab telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $dataSubBab = SubBab::findOrFail($subBabId);
+
+        $dataSubBab->update([
+            'user_id' => $user->id,
+            'sub_bab' => $request->sub_bab,
+            'kode' => $request->sub_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'update', $dataSubBab))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sub bab Berhasil diubah.',
+            'data' => $dataSubBab
+        ]);
+    }
+
+    // function sub bab activate
+    public function subBabActivate(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId, $subBabId)
+    {
+        $data = SubBab::where('id', $subBabId)->update([
+            'status_sub_bab' => $request->status_sub_bab,
+        ]);
+
+        broadcast(new SyllabusCrud('subBab', 'activate', $data))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status Berhasil Diubah.',
             'data' => $data
         ]);
     }
