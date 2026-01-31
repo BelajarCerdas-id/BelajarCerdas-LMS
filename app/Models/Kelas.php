@@ -57,4 +57,9 @@ class Kelas extends Model
     {
         return $this->hasMany(LmsQuestionBank::class, 'kelas_id');
     }
+
+    public function LmsContent()
+    {
+        return $this->hasMany(LmsContent::class, 'kelas_id');
+    }
 }

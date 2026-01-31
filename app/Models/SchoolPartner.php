@@ -77,4 +77,14 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(SchoolMapel::class, 'school_partner_id');
     }
+
+    public function LmsContent()
+    {
+        return $this->hasMany(Service::class, 'school_partner_id');
+    }
+
+    public function SchoolLmsContent()
+    {
+        return $this->hasMany(SchoolLmsContent::class, 'school_partner_id');
+    }
 }

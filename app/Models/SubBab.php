@@ -62,4 +62,9 @@ class SubBab extends Model
     {
         return $this->hasMany(LmsQuestionBank::class, 'sub_bab_id');
     }
+
+    public function LmsContent()
+    {
+        return $this->hasMany(LmsContent::class, 'sub_bab_id');
+    }
 }

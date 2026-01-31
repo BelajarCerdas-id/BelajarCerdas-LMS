@@ -62,4 +62,9 @@ class Bab extends Model
     {
         return $this->hasMany(LmsQuestionBank::class, 'bab_id');
     }
+
+    public function LmsContent()
+    {
+        return $this->hasMany(LmsContent::class, 'bab_id');
+    }
 }
