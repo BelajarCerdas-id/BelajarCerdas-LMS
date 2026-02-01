@@ -1,5 +1,5 @@
 function paginateBankSoal(page = 1) {
-    const container = document.getElementById('container-bank-soal-list');
+    const container = document.getElementById('container');
     if (!container) return;
 
     const schoolName = container.dataset.schoolName;

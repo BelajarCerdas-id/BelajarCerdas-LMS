@@ -3,176 +3,126 @@ $(document).ready(function () {
     var oldKelas = $('#id_kelas').attr('data-old-kelas'); // Ambil kelas yang dipilih jika ada
     var oldMapel = $('#id_mapel').attr('data-old-mapel'); // Ambil mapel yang dipilih jika ada
     var oldBab = $('#id_bab').attr('data-old-bab'); // Ambil bab yang dipilih jika ada
-    var oldSubBab = $('#id_sub_bab').attr('data-old-sub_bab'); // Ambil sub bab yang dipilih jika ada
+    var oldSubBab = $('#id_sub_bab').attr('data-old-sub-bab'); // Ambil sub bab yang dipilih jika ada
 
-    var selectKelas = document.getElementById('id_kelas');
-    var selectMapel = document.getElementById('id_mapel');
-    var selectBab = document.getElementById('id_bab');
-    var selectSubBab = document.getElementById('id_sub_bab');
+    const container = document.getElementById('container');
+    const schoolId = container.dataset.schoolId;
+
+    function resetSelect($select, placeholder) {
+        $select.prop('disabled', true).removeClass('cursor-pointer opacity-100').addClass('cursor-default opacity-50').empty().append(`<option value="" class="hidden">${placeholder}</option>`);
+    }
+
+    function enableSelect($select) {
+        $select.prop('disabled', false).removeClass('cursor-default opacity-50').addClass('cursor-pointer opacity-100');
+    }
 
     $('#id_kurikulum').on('change', function () {
-        var curriculumId = $(this).val();
-        if (curriculumId) {
-            $.ajax({
-                url: `/kurikulum/${curriculumId}/kelas`,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    selectKelas.disabled =
-                        false; // untuk menonaktifkan disabled pada select kelas ketika fase sudah dipilih
-                    selectKelas.classList.replace('cursor-default', 'cursor-pointer');
-                    selectKelas.classList.replace('opacity-50', 'opacity-100');
-                    $('#id_kelas').empty();
-                    $('#id_kelas').append(
-                        '<option value="" class="hidden">Pilih Kelas</option>'
-                    );
-                    $.each(data, function (key, kelas) {
-                        $('#id_kelas').append(
-                            '<option value="' + kelas.id + '"' +
-                            (oldKelas == kelas.id ? ' selected' : '') +
-                            '>' +
-                            kelas.kelas + '</option>'
-                        );
-                    });
 
-                    if (oldKelas) {
-                        $('#id_kelas').val(oldKelas).trigger('change');
-                    }
+        resetSelect($('#id_kelas'), 'Pilih Kelas');
+        resetSelect($('#id_mapel'), 'Pilih Mata Pelajaran');
+        resetSelect($('#id_bab'), 'Pilih Bab');
+        resetSelect($('#id_sub_bab'), 'Pilih Sub Bab');
+
+        let curriculumId = $(this).val();
+        if (!curriculumId) return;
+
+        // LOAD KELAS
+        $.get(`/kurikulum/${curriculumId}/kelas`, function (data) {
+            enableSelect($('#id_kelas'));
+
+            data.forEach(kelas => {
+                $('#id_kelas').append(
+                    `<option value="${kelas.id}">${kelas.kelas}</option>`
+                );
+            });
+
+            if (oldKelas) {
+                $('#id_kelas').val(oldKelas).trigger('change');
+                oldKelas = null; // PENTING
+            }
+        });
+    });
+
+    // Ketika id_kelas berubah
+    $('#id_kelas').on('change', function () {
+
+        resetSelect($('#id_mapel'), 'Pilih Mata Pelajaran');
+        resetSelect($('#id_bab'), 'Pilih Bab');
+        resetSelect($('#id_sub_bab'), 'Pilih Sub Bab');
+
+        let kelasId = $(this).val();
+        if (!kelasId) return;
+
+        $.get(schoolId
+            ? `/kelas/${kelasId}/${schoolId}/mapel`
+            : `/kelas/${kelasId}/mapel`, function (data) {
+                enableSelect($('#id_mapel'));
+
+                data.forEach(mapel => {
+                    $('#id_mapel').append(
+                        `<option value="${schoolId ? mapel.mapel?.id : mapel.id}">${schoolId ? mapel.mapel?.mata_pelajaran : mapel.mata_pelajaran}</option>`
+                    );
+                });
+
+                if (oldMapel) {
+                    $('#id_mapel').val(oldMapel).trigger('change');
+                    oldMapel = null; // reset setelah dipakai
                 }
             });
-        } else {
-            $('#id_kelas').empty();
-        }
+    });
+
+    // Ketika id_mapel berubah
+    $('#id_mapel').on('change', function () {
+
+        resetSelect($('#id_bab'), 'Pilih Bab');
+        resetSelect($('#id_sub_bab'), 'Pilih Sub Bab');
+
+        let mapelId = $(this).val();
+        if (!mapelId) return;
+
+        $.get(`/mapel/${mapelId}/bab`, function (data) {
+            enableSelect($('#id_bab'));
+
+            data.forEach(bab => {
+                $('#id_bab').append(
+                    `<option value="${bab.id}">${bab.nama_bab}</option>`
+                );
+            });
+
+            // EDIT MODE (sekali saja)
+            if (oldBab) {
+                $('#id_bab').val(oldBab).trigger('change');
+                oldBab = null;
+            }
+        });
+    });
+
+    // Ketika id_bab berubah
+    $('#id_bab').on('change', function () {
+
+        resetSelect($('#id_sub_bab'), 'Pilih Sub Bab');
+
+        let babId = $(this).val();
+        if (!babId) return;
+
+        $.get(`/bab/${babId}/sub-bab`, function (data) {
+            enableSelect($('#id_sub_bab'));
+
+            data.forEach(sub => {
+                $('#id_sub_bab').append(
+                    `<option value="${sub.id}">${sub.sub_bab}</option>`
+                );
+            });
+
+            // EDIT MODE (sekali saja)
+            if (oldSubBab) {
+                $('#id_sub_bab').val(oldSubBab).trigger('change');
+                oldSubBab = null;
+            }
+        });
     });
 
     if (oldKurikulum) {
         $('#id_kurikulum').val(oldKurikulum).trigger('change');
-    }
-
-    // Ketika id_kelas berubah
-    $('#id_kelas').on('change', function () {
-        var kelasId = $(this).val();
-        if (kelasId) {
-            $.ajax({
-                url: `/kelas/${kelasId}/mapel`,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    selectMapel.disabled =
-                        false; // untuk menonaktifkan disabled pada select kelas ketika fase sudah dipilih
-                    selectMapel.classList.replace('cursor-default', 'cursor-pointer');
-                    selectMapel.classList.replace('opacity-50', 'opacity-100');
-                    $('#id_mapel').empty();
-                    $('#id_mapel').append(
-                        '<option value="" class="hidden">Pilih Mata Pelajaran</option>'
-                    );
-                    $.each(data, function (key, mapel) {
-                        $('#id_mapel').append(
-                            '<option value="' + mapel.id + '"' +
-                            (oldMapel == mapel.id ? ' selected' : '') +
-                            '>' +
-                            mapel.mata_pelajaran + '</option>'
-                        );
-                    });
-
-                    if (oldMapel) {
-                        $('#id_mapel').val(oldMapel).trigger('change');
-                    }
-                }
-            });
-        } else {
-            $('#id_mapel').empty();
-        }
-    });
-
-    // Jika ada kelas yang dipilih sebelumnya, set dan trigger mapel
-    if (oldKelas) {
-        $('#id_kelas').val(oldKelas).trigger('change');
-    }
-
-    // Ketika id_mapel berubah
-    $('#id_mapel').on('change', function () {
-        var mapelId = $(this).val();
-        if (mapelId) {
-            $.ajax({
-                url: `/mapel/${mapelId}/bab`,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    selectBab.disabled =
-                        false; // untuk menonaktifkan disabled pada select kelas ketika fase sudah dipilih
-                    selectBab.classList.replace('cursor-default', 'cursor-pointer');
-                    selectBab.classList.replace('opacity-50', 'opacity-100');
-                    $('#id_bab').empty();
-                    $('#id_bab').append(
-                        '<option value="" class="hidden">Pilih Bab</option>'
-                    );
-                    $.each(data, function (key, nama_bab) {
-                        $('#id_bab').append(
-                            '<option value="' + nama_bab.id + '"' +
-                            (oldBab == nama_bab.id ? ' selected' :
-                                '') +
-                            '>' +
-                            nama_bab.nama_bab + '</option>'
-                        );
-                    });
-
-                    // Set nilai bab yang dipilih jika ada
-                    if (oldBab) {
-                        $('#id_bab').val(oldBab).trigger('change');
-                    }
-                }
-            });
-        } else {
-            $('#id_bab').empty();
-        }
-    });
-
-    // Jika ada mapel yang dipilih sebelumnya, set
-    if (oldMapel) {
-        $('#id_mapel').val(oldMapel).trigger('change');
-    }
-
-    // Ketika id_bab berubah
-    $('#id_bab').on('change', function () {
-        var babId = $(this).val();
-        if (babId) {
-            $.ajax({
-                url: `/bab/${babId}/sub-bab`,
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    selectSubBab.disabled =
-                        false; // untuk menonaktifkan disabled pada select kelas ketika fase sudah dipilih
-                    selectSubBab.classList.replace('cursor-default', 'cursor-pointer');
-                    selectSubBab.classList.replace('opacity-50', 'opacity-100');
-                    $('#id_sub_bab').empty();
-                    $('#id_sub_bab').append(
-                        '<option value="" class="hidden">Pilih Sub Bab</option>'
-                    );
-                    $.each(data, function (key, sub_bab) {
-                        $('#id_sub_bab').append(
-                            '<option value="' + sub_bab.id + '"' +
-                            (oldSubBab == sub_bab.id ? ' selected' :
-                                '') +
-                            '>' +
-                            sub_bab.sub_bab + '</option>'
-                        );
-                    });
-
-                    // Set nilai bab yang dipilih jika ada
-                    if (oldSubBab) {
-                        $('#id_sub_bab').val(oldSubBab).trigger('change');
-                    }
-                }
-            });
-        } else {
-            $('#id_sub_bab').empty();
-        }
-    });
-
-    // Jika ada bab yang dipilih sebelumnya, set
-    if (oldBab) {
-        $('#id_bab').val(oldBab).trigger('change');
     }
 });
