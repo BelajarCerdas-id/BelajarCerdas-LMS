@@ -42,7 +42,9 @@ Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kel
 Route::get('/kurikulum/{curriculumId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']); // service by kurikulum
 Route::get('/kurikulum/{curriculumId}/{schoolId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']); // service by kurikulum
 
+// kelas for school partner & non school partner
 Route::get('/kurikulum/{curriculumId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']); // kelas by kurikulum
+Route::get('/kurikulum/{curriculumId}/{schoolId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']); // kelas by kurikulum
 
 // route dependent dropdown mapel by kelas non school partner & school partner
 Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas

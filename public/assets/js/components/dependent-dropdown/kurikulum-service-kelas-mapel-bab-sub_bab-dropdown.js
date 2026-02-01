@@ -29,7 +29,9 @@ $(document).ready(function () {
         if (!curriculumId) return;
 
         // LOAD KELAS
-        $.get(`/kurikulum/${curriculumId}/kelas`, function (data) {
+        $.get(schoolId
+            ? `/kurikulum/${curriculumId}/${schoolId}/kelas`
+            : `/kurikulum/${curriculumId}/kelas`, function (data) {
             enableSelect($('#id_kelas'));
 
             data.forEach(kelas => {

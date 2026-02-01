@@ -6,8 +6,10 @@ use App\Models\Bab;
 use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\SchoolMapel;
+use App\Models\SchoolPartner;
 use App\Models\Service;
 use App\Models\SubBab;
+use Illuminate\Support\Facades\DB;
 
 class MasterAcademicController extends Controller
 {
@@ -19,9 +21,31 @@ class MasterAcademicController extends Controller
     }
 
     // GET KELAS BY KURIKULUM
-    public function getKelasByKurikulum($id)
+    public function getKelasByKurikulum($id, $schoolId = null)
     {
-        $kelas = Kelas::where('kurikulum_id', $id)->get();
+        if ($schoolId) {
+            $schoolPartner = SchoolPartner::findOrFail($schoolId);
+
+            $mappingClasses = [
+                'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'SMP' => ['kelas 7','kelas 8','kelas 9'],
+                'MTS' => ['kelas 7','kelas 8','kelas 9'],
+                'SMA' => ['kelas 10','kelas 11','kelas 12'],
+                'SMK' => ['kelas 10','kelas 11','kelas 12'],
+                'MA'  => ['kelas 10','kelas 11','kelas 12'],
+                'MAK' => ['kelas 10','kelas 11','kelas 12'],
+            ];
+
+            $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
+
+            $kelas = Kelas::where('kurikulum_id', $id)
+            ->when(isset($mappingClasses[$jenjang]), function ($query) use ($mappingClasses, $jenjang) {
+                $query->whereIn(DB::raw('LOWER(kelas)'),array_map('strtolower', $mappingClasses[$jenjang]));
+            })->get();
+        } else {
+            $kelas = Kelas::where('kurikulum_id', $id)->get();
+        }
         return response()->json($kelas);
     }
 
