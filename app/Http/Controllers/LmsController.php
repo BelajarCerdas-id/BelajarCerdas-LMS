@@ -12,6 +12,7 @@ use App\Events\LmsManagementClass;
 use App\Events\LmsManagementMajors;
 use App\Events\LmsManagementStudentInClass;
 use App\Models\Fase;
+use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\LmsContent;
 use App\Models\LmsContentItem;
@@ -1379,9 +1380,35 @@ class LmsController extends Controller
     {
         // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
         if ($schoolId) {
-            $getContent = LmsContent::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 
-            'Service', 'SchoolLmsContent', 'SchoolPartner'])->where('school_partner_id', $schoolId)->orWhereNull('school_partner_id')
-            ->orderBy('created_at', 'desc')->paginate(10);
+            $schoolPartner = SchoolPartner::findOrFail($schoolId);
+
+            $mappingClasses = [
+                'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'SMP' => ['kelas 7','kelas 8','kelas 9'],
+                'MTS' => ['kelas 7','kelas 8','kelas 9'],
+                'SMA' => ['kelas 10','kelas 11','kelas 12'],
+                'SMK' => ['kelas 10','kelas 11','kelas 12'],
+                'MA'  => ['kelas 10','kelas 11','kelas 12'],
+                'MAK' => ['kelas 10','kelas 11','kelas 12'],
+            ];
+
+            $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
+
+            $allowedKelas = $mappingClasses[$jenjang] ?? [];
+
+            // ambil kelas sesuai dengan jenjang sekolahnya, lalu ambil id nya saja
+            $kelasIds = Kelas::whereIn(DB::raw('LOWER(kelas)'), $allowedKelas)->pluck('id');
+
+            $getContent = LmsContent::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service',
+                'SchoolPartner', 'SchoolLmsContent' => function ($query) use ($schoolId) {
+                    $query->where('school_partner_id', $schoolId);
+                },
+            ])->where(function ($query) use ($schoolId, $kelasIds) {
+                $query->where('school_partner_id', $schoolId)->orWhere(function ($q) use ($kelasIds) {
+                    $q->whereNull('school_partner_id')->whereIn('kelas_id', $kelasIds);
+                });
+            })->orderBy('created_at', 'desc')->paginate(10);;
         } else {
             $getContent = LmsContent::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 
             'Service', 'SchoolLmsContent'])->whereNull('school_partner_id')->orderBy('created_at', 'desc')->paginate(10);
