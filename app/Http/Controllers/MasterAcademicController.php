@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bab;
 use App\Models\Kelas;
 use App\Models\Mapel;
+use App\Models\SchoolMapel;
 use App\Models\SubBab;
 
 class MasterAcademicController extends Controller
@@ -24,9 +25,15 @@ class MasterAcademicController extends Controller
     }
 
     // GET MAPEL BY KELAS
-    public function getMapelByKelas($id)
+    public function getMapelByKelas($id, $schoolId = null)
     {
-        $mata_pelajaran = Mapel::where('kelas_id', $id)->where('status_mata_pelajaran', 'active')->get();
+        if ($schoolId) {
+            $mata_pelajaran = SchoolMapel::with(['Mapel'])->whereHas('Mapel', function ($query) use ($id) {
+                $query->where('kelas_id', $id);
+            })->where('school_partner_id', $schoolId)->get();
+        } else {
+            $mata_pelajaran = Mapel::where('kelas_id', $id)->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')->get();
+        }
         return response()->json($mata_pelajaran);
     }
 

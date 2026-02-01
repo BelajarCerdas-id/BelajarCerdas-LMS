@@ -38,7 +38,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kelas by fase
 
 Route::get('/kurikulum/{curriculumId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']); // kelas by kurikulum
+
+// route dependent dropdown mapel by kelas non school partner & school partner
 Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas
+Route::get('/kelas/{kelasId}/{schoolId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas
+
 Route::get('/mapel/{mapelId}/bab', [MasterAcademicController::class, 'getBabByMapel']); // bab by mapel
 Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabByBab']); // sub bab by bab
 
