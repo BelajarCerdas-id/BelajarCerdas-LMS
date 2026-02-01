@@ -65,6 +65,7 @@ function managementAcademic() {
                     const lmsRoleManagement = response.lmsRoleManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    const lmsContentManagement = response.lmsContentManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {
@@ -92,6 +93,21 @@ function managementAcademic() {
                             ],
                             link: {
                                 href: lmsCurriculumManagementBySchool,
+                            }
+                        },
+                        {
+                            key: 'academic_content',
+                            title: 'Academic Content',
+                            icon: 'fa-solid fa-book-open',
+                            description: 'Kelola materi pembelajaran sekolah',
+                            items: [
+                                'Upload Materi',
+                                'Materi Default',
+                                'Materi Sekolah',
+                                'Aktif / Nonaktif Materi',
+                            ],
+                            link: {
+                                href: lmsContentManagement,
                             }
                         },
                         {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\ActivateQuestionBankPG;
 use App\Events\BankSoalLmsEditPG;
 use App\Events\BankSoalLmsUploaded;
+use App\Events\LmsContentManagement;
 use App\Events\LmsSchoolSubscription;
 use App\Events\LmsManagementAccount;
 use App\Events\LmsManagementClass;
@@ -12,17 +13,23 @@ use App\Events\LmsManagementMajors;
 use App\Events\LmsManagementStudentInClass;
 use App\Models\Fase;
 use App\Models\Kurikulum;
+use App\Models\LmsContent;
+use App\Models\LmsContentItem;
 use App\Models\LmsQuestionBank;
 use App\Models\SchoolClass;
+use App\Models\SchoolLmsContent;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolMajor;
 use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
+use App\Models\ServiceRule;
 use App\Models\StudentSchoolClass;
 use App\Models\UserAccount;
 use App\Services\LMS\BankSoalWordImportService;
+use App\Services\LMS\LmsContentService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -163,6 +170,7 @@ class LmsController extends Controller
             'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/',
             'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/question-bank-management/',
             'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/kurikulum',
+            'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/content-management',
         ]);
     }
 
@@ -1358,4 +1366,325 @@ class LmsController extends Controller
         return response()->json(['message' => 'Gambar tidak ditemukan'], 404);
     }
 
+    // function content management view
+    public function lmsContentManagementView($schoolName = null, $schoolId = null)
+    {
+        $getCurriculum = Kurikulum::all();
+
+        return view('Features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
+    }
+
+    // function paginate lms content
+    public function paginateLmsContentManagement($schoolName = null, $schoolId = null)
+    {
+        // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
+        if ($schoolId) {
+            $getContent = LmsContent::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 
+            'Service', 'SchoolLmsContent', 'SchoolPartner'])->where('school_partner_id', $schoolId)->orWhereNull('school_partner_id')
+            ->orderBy('created_at', 'desc')->paginate(10);
+        } else {
+            $getContent = LmsContent::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 
+            'Service', 'SchoolLmsContent'])->whereNull('school_partner_id')->orderBy('created_at', 'desc')->paginate(10);
+        }
+
+        return response()->json([
+            'data'   => $getContent->items(),
+            'links'  => (string) $getContent->links(),
+            'current_page' => $getContent->currentPage(),
+            'per_page' => $getContent->perPage(),
+            'reviewContent' => '/lms/content-management/:contentId/review',
+            'reviewContentBySchool' => '/lms/school-subscription/content-management/:contentId/:schoolName/:schoolId/review',
+            'editContent' => '/lms/content-management/:contentId/edit',
+            'editContentBySchool' => '/lms/school-subscription/content-management/:contentId/:schoolName/:schoolId/edit',
+        ]);
+    }
+    
+    // function content management store
+    public function lmsContentManagementStore(Request $request, LmsContentService $service)
+    {
+        // base validation
+        $rules = [
+            'service_id'   => 'required',
+            'kurikulum_id' => 'required',
+            'kelas_id'     => 'required',
+            'mapel_id'     => 'required',
+            'bab_id'       => 'required',
+            'sub_bab_id'   => 'required',
+        ];
+
+        $messages = [
+            'kurikulum_id.required' => 'Harap pilih kurikulum.',
+            'kelas_id.required'     => 'Harap pilih kelas.',
+            'mapel_id.required'     => 'Harap pilih mapel.',
+            'bab_id.required'       => 'Harap pilih bab.',
+            'sub_bab_id.required'   => 'Harap pilih sub bab.',
+            'service_id.required'   => 'Harap pilih service.',
+        ];
+
+        // DYNAMIC VALIDATION (BERDASARKAN SERVICE RULE)
+        $serviceRules = ServiceRule::where('service_id', $request->service_id)->get();
+
+        foreach ($serviceRules as $rule) {
+
+            // TEXT INPUT (ARRAY)
+            if ($rule->upload_type === 'text') {
+                $rules["text.{$rule->id}"] = 'required|array|min:1';
+                $rules["text.{$rule->id}.*"] = 'required|string';
+
+                $messages["text.{$rule->id}.required"] = "Text wajib diisi";
+                $messages["text.{$rule->id}.array"]    = "Text wajib diisi";
+                $messages["text.{$rule->id}.min"]      = "Text minimal 1 data";
+                $messages["text.{$rule->id}.*.required"] = "Text tidak boleh kosong";
+            }
+
+            // FILE INPUT
+            if ($rule->upload_type === 'file') {
+                // default jika null
+                $maxMb = $rule->max_size_mb ?? 100;
+                $maxKb = $maxMb * 1024;
+
+                $rules["files.{$rule->id}"] = "required|file|max:{$maxKb}";
+
+                $messages["files.{$rule->id}.required"] = "File wajib diunggah.";
+                $messages["files.{$rule->id}.file"]     = "Format file tidak valid.";
+                $messages["files.{$rule->id}.max"]      = "File telah melebihi kapasitas yang ditentukan.";
+            }
+        }
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // store via service
+        $content = $service->store(
+            $validator->validated(),
+            Auth::id(),
+            $request->school_partner_id ?? null
+        );
+
+        broadcast(new LmsContentManagement($content))->toOthers();
+
+        // success response
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Content berhasil ditambahkan',
+            'data'    => $content,
+        ]);
+    }
+
+    // function activate lms content
+    public function lmsContentManagementActivate(Request $request, $contentId, $schoolName = null, $schoolId = null)
+    {
+        if ($schoolId) {
+            $content = SchoolLmsContent::where('lms_content_id', $contentId)->where('school_partner_id', $schoolId)->first();
+
+            $content->update([
+                'is_active' => $request->is_active,
+            ]);
+        } else {
+            $content = LmsContent::findOrFail($contentId);
+    
+            $content->update([
+                'is_active' => $request->is_active,
+            ]);
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Status content berhasil diubah.',
+        ]);
+    }
+
+    // private function guessMime
+    private function guessMime($ext)
+    {
+        return match (strtolower($ext)) {
+            'mp4', 'webm', 'ogg' => 'video/' . $ext,
+            'pdf'               => 'application/pdf',
+            'jpg', 'jpeg', 'png', 'webp' => 'image/' . $ext,
+            default             => 'application/octet-stream',
+        };
+    }
+
+    // function review content view
+    public function lmsReviewContent($contentId, $schoolName = null, $schoolId = null)
+    {
+        $items = LmsContentItem::with('ServiceRule', 'LmsContent.Service')->where('lms_content_id', $contentId)->get();
+
+        $data = $items->map(function ($item) {
+            $serviceName = $item->LmsContent?->Service?->name;
+
+            if (!$item->value_file) {
+                return [
+                    'service_name' => $serviceName,
+                    'rule_id' => $item->service_rule_id,
+                    'rule_name' => $item->ServiceRule?->name,
+                    'value_text' => $item->value_text,
+                    'type' => 'text'
+                ];
+            }
+
+            $extension = pathinfo($item->value_file, PATHINFO_EXTENSION);
+
+            return [
+                'service_name' => $serviceName,
+                'rule_id'   => $item->service_rule_id,
+                'rule_name' => $item->ServiceRule?->name,
+                'file_name'=> $item->original_filename,
+                'file_url' => asset('lms-contents/' . $item->value_file),
+                'mime'     => $this->guessMime($extension),
+                'type'     => 'file'
+            ];
+
+        });
+
+        return view('Features.lms.administrator.content-management.lms-review-content', compact('contentId', 'data'));
+    }
+
+    // function edit content view
+    public function lmsContentManagementEditView($contentId, $schoolName = null, $schoolId = null)
+    {
+        $content = LmsContent::with(['Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service'])->findOrFail($contentId);
+
+        $getCurriculum = Kurikulum::all();
+
+        return view('Features.lms.administrator.content-management.lms-content-management-edit',compact('content', 'getCurriculum'));
+    }
+
+    // function form edit content
+    public function lmsContentManagementFormEdit($contentId)
+    {
+        $items = LmsContentItem::with('ServiceRule')->where('lms_content_id', $contentId)->get();
+
+        $data = $items->map(function ($item) {
+            if (!$item->value_file) {
+                return [
+                    'rule_id' => $item->service_rule_id,
+                    'value_text' => $item->value_text,
+                    'type' => 'text'
+                ];
+            }
+
+            $extension = pathinfo($item->value_file, PATHINFO_EXTENSION);
+
+            return [
+                'rule_id'   => $item->service_rule_id,
+                'file_name'=> $item->original_filename,
+                'file_url' => asset('lms-contents/' . $item->value_file),
+                'mime'     => $this->guessMime($extension),
+                'type'     => 'file'
+            ];
+
+        });
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
+
+    // function form action edit content
+    public function lmsContentManagementEdit(Request $request, $contentId)
+    {
+        // AMBIL RULE DARI SERVICE YANG DIPILIH USER
+        $serviceRules = ServiceRule::where('service_id', $request->service_id)->get();
+
+        // base validation
+        $rulesValidation = [
+            'kurikulum_id' => 'required',
+            'kelas_id'     => 'required',
+            'mapel_id'     => 'required',
+            'bab_id'       => 'required',
+            'sub_bab_id'   => 'required',
+            'service_id'   => 'required',
+        ];
+
+        $messages = [
+            'kurikulum_id.required' => 'Harap pilih kurikulum.',
+            'kelas_id.required'     => 'Harap pilih kelas.',
+            'mapel_id.required'     => 'Harap pilih mapel.',
+            'bab_id.required'       => 'Harap pilih bab.',
+            'sub_bab_id.required'   => 'Harap pilih sub bab.',
+            'service_id.required'   => 'Harap pilih service.',
+        ];
+
+        // dynamic validation
+        foreach ($serviceRules as $rule) {
+
+            /* ================= TEXT ================= */
+            if ($rule->upload_type === 'text') {
+
+                $rulesValidation["text.{$rule->id}"] = [
+                    $rule->is_required ? 'required' : 'nullable',
+                    'array',
+                    $rule->is_required ? 'min:1' : null,
+                ];
+
+                $rulesValidation["text.{$rule->id}.*"] = [
+                    'required',
+                    'string',
+                ];
+
+                if ($rule->is_required) {
+                    $messages["text.{$rule->id}.required"] = 'Text tidak boleh kosong.';
+                    $messages["text.{$rule->id}.min"]      = 'Minimal satu data harus diisi.';
+                }
+
+                $messages["text.{$rule->id}.*.required"] = "Text tidak boleh kosong.";
+            }
+
+            /* ================= FILE ================= */
+            if ($rule->upload_type === 'file') {
+
+                $hasExisting = $request->input("existing_files.{$rule->id}") == 1;
+
+                // default max size (MB)
+                $maxMb = $rule->max_size_mb ?? 100;
+                $maxKb = $maxMb * 1024;
+
+                $fileRules = [];
+
+                $fileRules[] = $hasExisting ? 'nullable' : 'required';
+                $fileRules[] = 'file';
+                $fileRules[] = "max:{$maxKb}";
+
+                $rulesValidation["files.{$rule->id}"] = $fileRules;
+
+                $messages["files.{$rule->id}.required"] = "File wajib diunggah.";
+                $messages["files.{$rule->id}.file"]     = "Format file tidak valid.";
+                $messages["files.{$rule->id}.max"]      = "File telah melebihi kapasitas yang ditentukan.";
+            }
+        }
+
+        $validator = Validator::make($request->all(), $rulesValidation, $messages);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $content = LmsContent::findOrFail($contentId);
+
+        $lmsContentService = new LmsContentService();
+
+        // update via service
+        $updated = $lmsContentService->update(
+            $content,
+            $request->all(),
+            Auth::id()
+        );
+
+        broadcast(new LmsContentManagement($updated))->toOthers();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Content berhasil diperbarui',
+        ]);
+    }
 }

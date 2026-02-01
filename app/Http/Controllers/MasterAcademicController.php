@@ -6,6 +6,7 @@ use App\Models\Bab;
 use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\SchoolMapel;
+use App\Models\Service;
 use App\Models\SubBab;
 
 class MasterAcademicController extends Controller
@@ -22,6 +23,18 @@ class MasterAcademicController extends Controller
     {
         $kelas = Kelas::where('kurikulum_id', $id)->get();
         return response()->json($kelas);
+    }
+
+    // GET SERVICE BY KURIKULUM
+    public function getServiceByKurikulum($id, $schoolId = null)
+    {
+        // jika ada schoolId maka gunakan service yang untuk school partner only
+        if ($schoolId) {
+            $service = Service::where('kurikulum_id', $id)->where('school_partner_status', true)->get();
+        } else {
+            $service = Service::where('kurikulum_id', $id)->where('school_partner_status', true)->orWhere('school_partner_status', false)->get();
+        }
+        return response()->json($service);
     }
 
     // GET MAPEL BY KELAS

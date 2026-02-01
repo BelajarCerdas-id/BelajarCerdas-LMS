@@ -296,6 +296,20 @@
                             <div class="flex flex-col">
                                 <div
                                     class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                    <span>Content</span>
+                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                </div>
+
+                                <div class="list-content-dropdown pl-4">
+                                    <a href="{{ route('lms.contentManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
+                                        Manage Content
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col">
+                                <div
+                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
                                     <span>Question</span>
                                     <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
                                 </div>
@@ -519,6 +533,20 @@
                             </div>
 
                             <div class="content-dropdown px-2 w-full">
+                                <div class="flex flex-col">
+                                    <div
+                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                        <span>Content</span>
+                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                    </div>
+
+                                    <div class="list-content-dropdown pl-4">
+                                        <a href="{{ route('lms.contentManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
+                                            Manage Content
+                                        </a>
+                                    </div>
+                                </div>
+
                                 <div class="flex flex-col">
                                     <div
                                         class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[13px]">
