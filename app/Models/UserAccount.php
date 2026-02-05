@@ -77,4 +77,8 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(LmsContent::class, 'user_id');
     }
+
+    public function SchoolAssessmentType() {
+        return $this->hasMany(SchoolAssessmentType::class, 'user_id');
+    }
 }

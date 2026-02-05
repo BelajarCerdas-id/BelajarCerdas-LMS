@@ -87,4 +87,8 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(SchoolLmsContent::class, 'school_partner_id');
     }
+
+    public function SchoolAssessmentType() {
+        return $this->hasMany(SchoolAssessmentType::class, 'school_partner_id');
+    }
 }

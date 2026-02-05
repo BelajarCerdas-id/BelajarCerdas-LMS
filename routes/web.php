@@ -293,6 +293,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/content-management/paginate', [LmsController::class, 'paginateLmsContentManagement'])->name('lms.contentManagement.paginate.noSchoolPartner');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/content-management/paginate', [LmsController::class, 'paginateLmsContentManagement'])->name('lms.contentManagement.paginate.schoolPartner');
 
+    // ROUTES ASSESSMENT TYPE MANAGEMENT
+    // views
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management', [LmsController::class, 'lmsAssessmentTypeManagementView'])->name('lms.assessmentTypeManagement.view');
+
+    // crud
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/store', [LmsController::class, 'lmsAssessmentTypeManagementStore'])->name('lms.assessmentTypeManagement.store');
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/{assessmentTypeId}/edit', [LmsController::class, 'lmsAssessmentTypeManagementEdit'])->name('lms.assessmentTypeManagement.edit');
+    Route::put('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/{assessmentTypeId}/activate', [LmsController::class, 'lmsAssessmentTypeManagementActivate'])->name('lms.assessmentTypeManagement.activate');
+
+    // paginate
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/paginate', [LmsController::class, 'paginateLmsAssessmentTypeManagement'])->name('lms.assessmentTypeManagement.paginate');
+
     // ROUTES STUDENT LMS
     Route::get('/lms/{role}/{schoolName}/{schoolId}', [LmsController::class, 'lmsStudentView'])->name('lms.student.view');
 });
