@@ -66,6 +66,7 @@ function managementAcademic() {
                     const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsContentManagement = response.lmsContentManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    const lmsAssessmentTypeManagement = response.lmsAssessmentTypeManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {
@@ -108,6 +109,19 @@ function managementAcademic() {
                             ],
                             link: {
                                 href: lmsContentManagement,
+                            }
+                        },
+                        {
+                            key: 'assessment_types',
+                            title: 'Assessment Type Management',
+                            icon: 'fa-solid fa-clipboard-list',
+                            description: 'Jenis Asesmen',
+                            items: [
+                                'Jenis Asesmen',
+                                'Manajemen Asesmen',
+                            ],
+                            link: {
+                                href: lmsAssessmentTypeManagement,
                             }
                         },
                         {

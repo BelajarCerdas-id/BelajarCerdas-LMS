@@ -172,6 +172,7 @@ class LmsController extends Controller
             'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/question-bank-management/',
             'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/kurikulum',
             'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/content-management',
+            'lmsAssessmentTypeManagement' => '/lms/school-subscription/:schoolName/:schoolId/assessment-type-management',
         ]);
     }
 
