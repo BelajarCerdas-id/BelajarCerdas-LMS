@@ -91,4 +91,9 @@ class SchoolPartner extends Model
     public function SchoolAssessmentType() {
         return $this->hasMany(SchoolAssessmentType::class, 'school_partner_id');
     }
+
+    public function SchoolQuestionBank()
+    {
+        return $this->hasMany(SchoolQuestionBank::class, 'school_partner_id');
+    }
 }

@@ -4,6 +4,8 @@ namespace App\Services\LMS;
 
 use App\Events\BankSoalLmsUploaded;
 use App\Models\LmsQuestionBank;
+use App\Models\LmsQuestionOption;
+use App\Models\SchoolQuestionBank;
 use App\Services\DocxExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -225,22 +227,147 @@ class BankSoalWordImportService
                     $validationErrors[] = "Soal ke-$soalNumber: QUESTION tidak boleh kosong.";
                 }
     
-                $answerMap = [
-                    'OPTION1' => 'A',
-                    'OPTION2' => 'B',
-                    'OPTION3' => 'C',
-                    'OPTION4' => 'D',
-                    'OPTION5' => 'E',
-                ];
-    
-                // Pastikan semua OPTION yang ada terisi, plus field wajib lain
-                $presentOptions = array_filter(array_keys($answerMap), fn($opt) => isset($dataSoal[$opt]) && $extractor->isMeaningfullyEmpty($dataSoal[$opt]));
-                $requiredFields = array_merge($presentOptions, ['ANSWER', 'EXPLANATION', 'DIFFICULTY', 'TYPE']);
-    
-                foreach ($requiredFields as $field) {
+                $normalizeAnswers = function (?string $raw): array {
+                    if (!$raw) return [];
+                    return array_values(array_filter(array_map(
+                        fn($v) => strtoupper(trim($v)),
+                        preg_split('/[,;]+/', strip_tags($raw))
+                    )));
+                };
+
+                $isEmpty = fn($v) => !isset($v) || $extractor->isMeaningfullyEmpty($v);
+                    
+                $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
+                $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
+                    
+                $requiredBaseFields = ['QUESTION', 'DIFFICULTY', 'BLOOM', 'TYPE'];
+
+                foreach ($requiredBaseFields as $field) {
                     if (!isset($dataSoal[$field]) || $extractor->isMeaningfullyEmpty($dataSoal[$field])) {
                         $validationErrors[] = "Soal ke-$soalNumber: Field '$field' tidak boleh kosong.";
                     }
+                }
+
+                // VALIDASI OPTION
+                $options = array_filter(
+                    $dataSoal,
+                    fn($v, $k) => str_starts_with($k, 'OPTION') && !$isEmpty($v),
+                    ARRAY_FILTER_USE_BOTH
+                );
+
+                switch ($type) {
+                    case 'mcq':
+                        if (count($options) < 2) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MCQ minimal punya 2 OPTION.";
+                        }
+                        if (count($answers) !== 1) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MCQ harus tepat 1 jawaban.";
+                        }
+                        if (!isset($dataSoal[$answers[0] ?? '']) || $isEmpty($dataSoal[$answers[0]])) {
+                            $validationErrors[] = "Soal ke-$soalNumber: ANSWER tidak cocok dengan OPTION.";
+                        }
+                        break;
+
+                    case 'mcma':
+                        if (count($options) < 2) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal punya 2 OPTION.";
+                        }
+                        if (count($answers) < 1) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal 1 jawaban.";
+                        }
+                        foreach ($answers as $a) {
+                            if (!isset($dataSoal[$a]) || $isEmpty($dataSoal[$a])) {
+                                $validationErrors[] = "Soal ke-$soalNumber: ANSWER '$a' tidak valid atau OPTION kosong.";
+                            }
+                        }
+                        break;
+
+                    case 'matching':
+                        if ($isEmpty($dataSoal['ANSWER'] ?? null)) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya ANSWER.";
+                            break;
+                        }
+
+                        // LEFT & RIGHT
+                        $leftKeys = array_keys(array_filter($dataSoal, fn($v,$k) =>
+                            str_starts_with($k,'LEFT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH));
+
+                        $rightKeys = array_keys(array_filter($dataSoal, fn($v,$k) =>
+                            str_starts_with($k,'RIGHT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH));
+
+                        if (!$leftKeys || !$rightKeys) {
+                            $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya LEFT & RIGHT.";
+                            break;
+                        }
+
+                        // Parse ANSWER
+                        $pairMap = [];
+                        $leftUsed  = [];
+                        $rightUsed = [];
+
+                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER']));
+                            foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
+
+                                $parts = preg_split('/\s*,\s*/', trim($line));
+
+                                // WAJIB tepat 2 token
+                                if (count($parts) !== 2) {
+                                    $validationErrors[] =
+                                        "Soal ke-$soalNumber: Format ANSWER salah (harus LEFT,RIGHT).";
+                                    continue;
+                                }
+
+                                [$l, $r] = array_map(
+                                    fn($v) => strtoupper(trim($v)),
+                                    $parts
+                                );
+
+                                // LEFT valid
+                                if (!in_array($l, $leftKeys)) {
+                                    $validationErrors[] =
+                                        "Soal ke-$soalNumber: LEFT '$l' tidak valid.";
+                                    continue;
+                                }
+
+                                // RIGHT valid
+                                if (!in_array($r, $rightKeys)) {
+                                    $validationErrors[] =
+                                        "Soal ke-$soalNumber: RIGHT '$r' tidak valid.";
+                                    continue;
+                                }
+
+                                // LEFT duplicate
+                                if (isset($pairMap[$l])) {
+                                    $validationErrors[] =
+                                        "Soal ke-$soalNumber: LEFT '$l' dipakai lebih dari sekali.";
+                                    continue;
+                                }
+
+                                // RIGHT duplicate
+                                if (in_array($r, $rightUsed)) {
+                                    $validationErrors[] =
+                                        "Soal ke-$soalNumber: RIGHT '$r' dipakai lebih dari sekali.";
+                                    continue;
+                                }
+
+                                $pairMap[$l] = $r;
+                                $rightUsed[] = $r;
+                            }
+
+                            // Jumlah pasangan harus sama dengan LEFT
+                            if (count($pairMap) !== count($leftKeys)) {
+                                $validationErrors[] =
+                                    "Soal ke-$soalNumber: Jumlah pasangan harus sama dengan jumlah LEFT.";
+                            }
+
+                            break;
+
+                    case 'essay':
+                        // tidak perlu ANSWER & OPTION
+                        break;
+
+                    default:
+                        $validationErrors[] = "Soal ke-$soalNumber: TYPE '$type' tidak dikenali.";
                 }
     
                 // Jika validasi gagal → simpan error & lanjut ke soal berikutnya
@@ -286,44 +413,127 @@ class BankSoalWordImportService
         $validSoalData[] = $dataSoal;
         // Simpan soal ke database
         foreach ($validSoalData as $dataSoal) {
-            $answerKeyRaw = $dataSoal['ANSWER'] ?? '';
-            $plainAnswerKey = strtoupper(trim(strip_tags($answerKeyRaw)));
-            $finalAnswerKey = $answerMap[$plainAnswerKey] ?? null;
-            if (!$finalAnswerKey) continue;
 
-            // Cek duplikasi soal
-            $existingQuestion = LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->exists();
-
-            // Tentukan status bank soal (Publish kalau sudah ada soal publish sebelumnya di sub_bab_id yang sama)
-            $statusBankSoal = LmsQuestionBank::where('sub_bab_id', $request->sub_bab_id)
-                ->where('status_bank_soal', 'Publish')
-                ->exists() ? 'Publish' : 'Unpublish';
+            $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
+            $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
 
             $schoolPartnerId = $request->school_partner_id;
+
+            // Cek duplikasi soal
+            $existingQuestion = $schoolPartnerId
+                ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)->exists()
+                : LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->exists();
+
+            // Tentukan status bank soal (Publish kalau sudah ada soal publish sebelumnya di sub_bab_id yang sama)
+            $statusBankSoal = LmsQuestionBank::where('sub_bab_id', $request->sub_bab_id)->where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))
+                ->where('status_bank_soal', 'Unpublish')
+                ->exists() ? 'Unpublish' : 'Publish';
 
             // Simpan setiap opsi jawaban ke DB
             if (!$allWordValidationErrors) {
                 if (!$existingQuestion) {
-                    foreach ($answerMap as $optionField => $label) {
-                        if (!empty($dataSoal[$optionField])) {
-                            $createBankSoal = LmsQuestionBank::create([
-                                'user_id' => $userId,
-                                'school_partner_id' => $request->school_partner_id ?? null,
-                                'kurikulum_id' => $request->kurikulum_id,
-                                'kelas_id' => $request->kelas_id,
-                                'mapel_id' => $request->mapel_id,
-                                'bab_id' => $request->bab_id,
-                                'sub_bab_id' => $request->sub_bab_id,
-                                'questions' => $dataSoal['QUESTION'],
-                                'options_key' => $label,
-                                'options_value' => $dataSoal[$optionField],
-                                'answer_key' => $finalAnswerKey,
-                                'difficulty' => trim(strip_tags($dataSoal['DIFFICULTY'] ?? '')),
-                                'explanation' => $dataSoal['EXPLANATION'] ?? '',
-                                'status_soal' => trim(strip_tags($dataSoal['STATUS'] ?? '')),
-                                'tipe_soal' => trim(strip_tags($dataSoal['TYPE'] ?? '')),
-                                'status_bank_soal' => $statusBankSoal,
-                                'question_source' => $schoolPartnerId ? 'school' : 'default',
+                    $createBankSoal = LmsQuestionBank::create([
+                        'user_id' => $userId,
+                        'school_partner_id' => $schoolPartnerId ?? null,
+                        'kurikulum_id' => $request->kurikulum_id,
+                        'kelas_id' => $request->kelas_id,
+                        'mapel_id' => $request->mapel_id,
+                        'bab_id' => $request->bab_id,
+                        'sub_bab_id' => $request->sub_bab_id,
+                        'questions' => $dataSoal['QUESTION'],
+                        'difficulty' => trim(strip_tags($dataSoal['DIFFICULTY'] ?? '')),
+                        'bloom' => trim(strip_tags($dataSoal['BLOOM'] ?? '')),
+                        'explanation' => $dataSoal['EXPLANATION'] ?? '',
+                        'tipe_soal' => trim(strip_tags($dataSoal['TYPE'] ?? '')),
+                        'status_bank_soal' => $statusBankSoal,
+                        'question_source' => $schoolPartnerId ? 'school' : 'default',
+                    ]);
+
+                    if (in_array($type, ['mcq', 'mcma'])) {
+
+                        foreach ($dataSoal as $key => $value) {
+                            if (!str_starts_with($key, 'OPTION')) continue;
+
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => $key,              // OPTION1, OPTION2
+                                'options_value' => $value,
+                                'is_correct'    => in_array($key, $answers),
+                            ]);
+                        }
+
+                    } elseif (in_array($type, ['tf', 'yn'])) {
+
+                        $choices = $type === 'tf'
+                            ? ['TRUE', 'FALSE']
+                            : ['YES', 'NO'];
+
+                        foreach ($choices as $choice) {
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => $choice,
+                                'options_value' => $choice,
+                                'is_correct'    => in_array($choice, $answers),
+                            ]);
+                        }
+
+                    } elseif ($type === 'matching') {
+
+                        // Bersihkan ANSWER (hindari <br>, </p>, dll)
+                        $pairMap = [];
+                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
+
+                        $lines = preg_split('/\r\n|\r|\n/', $answerRaw);
+
+                        foreach ($lines as $line) {
+                            $line = trim($line);
+                            if (!$line) continue;
+
+                            // pecah LEFTx,RIGHTy (spasi aman)
+                            [$l, $r] = array_map(
+                                fn($v) => strtoupper(trim($v)),
+                                preg_split('/\s*,\s*/', $line)
+                            );
+
+                            if ($l && $r) {
+                                $pairMap[$l] = $r;
+                            }
+                        }
+
+                        // simpan right side
+                        foreach ($dataSoal as $key => $value) {
+                            if (!is_string($key)) continue;
+                            if (!str_starts_with($key, 'RIGHT')) continue;
+                            if ($extractor->isMeaningfullyEmpty($value)) continue;
+
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => strtoupper(trim($key)),   // RIGHT1
+                                'options_value' => $value,
+                                'is_correct'    => false,
+                                'extra_data'    => [
+                                    'side' => 'right',
+                                ],
+                            ]);
+                        }
+
+                        // Simpan LEFT side + pasangan
+                        foreach ($dataSoal as $key => $value) {
+                            if (!is_string($key)) continue;
+                            if (!str_starts_with($key, 'LEFT')) continue;
+                            if ($extractor->isMeaningfullyEmpty($value)) continue;
+
+                            $leftKey = strtoupper(trim($key));
+
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => $leftKey,        // LEFT1
+                                'options_value' => $value,
+                                'is_correct'    => false,
+                                'extra_data'    => [
+                                    'side'      => 'left',
+                                    'pair_with' => $pairMap[$leftKey] ?? null, // RIGHTx
+                                ],
                             ]);
                         }
                     }

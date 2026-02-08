@@ -196,6 +196,7 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Mata Pelajaran</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Bab</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Sub Bab</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Bank Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Sumber Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
@@ -230,6 +231,7 @@
                                 <div class="flex flex-col gap-1">
                                     <span id="text-nama_lengkap" class="font-semibold"></span>
                                     <span id="text-status" class="text-sm text-gray-500"></span>
+                                    <span id="text-created_at" class="text-xs text-gray-400"></span>
                                     <span id="text-updated_at" class="text-xs text-gray-400"></span>
                                 </div>
                             </div>
@@ -241,12 +243,32 @@
 
                         <hr class="my-4 opacity-25">
 
-                        {{-- SUMBER SOAL --}}
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-500">Sumber Soal</span>
-                            <span id="text-publisher"
-                                class="text-sm font-semibold px-3 py-1 rounded-full">
-                            </span>
+                        <div class="flex flex-col gap-3">
+
+                            <!-- SOURCE -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold opacity-70">Source</span>
+                                <span id="text-publisher"
+                                    class="text-xs font-semibold px-3 py-1 rounded-full">
+                                </span>
+                            </div>
+                            
+                            <!-- STATUS -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold opacity-70">Status Global</span>
+                                <span id="badge-global" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold opacity-70">Status Sekolah</span>
+                                <span id="badge-school" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
+                            </div>
+
+                        </div>
+
+                        <!-- INFO -->
+                        <div id="text-info"
+                            class="mt-5 text-sm px-4 py-3 rounded-lg">
                         </div>
                     </div>
 

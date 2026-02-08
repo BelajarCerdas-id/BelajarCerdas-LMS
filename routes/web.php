@@ -228,16 +228,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management', [LmsController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.schoolPartner');
 
     // review question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/{subBabId}/{schoolName}/{schoolId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{schoolName}/{schoolId}', [LmsController::class, 'lmsQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
 
     // edit question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/{questionId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'lmsQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
 
     // form question bank edit no school partner & school partner
-    Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/reivew/{subBabId}/{questionId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
-    Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/reivew/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
+    Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
 
     // crud bank soal
     // upload bank soal no school partner & school partner
@@ -248,7 +248,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/bank-soal/edit-image', [LmsController::class, 'editImageBankSoal'])->name('lms.editImage');
     Route::post('/lms/bank-soal/delete-image/endpoint', [LmsController::class, 'deleteImageBankSoal'])->name('lms.deleteImage');
 
-    Route::put('/lms/school-subscription/question-bank-management/{subBabId}/source/{source}/activate', [LmsController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate');
+    // activate question bank no school partner & school partner
+    Route::put('/lms/question-bank-management/{subBabId}/source/{source}/question-type/{questionType}/activate', [LmsController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.noSchoolPartner');
+    Route::put('/lms/school-subscription/question-bank-management/{subBabId}/source/{source}/question-type/{questionType}/{schoolName}/{schoolId}/activate', [LmsController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.schoolPartner');
 
     // edit bank soal no school partner & school partner submit form
     Route::post('/lms/question-bank-management/{questionId}/edit', [LmsController::class, 'lmsQuestionBankManagementEdit'])->name('lms.questionBankManagement.edit');
@@ -259,8 +261,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/paginate', [LmsController::class, 'paginateLmsQuestionBankManagement'])->name('lms.questionBankManagement.paginate.schoolPartner');
 
     // paginate review question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.questionBankManagementDetail.paginate.noSchoolPartner');
-    Route::get('/lms/question-bank-management/source/{source}/review/{subBabId}/school-subscription/{schoolName}/{schoolId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.reviewQuestionBank.paginate.schoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.questionBankManagementDetail.paginate.noSchoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/school-subscription/{schoolName}/{schoolId}/paginate', [LmsController::class, 'paginateReviewQuestionBank'])->name('lms.reviewQuestionBank.paginate.schoolPartner');
 
     // ROUTES CONTENT MANAGEMENT
     // view content management no school partner & school partner

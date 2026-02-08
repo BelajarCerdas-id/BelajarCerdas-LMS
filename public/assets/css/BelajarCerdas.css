@@ -109,6 +109,14 @@ body {
     display: block;
 }
 
+.ck-content img {
+    max-width: 200px;
+    max-height: 150px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
 /* sidebar beranda siswa  */
 .sidebar-beranda-student {
     width: 290px;

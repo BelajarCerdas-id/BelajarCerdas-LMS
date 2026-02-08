@@ -18,15 +18,23 @@ class LmsQuestionBank extends Model
         'bab_id',
         'sub_bab_id',
         'questions',
-        'options_key',
-        'options_value',
-        'answer_key',
         'difficulty',
+        'bloom',
         'explanation',
         'status_bank_soal',
         'tipe_soal',
         'question_source',
     ];
+
+    public function LmsQuestionOption()
+    {
+        return $this->hasMany(LmsQuestionOption::class, 'question_id');
+    }
+
+    public function SchoolQuestionBank()
+    {
+        return $this->hasMany(SchoolQuestionBank::class, 'question_id');
+    }
 
     public function UserAccount()
     {

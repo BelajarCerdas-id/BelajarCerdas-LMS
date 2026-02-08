@@ -4,6 +4,7 @@ function paginateBankSoal(page = 1) {
 
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
+    const isSchoolMode = !!schoolId;
 
     fetchBankSoal(schoolName, schoolId);
 
@@ -69,7 +70,7 @@ function paginateBankSoal(page = 1) {
                 }
 
                 if (groups && Object.keys(groups).length > 0) {
-                    $.each(groups, function (_, questions) {
+                    $.each(groups, function (index, questions) {
                         const first = questions[0];
                         
                         const formatDate = (dateString) => {
@@ -83,37 +84,57 @@ function paginateBankSoal(page = 1) {
                             return `${day}-${monthName}-${year}`;
                         };
 
+                        const createdAt = first.created_at ? `${formatDate(first.created_at)}` : 'Tanggal tidak tersedia';
                         const updatedAt = first.updated_at ? `${formatDate(first.updated_at)}` : 'Tanggal tidak tersedia';
 
                         let lmsReviewQuestion = '';
 
                         if (schoolId) {
-                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':source', first.question_source).replace(':subBabId', first.sub_bab_id)
-                                .replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
+                                .replace(':subBabId', first.sub_bab_id).replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                         } else {
-                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':subBabId', first.sub_bab_id);
+                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
                         }
+
+                        const isGlobalActive = first.status_bank_soal === 'Publish';
+                        const hasSchoolOverride = first.school_question_bank?.length > 0;
+
+                        // EFFECTIVE STATUS (dipakai / tidak)
+                        const isChecked = isSchoolMode
+                            ? (
+                                hasSchoolOverride
+                                    ? !!first.school_question_bank[0].is_active
+                                    : isGlobalActive
+                            )
+                            : isGlobalActive; // ADMIN MODE → PURE GLOBAL
+
+                        toggleActivateQuestionBank = `
+                            <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox"
+                                class="hidden peer toggle-activate-bank-soal"
+                                data-sub-bab-id="${first.sub_bab_id}"
+                                data-question-id="${first.id}"
+                                data-source="${first.question_source}"
+                                data-question-type="${first.tipe_soal}"
+                                data-global-active="${isGlobalActive ? 1 : 0}"
+                                ${isChecked ? 'checked' : ''}
+                            />
+                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors"></div>
+                                <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
+                            </label>
+                        `;
 
                         $('#tbody-bank-soal-list').append(`
                             <tr>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + 1 }</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1 }</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${first.kurikulum?.nama_kurikulum}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${first.kelas?.kelas}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${first.mapel?.mata_pelajaran}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${first.bab?.nama_bab}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${first.sub_bab?.sub_bab}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.tipe_soal}</td>
                                 <td class="border text-center border-gray-300">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="hidden peer toggle-activate-bank-soal"
-                                            data-sub-bab-id="${first.sub_bab_id}" data-source="${first.question_source}"
-                                            ${first.status_bank_soal === 'Publish' ? 'checked' : ''} />
-                                        <div
-                                            class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
-                                        </div>
-                                            <div
-                                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5">
-                                        </div>
-                                    </label>
+                                    ${toggleActivateQuestionBank}
                                 </td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">
                                     ${first.question_source === 'school' ? first.school_partner?.nama_sekolah : 'belajarcerdas.id'}
@@ -133,8 +154,15 @@ function paginateBankSoal(page = 1) {
                                             </li>
                                             <li onclick="historyQuestion(this)"
                                                 data-nama_lengkap="${first.user_account?.office_profile?.nama_lengkap || first.user_account?.school_staff_profile?.nama_lengkap}"
-                                                data-status="${first.user_account?.role ?? '-'}" data-updated_at="${updatedAt}" data-school_name="${first.school_partner?.nama_sekolah ?? ''}"
-                                                data-is_default="${first.school_partner_id === null}" class="cursor-pointer">
+                                                data-status="${first.user_account?.role ?? '-'}" 
+                                                data-created_at="${createdAt}" 
+                                                data-updated_at="${updatedAt}" 
+                                                data-global_status="${first.status_bank_soal}" 
+                                                data-school_status="${first.school_question_bank?.[0]?.is_active ? 'true' : 'false'}"
+                                                data-has-school-override="${first.school_question_bank?.length ? 'true' : 'false'}"
+                                                data-school_name="${first.school_partner?.nama_sekolah ?? ''}" 
+                                                data-is_default="${first.school_partner_id ? 'false' : 'true'}" 
+                                                class="cursor-pointer">
                                                 <span>
                                                     <i class="fa-solid fa-clock-rotate-left text-[#0071BC]"></i>
                                                     History Question
@@ -186,12 +214,22 @@ function historyQuestion(element) {
 
     const namaLengkap = element.dataset.nama_lengkap;
     const status = element.dataset.status;
+    const createdAt = element.dataset.created_at;
     const updatedAt = element.dataset.updated_at;
+
+    const globalStatus = element.dataset.global_status === 'Publish';
+    const hasSchoolOverride = element.dataset.hasSchoolOverride === 'true';
+    const schoolStatusRaw = element.dataset.school_status === 'true';
+
+    // EFFECTIVE STATUS (real dipakai / tidak)
+    const isEffectiveActive = globalStatus && (!hasSchoolOverride || schoolStatusRaw);
+
     const schoolName = element.dataset.school_name;
     const isDefault = element.dataset.is_default === "true";
 
     document.getElementById('text-nama_lengkap').innerText = namaLengkap;
     document.getElementById('text-status').innerText = status;
+    document.getElementById('text-created_at').innerText = 'Tanggal dibuat: ' + `${createdAt}`;
     document.getElementById('text-updated_at').innerText = 'Terakhir diperbarui: ' + `${updatedAt}`;
 
     const publisherEl = document.getElementById('text-publisher');
@@ -204,33 +242,88 @@ function historyQuestion(element) {
         publisherEl.className = 'text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
     }
 
+    // BADGE GLOBAL
+    const badgeGlobal = document.getElementById('badge-global');
+    if (globalStatus) {
+        badgeGlobal.innerText = 'AKTIF';
+        badgeGlobal.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700';
+    } else {
+        badgeGlobal.innerText = 'NONAKTIF';
+        badgeGlobal.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
+    }
+
+    // BADGE SCHOOL
+    const badgeSchool = document.getElementById('badge-school');
+    if (!hasSchoolOverride) {
+        badgeSchool.innerText = '-';
+    } else if (schoolStatusRaw) {
+        badgeSchool.innerText = 'AKTIF';
+        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+    } else {
+        badgeSchool.innerText = 'NONAKTIF';
+        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+    }
+
+    // INFO MESSAGE
+    const infoEl = document.getElementById('text-info');
+    if (!globalStatus) {
+        infoEl.innerHTML =
+            '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Bank soal ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
+        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
+
+    } else if (!hasSchoolOverride) {
+        infoEl.innerHTML =
+            '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal mengikuti status global dan dapat digunakan.';
+        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+    } else if (schoolStatusRaw) {
+        infoEl.innerHTML =
+            '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal aktif dan dapat digunakan oleh guru dan siswa.';
+        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+    } else {
+        infoEl.innerHTML =
+            '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Bank soal ini dinonaktifkan oleh sekolah.';
+        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+    }
+
+
     document.getElementById('my_modal_2').showModal();
 }
 
-// function activate mapel
-$(document).ready(function () {
-    $(document).on('change', '.toggle-activate-bank-soal', function () {
-        let subBabId = $(this).data('sub-bab-id'); // Ambil ID sub bab dari atribut data-id di checkbox
-        let status = $(this).is(':checked') ? 'Publish' : 'Unpublish'; // Jika toggle ON maka publish, kalau OFF maka unpublish
-        let source = $(this).data('source'); // Ambil source dari atribut data-source di checkbox
+// function activate bank soal
+$(document).on('change', '.toggle-activate-bank-soal', function () {
+    const checkbox = $(this);
+    const container = document.getElementById('container');
+    if (!container) return;
 
-        $.ajax({
-            url: `/lms/school-subscription/question-bank-management/${subBabId}/source/${source}/activate`, // Endpoint ke server
-            method: 'PUT', // Method HTTP PUT untuk update data
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: {
-                status_bank_soal: status // Kirim status baru (publish / unpublish)
-            },
-            success: function (response) {
-                // Memanggil fungsi untuk memuat ulang data
-                paginateBankSoal();
-            },
-            error: function (xhr) {
-                alert('Gagal mengubah status.');
-                checkbox.prop('checked', !checkbox.is(':checked'));
-            }
-        });
+    const schoolId = container.dataset.schoolId;
+    const schoolName = container.dataset.schoolName;
+
+    const subBabId = checkbox.data('sub-bab-id');
+    const source = checkbox.data('source');
+    const questionType = checkbox.data('question-type');
+    const isGlobalActive = Number(checkbox.data('global-active')) === 1;
+
+    const action = checkbox.is(':checked') ? 'enable' : 'disable';
+
+    $.ajax({
+        url: schoolId
+            ? `/lms/school-subscription/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/${schoolName}/${schoolId}/activate`
+            : `/lms/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/activate`,
+        method: 'PUT',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: { action },
+        success: function () {
+            // REFRESH DATA LIST
+            paginateQuestionBank(response.current_page);
+        },
+        error: function () {
+            checkbox.prop('checked', !checkbox.is(':checked'));
+            alert('Gagal mengubah status');
+        }
     });
 });
+

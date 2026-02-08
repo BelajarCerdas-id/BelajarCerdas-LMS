@@ -6,6 +6,7 @@ function formQuestionBankEdit() {
     if (!container) return;
 
     const source = container.dataset.source;
+    const questionType = container.dataset.questionType;
     const subBabId = container.dataset.subBabId;
     const questionId = container.dataset.questionId;
     const schoolName = container.dataset.schoolName;
@@ -14,40 +15,164 @@ function formQuestionBankEdit() {
     if (!source) return;
     if (!subBabId) return;
     if (!questionId) return;
+    if (!questionType) return;
 
     $.ajax({
         url: schoolId
-            ? `/lms/school-subscription/question-bank-management/bank-soal/form/source/${source}/reivew/${subBabId}/${questionId}/${schoolName}/${schoolId}/edit`
-            : `/lms/question-bank-management/bank-soal/form/source/${source}/reivew/${subBabId}/${questionId}/edit`,
+            ? `/lms/school-subscription/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${subBabId}/${questionId}/${schoolName}/${schoolId}/edit`
+            : `/lms/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${subBabId}/${questionId}/edit`,
         method: 'GET',
         success: function (response) {
-            const grouped = response.data;
             const question = response.editQuestion;
+            const questionTypeNormalized = (questionType || '').toUpperCase();
+
+            function renderOptionsByType(type) {
+                switch (type) {
+                    case 'MCQ':
+                        return renderMCQ();
+                    case 'MCMA':
+                        return renderMCMA();
+                    case 'MATCHING':
+                        return renderMatching();
+                    default:
+                        return '';
+                }
+            }
+
+            function renderMCQ() {
+                const options = response.options;
+
+                // options value
+                const optionEditors = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${options.map(opt => `
+                            <div class="flex flex-col gap-2 p-2 border border-gray-300 rounded">
+                                <label class="text-sm font-medium">
+                                    ${opt.options_key}
+                                    <sup class="text-red-500">&#42;</sup>
+                                </label>
+                                <textarea class="editor w-full" name="options[${opt.id}]">${opt.options_value}</textarea>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Answer Key dropdown tetap dibawah grid opsi
+                const answerSelect = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
+                        <div>
+                            <label class="mb-2 text-sm">
+                                Answer Key
+                                <sup class="text-red-500">&#42;</sup>
+                            </label>
+                            <select name="answer_key"
+                                class="w-full bg-white shadow-lg h-12 text-sm border border-gray-300 rounded px-2 cursor-pointer">
+                                ${options.map(opt => `
+                                    <option value="${opt.options_key}" ${opt.is_correct ? 'selected' : ''}>
+                                        ${opt.options_key}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+
+                return optionEditors + answerSelect;
+            }
+
+            function renderMCMA() {
+                const options = response.options;
+
+                // options value & answer key
+                const optionEditors = `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                        ${options.map(opt => `
+                            <div class="flex flex-col gap-2 p-2 border border-gray-300 rounded">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm font-medium">
+                                        ${opt.options_key}
+                                        <sup class="text-red-500">&#42;</sup>
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        name="answer_key[]"
+                                        value="${opt.options_key}"
+                                        ${opt.is_correct ? 'checked' : ''}
+                                        class="mcma-checkbox cursor-pointer"
+                                    >
+                                </div>
+
+                                <textarea class="editor w-full" name="options[${opt.id}]">
+                                    ${opt.options_value}
+                                </textarea>
+
+                                <span id="error-options-${opt.id}" class="text-red-500 font-bold text-xs"></span>
+                            </div>
+
+                        `).join('')}
+                    </div>
+
+                    <!-- GLOBAL ERROR MCMA -->
+                    <div class="lg:col-span-2">
+                        <span id="error-answer_key" class="text-red-500 font-bold text-xs"></span>
+                    </div>
+                `;
+
+                return optionEditors;
+            }
+
+            function renderMatching() {
+                const left = response.options.filter(o => o.extra_data?.side === 'left');
+                const right = response.options.filter(o => o.extra_data?.side === 'right');
+
+                return `
+                    <div class="matching-editor grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                        <!-- LEFT Column -->
+                        <div>
+                            <h4 class="font-bold mb-2">LEFT</h4>
+                            ${left.map(l => `
+                                <div class="mb-4 p-2 border border-gray-300 rounded">
+                                    <label class="text-sm font-semibold">
+                                        ${l.options_key}
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                        ${response.matching[l.options_key] ?? '-'}
+                                    </label>
+
+                                    <textarea class="editor w-full" name="left[${l.id}]">${l.options_value}</textarea>
+                                    <span id="error-left-${l.id}" class="text-red-500 font-bold text-xs"></span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- RIGHT Column -->
+                        <div>
+                            <h4 class="font-bold mb-2">RIGHT</h4>
+                            ${right.map(r => `
+                                <div class="mb-4 p-2 border border-gray-300 rounded">
+                                    <label class="text-sm font-semibold">${r.options_key}</label>
+                                    <textarea class="editor w-full" name="right[${r.id}]">${r.options_value}</textarea>
+                                    <span id="error-right-${r.id}" class="text-red-500 font-bold text-xs"></span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                    </div>
+                `;
+            }
+
 
             // options value select
-            const optionsValue = Object.values(grouped).flat().map(item => `
-                <div class="flex flex-col gap-4">
-                    <span>
-                        <label class="mb-2 text-sm">
-                            Option ${item.options_key}
-                            <sup class="text-red-500 pl-1">*</sup>
-                        </label>
-                    </span>
-                        <textarea name="options_value[${item.id}]" class="editor">${item.options_value}</textarea>
-                        <span id="error-options_value-${item.id}" class="text-red-500 font-bold text-xs"></span>
-                </div>
-            `).join('');
-
-            // ambil answer_key options sesuai dengan banyaknya options_key pada soal
-            const answerKeyOptions = Object.values(grouped).flat()
-                .map(item => item.options_key) // ambil semua opsi: a, b, c, d, e
-                .filter((value, index, self) => self.indexOf(value) === index) // hapus duplikat
-                .map(opt => `<option value="${opt}">${opt}</option>`) // buat options sesuai banyaknya options_key
-                .join('');
+            const optionsValue = renderOptionsByType(
+                questionTypeNormalized,
+            )
             
             const formHtml = `
                 <form id="bank-soal-edit-question-form" data-source="${source}" data-sub-bab-id="${subBabId}" data-question-id="${questionId}" 
                     data-school-name="${schoolName}" data-school-id="${schoolId}" enctype="multipart/form-data">
+
+                    <input type="hidden" name="question_type" value="${questionTypeNormalized}">
 
                     <!-- Question -->
                     <div class="leading-10 mb-6 w-full">
@@ -56,28 +181,18 @@ function formQuestionBankEdit() {
                         <span id="error-questions" class="text-red-500 font-bold text-xs"></span>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
                         ${optionsValue}
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-6">
                         <div class="flex flex-col">
-                            <label class="mb-2 text-sm">Answer Key<sup class="text-red-500 pl-1">&#42;</sup></label>
-                                <select name="answer_key" id="answer_key" value="{{ old('answer_key') }}"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 cursor-pointer">
-                                        <option value="${question.answer_key}" class="hidden">
-                                            ${question.answer_key}
-                                        </option>
-
-                                        ${answerKeyOptions}
-                                </select>
-                            <span id="error-answer_key" class="text-red-500 font-bold text-xs pt-2"></span>
-                        </div>
-
-                        <div class="flex flex-col">
-                            <label class="mb-2 text-sm">Difficulty</label>
+                            <label class="mb-2 text-sm">
+                                Difficulty
+                                <sup class="text-red-500">&#42;</sup>
+                            </label>
                             <select name="difficulty" id="difficulty" value="{{ old('difficulty') }}"
-                                class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 cursor-pointer">
+                                class="bg-white shadow-lg h-12 text-sm  border border-gray-300 outline-none rounded-md px-2 cursor-pointer">
                                     <option value="${question.difficulty}" class="hidden">
                                         ${question.difficulty}
                                     <option value="Mudah">Mudah</option>
@@ -86,12 +201,21 @@ function formQuestionBankEdit() {
                             </select>
                             <span id="error-difficulty" class="text-red-500 font-bold text-xs pt-2"></span>
                         </div>
+
+                        <div class="flex flex-col">
+                            <label class="mb-2 text-sm">
+                                Bloom
+                                <sup class="text-red-500">&#42;</sup>
+                            </label>
+                                <input type="text" id="bloom" name="bloom" class="bg-white shadow-lg h-12 text-sm  border border-gray-300 outline-none rounded-md px-2" value="${question.bloom}">
+                            <span id="error-difficulty" class="text-red-500 font-bold text-xs pt-2"></span>
+                        </div>
                     </div>
 
                     <div class="leading-10 w-full my-6">
                         <span>
                             Explanation
-                            <sup class="text-red-500 pl-1">&#42;</sup>
+                            <sup class="text-red-500">&#42;</sup>
                         </span>
                         <textarea name="explanation" id="explanation" class="editor">${question.explanation}</textarea>
                         <span id="error-explanation" class="text-red-500 font-bold text-xs"></span>
@@ -178,6 +302,14 @@ document.addEventListener('DOMContentLoaded', function () {
     formQuestionBankEdit();
 });
 
+$(document).on('change', '.mcma-checkbox', function () {
+    const checkedCount = $('.mcma-checkbox:checked').length;
+
+    if (checkedCount > 0) {
+        $('#error-answer_key').text('');
+    }
+});
+
 let isProcessing = false;
 
 // Form Action edit question
@@ -260,7 +392,7 @@ $(document).ready(function () {
                             inputName = `${name}[${index}]`; // options_value[639]
                             errorId = `error-${name}-${index}`; // error-options_value-639
                         }
-
+                        
                         // Tambahkan border ke field yang error
                         $(`[name="${inputName}"]`).addClass('border-red-400 border-2');
 

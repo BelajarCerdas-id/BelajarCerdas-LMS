@@ -18,12 +18,14 @@ use App\Models\Kurikulum;
 use App\Models\LmsContent;
 use App\Models\LmsContentItem;
 use App\Models\LmsQuestionBank;
+use App\Models\LmsQuestionOption;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolClass;
 use App\Models\SchoolLmsContent;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolMajor;
 use App\Models\SchoolPartner;
+use App\Models\SchoolQuestionBank;
 use App\Models\SchoolStaffProfile;
 use App\Models\ServiceRule;
 use App\Models\StudentSchoolClass;
@@ -1130,19 +1132,51 @@ class LmsController extends Controller
             });
         })->get();
 
-        $getQuestions = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile','Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'SchoolPartner'])
-        ->orderBy('created_at', 'desc');
+        // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
+        if ($schoolId) {
+            $schoolPartner = SchoolPartner::findOrFail($schoolId);
+    
+            $mappingClasses = [
+                'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
+                'SMP' => ['kelas 7','kelas 8','kelas 9'],
+                'MTS' => ['kelas 7','kelas 8','kelas 9'],
+                'SMA' => ['kelas 10','kelas 11','kelas 12'],
+                'SMK' => ['kelas 10','kelas 11','kelas 12'],
+                'MA'  => ['kelas 10','kelas 11','kelas 12'],
+                'MAK' => ['kelas 10','kelas 11','kelas 12'],
+            ];
+    
+            $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
+    
+            $allowedKelas = $mappingClasses[$jenjang] ?? [];
+    
+            // ambil kelas sesuai dengan jenjang sekolahnya, lalu ambil id nya saja
+            $kelasIds = Kelas::whereIn(DB::raw('LOWER(kelas)'), $allowedKelas)->pluck('id');
+        }
+
+        $getQuestions = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile','Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab',
+            'SchoolPartner',
+            'SchoolQuestionBank' => function ($q) use ($schoolId) {
+
+            if ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            }
+            
+        }])->orderBy('created_at', 'desc');
 
         if ($schoolId) {
-            $getQuestions->where(function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId)
-                ->orWhereNull('school_partner_id');
+            $getQuestions->where(function ($q1) use ($schoolId, $kelasIds) {
+                $q1->where('school_partner_id', $schoolId)
+                ->orWhere(function ($q2) use ($kelasIds) {
+                    $q2->whereNull('school_partner_id')->whereIn('kelas_id', $kelasIds);
+                });
             });
         } else {
             $getQuestions->whereNull('school_partner_id');
         }
 
-        $rows = $getQuestions->get()->groupBy(fn ($q) => $q->sub_bab_id.'-'.$q->school_partner_id)->values();
+        $rows = $getQuestions->get()->groupBy(fn ($q) => $q->sub_bab_id.'-'.$q->tipe_soal.'-'.$q->school_partner_id)->values();
 
         // Pagination manual
         $page = $request->get('page', 1);
@@ -1173,8 +1207,8 @@ class LmsController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'source' => $source ?? null,
-            'lmsReviewQuestion' => '/lms/question-bank-management/source/:source/review/:subBabId',
-            'lmsReviewQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/:subBabId/:schoolName/:schoolId',
+            'lmsReviewQuestion' => '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
+            'lmsReviewQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:schoolName/:schoolId',
         ]);
     }
 
@@ -1185,13 +1219,39 @@ class LmsController extends Controller
     }
 
     // function activate bank soal
-    public function lmsActivateQuestionBank(Request $request, $subBabId, $source)
+    public function lmsActivateQuestionBank(Request $request, $subBabId, $source, $questionType, $schoolName = null, $schoolId = null) 
     {
-        $affectedRows = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)->update([
-            'status_bank_soal' => $request->status_bank_soal
-        ]);
+        $isEnable = $request->action === 'enable';
 
-        broadcast(new ActivateQuestionBankPG($subBabId,$source,$request->status_bank_soal,$affectedRows))->toOthers();
+        // Ambil semua soal target (TANPA gate global)
+        $questions = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)
+        ->where('tipe_soal', $questionType)->get();
+
+        if ($schoolId) {
+
+            // MODE SEKOLAH (OVERRIDE)
+            foreach ($questions as $question) {
+                SchoolQuestionBank::updateOrCreate(
+                    [
+                        'question_id' => $question->id,
+                        'school_partner_id' => $schoolId,
+                    ],
+                    [
+                        'is_active' => $isEnable,
+                    ]
+                );
+            }
+        } else {
+            // MODE GLOBAL
+            $status = $isEnable ? 'Publish' : 'Unpublish';
+
+            $affected = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)
+            ->where('tipe_soal', $questionType)->update([
+                'status_bank_soal' => $status,
+            ]);
+        }
+
+        broadcast(new ActivateQuestionBankPG($subBabId,$source,$request->action,$questions->count()))->toOthers();
 
         return response()->json([
             'status' => 'success',
@@ -1199,54 +1259,52 @@ class LmsController extends Controller
         ]);
     }
 
+
     // function bank soal detail view
-    public function lmsQuestionBankManagementDetailView($source, $subBabId, $schoolName = null, $schoolId = null)
+    public function lmsQuestionBankManagementDetailView($source, $questionType, $subBabId, $schoolName = null, $schoolId = null)
     {
-        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-detail', compact('source', 'subBabId', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-detail', compact('source', 'questionType', 'subBabId', 'schoolName', 'schoolId'));
     }
 
     // function paginate bank soal detail
-    public function paginateReviewQuestionBank($source, $subBabId, $schoolName = null, $schoolId = null)
+    public function paginateReviewQuestionBank($source, $questionType, $subBabId, $schoolName = null, $schoolId = null) 
     {
-        $getQuestions = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'SchoolPartner'])
-            ->where('sub_bab_id', $subBabId)->where('question_source', $source);
+        $questions = LmsQuestionBank::with('LmsQuestionOption')
+            ->where('sub_bab_id', $subBabId)
+            ->where('question_source', $source)
+            ->where('tipe_soal', $questionType)
+            ->get();
 
-        $grouped = $getQuestions->get()->groupBy('questions');
-
-        $videoIds = [];
-
-        // Loop untuk mendapatkan ID video dari URL
-        foreach ($grouped as $groupedSoal) {
-            $videoId = null;
-
-            // Cari explanation yang mengandung url video menggunakan regex, lalu mengambil 1 data pertama dari masing" array group soal.
-            if (preg_match('/youtu\.be\/([a-zA-Z0-9_-]{11})|youtube\.com\/.*v=([a-zA-Z0-9_-]{11})/', $groupedSoal[0]['explanation'], $matches)) {
-                $videoId = $matches[1] ?? $matches[2];
+        $videoIds = $questions->map(function ($q) {
+            if (preg_match(
+                '/youtu\.be\/([a-zA-Z0-9_-]{11})|youtube\.com\/.*v=([a-zA-Z0-9_-]{11})/',
+                $q->explanation,
+                $matches
+            )) {
+                return $matches[1] ?? $matches[2];
             }
-
-            // Menyiapkan array untuk ID video
-            $videoIds[] = $videoId;
-        }
+            return null;
+        });
 
         return response()->json([
-            'data' => $grouped->values(),
+            'data' => $questions,
             'videoIds' => $videoIds,
-            'lmsEditQuestion' => '/lms/question-bank-management/source/:source/review/:subBabId/:questionId/edit',
-            'lmsEditQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/:subBabId/:questionId/:schoolName/:schoolId/edit',
+            'lmsEditQuestion' => '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit',
+            'lmsEditQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/:schoolName/:schoolId/edit',
         ]);
     }
 
     // function edit question view
-    public function lmsQuestionBankManagementEditView($source, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    public function lmsQuestionBankManagementEditView($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion) {
             if ($schoolId) {
-                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $subBabId, $schoolName, $schoolId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $questionType, $subBabId, $schoolName, $schoolId]);
             } else {
-                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $subBabId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]);
             }
         }
 
@@ -1257,19 +1315,29 @@ class LmsController extends Controller
         $groupedSoal = $dataSoal;
 
         return view('features.lms.administrator.question-bank-management.lms-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
-        'schoolName', 'schoolId'));
+        'schoolName', 'schoolId', 'questionType'));
     }
 
     // form edit question
-    public function formEditQuestion($source, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    public function formEditQuestion($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
     {
-        $editQuestion = LmsQuestionBank::find($questionId);
+        $editQuestion = LmsQuestionBank::with('LmsQuestionOption')->findOrFail($questionId);
 
         if (!$editQuestion) {
             if ($schoolId) {
-                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $subBabId, $schoolName, $schoolId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $questionType, $subBabId, $schoolName, $schoolId]);
             } else {
-                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $subBabId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]);
+            }
+        }
+
+        $options = $editQuestion->LmsQuestionOption;
+
+        // Buat mapping LEFT -> RIGHT dari extra_data['pair_with']
+        $matching = [];
+        foreach ($options as $opt) {
+            if (($opt->extra_data['side'] ?? null) === 'left') {
+                $matching[$opt->options_key] = $opt->extra_data['pair_with'] ?? null;
             }
         }
 
@@ -1283,25 +1351,73 @@ class LmsController extends Controller
             'status' => 'success',
             'data' => $groupedSoal,
             'editQuestion' => $editQuestion,
+            'options' => $editQuestion->LmsQuestionOption,
+            'matching' => $matching,
+            'type' => strtoupper($editQuestion->tipe_soal),
         ]);
     }
 
     // function bankSoal edit question
     public function lmsQuestionBankManagementEdit(Request $request, $questionId)
     {
-        $validator = Validator::make($request->all(), [
-            'questions' => 'required',
-            'options_value.*' => 'required',
-            'answer_key' => 'required',
-            'difficulty' => 'required',
-            'explanation' => 'required',
-        ], [
-            'questions.required' => 'Harap isi pertanyaan soal.',
-            'options_value.*.required' => 'Harap isi jawaban soal.',
-            'answer_key.required' => 'Harap isi jawaban soal.',
-            'difficulty.required' => 'Harap isi difficulty soal.',
-            'explanation.required' => 'Harap isi pembahasan soal.',
-        ]);
+        $user = Auth::user();
+
+        $question = LmsQuestionBank::findOrFail($questionId);
+        $questionType = strtoupper($question->tipe_soal);
+
+        // GENERAL VALIDATION
+        $rules = [
+            'questions'   => 'required|string',
+            'difficulty'  => 'required|in:Mudah,Sedang,Sukar',
+            'explanation' => 'required|string',
+        ];
+
+        $messages = [
+            'questions.required'   => 'Pertanyaan wajib diisi.',
+            'difficulty.required'  => 'Difficulty wajib dipilih.',
+            'difficulty.in'        => 'Difficulty tidak valid.',
+            'explanation.required' => 'Pembahasan wajib diisi.',
+        ];
+
+        if ($questionType === 'MCQ') {
+            $rules += [
+                'options'    => 'required',
+                'answer_key' => 'required|string',
+            ];
+
+            $messages += [
+                'options.*.required' => 'Harap isi jawaban soal.',
+                'answer_key.required' => 'Pilih jawaban benar.',
+            ];
+        }
+
+        if ($questionType === 'MCMA') {
+            $rules += [
+                'options.*'      => 'required',
+                'answer_key'   => 'required|array|min:1',
+                'answer_key.*' => 'string',
+            ];
+
+            $messages += [
+                'options.*.required' => 'Harap isi jawaban soal.',
+                'answer_key.required' => 'Pilih minimal satu jawaban benar.',
+                'answer_key.min' => 'Pilih minimal satu jawaban benar.',
+            ];
+        }
+
+        if ($questionType === 'MATCHING') {
+            $rules += [
+                'left.*'     => 'required',
+                'right.*'    => 'required',
+            ];
+
+            $messages += [
+                'left.*.required' => 'Harap isi jawaban soal.',
+                'right.*.required' => 'Harap isi jawaban soal.',
+            ];
+        }
+
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
             return response()->json([
@@ -1310,34 +1426,76 @@ class LmsController extends Controller
             ], 422);
         }
 
-        $question = LmsQuestionBank::find($questionId);
+        $question->update([
+            'user_id' => $user->id,
+            'questions'   => $request->questions,
+            'difficulty'  => $request->difficulty,
+            'bloom'       => $request->bloom,
+            'explanation' => $request->explanation,
+        ]);
 
-        $dataQuestion = LmsQuestionBank::where('questions', $question->questions)->get()->groupBy('questions');
+        switch ($questionType) {
 
-        // Simpan hasil pengelompokan ke variabel baru
-        $groupedSoal = $dataQuestion;
+            // MCQ
+            case 'MCQ':
 
-        foreach($groupedSoal as $key => $value) {
-            foreach($value as $soal) {
-                $soal->update([
-                    'questions' => $request->questions,
-                    'answer_key' => $request->answer_key,
-                    'options_value' => $request->options_value[$soal->id], // untuk each option_value masing" options
-                    'difficulty' => $request->difficulty,
-                    'explanation' => $request->explanation,
-                ]);
-            }
+                $options = LmsQuestionOption::whereIn('id', array_keys($request->options))->get()->keyBy('id');
+
+                foreach ($request->options as $optionId => $value) {
+                    $isCorrect = $request->answer_key === $options[$optionId]->options_key;
+
+                    LmsQuestionOption::where('id', $optionId)->update([
+                        'options_value' => $value,
+                        'is_correct'    => $isCorrect,
+                    ]);
+                }
+
+            break;
+
+            // MCMA
+            case 'MCMA':
+
+                $options = LmsQuestionOption::whereIn('id', array_keys($request->options))->get()->keyBy('id');
+
+                foreach ($request->options as $optionId => $value) {
+                    $option = $options[$optionId];
+
+                    LmsQuestionOption::where('id', $optionId)->update([
+                        'options_value' => $value,
+                        'is_correct'    => in_array($option->options_key, $request->answer_key),
+                    ]);
+                }
+
+            break;
+
+            // MATCHING
+            case 'MATCHING':
+
+                // Update LEFT
+                foreach ($request->left as $id => $value) {
+                    LmsQuestionOption::where('id', $id)->update([
+                        'options_value' => $value,
+                    ]);
+                }
+
+                // Update RIGHT
+                foreach ($request->right as $id => $value) {
+                    LmsQuestionOption::where('id', $id)->update([
+                        'options_value' => $value,
+                    ]);
+                }
+
+            break;
         }
 
-        broadcast(new BankSoalLmsEditPG($groupedSoal, $questionId))->toOthers();
+        broadcast(new BankSoalLmsEditPG($question, $questionId))->toOthers();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Soal berhasil diupdate',
-            'data' => $groupedSoal
         ]);
     }
-
+    
     // function edit image bank soal (for ckeditor)
     public function editImageBankSoal(Request $request) {
         if ($request->hasFile('upload')) {

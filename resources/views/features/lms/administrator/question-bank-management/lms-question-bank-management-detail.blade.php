@@ -7,7 +7,8 @@
 ]);
 
 @if (Auth::user()->role === 'Administrator')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative ml-0 md:ml-62.5 w-full transition-[margin] md:w-[calc(100%-250px)] duration-500 ease-in-out">
+
         <div class="my-15 mx-7.5">
             <main>
                 <!---- list bank soal ---->
@@ -16,7 +17,8 @@
                     <h3 class="font-bold opacity-70 text-xl">Daftar Soal</h3>
 
                     <!--- daftar list soal --->
-                    <div id="container-bank-soal-detail" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-source="{{ $source }}" data-sub-bab-id="{{ $subBabId }}">
+                    <div id="container-bank-soal-detail" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-source="{{ $source }}"
+                        data-question-type="{{ $questionType }}" data-sub-bab-id="{{ $subBabId }}">
                         <div id="grid-list-soal" class="container-accordion mb-8">
                             <!-- show data in ajax -->
                         </div>

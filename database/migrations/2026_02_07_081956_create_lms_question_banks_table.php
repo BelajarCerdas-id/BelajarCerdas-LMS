@@ -21,12 +21,10 @@ return new class extends Migration
             $table->foreignId('bab_id')->constrained('babs');
             $table->foreignId('sub_bab_id')->constrained('sub_babs');
             $table->text('questions');
-            $table->string('options_key');
-            $table->text('options_value');
-            $table->string('answer_key');
-            $table->enum('difficulty', ['Mudah', 'Sedang', 'Sukar']);
-            $table->text('explanation');
-            $table->enum('status_bank_soal', ['Unpublish', 'Publish'])->default('Unpublish');
+            $table->string('difficulty');
+            $table->string('bloom');
+            $table->text('explanation')->nullable();
+            $table->enum('status_bank_soal', ['Unpublish', 'Publish'])->default('Publish');
             $table->string('tipe_soal');
             $table->string('question_source');
             $table->timestamps();
