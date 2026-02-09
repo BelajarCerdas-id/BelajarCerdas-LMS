@@ -1739,7 +1739,7 @@ class LmsController extends Controller
 
         });
 
-        return view('Features.lms.administrator.content-management.lms-review-content', compact('contentId', 'data'));
+        return view('Features.lms.administrator.content-management.lms-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function edit content view
