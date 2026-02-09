@@ -2,6 +2,7 @@ function paginateContentManagemet(page = 1) {
     const container = document.getElementById('container');
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
+    const isSchoolMode = !!schoolId;
 
     if (!container) return;
 
@@ -18,8 +19,6 @@ function paginateContentManagemet(page = 1) {
             $('.pagination-container-content-management-list').empty();
 
             if (response.data.length > 0) {
-                console.log('schoolId:', schoolId, typeof schoolId);
-
                 $.each(response.data, function (index, item) {
 
                     const formatDate = (dateString) => {
@@ -48,29 +47,33 @@ function paginateContentManagemet(page = 1) {
                         reviewContent = response.reviewContent.replace(':contentId', item.id)
                     }
 
+                    const isGlobalActive = item.is_active;
+                    const hasSchoolOverride = item.school_lms_content.length > 0;
+
+                    // EFFECTIVE STATUS (dipakai / tidak)
+                    const isChecked = isSchoolMode
+                        ? (
+                            hasSchoolOverride
+                                ? !!item.school_lms_content[0].is_active
+                                : isGlobalActive
+                        )
+                        : isGlobalActive; // ADMIN MODE → PURE GLOBAL
+
                     let toggleActivateContent = '';
 
-                    if (schoolId) {
-                        toggleActivateContent = `
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="hidden peer toggle-activate-content" data-content-id="${item.id}" 
-                                    data-current-page="${response.current_page}"
-                                    ${item.school_lms_content?.[0]?.is_active == true ? 'checked' : ''} />
-                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5"></div>
-                            </label>
-                        `;
-                    } else {
-                        toggleActivateContent = `
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="hidden peer toggle-activate-content" data-content-id="${item.id}" 
-                                    data-current-page="${response.current_page}"
-                                    ${item.is_active == true ? 'checked' : ''} />
-                                <div class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5"></div>
-                            </label>
-                        `;
-                    }
+                    toggleActivateContent = `
+                        <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox"
+                            class="hidden peer toggle-activate-content"
+                            data-content-id="${item.id}" 
+                            data-current-page="${response.current_page}"
+                            data-global-active="${isGlobalActive ? 1 : 0}"
+                            ${isChecked ? 'checked' : ''}
+                        />
+                            <div class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors"></div>
+                            <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform peer-checked:translate-x-5"></div>
+                        </label>
+                    `;
 
                     $('#tbody-content-management-list').append(`
                         <tr>
@@ -104,7 +107,8 @@ function paginateContentManagemet(page = 1) {
                                             data-role="${item.user_account?.role ?? '-'}"
                                             data-updated_at="${updatedAt}"
                                             data-global_status="${item.is_active ? true : false}"
-                                            data-school_status="${item.school_lms_content?.[0]?.is_active ? true : false}"
+                                            data-school_status="${item.school_lms_content?.[0]?.is_active ? 'true' : 'false'}"
+                                            data-has-school-override="${item.school_lms_content?.length ? 'true' : 'false'}"
                                             data-school_name="${item.school_partner?.nama_sekolah ?? ''}"
                                             data-is_default="${item.school_partner_id ? 'false' : 'true'}">
 
@@ -156,20 +160,24 @@ function bindPaginationLinks() {
 // open modal history content
 function historyContent(element) {
 
+    const container = document.getElementById('container');
+    const schoolId = container.dataset.schoolId;
+
     const namaLengkap = element.dataset.nama_lengkap;
     const role = element.dataset.role;
     const updatedAt = element.dataset.updated_at;
 
-    const globalStatus = element.dataset.global_status === 'true'; // active / inactive
-    const schoolStatus = element.dataset.school_status === 'true'; // active / inactive
+    const globalStatus = element.dataset.global_status == 'true';
+    const hasSchoolOverride = element.dataset.hasSchoolOverride === 'true';
+    const schoolStatusRaw = element.dataset.school_status === 'true';
+
     const schoolName = element.dataset.school_name;
     const isDefault = element.dataset.is_default === "true";
 
     // BASIC INFO
     document.getElementById('text-nama_lengkap').innerText = namaLengkap;
     document.getElementById('text-role').innerText = role;
-    document.getElementById('text-updated_at').innerText =
-        updatedAt ? `Terakhir diperbarui: ${updatedAt}` : '';
+    document.getElementById('text-updated_at').innerText = updatedAt ? `Terakhir diperbarui: ${updatedAt}` : '';
 
     // PUBLISHER
     const publisherEl = document.getElementById('text-publisher');
@@ -191,27 +199,44 @@ function historyContent(element) {
         badgeGlobal.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
     }
 
-    // BADGE SCHOOL
-    const badgeSchool = document.getElementById('badge-school');
-    if (schoolStatus) {
-        badgeSchool.innerText = 'AKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
-    } else {
-        badgeSchool.innerText = 'NONAKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
-    }
+    if (schoolId) {
+        // BADGE SCHOOL
+        document.getElementById('text-badge-school').classList.replace('hidden', 'block');
+        const badgeSchool = document.getElementById('badge-school');
 
-    // INFO MESSAGE
-    const infoEl = document.getElementById('text-info');
-    if (globalStatus !== true) {
-        infoEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Content ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
-    } else if (schoolStatus) {
-        infoEl.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i> Content aktif dan dapat digunakan oleh guru dan siswa.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
-    } else {
-        infoEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Content ini dinonaktifkan oleh sekolah dan tidak dapat digunakan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        if (!hasSchoolOverride) {
+            badgeSchool.innerText = '-';
+            badgeSchool.className = '';
+        } else if (schoolStatusRaw) {
+            badgeSchool.innerText = 'AKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+        } else {
+            badgeSchool.innerText = 'NONAKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+        }
+    
+        // INFO MESSAGE
+        const infoEl = document.getElementById('text-info');
+        if (!globalStatus) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Content ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
+    
+        } else if (!hasSchoolOverride) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Content mengikuti status global dan dapat digunakan.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+    
+        } else if (schoolStatusRaw) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Content aktif dan dapat digunakan oleh guru dan siswa.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+    
+        } else {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Content ini dinonaktifkan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        }
     }
 
     document.getElementById('my_modal_1').showModal();
@@ -219,6 +244,7 @@ function historyContent(element) {
 
 // activate content
 $(document).on('change', '.toggle-activate-content', function () {
+    const checkbox = $(this);
     const container = document.getElementById('container');
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
@@ -229,6 +255,8 @@ $(document).on('change', '.toggle-activate-content', function () {
     let status = $(this).is(':checked') ? 1 : 0; // Jika toggle ON maka 1, kalau OFF maka 0
     let currentPage = $(this).data('current-page'); // Ambil current page dari atribut data-current-page di checkbox
 
+    const action = checkbox.is(':checked') ? 'enable' : 'disable';
+
     $.ajax({
         url: schoolId
             ? `/lms/school-subscription/content-management/${contentId}/${schoolName}/${schoolId}/activate`
@@ -237,9 +265,7 @@ $(document).on('change', '.toggle-activate-content', function () {
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
-        data: {
-            is_active: status // Kirim status baru (true / false)
-        },
+        data: { action },
         success: function (response) {
             // inisialisasi update data terbaru setelah berhasil insert data
             const page = currentPage;

@@ -30,8 +30,6 @@ class LmsContentService {
 
             $this->syncItems($content, $data);
 
-            $this->syncSchoolRelation($content, $schoolId);
-
             return $content;
         });
     }

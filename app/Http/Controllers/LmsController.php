@@ -1668,17 +1668,25 @@ class LmsController extends Controller
     // function activate lms content
     public function lmsContentManagementActivate(Request $request, $contentId, $schoolName = null, $schoolId = null)
     {
-        if ($schoolId) {
-            $content = SchoolLmsContent::where('lms_content_id', $contentId)->where('school_partner_id', $schoolId)->first();
+        $isEnable = $request->action === 'enable';
 
-            $content->update([
-                'is_active' => $request->is_active,
-            ]);
+        LmsContent::findOrFail($contentId);
+
+        if ($schoolId) {
+            SchoolLmsContent::updateOrCreate(
+                [
+                    'lms_content_id' => $contentId,
+                    'school_partner_id' => $schoolId,
+                ],
+                [
+                    'is_active' => $isEnable,
+                ]
+            );
         } else {
-            $content = LmsContent::findOrFail($contentId);
-    
-            $content->update([
-                'is_active' => $request->is_active,
+            $status = $isEnable ? 1 : 0;
+
+            $affected = LmsContent::where('id', $contentId)->update([
+                'is_active' => $status,
             ]);
         }
 
