@@ -90,6 +90,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
             $kurikulum = Kurikulum::firstOrCreate([
                 'nama_kurikulum' => $row['kurikulum'],
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['kurikulum'],
             ]);
 
@@ -98,6 +99,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'nama_fase' => $row['fase'],
                 'kurikulum_id' => $kurikulum->id,
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['fase'],
             ]);
 
@@ -107,6 +109,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'fase_id' => $fase->id,
                 'kurikulum_id' => $kurikulum->id,
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['kelas'],
             ]);
 
@@ -117,6 +120,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'fase_id' => $fase->id,
                 'kurikulum_id' => $kurikulum->id,
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['mata_pelajaran'],
             ]);
 
@@ -129,6 +133,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'fase_id' => $fase->id,
                 'kurikulum_id' => $kurikulum->id,
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['bab'],
             ]);
 
@@ -141,6 +146,7 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'fase_id' => $fase->id,
                 'kurikulum_id' => $kurikulum->id,
             ], [
+                'user_id' => $this->userId,
                 'kode' => $row['sub_bab'],
             ]);
 
