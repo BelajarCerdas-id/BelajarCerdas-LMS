@@ -260,7 +260,7 @@
                             </div>
 
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-bold opacity-70">Status Sekolah</span>
+                                <span id="text-badge-school" class="text-sm font-bold opacity-70 hidden">Status Sekolah</span>
                                 <span id="badge-school" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
                             </div>
 

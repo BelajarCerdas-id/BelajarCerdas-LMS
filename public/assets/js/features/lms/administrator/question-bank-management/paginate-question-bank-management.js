@@ -211,6 +211,10 @@ function bindPaginationLinks() {
 
 // open modal history question
 function historyQuestion(element) {
+    const container = document.getElementById('container');
+    if (!container) return;
+
+    const schoolId = container.dataset.schoolId;
 
     const namaLengkap = element.dataset.nama_lengkap;
     const status = element.dataset.status;
@@ -220,9 +224,6 @@ function historyQuestion(element) {
     const globalStatus = element.dataset.global_status === 'Publish';
     const hasSchoolOverride = element.dataset.hasSchoolOverride === 'true';
     const schoolStatusRaw = element.dataset.school_status === 'true';
-
-    // EFFECTIVE STATUS (real dipakai / tidak)
-    const isEffectiveActive = globalStatus && (!hasSchoolOverride || schoolStatusRaw);
 
     const schoolName = element.dataset.school_name;
     const isDefault = element.dataset.is_default === "true";
@@ -252,41 +253,44 @@ function historyQuestion(element) {
         badgeGlobal.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
     }
 
-    // BADGE SCHOOL
-    const badgeSchool = document.getElementById('badge-school');
-    if (!hasSchoolOverride) {
-        badgeSchool.innerText = '-';
-    } else if (schoolStatusRaw) {
-        badgeSchool.innerText = 'AKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
-    } else {
-        badgeSchool.innerText = 'NONAKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+    if (schoolId) {
+        // BADGE SCHOOL
+        document.getElementById('text-badge-school').classList.replace('hidden', 'block');
+        const badgeSchool = document.getElementById('badge-school');
+        if (!hasSchoolOverride) {
+            badgeSchool.innerText = '-';
+            badgeSchool.className = '';
+        } else if (schoolStatusRaw) {
+            badgeSchool.innerText = 'AKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+        } else {
+            badgeSchool.innerText = 'NONAKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+        }
+    
+        // INFO MESSAGE
+        const infoEl = document.getElementById('text-info');
+        if (!globalStatus) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Bank soal ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
+    
+        } else if (!hasSchoolOverride) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal mengikuti status global dan dapat digunakan.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+    
+        } else if (schoolStatusRaw) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal aktif dan dapat digunakan oleh guru dan siswa.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+    
+        } else {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Bank soal ini dinonaktifkan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        }
     }
-
-    // INFO MESSAGE
-    const infoEl = document.getElementById('text-info');
-    if (!globalStatus) {
-        infoEl.innerHTML =
-            '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Bank soal ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
-
-    } else if (!hasSchoolOverride) {
-        infoEl.innerHTML =
-            '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal mengikuti status global dan dapat digunakan.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
-
-    } else if (schoolStatusRaw) {
-        infoEl.innerHTML =
-            '<i class="fa-solid fa-circle-check text-green-500"></i> Bank soal aktif dan dapat digunakan oleh guru dan siswa.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
-
-    } else {
-        infoEl.innerHTML =
-            '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Bank soal ini dinonaktifkan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
-    }
-
 
     document.getElementById('my_modal_2').showModal();
 }
