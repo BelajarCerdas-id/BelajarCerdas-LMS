@@ -6,6 +6,7 @@ function paginateMapelManagement(page = 1) {
     const curriculumId = container.dataset.curriculumId;
     const faseId = container.dataset.faseId;
     const kelasId = container.dataset.kelasId;
+    const isSchoolMode = !!schoolId;
 
     if (!container) return;
     if (!schoolName) return;
@@ -105,14 +106,27 @@ function paginateMapelManagement(page = 1) {
                             `;
                         }
 
+                        const isGlobalActive = item.status_mata_pelajaran === 'active';
+                        const hasSchoolOverride = item.school_mapel.length > 0;
+
+                        // EFFECTIVE STATUS (dipakai / tidak)
+                        const isChecked = isSchoolMode
+                            ? (
+                                hasSchoolOverride
+                                    ? !!item.school_mapel[0].is_active
+                                    : isGlobalActive
+                            )
+                            : isGlobalActive; // ADMIN MODE → PURE GLOBAL
+
                         $('#tbody-mapel-management').append(`
                             <tr class="text-xs">
                                 <td class="border border-gray-300 px-3 py-2">${item.mata_pelajaran ?? '-'}</td>
                                 <td class="border text-center border-gray-300">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" class="hidden peer toggle-mapel"
-                                            data-id="${item.school_mapel?.[0]?.id}"
-                                            ${item.school_mapel?.[0]?.is_active == true ? 'checked' : ''} />
+                                            data-id="${item.id}"
+                                            data-global-active="${isGlobalActive ? 1 : 0}"
+                                            ${isChecked ? 'checked' : ''} />
                                         <div
                                             class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
                                         </div>
@@ -146,6 +160,7 @@ function paginateMapelManagement(page = 1) {
                                                 data-updated_at="${updatedAt}"
                                                 data-global_status="${item.status_mata_pelajaran}"
                                                 data-school_status="${item.school_mapel?.[0]?.is_active ? true : false}"
+                                                data-has-school-override="${item.school_mapel?.length ? 'true' : 'false'}"
                                                 data-school_name="${item.school_partner?.nama_sekolah ?? ''}"
                                                 data-is_default="${item.school_partner_id ? 'false' : 'true'}">
                                                 <span>
@@ -195,12 +210,17 @@ $(document).ready(function () {
 
 // open modal history mapel
 function historyMapel(element) {
+    const container = document.getElementById('container-mapel-management');
+    const schoolId = container.dataset.schoolId;
+
     const namaLengkap = element.dataset.nama_lengkap;
     const role = element.dataset.role;
     const updatedAt = element.dataset.updated_at;
 
-    const globalStatus = element.dataset.global_status; // active / inactive
-    const schoolStatus = element.dataset.school_status === 'true'; // active / inactive
+    const globalStatus = element.dataset.global_status;
+    const hasSchoolOverride = element.dataset.hasSchoolOverride === 'true';
+    const schoolStatusRaw = element.dataset.school_status === 'true';
+
     const schoolName = element.dataset.school_name;
     const isDefault = element.dataset.is_default === "true";
 
@@ -230,27 +250,43 @@ function historyMapel(element) {
         badgeGlobal.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
     }
 
-    // BADGE SCHOOL
-    const badgeSchool = document.getElementById('badge-school');
-    if (schoolStatus) {
-        badgeSchool.innerText = 'AKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
-    } else {
-        badgeSchool.innerText = 'NONAKTIF';
-        badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
-    }
+    if (schoolId) {
+        // BADGE SCHOOL
+        const badgeSchool = document.getElementById('badge-school');
 
-    // INFO MESSAGE
-    const infoEl = document.getElementById('text-info');
-    if (globalStatus !== 'active') {
-        infoEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Mapel ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
-    } else if (schoolStatus) {
-        infoEl.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i> Mapel aktif dan dapat digunakan oleh guru dan siswa.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
-    } else {
-        infoEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Mapel ini dinonaktifkan oleh sekolah dan tidak dapat digunakan oleh sekolah.';
-        infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        if (!hasSchoolOverride) {
+            badgeSchool.innerText = '-';
+            badgeSchool.className = '';
+        } else if (schoolStatusRaw) {
+            badgeSchool.innerText = 'AKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+        } else {
+            badgeSchool.innerText = 'NONAKTIF';
+            badgeSchool.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+        }
+
+        // INFO MESSAGE
+        const infoEl = document.getElementById('text-info');
+        if (!globalStatus) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Mata pelajaran ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
+
+        } else if (!hasSchoolOverride) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Mata pelajaran mengikuti status global dan dapat digunakan.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+        } else if (schoolStatusRaw) {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Mata pelajaran aktif dan dapat digunakan oleh guru dan siswa.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+        } else {
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Mata pelajaran ini dinonaktifkan oleh sekolah.';
+            infoEl.className = 'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        }
     }
 
     document.getElementById('my_modal_2').showModal();
@@ -486,6 +522,7 @@ $('#submit-button-edit-mapel').on('click', function (e) {
 // function activate mapel
 $(document).ready(function () {
     $(document).on('change', '.toggle-mapel', function () {
+        const checkbox = $(this);
         let mapelId = $(this).data('id'); // Ambil ID mapel dari atribut data-id di checkbox
         let status = $(this).is(':checked') ? 1 : 0; // Jika toggle ON maka 1, kalau OFF maka 0
 
@@ -496,6 +533,8 @@ $(document).ready(function () {
         const curriculumId = container.dataset.curriculumId;
         const faseId = container.dataset.faseId;
         const kelasId = container.dataset.kelasId;
+
+        const action = checkbox.is(':checked') ? 'enable' : 'disable';
 
         if (!container) return;
         if (!schoolName) return;
@@ -511,9 +550,7 @@ $(document).ready(function () {
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            data: {
-                is_active: status // Kirim status baru (true / false)
-            },
+            data: { action },
             success: function (response) {
                 // Memanggil fungsi untuk memuat ulang data
                 paginateMapelManagement();

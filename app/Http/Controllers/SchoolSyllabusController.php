@@ -281,16 +281,35 @@ class SchoolSyllabusController extends Controller
     // function mapel activate
     public function mapelActivate(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
-        $data = SchoolMapel::where('id', $mapelId)->update([
-            'is_active' => $request->is_active,
-        ]);
 
-        broadcast(new SyllabusCrud('mapel', 'activate', $data))->toOthers();
+        $isEnable = $request->action === 'enable';
+
+        Mapel::findOrFail($mapelId);
+
+        if ($schoolId) {
+            $affected = SchoolMapel::updateOrCreate(
+                [
+                    'mapel_id' => $mapelId,
+                    'school_partner_id' => $schoolId,
+                ],
+                [
+                    'is_active' => $isEnable,
+                ]
+            );
+        } else {
+            $status = $isEnable ? 1 : 0;
+
+            $affected = Mapel::where('id', $mapelId)->update([
+                'is_active' => $status,
+            ]);
+        }
+
+        broadcast(new SyllabusCrud('mapel', 'activate', $affected))->toOthers();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status Mata Pelajaran Berhasil Diubah.',
-            'data' => $data
+            'data' => $affected
         ]);
     }
 
