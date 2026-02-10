@@ -65,9 +65,27 @@ class MasterAcademicController extends Controller
     public function getMapelByKelas($id, $schoolId = null)
     {
         if ($schoolId) {
-            $mata_pelajaran = SchoolMapel::with(['Mapel'])->whereHas('Mapel', function ($query) use ($id) {
-                $query->where('kelas_id', $id);
-            })->where('school_partner_id', $schoolId)->get();
+            $mata_pelajaran = Mapel::query()
+
+                // MAPEL KHUSUS SEKOLAH
+                ->whereHas('SchoolMapel', function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId)
+                    ->where('is_active', 1);
+                })
+
+                // ATAU MAPEL GLOBAL
+                ->orWhere(function ($q) use ($id, $schoolId) {
+                    $q->whereNull('school_partner_id')
+                    ->where('kelas_id', $id)
+                    ->where('status_mata_pelajaran', 'active')
+
+                    // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                    ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                        $sq->where('school_partner_id', $schoolId);
+                    });
+                })
+
+                ->get();
         } else {
             $mata_pelajaran = Mapel::where('kelas_id', $id)->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')->get();
         }

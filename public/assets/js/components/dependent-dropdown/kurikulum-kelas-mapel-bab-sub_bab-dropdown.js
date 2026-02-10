@@ -62,7 +62,7 @@ $(document).ready(function () {
 
                 data.forEach(mapel => {
                     $('#id_mapel').append(
-                        `<option value="${schoolId ? mapel.mapel?.id : mapel.id}">${schoolId ? mapel.mapel?.mata_pelajaran : mapel.mata_pelajaran}</option>`
+                        `<option value="${mapel.id}">${mapel.mata_pelajaran}</option>`
                     );
                 });
 
