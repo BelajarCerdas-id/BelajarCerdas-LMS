@@ -67,6 +67,7 @@ function managementAcademic() {
                     const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsContentManagement = response.lmsContentManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
                     const lmsAssessmentTypeManagement = response.lmsAssessmentTypeManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    const lmsTeacherSubjectManagement = response.lmsTeacherSubjectManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {
@@ -140,6 +141,21 @@ function managementAcademic() {
                                 href: lmsQuestionBankManagement,
                             }
                         },
+                        {
+                            key: 'teacher_subject',
+                            title: 'Teacher Subject Management',
+                            icon: 'fa-solid fa-chalkboard-user',
+                            description: 'Manajemen guru pengampu mata pelajaran per kelas',
+                            items: [
+                                'Assign Guru ke Mapel',
+                                'Guru Mengajar per Kelas',
+                                'Daftar Mapel Guru',
+                            ],
+                            link: {
+                                href: lmsTeacherSubjectManagement,
+                            }
+                        }
+
                     ];
 
                     academicManagementGroups.forEach(group => {

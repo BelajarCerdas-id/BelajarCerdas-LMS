@@ -177,6 +177,7 @@ class LmsController extends Controller
             'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/kurikulum',
             'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/content-management',
             'lmsAssessmentTypeManagement' => '/lms/school-subscription/:schoolName/:schoolId/assessment-type-management',
+            'lmsTeacherSubjectManagement' => '/lms/school-subscription/:schoolName/:schoolId/teacher-subject-management',
         ]);
     }
 
