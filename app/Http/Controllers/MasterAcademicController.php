@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Bab;
 use App\Models\Kelas;
 use App\Models\Mapel;
-use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
 use App\Models\Service;
 use App\Models\SubBab;
@@ -65,27 +64,27 @@ class MasterAcademicController extends Controller
     public function getMapelByKelas($id, $schoolId = null)
     {
         if ($schoolId) {
-            $mata_pelajaran = Mapel::query()
+            $mata_pelajaran = Mapel::where(function ($query) use ($id, $schoolId) {
 
                 // MAPEL KHUSUS SEKOLAH
-                ->whereHas('SchoolMapel', function ($q) use ($schoolId) {
-                    $q->where('school_partner_id', $schoolId)
-                    ->where('is_active', 1);
+                $query->whereHas('SchoolMapel', function ($q) use ($id, $schoolId) {
+                    $q->where('school_partner_id', $schoolId)->where('kelas_id', $id)
+                        ->where('is_active', 1);
                 })
 
                 // ATAU MAPEL GLOBAL
                 ->orWhere(function ($q) use ($id, $schoolId) {
                     $q->whereNull('school_partner_id')
-                    ->where('kelas_id', $id)
-                    ->where('status_mata_pelajaran', 'active')
+                        ->where('kelas_id', $id)
+                        ->where('status_mata_pelajaran', 'active')
 
-                    // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
-                    ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
-                        $sq->where('school_partner_id', $schoolId);
+                        // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                        ->whereDoesntHave('SchoolMapel', function ($sq) use ($id, $schoolId) {
+                            $sq->where('school_partner_id', $schoolId)->where('kelas_id', $id);
                     });
-                })
+                });
 
-                ->get();
+            })->get();
         } else {
             $mata_pelajaran = Mapel::where('kelas_id', $id)->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')->get();
         }
