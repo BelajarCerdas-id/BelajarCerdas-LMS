@@ -219,7 +219,8 @@
 <script src="{{ asset('assets/js/Features/lms/administrator/content-management/lms-content-management.js') }}"></script> <!--- lms content management ---->
 
 <!--- COMPONENTS ---->
-<script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-service-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown ---->
+<script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->
+<script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-service-dropdown.js') }}"></script> <!--- dependent dropdown service ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
 <!--- PUSHER LISTENER ---->
