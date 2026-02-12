@@ -81,4 +81,9 @@ class UserAccount extends Authenticatable
     public function SchoolAssessmentType() {
         return $this->hasMany(SchoolAssessmentType::class, 'user_id');
     }
+
+    public function TeacherMapel()
+    {
+        return $this->hasMany(TeacherMapel::class, 'user_id');
+    }
 }

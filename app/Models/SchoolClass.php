@@ -20,6 +20,11 @@ class SchoolClass extends Model
         'status_class',
     ];
 
+    public function TeacherMapel()
+    {
+        return $this->hasMany(TeacherMapel::class, 'school_class_id');
+    }
+
     public function SchoolPartner()
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');

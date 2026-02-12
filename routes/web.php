@@ -50,6 +50,9 @@ Route::get('/kurikulum/{curriculumId}/{schoolId}/kelas', [MasterAcademicControll
 Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas
 Route::get('/kelas/{kelasId}/{schoolId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']); // mapel by kelas
 
+// route dependent dropdown rombel kelas by kelas
+Route::get('/kelas/{kelasId}/rombel-kelas/{schoolId}', [MasterAcademicController::class, 'getRombelByKelas']); // rombel kelas by kelas
+
 Route::get('/mapel/{mapelId}/bab', [MasterAcademicController::class, 'getBabByMapel']); // bab by mapel
 Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabByBab']); // sub bab by bab
 
@@ -306,6 +309,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // paginate
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/paginate', [LmsController::class, 'paginateLmsAssessmentTypeManagement'])->name('lms.assessmentTypeManagement.paginate');
+
+    // ROUTES TEACHER SUBJECT MANAGEMENT
+    // views
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management', [LmsController::class, 'lmsTeacherSubjectManagement'])->name('lmsTeacherSubjectManagement.view');
+
+    // crud
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management/store', [LmsController::class, 'lmsTeacherSubjectManagementStore'])->name('lmsTeacherSubjectManagement.store');
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management/{teacherSubjectId}/edit', [LmsController::class, 'lmsTeacherSubjectManagementEdit'])->name('lmsTeacherSubjectManagement.edit');
+    Route::put('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management/{teacherSubjectId}/activate', [LmsController::class, 'lmsTeacherSubjectManagementActivate'])->name('lmsTeacherSubjectManagement.activate');
+
+    // paginate
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management/paginate', [LmsController::class, 'paginateLmsTeacherSubjectManagement'])->name('lmsTeacherSubjectManagement.paginate');
 
     // ROUTES STUDENT LMS
     Route::get('/lms/{role}/{schoolName}/{schoolId}', [LmsController::class, 'lmsStudentView'])->name('lms.student.view');
