@@ -23,7 +23,7 @@ class LmsContent extends Model
 
     public function LmsContentItem()
     {
-        return $this->hasMany(LmsContent::class, 'lms_content_id');
+        return $this->hasMany(LmsContentItem::class, 'lms_content_id');
     }
 
     public function SchoolLmsContent()
