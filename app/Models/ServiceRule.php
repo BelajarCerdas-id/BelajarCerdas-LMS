@@ -23,7 +23,7 @@ class ServiceRule extends Model
 
     public function LmsContentItem()
     {
-        return $this->hasMany(LmsContent::class, 'lms_content_id');
+        return $this->hasMany(LmsContentItem::class, 'service_rule_id');
     }
 
     public function Service()
