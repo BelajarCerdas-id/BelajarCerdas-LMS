@@ -284,7 +284,7 @@ let isProcessing = false;
 $('#submit-button-create-content').on('click', function (e) {
     e.preventDefault();
 
-    const container = document.getElementById('content-management-form');
+    const container = document.getElementById('container');
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 

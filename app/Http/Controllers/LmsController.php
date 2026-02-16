@@ -1590,7 +1590,7 @@ class LmsController extends Controller
     }
     
     // function content management store
-    public function lmsContentManagementStore(Request $request, LmsContentService $service)
+    public function lmsContentManagementStore(Request $request, LmsContentService $service, $schoolName = null, $schoolId = null)
     {
         // base validation
         $rules = [
@@ -1654,7 +1654,7 @@ class LmsController extends Controller
         $content = $service->store(
             $validator->validated(),
             Auth::id(),
-            $request->school_partner_id ?? null
+            $schoolId ?? null
         );
 
         broadcast(new LmsContentManagement($content))->toOthers();
