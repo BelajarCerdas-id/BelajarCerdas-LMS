@@ -34,6 +34,7 @@ body {
 
 /* ketika aktif, text orange */
 .list-item.active .toggle-menu-sidebar,
+.list-item.active .content-menu i,
 .toggle-sub-menu-sidebar.active,
 .link-href.active,
 .list-item.active > .dropdown-menu > .toggle-menu-sidebar i {
