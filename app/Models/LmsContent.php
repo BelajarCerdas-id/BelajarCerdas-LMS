@@ -31,6 +31,11 @@ class LmsContent extends Model
         return $this->hasMany(SchoolLmsContent::class, 'lms_content_id');
     }
 
+    public function LmsMeetingContent()
+    {
+        return $this->hasMany(LmsMeetingContent::class, 'lms_content_id');
+    }
+
     public function UserAccount()
     {
         return $this->belongsTo(UserAccount::class, 'user_id');

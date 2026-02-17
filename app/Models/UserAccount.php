@@ -86,4 +86,9 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(TeacherMapel::class, 'user_id');
     }
+
+    public function LmsMeetingContent()
+    {
+        return $this->hasMany(LmsMeetingContent::class, 'teacher_id');
+    }
 }

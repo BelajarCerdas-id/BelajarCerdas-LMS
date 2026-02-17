@@ -25,6 +25,11 @@ class SchoolClass extends Model
         return $this->hasMany(TeacherMapel::class, 'school_class_id');
     }
 
+    public function LmsMeetingContent()
+    {
+        return $this->hasMany(LmsMeetingContent::class, 'school_class_id');
+    }
+
     public function SchoolPartner()
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');

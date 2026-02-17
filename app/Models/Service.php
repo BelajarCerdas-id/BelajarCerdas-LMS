@@ -29,4 +29,9 @@ class Service extends Model
     {
         return $this->hasMany(LmsContent::class, 'service_id');
     }
+
+    public function LmsMeetingContent()
+    {
+        return $this->hasMany(LmsMeetingContent::class, 'service_id');
+    }
 }
