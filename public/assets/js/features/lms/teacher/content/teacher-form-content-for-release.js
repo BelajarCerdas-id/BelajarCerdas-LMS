@@ -53,16 +53,17 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                 (response.rombel || []).forEach((item, index) => {
                     const row = document.createElement('tr');
                     row.classList.add('rombel-row');
-                    row.dataset.id = item.id ?? '';
-                    row.dataset.tahun = item.tahun_ajaran ?? '';
-                    row.dataset.kelas = item.Kelas?.kelas ?? '';
-                    const mapelName = item.teacher_mapel?.[0]?.mapel?.mata_pelajaran ?? '';
+                    row.dataset.id = item.school_class?.id ?? '';
+                    row.dataset.tahun = item.school_class?.tahun_ajaran ?? '';
+                    row.dataset.kelas = item.school_class?.kelas?.kelas ?? '';
+
+                    const mapelName = item.mapel?.mata_pelajaran ?? '';
     
                     row.innerHTML = `
                         <td class="border border-gray-300 px-3 py-2 text-center">
                             <input type="checkbox" name="school_class_id[]" value="${item.id}" class="rombel-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
                         </td>
-                        <td class="border border-gray-300 px-3 py-2 text-center">${item.class_name ?? ''}</td>
+                        <td class="border border-gray-300 px-3 py-2 text-center">${item.school_class?.class_name ?? ''}</td>
                         <td class="border border-gray-300 px-3 py-2 text-center">${mapelName}</td>
                         <td class="border border-gray-300 px-3 py-2 text-center rombel-status text-gray-400">Belum dipilih</td>
                         <td class="border border-gray-300 px-3 py-2 align-middle">

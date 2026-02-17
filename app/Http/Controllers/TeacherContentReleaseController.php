@@ -78,41 +78,21 @@ class TeacherContentReleaseController extends Controller
     {
         $teacherId = Auth::id();
 
-        $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->find($schoolId);
+        // VALIDASI SCHOOL
+        $schoolPartner = SchoolPartner::findOrFail($schoolId);
+        $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
 
+        // DEFAULT LEVEL BERDASARKAN JENJANG
         $startLevelMap = [
-            'SD'  => 1, 'MI'  => 1,
-            'SMP' => 7, 'MTS' => 7,
-            'SMA' => 10, 'SMK' => 10, 'MA' => 10, 'MAK' => 10
+            'SD'  => 1,  'MI'  => 1,
+            'SMP' => 7,  'MTS' => 7,
+            'SMA' => 10, 'SMK' => 10,
+            'MA'  => 10, 'MAK' => 10,
         ];
 
-        $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
-        $selectedClass = $request->filled('search_class') ? (int)$request->search_class : $defaultLevel;
+        $defaultLevel = $startLevelMap[$jenjang] ?? 1;
 
-        // ambil rombel guru
-        $querySchoolClasses = SchoolClass::where('school_partner_id', $schoolId)
-            ->whereHas('TeacherMapel', fn($q) => $q->where('user_id', $teacherId)->where('is_active', true))
-            ->with(['TeacherMapel.Mapel', 'Kelas']);
-
-        $tahunAjaran = $querySchoolClasses->pluck('tahun_ajaran')->unique()->sortDesc()->values();
-        $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
-
-        $schoolClasses = $querySchoolClasses->where('tahun_ajaran', $searchYear)->get();
-
-        // level kelas unik
-        $className = $schoolClasses->pluck('class_name')
-            ->map(fn($c) => $this->extractClassLevel($c))
-            ->unique()
-            ->sort()
-            ->values();
-
-        $selectedClass = $request->filled('search_class') ? (int)$request->search_class : ($className->first() ?? $defaultLevel);
-
-        // filter rombel sesuai selectedClass
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->class_name) === $selectedClass)->values();
-
-        $schoolPartner = SchoolPartner::findOrFail($schoolId);
-
+        // MAPPING KELAS BERDASARKAN JENJANG
         $mappingClasses = [
             'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
             'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
@@ -124,72 +104,85 @@ class TeacherContentReleaseController extends Controller
             'MAK' => ['kelas 10','kelas 11','kelas 12'],
         ];
 
-        $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
-
         $allowedKelas = $mappingClasses[$jenjang] ?? [];
 
-        // ambil kelas sesuai dengan jenjang sekolahnya, lalu ambil id nya saja
         $kelasIds = Kelas::whereIn(DB::raw('LOWER(kelas)'), $allowedKelas)->pluck('id');
 
+        // TEACHER MAPEL
         $teacherMapels = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)
-            ->whereHas('SchoolClass', fn($q) => $q->where('school_partner_id', $schoolId))->pluck('mapel_id');
+            ->whereHas('SchoolClass', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })->with(['SchoolClass.Kelas', 'Mapel'])->get();
 
-        // ambil LMS Content
+        // TAHUN AJARAN
+        $tahunAjaran = $teacherMapels->pluck('SchoolClass.tahun_ajaran')->unique()->sortDesc()->values();
+
+        $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
+
+        // FILTER BERDASARKAN TAHUN AJARAN
+        $schoolClasses = $teacherMapels->where('SchoolClass.tahun_ajaran', $searchYear)->values();
+
+        // LEVEL KELAS UNIK
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+
+        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+
+        // FILTER ROMBEL SESUAI LEVEL
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+
+        // AMBIL MAPEL ID GURU
+        $mapelIds = $teacherMapels->pluck('mapel_id')->unique();
+
+        // LMS CONTENT
         $query = LmsContent::with(['Kurikulum', 'Bab', 'SubBab', 'Kelas', 'Mapel', 'LmsContentItem', 'Service', 'SchoolPartner', 'SchoolLmsContent' => function ($q) use ($schoolId) {
-                $q->where('is_active', true);
+                $q->where('school_partner_id', $schoolId)->where('is_active', true);
             }
         ])->where('is_active', true)->where(function ($q) use ($schoolId) {
-            // ambil content default yang active
+
+            // Default content global
             $q->where(function ($qGlobal) use ($schoolId) {
-                $qGlobal->whereNull('school_partner_id')->whereDoesntHave('SchoolLmsContent', function ($qSM) use ($schoolId) {
-                    $qSM->where('school_partner_id', $schoolId)->where('is_active', 0);
+                $qGlobal->whereNull('school_partner_id')
+                    ->whereDoesntHave('SchoolLmsContent', function ($qSM) use ($schoolId) {
+                        $qSM->where('school_partner_id', $schoolId)->where('is_active', 0);
                 });
             })
 
-            // atau ambil content custom yang active pada masing" sekolah
-            ->orWhere(function ($q2) use ($schoolId) {
-                $q2->where('school_partner_id', $schoolId)->whereHas('SchoolLmsContent', function ($q3) use ($schoolId) {
-                    $q3->where('school_partner_id', $schoolId)->where('is_active', 1);
+            // Custom content school
+            ->orWhere(function ($qCustom) use ($schoolId) {
+                $qCustom->where('school_partner_id', $schoolId)
+                    ->whereHas('SchoolLmsContent', function ($qSM) use ($schoolId) {
+                        $qSM->where('school_partner_id', $schoolId)->where('is_active', 1);
                 });
             });
-        })->whereIn('mapel_id', $teacherMapels)->whereIn('kelas_id', $kelasIds)->orderBy('created_at', 'desc');
+        })->whereIn('mapel_id', $mapelIds)->whereIn('kelas_id', $kelasIds)->orderByDesc('created_at');
 
+        // FILTER SEARCH MATERI
         if ($request->filled('search_materi')) {
-            $query->whereHas('LmsContentItem', fn($q) => 
-            $q->where('original_filename', 'LIKE', '%' . $request->search_materi . '%'));
+            $query->whereHas('LmsContentItem', function ($q) use ($request) {
+                $q->where('original_filename', 'LIKE', '%' . $request->search_materi . '%');
+            });
         }
 
-        if ($request->filled('kurikulum_id')) {
-            $query->where('kurikulum_id', $request->kurikulum_id);
-        }
-
-        if ($request->filled('service_id')) {
-            $query->where('service_id', $request->service_id);
-        }
-
-        if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
-        }
-
-        if ($request->filled('mapel_id')) {
-            $query->where('mapel_id', $request->mapel_id);
-        }
-
-        if ($request->filled('bab_id')) {
-            $query->where('bab_id', $request->bab_id);
+        // FILTER CURRICULUM CORE
+        foreach (['kurikulum_id','service_id','kelas_id','mapel_id','bab_id'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->where($filter, $request->$filter);
+            }
         }
 
         $contents = $query->get();
 
         return response()->json([
-            'tahunAjaran'  => $tahunAjaran,
+            'tahunAjaran'   => $tahunAjaran,
             'selectedYear'  => $searchYear,
             'selectedClass' => $selectedClass,
-            'className'     => $className,
+            'className'     => $classLevels,
             'rombel'        => $schoolClasses,
             'contents'      => $contents
         ]);
     }
+
+
 
     // function teacher content for release store
     public function teacherContentForReleaseStore(Request $request, $role, $schoolName, $schoolId)
