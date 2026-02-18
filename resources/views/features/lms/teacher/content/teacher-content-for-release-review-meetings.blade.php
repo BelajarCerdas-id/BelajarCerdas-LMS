@@ -12,7 +12,7 @@
 
             <main>
                 <section id="container-content-for-release-review-meetings" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                        data-school-class-id="{{ $schoolClassId }}" data-semester="{{ $semester }}" data-service-id="{{ $serviceId }}">
+                        data-school-class-id="{{ $schoolClassId }}" data-mapel-id="{{ $mapelId }}" data-semester="{{ $semester }}" data-service-id="{{ $serviceId }}">
 
                     <div id="header-meetings" class="hidden">
                         <!-- show data in ajax -->

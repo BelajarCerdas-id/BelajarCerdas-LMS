@@ -76,4 +76,9 @@ class Mapel extends Model
     {
         return $this->hasMany(TeacherMapel::class, 'mapel_id');
     }
+
+    public function LmsMeetingContent()
+    {
+        return $this->hasMany(LmsMeetingContent::class, 'mapel_id');
+    }
 }

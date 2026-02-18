@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('teacher_id')->constrained('user_accounts');
             $table->foreignId('school_class_id')->constrained('school_classes');
+            $table->foreignId('mapel_id')->constrained('mapels');
             $table->foreignId('school_partner_id')->constrained('school_partners');
             $table->foreignId('lms_content_id')->constrained('lms_contents');
             $table->foreignId('service_id')->constrained('services');
@@ -24,7 +25,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['school_class_id', 'service_id', 'school_partner_id', 'semester', 'meeting_number']);
+            $table->unique(['school_class_id', 'mapel_id', 'service_id', 'school_partner_id', 'semester', 'meeting_number']);
         });
     }
 

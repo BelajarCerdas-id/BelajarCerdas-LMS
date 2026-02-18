@@ -22,13 +22,14 @@ function paginateContentForRelease(page = 1) {
                 $.each(response.data, function (index, item) {
 
                     const teacherContentForReleaseReviewMeetings = response.teacherContentForReleaseReviewMeetings.replace(':role', role).replace(':schoolName', schoolName)
-                        .replace(':schoolId', schoolId).replace(':schoolClassId', item.school_class_id).replace(':semester', item.semester)
+                        .replace(':schoolId', schoolId).replace(':schoolClassId', item.school_class_id).replace(':mapelId', item.mapel_id).replace(':semester', item.semester)
                         .replace(':serviceId', item.service_id);
                     
                     $('#tbody-content-for-release-list').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">${item.school_class?.class_name ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.mapel?.mata_pelajaran?? '-'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">${item.school_class?.tahun_ajaran ?? '-'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">Semester ${item.semester ?? '-'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">${item.total_meetings ?? 0} Pertemuan</td>

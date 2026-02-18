@@ -12,6 +12,7 @@ class LmsMeetingContent extends Model
     protected $fillable = [
         'teacher_id',
         'school_class_id',
+        'mapel_id',
         'school_partner_id',
         'lms_content_id',
         'service_id',
@@ -29,6 +30,11 @@ class LmsMeetingContent extends Model
     public function SchoolClass()
     {
         return $this->belongsTo(SchoolClass::class, 'school_class_id');
+    }
+
+    public function Mapel()
+    {
+        return $this->belongsTo(Mapel::class, 'mapel_id');
     }
 
     public function SchoolPartner()

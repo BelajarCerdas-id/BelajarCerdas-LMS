@@ -11,6 +11,7 @@ use App\Models\SchoolPartner;
 use App\Models\Service;
 use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,18 +50,18 @@ class TeacherContentReleaseController extends Controller
     {
         $user = Auth::user();
 
-        $data = LmsMeetingContent::join('lms_contents', 'lms_contents.id', '=', 'lms_meeting_contents.lms_content_id')
-            ->with(['SchoolClass', 'Service'])
+        $data = LmsMeetingContent::with(['SchoolClass', 'Mapel', 'Service'])
             ->selectRaw('
                 lms_meeting_contents.school_class_id,
+                lms_meeting_contents.mapel_id,
                 lms_meeting_contents.semester,
-                lms_contents.service_id,
+                lms_meeting_contents.service_id,
                 COUNT(*) as total_meetings,
                 MAX(lms_meeting_contents.created_at) as last_created
             ')
             ->where('lms_meeting_contents.teacher_id', $user->id)
             ->where('lms_meeting_contents.school_partner_id', $schoolId)
-            ->groupBy('lms_meeting_contents.school_class_id', 'lms_meeting_contents.semester', 'lms_contents.service_id')
+            ->groupBy('lms_meeting_contents.school_class_id', 'lms_meeting_contents.mapel_id', 'lms_meeting_contents.semester', 'lms_meeting_contents.service_id')
             ->orderByDesc('last_created')
             ->paginate(20);
 
@@ -69,7 +70,7 @@ class TeacherContentReleaseController extends Controller
             'links' => (string) $data->links(),
             'current_page' => $data->currentPage(),
             'per_page' => $data->perPage(),
-            'teacherContentForReleaseReviewMeetings' => '/lms/:role/:schoolName/:schoolId/content-for-release/rombel-kelas/:schoolClassId/semester/:semester/service/:serviceId/review-meetings',
+            'teacherContentForReleaseReviewMeetings' => '/lms/:role/:schoolName/:schoolId/content-for-release/rombel-kelas/:schoolClassId/subject/:mapelId/semester/:semester/service/:serviceId/review-meetings',
         ]);
     }
 
@@ -112,7 +113,7 @@ class TeacherContentReleaseController extends Controller
         $teacherMapels = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)
             ->whereHas('SchoolClass', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
-            })->with(['SchoolClass.Kelas', 'Mapel'])->get();
+            })->with(['SchoolClass', 'Mapel'])->get();
 
         // TAHUN AJARAN
         $tahunAjaran = $teacherMapels->pluck('SchoolClass.tahun_ajaran')->unique()->sortDesc()->values();
@@ -140,19 +141,16 @@ class TeacherContentReleaseController extends Controller
         ])->where('is_active', true)->where(function ($q) use ($schoolId) {
 
             // Default content global
-            $q->where(function ($qGlobal) use ($schoolId) {
-                $qGlobal->whereNull('school_partner_id')
-                    ->whereDoesntHave('SchoolLmsContent', function ($qSM) use ($schoolId) {
-                        $qSM->where('school_partner_id', $schoolId)->where('is_active', 0);
-                });
-            })
+            $q->where(function ($q) use ($schoolId) {
 
-            // Custom content school
-            ->orWhere(function ($qCustom) use ($schoolId) {
-                $qCustom->where('school_partner_id', $schoolId)
-                    ->whereHas('SchoolLmsContent', function ($qSM) use ($schoolId) {
-                        $qSM->where('school_partner_id', $schoolId)->where('is_active', 1);
-                });
+                $q->where(function ($qGlobal) use ($schoolId) {
+                    $qGlobal->whereNull('school_partner_id')
+                        ->whereDoesntHave('SchoolLmsContent', function ($qSM) use ($schoolId) {
+                            $qSM->where('school_partner_id', $schoolId)
+                                ->where('is_active', 0);
+                        });
+                })
+                    ->orWhere('school_partner_id', $schoolId);
             });
         })->whereIn('mapel_id', $mapelIds)->whereIn('kelas_id', $kelasIds)->orderByDesc('created_at');
 
@@ -182,27 +180,25 @@ class TeacherContentReleaseController extends Controller
         ]);
     }
 
-
-
     // function teacher content for release store
     public function teacherContentForReleaseStore(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
 
         $validator = Validator::make($request->all(), [
-            'school_class_id' => 'required|array|min:1',
+            'school_class_id' => 'required',
+            'mapel_id'        => 'required',
             'lms_content_id'  => 'required',
             'semester'        => 'required',
             'pertemuan'       => 'required',
-            'meeting_date'    => 'required|array|min:1',
-            'meeting_date.*'  => 'required',
+            'meeting_date'    => 'required',
         ], [
             'school_class_id.required' => 'Harap pilih kelas.',
+            'mapel_id.required'        => 'Mapel tidak ditemukan.',
             'lms_content_id.required'  => 'Harap pilih materi.',
             'semester.required'        => 'Harap pilih semester.',
             'pertemuan.required'       => 'Harap pilih pertemuan.',
             'meeting_date.required'    => 'Harap pilih tanggal.',
-            'meeting_date.*.required'  => 'Harap pilih tanggal.',
         ]);
 
         if ($validator->fails()) {
@@ -217,22 +213,44 @@ class TeacherContentReleaseController extends Controller
 
         try {
 
-            foreach ($request->school_class_id as $classId) {
+            $classId = $request->school_class_id;
+            $mapelId = $request->mapel_id;
 
-                LmsMeetingContent::updateOrCreate([
-                    'school_class_id' => $classId,
-                    'service_id' => $request->service_id,
-                    'school_partner_id' => $schoolId,
-                    'semester' => $request->semester,
-                    'meeting_number' => $request->pertemuan,
-                ], [
-                    'teacher_id' => $user->id,
-                    'lms_content_id' => $request->lms_content_id,
-                    'meeting_date' => $request->meeting_date[$classId] ?? now(),
-                    'is_active' => $request->is_active,
-                ]);
+            $meetingDate = Carbon::parse($request->meeting_date)->format('Y-m-d');
 
+            $content = LmsContent::find($request->lms_content_id);
+
+            if (!$content) {
+                return response()->json([
+                    'errors' => [
+                        'lms_content_id' => ['Materi tidak ditemukan.']
+                    ]
+                ], 422);
             }
+
+            // Validasi materi sesuai mapel
+            if ($content->mapel_id != $mapelId) {
+                return response()->json([
+                    'status' => 'error',
+                    'errors' => [
+                        'lms_content_id' => ['Materi tidak sesuai dengan mata pelajaran rombel.']
+                    ]
+                ], 422);
+            }
+
+            LmsMeetingContent::updateOrCreate([
+                'school_class_id' => $classId,
+                'mapel_id' => $mapelId,
+                'semester' => $request->semester,
+                'meeting_number' => $request->pertemuan,
+                'school_partner_id' => $schoolId,
+                'service_id' => $content->service_id,
+            ], [
+                'teacher_id' => $user->id,
+                'lms_content_id' => $request->lms_content_id,
+                'meeting_date' => $meetingDate,
+                'is_active' => $request->is_active,
+            ]);
 
             DB::commit();
 
@@ -327,14 +345,14 @@ class TeacherContentReleaseController extends Controller
     }
 
     // function teacher content for release review meetings view
-    public function teacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $semester, $serviceId)
+    public function teacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId)
     {
         return view('features.lms.teacher.content.teacher-content-for-release-review-meetings', compact('role', 'schoolName', 
-            'schoolId', 'schoolClassId', 'semester', 'serviceId'));
+            'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId'));
     }
 
     // function paginate
-    public function paginateTeacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $semester, $serviceId)
+    public function paginateTeacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId)
     {
         $user = Auth::user();
 
@@ -342,8 +360,8 @@ class TeacherContentReleaseController extends Controller
             ->whereHas('LmsContent', function ($query) use ($serviceId) {
                 $query->where('service_id', $serviceId);
             })
-            ->where('school_partner_id', $schoolId)->where('school_class_id', $schoolClassId)->where('semester', $semester)
-            ->get();
+            ->where('school_partner_id', $schoolId)->where('school_class_id', $schoolClassId)->where('mapel_id', $mapelId)
+            ->where('semester', $semester)->get();
 
         $getSchoolClass = SchoolClass::where('id', $schoolClassId)->first();
 
@@ -353,7 +371,7 @@ class TeacherContentReleaseController extends Controller
             'data' => $getMeetingContent,
             'schoolClass' => $getSchoolClass,
             'service' => $getService,
-            'teacherContentForReleaseReviewContent' => '/lms/:role/:schoolName/:schoolId/content-for-release/rombel-kelas/:schoolClassId/semester/:semester/service/:serviceId/review-content/:meetingContentId',
+            'teacherContentForReleaseReviewContent' => '/lms/:role/:schoolName/:schoolId/content-for-release/rombel-kelas/:schoolClassId/subject/:mapelId/semester/:semester/service/:serviceId/review-content/:meetingContentId',
         ]);
     }
 
@@ -372,7 +390,7 @@ class TeacherContentReleaseController extends Controller
         ]);
     }
 
-    public function TeacherContentForReleaseReviewContent($role, $schoolName, $schoolId, $schoolClassId, $semester, $serviceId, $meetingContentId)
+    public function TeacherContentForReleaseReviewContent($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId, $meetingContentId)
     {
         $items = LmsMeetingContent::with('LmsContent.LmsContentItem.ServiceRule', 'LmsContent.Service')->where('id', $meetingContentId)->get();
 
@@ -404,6 +422,6 @@ class TeacherContentReleaseController extends Controller
         });
 
         return view('features.lms.teacher.content.teacher-content-for-release-review-content', compact('role', 'schoolName', 
-            'schoolId', 'schoolClassId', 'semester', 'serviceId', 'meetingContentId', 'data'));
+            'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId', 'meetingContentId', 'data'));
     }
 }

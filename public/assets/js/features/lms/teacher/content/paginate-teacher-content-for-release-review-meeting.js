@@ -6,13 +6,14 @@ function paginateContentForRelease() {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const schoolClassId = container.dataset.schoolClassId;
+    const mapelId = container.dataset.mapelId;
     const semester = container.dataset.semester;
     const serviceId = container.dataset.serviceId;
 
-    if (!role || !schoolName || !schoolId || !schoolClassId || !semester || !serviceId) return;
+    if (!role || !schoolName || !schoolId || !schoolClassId || !mapelId || !semester || !serviceId) return;
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/content-for-release/rombel-kelas/${schoolClassId}/semester/${semester}/service/${serviceId}/review-meetings/paginate`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/content-for-release/rombel-kelas/${schoolClassId}/subject/${mapelId}/semester/${semester}/service/${serviceId}/review-meetings/paginate`,
         method: 'GET',
         success: function (response) {
             const headerContainer = $('#header-meetings');
@@ -65,7 +66,7 @@ function paginateContentForRelease() {
                     const meetingDate = item.meeting_date ? formatDate(item.meeting_date) : 'Tanggal tidak tersedia';
 
                     const teacherContentForReleaseReviewContent = response.teacherContentForReleaseReviewContent.replace(':role', role).replace(':schoolName', schoolName)
-                        .replace(':schoolId', schoolId).replace(':schoolClassId', schoolClassId).replace(':semester', semester)
+                        .replace(':schoolId', schoolId).replace(':schoolClassId', schoolClassId).replace(':mapelId', mapelId).replace(':semester', semester)
                         .replace(':serviceId', serviceId).replace(':meetingContentId', item.id);
 
                     const MeetingList = `

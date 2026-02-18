@@ -50,45 +50,52 @@ function formContentForRelease(search_materi = null, search_year = null, search_
             tbodyContent.innerHTML = '';
 
             if (response.rombel.length > 0) {
-                (response.rombel || []).forEach((item, index) => {
+
+                tbodyContent.innerHTML = ''; // supaya tidak double render
+
+                (response.rombel || []).forEach((item) => {
+
                     const row = document.createElement('tr');
                     row.classList.add('rombel-row');
-                    row.dataset.id = item.school_class?.id ?? '';
-                    row.dataset.tahun = item.school_class?.tahun_ajaran ?? '';
-                    row.dataset.kelas = item.school_class?.kelas?.kelas ?? '';
 
+                    const classId = item.school_class?.id ?? '';
+                    const mapelId = item.mapel?.id ?? '';
                     const mapelName = item.mapel?.mata_pelajaran ?? '';
-    
+
                     row.innerHTML = `
                         <td class="border border-gray-300 px-3 py-2 text-center">
-                            <input type="checkbox" name="school_class_id[]" value="${item.id}" class="rombel-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                            <input type="radio" name="school_class_id" value="${classId}" data-mapel="${mapelId}" class="rombel-radio h-4 w-4 text-blue-600 cursor-pointer">
                         </td>
-                        <td class="border border-gray-300 px-3 py-2 text-center">${item.school_class?.class_name ?? ''}</td>
-                        <td class="border border-gray-300 px-3 py-2 text-center">${mapelName}</td>
-                        <td class="border border-gray-300 px-3 py-2 text-center rombel-status text-gray-400">Belum dipilih</td>
+
+                        <td class="border border-gray-300 px-3 py-2 text-center">
+                            ${item.school_class?.class_name ?? ''}
+                        </td>
+
+                        <td class="border border-gray-300 px-3 py-2 text-center">
+                            ${mapelName}
+                        </td>
+
+                        <td class="border border-gray-300 px-3 py-2 text-center rombel-status text-gray-400">
+                            Belum dipilih
+                        </td>
+
                         <td class="border border-gray-300 px-3 py-2 align-middle">
                             <div class="relative w-full">
                                 <input 
-                                    type="text" name="meeting_date[${item.id}]"
-                                    class="rombel-date w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm outline-none
-                                        disabled:bg-gray-100 disabled:text-gray-400
-                                        transition duration-200"
-                                    placeholder="Pilih tanggal release"
-                                    disabled
-                                >
+                                    type="text" class="rombel-date w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm outline-none
+                                        disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih tanggal release" disabled>
                                 <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
                                     <i class="fa-regular fa-calendar text-sm"></i>
                                 </span>
                             </div>
-                                <span id="error-meeting_date-${item.id}"
-                                    class="text-red-500 text-xs font-semibold">
-                                </span>
+                            <span class="text-red-500 text-xs font-semibold error-meeting-date"></span>
                         </td>
                     `;
+
                     tbodyContent.appendChild(row);
                 });
     
-                initRombelCheckboxLogic();
+                initRombelRadioLogic();
                 $('.thead-table-rombel-class-content-for-release').show();
                 $('#empty-message-rombel-class-content-for-release-list').hide();
             } else {
@@ -103,10 +110,10 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                     const filename = item.lms_content_item?.[0]?.original_filename ?? '-';
 
                     return `
-                        <label class="content-item flex gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer">
+                        <label class="content-item flex gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
+                            data-service="${item.service_id}">
 
                             <input type="radio" name="lms_content_id" value="${item.id}" class="content-checkbox mt-1 h-4 w-4 shrink-0 rounded border-gray-300 cursor-pointer">
-                            <input type="hidden" name="service_id" value="${item.service_id}">
 
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-gray-800 wrap-break-word">
@@ -194,6 +201,8 @@ $(document).on('change', '#id_kurikulum, #id_service, #id_kelas, #id_mapel, #id_
         $('#id_mapel').val(),
         $('#id_bab').val(),
     );
+
+    document.getElementById('total-selected').innerText = '0 Dipilih';
 });
 
 function enableFlatpickr(el) {
@@ -205,21 +214,16 @@ function enableFlatpickr(el) {
         disableMobile: true,
 
         onChange: function (selectedDates, dateStr, instance) {
-            const el = instance.input;
 
-            el.classList.remove('border-red-400');
+            const input = instance.input;
 
-            // ambil ID dari name meeting_date[5]
-            const nameAttr = el.getAttribute('name');
-            const match = nameAttr.match(/\[(.*?)\]/);
+            input.classList.remove('border-red-400');
 
-            if (match) {
-                const id = match[1];
+            const row = input.closest('tr');
+            const errorSpan = row.querySelector('.error-meeting-date');
 
-                const errorMessage = document.querySelector(`#error-meeting_date-${id}`);
-                if (errorMessage) {
-                    errorMessage.textContent = '';
-                }
+            if (errorSpan) {
+                errorSpan.textContent = '';
             }
         }
     });
@@ -231,37 +235,52 @@ function disableFlatpickr(el) {
     }
 }
 
-function initRombelCheckboxLogic() {
-    const checkboxes = document.querySelectorAll('.rombel-checkbox');
+function initRombelRadioLogic() {
 
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', function () {
+    $(document).off('change', '.rombel-radio').on('change', '.rombel-radio', function () {
 
-            const row = this.closest('.rombel-row');
-            if (!row) return;
+        // RESET SEMUA ROW
+        $('.rombel-date').each(function () {
+            disableFlatpickr(this); // destroy instance dulu
 
-            const dateInput = row.querySelector('.rombel-date');
-            const status = row.querySelector('.rombel-status');
-
-            if (this.checked) {
-                dateInput.disabled = false;
-                enableFlatpickr(dateInput);
-
-                status.textContent = "Siap Dijadwalkan";
-                status.classList.remove('text-gray-400');
-                status.classList.add('text-green-600');
-            } else {
-                disableFlatpickr(dateInput);
-                dateInput.disabled = true;
-                dateInput.value = '';
-
-                status.textContent = "Belum dipilih";
-                status.classList.remove('text-green-600');
-                status.classList.add('text-gray-400');
-            }
+            $(this).prop('disabled', true).removeAttr('name').val('').removeClass('border-red-400');
         });
+
+        $('.error-meeting-date').text('');
+        $('.rombel-status').text('Belum dipilih').addClass('text-gray-400');
+
+        // ROW YANG DIPILIH
+        const row = $(this).closest('tr');
+        const dateInput = row.find('.rombel-date')[0]; // ambil DOM element
+
+        $(dateInput).prop('disabled', false).attr('name', 'meeting_date');
+
+        // INIT FLATPICKR LAGI
+        enableFlatpickr(dateInput);
+
+        row.find('.rombel-status').text('Dipilih').removeClass('text-gray-400');
+
+        // SET HIDDEN MAPEL
+        const mapelId = $(this).data('mapel');
+        $('#dynamic_mapel_id').remove();
+
+        $('#content-for-release-form').append(
+            `<input type="hidden" id="dynamic_mapel_id" name="mapel_id" value="${mapelId}">`
+        );
     });
 }
+
+$(document).on('change', 'input[name="lms_content_id"]', function () {
+
+    const selected = $(this).closest('.content-item');
+    const serviceId = selected.data('service'); // nanti kita taruh di data attribute
+
+    $('#hidden-service-id').remove();
+
+    $('#content-for-release-form').append(
+        `<input type="hidden" id="hidden-service-id" name="service_id" value="${serviceId}">`
+    );
+});
 
 document.addEventListener('change', function (e) {
 
@@ -406,41 +425,42 @@ $('#submit-button-publish-content-for-release, #submit-button-draft-content-for-
             paginateContentForRelease();
         },
         error: function (xhr) {
+
             if (xhr.status === 422) {
+
                 const errors = xhr.responseJSON.errors;
 
+                // reset error
+                $('.border-red-400').removeClass('border-red-400 border');
+                $('.error-meeting-date').text('');
+                $('.text-error').text('');
+
                 $.each(errors, function (field, messages) {
-                    if (field.includes('.')) {
 
-                        let parts = field.split('.');
-                        let fieldName = parts[0];
-                        let index = parts[1];
+                    if (field === 'meeting_date') {
 
-                        // kasih border ke input sesuai index
-                        let input = $(`[name="${fieldName}[${index}]"]`);
-                        input.addClass('border-red-400 border');
+                        const selectedRow = $('.rombel-radio:checked').closest('tr');
+                        selectedRow.find('.rombel-date')
+                            .addClass('border-red-400 border');
 
-                        // tampilkan error ke span sesuai index
-                        $(`#error-${fieldName}-${index}`).text(messages[0]);
+                        selectedRow.find('.error-meeting-date')
+                            .text(messages[0]);
 
                     } else {
-
                         $(`#error-${field}`).text(messages[0]);
-                        $(`[name="${field}"]`).addClass('border-red-400 border');
+                        $(`[name="${field}"]`)
+                            .addClass('border-red-400 border');
                     }
                 });
 
                 if (errors.school_class_id) {
-                    $('#error-school_class_id')
-                        .removeClass('hidden')
-                        .text(errors.school_class_id[0]);
+                    $('#error-school_class_id').removeClass('hidden').text(errors.school_class_id[0]);
                 }
 
                 if (errors.lms_content_id) {
-                    $('#error-lms_content_id')
-                        .removeClass('hidden')
-                        .text(errors.lms_content_id[0]);
+                    $('#error-lms_content_id').removeClass('hidden').text(errors.lms_content_id[0]);
                 }
+
             } else {
                 alert('Terjadi kesalahan saat mengirim data.');
             }

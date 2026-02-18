@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Review Content',
-    'linkBackButton' => route('lms.teacherContentForReleaseReviewMeeting.view', [$role, $schoolName, $schoolId, $schoolClassId, $semester, $serviceId]),
+    'linkBackButton' => route('lms.teacherContentForReleaseReviewMeeting.view', [$role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
