@@ -78,20 +78,16 @@
                                     <span id="error-meeting_number" class="text-red-500 text-xs mt-1 font-bold"></span>
                             </div>
 
-                            <div class="mt-4 w-full md:w-96.25">
-                                <label class="text-sm font-medium text-gray-500 mb-1 block">
+                            <div class="w-full relative flex flex-col gap-2 mt-4">
+                                <label class="text-sm font-medium text-gray-500 block">
                                     Tanggal Pertemuan
                                 </label>
 
-                                <div class="relative w-full">
-                                    <input type="text" id="edit-tanggal-pertemuan" name="meeting_date"
-                                        class="rombel-date w-full md:w-96.25 bg-white border border-gray-300 rounded-lg px-3 pr-10 h-12 text-sm shadow-sm outline-none transition duration-200"
-                                        placeholder="Pilih tanggal release">
+                                <input type="text" id="edit-tanggal-pertemuan" name="meeting_date"
+                                    class="rombel-date w-full md:w-96.25 bg-white border border-gray-300 rounded-lg px-2 h-12 text-sm shadow-sm outline-none transition duration-200"
+                                    placeholder="Pilih tanggal release">
 
-                                    <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                                        <i class="fa-regular fa-calendar text-sm"></i>
-                                    </span>
-                                </div>
+                                    <i class="fa-regular fa-calendar absolute top-[60%] right-4"></i>
                             </div>
 
                             <span id="error-meeting_date" class="text-red-500 text-xs font-semibold"></span>

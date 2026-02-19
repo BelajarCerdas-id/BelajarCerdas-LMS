@@ -73,8 +73,8 @@ function paginateContentForRelease() {
                         <div class="p-5 hover:bg-gray-50 transition">
                             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-                                <div class="space-y-3">
-                                    <p class="text-sm font-semibold text-gray-800">
+                                <div class="space-y-3 w-full min-w-0">
+                                    <p class="text-sm font-semibold text-gray-800 wrap-break-word">
                                         Pertemuan ${item.meeting_number} - ${item.lms_content?.lms_content_item?.[0]?.original_filename ?? '-'}
                                     </p>
 
