@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Events\ActivateQuestionBankPG;
 use App\Events\BankSoalLmsEditPG;
-use App\Events\BankSoalLmsUploaded;
 use App\Events\LmsAssessmentTypeManagement;
 use App\Events\LmsContentManagement;
 use App\Events\LmsSchoolSubscription;
@@ -16,7 +15,6 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\LmsContent;
-use App\Models\LmsContentItem;
 use App\Models\LmsQuestionBank;
 use App\Models\LmsQuestionOption;
 use App\Models\SchoolAssessmentType;
@@ -33,6 +31,7 @@ use App\Models\TeacherMapel;
 use App\Models\UserAccount;
 use App\Services\LMS\BankSoalWordImportService;
 use App\Services\LMS\LmsContentService;
+use App\Services\ReviewContent\LmsReviewContentService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +41,10 @@ use Illuminate\Validation\Rule;
 
 class LmsController extends Controller
 {
+    // CONSTRUCT LMS REVIEW CONTENT
+    public function __construct(protected LmsReviewContentService $reviewContentService) 
+    {}
+
     // HELPER NAMING CLASS
     private function extractClassLevel(string $className): int
     {
@@ -1698,50 +1701,12 @@ class LmsController extends Controller
         ]);
     }
 
-    // private function guessMime
-    private function guessMime($ext)
-    {
-        return match (strtolower($ext)) {
-            'mp4', 'webm', 'ogg' => 'video/' . $ext,
-            'pdf'               => 'application/pdf',
-            'jpg', 'jpeg', 'png', 'webp' => 'image/' . $ext,
-            default             => 'application/octet-stream',
-        };
-    }
-
     // function review content view
     public function lmsReviewContent($contentId, $schoolName = null, $schoolId = null)
     {
-        $items = LmsContentItem::with('ServiceRule', 'LmsContent.Service')->where('lms_content_id', $contentId)->get();
+        $data = $this->reviewContentService->getByContentId($contentId);
 
-        $data = $items->map(function ($item) {
-            $serviceName = $item->LmsContent?->Service?->name;
-
-            if (!$item->value_file) {
-                return [
-                    'service_name' => $serviceName,
-                    'rule_id' => $item->service_rule_id,
-                    'rule_name' => $item->ServiceRule?->name,
-                    'value_text' => $item->value_text,
-                    'type' => 'text'
-                ];
-            }
-
-            $extension = pathinfo($item->value_file, PATHINFO_EXTENSION);
-
-            return [
-                'service_name' => $serviceName,
-                'rule_id'   => $item->service_rule_id,
-                'rule_name' => $item->ServiceRule?->name,
-                'file_name'=> $item->original_filename,
-                'file_url' => asset('lms-contents/' . $item->value_file),
-                'mime'     => $this->guessMime($extension),
-                'type'     => 'file'
-            ];
-
-        });
-
-        return view('Features.lms.administrator.content-management.lms-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function edit content view
@@ -1757,28 +1722,7 @@ class LmsController extends Controller
     // function form edit content
     public function lmsContentManagementFormEdit($contentId)
     {
-        $items = LmsContentItem::with('ServiceRule')->where('lms_content_id', $contentId)->get();
-
-        $data = $items->map(function ($item) {
-            if (!$item->value_file) {
-                return [
-                    'rule_id' => $item->service_rule_id,
-                    'value_text' => $item->value_text,
-                    'type' => 'text'
-                ];
-            }
-
-            $extension = pathinfo($item->value_file, PATHINFO_EXTENSION);
-
-            return [
-                'rule_id'   => $item->service_rule_id,
-                'file_name'=> $item->original_filename,
-                'file_url' => asset('lms-contents/' . $item->value_file),
-                'mime'     => $this->guessMime($extension),
-                'type'     => 'file'
-            ];
-
-        });
+        $data = $this->reviewContentService->getByContentId($contentId);
 
         return response()->json([
             'data' => $data
