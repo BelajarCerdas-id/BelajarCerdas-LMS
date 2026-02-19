@@ -140,17 +140,19 @@ class TeacherContentReleaseController extends Controller
             }
         ])->where('is_active', true)->where(function ($q) use ($schoolId) {
 
-            // Default content global
             $q->where(function ($q) use ($schoolId) {
 
-                $q->where(function ($qGlobal) use ($schoolId) {
-                    $qGlobal->whereNull('school_partner_id')
-                        ->whereDoesntHave('SchoolLmsContent', function ($qSM) use ($schoolId) {
-                            $qSM->where('school_partner_id', $schoolId)
-                                ->where('is_active', 0);
-                        });
+                // Jika ada override untuk sekolah
+                $q->whereHas('SchoolLmsContent', function ($qOverride) use ($schoolId) {
+                    $qOverride->where('school_partner_id', $schoolId)->where('is_active', 1);
                 })
-                    ->orWhere('school_partner_id', $schoolId);
+
+                // Jika tidak ada override, pakai global
+                ->orWhere(function ($qGlobal) use ($schoolId) {
+                    $qGlobal->whereNull('school_partner_id')->whereDoesntHave('SchoolLmsContent', function ($qCheck) use ($schoolId) {
+                        $qCheck->where('school_partner_id', $schoolId);
+                    });
+                });
             });
         })->whereIn('mapel_id', $mapelIds)->whereIn('kelas_id', $kelasIds)->orderByDesc('created_at');
 
