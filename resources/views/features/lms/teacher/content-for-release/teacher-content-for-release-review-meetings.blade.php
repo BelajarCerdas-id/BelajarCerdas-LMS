@@ -115,4 +115,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/content/paginate-teacher-content-for-release-review-meeting.js') }}"></script> <!--- paginate content for release review meeting ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release-review-meeting.js') }}"></script> <!--- paginate content for release review meeting ---->

@@ -303,8 +303,8 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/content/paginate-teacher-content-for-release.js') }}"></script> <!--- paginate content for release ---->
-<script src="{{ asset('assets/js/features/lms/teacher/content/teacher-form-content-for-release.js') }}"></script> <!--- form content for release ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release.js') }}"></script> <!--- paginate content for release ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/teacher-form-content-for-release.js') }}"></script> <!--- form content for release ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->
