@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    const oldKurikulum = $('#id_kurikulum').data('old-kurikulum');
     var oldService = $('#id_service').attr('data-old-service'); // Ambil service yang dipilih jika ada
 
     function resetSelect($select, placeholder) {
@@ -32,6 +33,10 @@ $(document).ready(function () {
             }
         });
     });
+
+    if (oldKurikulum) {
+        $('#id_kurikulum').val(oldKurikulum).trigger('change');
+    }
 });
 
 let EDIT_ITEMS = [];
