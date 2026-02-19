@@ -1716,7 +1716,8 @@ class LmsController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.lms-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
+        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 
+            'schoolName', 'schoolId'));
     }
 
     // function form edit content
