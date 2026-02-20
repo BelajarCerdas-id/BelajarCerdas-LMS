@@ -1,5 +1,6 @@
 function paginateBankSoalDetail() {
     const container = document.getElementById('container-bank-soal-detail');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const subBabId = container.dataset.subBabId;
@@ -7,6 +8,7 @@ function paginateBankSoalDetail() {
     const questionType = container.dataset.questionType;
 
     if (!container) return;
+    if (!role) return;
     if (!subBabId) return;
     if (!source) return;
     if (!questionType) return;
@@ -134,31 +136,24 @@ function paginateBankSoalDetail() {
                         </div>
                     `;
                         
+                    const canEdit = !schoolId || question.school_partner_id;
+
                     let buttonEditQuestion = '';
                     let lmsEditQuestion = '';
-                        
-                    if (schoolId) {
-                        lmsEditQuestion = response.lmsEditQuestionBySchool.replace(':source', source).replace(':questionType', questionType).replace(':subBabId', subBabId)
-                            .replace(':questionId', question.id).replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    } else {
-                        lmsEditQuestion = response.lmsEditQuestion.replace(':source', source).replace(':questionType', questionType).replace(':subBabId', subBabId)
-                            .replace(':questionId', question.id);
-                    }
 
-                    if (schoolId) {
-                        if (question.school_partner_id) {
-                            buttonEditQuestion = `
-                                <div class="w-full flex justify-end gap-2 items-center">
-                                    <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
-                                        <span>Edit</span>
-                                        <i class="fas fa-pen"></i>
-                                    </a>
-                                </div>
-                            `;
+                    if (canEdit) {
+
+                        let urlTemplate;
+
+                        if (schoolId && response.lmsEditQuestionBySchool) {
+                            urlTemplate = response.lmsEditQuestionBySchool;
                         } else {
-                            buttonEditQuestion = '';
+                            urlTemplate = response.lmsEditQuestion;
                         }
-                    } else {
+
+                        lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
+                            .replace(':questionType', questionType).replace(':subBabId', subBabId).replace(':questionId', question.id);
+
                         buttonEditQuestion = `
                             <div class="w-full flex justify-end gap-2 items-center">
                                 <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
@@ -168,7 +163,6 @@ function paginateBankSoalDetail() {
                             </div>
                         `;
                     }
-                    
                     
                     // tampilkan opsi jawaban benar pada tipe soal selain matching
                     let matchingContainer = '';

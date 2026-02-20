@@ -1268,12 +1268,15 @@ class LmsController extends Controller
     // function bank soal detail view
     public function lmsQuestionBankManagementDetailView($source, $questionType, $subBabId, $schoolName = null, $schoolId = null)
     {
-        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-detail', compact('source', 'questionType', 'subBabId', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 
+        'subBabId', 'schoolName', 'schoolId'));
     }
 
     // function paginate bank soal detail
     public function paginateReviewQuestionBank($source, $questionType, $subBabId, $schoolName = null, $schoolId = null) 
     {
+        $user = Auth::user();
+
         $questions = LmsQuestionBank::with('LmsQuestionOption')
             ->where('sub_bab_id', $subBabId)
             ->where('question_source', $source)
@@ -1291,12 +1294,19 @@ class LmsController extends Controller
             return null;
         });
 
-        return response()->json([
+        $response = [
             'data' => $questions,
             'videoIds' => $videoIds,
-            'lmsEditQuestion' => '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit',
-            'lmsEditQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/:schoolName/:schoolId/edit',
-        ]);
+        ];
+
+        if ($user->role === 'Administrator') {
+            $response['lmsEditQuestion'] = '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
+            $response['lmsEditQuestionBySchool'] = '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/:schoolName/:schoolId/edit';
+        } else if ($user->role === 'Guru') {
+            $response['lmsEditQuestion'] = '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
+        }
+
+        return response()->json($response);
     }
 
     // function edit question view
@@ -1319,7 +1329,7 @@ class LmsController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('features.lms.administrator.question-bank-management.lms-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
         'schoolName', 'schoolId', 'questionType'));
     }
 
