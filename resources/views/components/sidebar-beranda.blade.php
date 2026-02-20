@@ -638,6 +638,13 @@
                                 </div>
 
                                 <div class="list-content-dropdown pl-4">
+                                    <a href="{{ route('lms.teacherContentManagement.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Content Mangement
+                                    </a>
                                     <a href="{{ route('lms.teacherContentForRelease.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
@@ -884,6 +891,13 @@
                                 </div>
 
                                 <div class="list-content-dropdown pl-4">
+                                    <a href="{{ route('lms.teacherContentManagement.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Content Mangement
+                                    </a>
                                     <a href="{{ route('lms.teacherContentForRelease.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
