@@ -10,6 +10,7 @@ use App\Http\Controllers\ServiceRuleController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\TeacherContentController;
 use App\Http\Controllers\TeacherContentReleaseController;
+use App\Http\Controllers\TeacherQuestionBankController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -352,6 +353,15 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // paginate
     Route::get('/lms/{role}/{schoolName}/{schoolId}/content-for-release/paginate', [TeacherContentReleaseController::class, 'paginateTeacherContentForRelease'])->name('lms.teacherContentForRelease.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/content-for-release/rombel-kelas/{schoolClassId}/subject/{mapelId}/semester/{semester}/service/{serviceId}/review-meetings/paginate', [TeacherContentReleaseController::class, 'paginateTeacherContentForReleaseReviewMeeting'])->name('lms.teacherContentForReleaseReviewMeeting.paginate');
+
+    // question bank management
+    // views
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management', [TeacherQuestionBankController::class, 'teacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementDetail'])->name('lms.teacherQuestionBankManagement.detail.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementEdit'])->name('lms.teacherQuestionBankManagement.edit.view');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/paginate', [TeacherQuestionBankController::class, 'paginateTeacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.paginate');
 });
 
 // ROUTES SCHOOL PARTNER
