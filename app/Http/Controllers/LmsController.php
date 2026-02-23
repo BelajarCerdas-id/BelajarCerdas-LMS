@@ -523,7 +523,7 @@ class LmsController extends Controller
         $getClassQuery = SchoolClass::with(['UserAccount', 'UserAccount.SchoolStaffProfile', 'Kelas'])
             ->withCount([
                 'StudentSchoolClass as student_school_class_count' => function ($q) {
-                    $q->where('status_class', 'active')
+                    $q->where('student_class_status', 'active')
                     ->where(function ($sub) {
                         $sub->whereNull('academic_action')
                             ->orWhere('academic_action', '');
