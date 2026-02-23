@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('user_accounts');
             $table->foreignId('school_partner_id')->constrained('school_partners');
             $table->string('name');
-            $table->string('assessment_mode'); // exam, quiz, assignment, other.
+            $table->foreignId('assessment_mode_id')->constrained('assessment_modes');
             $table->boolean('is_remedial_allowed')->default(false);
             $table->integer('max_remedial_attempt')->nullable();
             $table->boolean('is_active')->default(true);

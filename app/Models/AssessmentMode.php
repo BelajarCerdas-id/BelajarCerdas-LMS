@@ -13,4 +13,8 @@ class AssessmentMode extends Model
         'name',
         'code',
     ];
+
+    public function SchoolAssessmentType() {
+        return $this->hasMany(SchoolAssessmentType::class, 'assessment_mode_id');
+    }
 }

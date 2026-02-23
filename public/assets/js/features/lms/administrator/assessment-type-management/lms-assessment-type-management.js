@@ -82,7 +82,7 @@ function assessmentTypeManagement(page = 1) {
                         $('#table-list-assessment-type-management').append(`
                             <tr class="text-xs">
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.name ?? '-'}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.assessment_mode ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${item.assessment_mode?.name ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.is_remedial_allowed == true ? 'Ya' : 'Tidak' ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.max_remedial_attempt ? item.max_remedial_attempt + ` Kesempatan` : '-'}</td>
                                 <td class="border text-center border-gray-300">
@@ -107,7 +107,7 @@ function assessmentTypeManagement(page = 1) {
                                             class="dropdown-content menu bg-base-100 rounded-box w-max p-2 shadow-sm z-9999">
                                             <li>
                                                 <a href="#" class="btn-edit-assessment-type" data-assessment-type-id="${item.id}" data-assessment-type-name="${item.name}"
-                                                    data-assessment-mode="${item.assessment_mode}" data-is-remedial-allowed="${item.is_remedial_allowed}" 
+                                                    data-assessment-mode-id="${item.assessment_mode_id}" data-is-remedial-allowed="${item.is_remedial_allowed}" 
                                                     data-max-remedial-attempt="${item.max_remedial_attempt}">
                                                     <i class="fa-solid fa-pen text-[#0071BC]"></i>
                                                     Edit Assessment Type
@@ -287,14 +287,14 @@ $(document).off('click', '.btn-edit-assessment-type').on('click', '.btn-edit-ass
 
     const assessmentTypeId = $(this).data('assessment-type-id');
     const assessmentTypeName = $(this).data('assessment-type-name');
-    const assessmentMode = $(this).data('assessment-mode');
+    const assessmentModeId = $(this).data('assessment-mode-id');
     const isRemedialAllowed = $(this).data('is-remedial-allowed');
     const maxRemedialAttempt = $(this).data('max-remedial-attempt');
 
     // set value ke form
     $('#edit-assessment-type-id').val(assessmentTypeId);
     $('#edit-assessment-type-name').val(assessmentTypeName);
-    $('#edit-assessment-mode').val(assessmentMode);
+    $('#edit-assessment-mode-id').val(assessmentModeId);
     $('#edit-is-remedial-allowed').val(isRemedialAllowed);
 
     const input = $('#edit-max-remedial-attempt');

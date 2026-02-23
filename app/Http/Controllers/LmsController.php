@@ -11,6 +11,7 @@ use App\Events\LmsManagementAccount;
 use App\Events\LmsManagementClass;
 use App\Events\LmsManagementMajors;
 use App\Events\LmsManagementStudentInClass;
+use App\Models\AssessmentMode;
 use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
@@ -1845,13 +1846,15 @@ class LmsController extends Controller
     // function lms assessment type management view
     public function lmsAssessmentTypeManagementView($schoolName, $schoolId)
     {
-        return view('features.lms.administrator.assessment-type-management.lms-assessment-type-management', compact('schoolName', 'schoolId'));
+        $getAssessmentMode = AssessmentMode::all();
+
+        return view('features.lms.administrator.assessment-type-management.lms-assessment-type-management', compact('schoolName', 'schoolId', 'getAssessmentMode'));
     }
 
     // function paginate lms assessment type management
     public function paginateLmsAssessmentTypeManagement($schoolName, $schoolId) 
     {
-        $assessmentTypes = SchoolAssessmentType::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile'])
+        $assessmentTypes = SchoolAssessmentType::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'AssessmentMode'])
         ->where('school_partner_id', $schoolId)->paginate(10);
 
         $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
@@ -1884,13 +1887,13 @@ class LmsController extends Controller
                 'required',
                 Rule::unique('school_assessment_types', 'name')->where('school_partner_id', $schoolId),
             ],
-            'assessment_mode' => 'required',
+            'assessment_mode_id' => 'required',
             'is_remedial_allowed' => 'required',
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1',
         ], [
             'name.required' => 'Nama asesmen tidak boleh kosong.',
             'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
-            'assessment_mode.required' => 'Mode asesmen tidak boleh kosong.',
+            'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',
         ]);
@@ -1914,7 +1917,7 @@ class LmsController extends Controller
             'user_id' => $user->id,
             'school_partner_id' => $schoolId,
             'name' => $request->name,
-            'assessment_mode' => $request->assessment_mode,
+            'assessment_mode_id' => $request->assessment_mode_id,
             'is_remedial_allowed' => $request->is_remedial_allowed ?? null,
             'max_remedial_attempt' => $maxRemedialAttempt,
         ]);
@@ -1941,13 +1944,13 @@ class LmsController extends Controller
         ], [
             'name.required' => 'Nama asesmen harus diisi.',
             'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
-            'assessment_mode' => 'required',
+            'assessment_mode_id' => 'required',
             'is_remedial_allowed' => 'required',
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1',
         ], [
             'name.required' => 'Nama asesmen tidak boleh kosong.',
             'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
-            'assessment_mode.required' => 'Mode asesmen tidak boleh kosong.',
+            'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',
         ]);
@@ -1972,7 +1975,7 @@ class LmsController extends Controller
         $assessmentType->update([
             'user_id' => $user->id,
             'name' => $request->name,
-            'assessment_mode' => $request->assessment_mode,
+            'assessment_mode_id' => $request->assessment_mode_id,
             'is_remedial_allowed' => $request->is_remedial_allowed ?? null,
             'max_remedial_attempt' => $maxRemedialAttempt,
         ]);

@@ -48,14 +48,14 @@
                                         Mode Asesmen
                                         <sup class="text-red-500">&#42;</sup>
                                     </label>
-                                    <select name="assessment_mode"
+                                    <select name="assessment_mode_id"
                                         class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs shadow-sm outline-none cursor-pointer">
                                         <option value="" class="hidden">Pilih Mode Asesmen</option>
-                                        <option value="exam">Exam</option>
-                                        <option value="quiz">Quiz</option>
-                                        <option value="assignment">Assignment</option>
+                                        @foreach ($getAssessmentMode as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                        @endforeach
                                     </select>
-                                    <span id="error-assessment_mode" class="text-red-500 text-xs mt-1 font-bold"></span>
+                                    <span id="error-assessment_mode_id" class="text-red-500 text-xs mt-1 font-bold"></span>
                                 </div>
 
                             </div>
@@ -180,17 +180,17 @@
                                             Mode Asesmen
                                             <sup class="text-red-500">&#42;</sup>
                                         </label>
-                                        <select id="edit-assessment-mode" name="assessment_mode"
+                                        <select id="edit-assessment-mode-id" name="assessment_mode_id"
                                             class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs shadow-sm outline-none cursor-pointer">
                                             <option value="" class="hidden">Pilih Mode Asesmen</option>
-                                            <option value="exam">Exam</option>
-                                            <option value="quiz">Quiz</option>
-                                            <option value="assignment">Assignment</option>
+                                            @foreach ($getAssessmentMode as $item)
+                                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                            @endforeach
                                         </select>
-                                        <span id="error-assessment_mode" class="text-red-500 text-xs mt-1 font-bold"></span>
+                                        <span id="error-assessment_mode_id" class="text-red-500 text-xs mt-1 font-bold"></span>
                                     </div>
 
-                                    <!-- ================= REMEDIAL POLICY ================= -->
+                                    <!-- REMEDIAL -->
                                     <div class="border-t border-gray-300 pt-6">
                                         <label class="text-sm font-semibold text-gray-700">
                                             Kebijakan Remedial

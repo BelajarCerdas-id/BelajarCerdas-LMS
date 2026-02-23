@@ -13,7 +13,7 @@ class SchoolAssessmentType extends Model
         'user_id',
         'school_partner_id',
         'name',
-        'assessment_mode',
+        'assessment_mode_id',
         'is_remedial_allowed',
         'max_remedial_attempt',
         'is_active',
@@ -25,5 +25,9 @@ class SchoolAssessmentType extends Model
 
     public function SchoolPartner() {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
+    }
+
+    public function AssessmentMode() {
+        return $this->belongsTo(AssessmentMode::class, 'assessment_mode_id');
     }
 }
