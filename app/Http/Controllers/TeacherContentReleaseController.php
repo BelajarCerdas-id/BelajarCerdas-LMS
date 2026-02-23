@@ -113,6 +113,23 @@ class TeacherContentReleaseController extends Controller
         $teacherMapels = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)
             ->whereHas('SchoolClass', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
+            })
+            ->whereHas('Mapel', function ($q) use ($schoolId) {
+                // MAPEL KHUSUS SEKOLAH
+                $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
+                    $q1->where('school_partner_id', $schoolId)
+                        ->where('is_active', 1);
+                })
+
+                // ATAU MAPEL GLOBAL
+                ->orWhere(function ($q2) use ($schoolId) {
+                    $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
+
+                        // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                        ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                            $sq->where('school_partner_id', $schoolId);
+                    });
+                });
             })->with(['SchoolClass', 'Mapel'])->get();
 
         // TAHUN AJARAN
