@@ -59,4 +59,9 @@ class SchoolClass extends Model
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
+
+    public function SchoolAssessment()
+    {
+        return $this->hasMany(SchoolAssessment::class, 'school_class_id');
+    }
 }

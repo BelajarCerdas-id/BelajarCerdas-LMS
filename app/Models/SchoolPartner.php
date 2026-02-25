@@ -101,4 +101,9 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(LmsMeetingContent::class, 'school_partner_id');
     }
+
+    public function SchoolAssessment()
+    {
+        return $this->hasMany(SchoolAssessment::class, 'school_partner_id');
+    }
 }

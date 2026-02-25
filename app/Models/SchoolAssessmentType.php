@@ -30,4 +30,9 @@ class SchoolAssessmentType extends Model
     public function AssessmentMode() {
         return $this->belongsTo(AssessmentMode::class, 'assessment_mode_id');
     }
+
+    public function SchoolAssessment()
+    {
+        return $this->hasMany(SchoolAssessment::class, 'assessment_type_id');
+    }
 }
