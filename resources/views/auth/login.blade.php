@@ -1,6 +1,6 @@
 <x-script></x-script>
 
-<div class="w-full h-lvh bg-cover bg-[#0071BC]" style="background-image: url('{{ asset('assets/images/login/background-login.svg') }}')">
+<div class="w-full h-lvh bg-cover bg-[#0071BC]" style="background-image: url('{{ asset('assets/images/components/background-bc.svg') }}')">
     <div class="min-h-lvh flex flex-col items-center justify-center px-4">
         <!-- Logo -->
         <div>
