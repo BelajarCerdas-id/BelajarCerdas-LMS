@@ -239,10 +239,16 @@ class LmsUsersHandler
                     /* =======================
                     * STUDENT SCHOOL CLASS
                     * ======================= */
-                    StudentSchoolClass::create([
-                        'student_id' => $user->id,
-                        'school_class_id' => $schoolClass->id,
-                    ]);
+                    StudentSchoolClass::updateOrCreate(
+                        [
+                            'student_id' => $user->id,
+                            'school_class_id' => $schoolClass->id,
+                        ],
+                        [
+                            'student_id' => $user->id,
+                            'school_class_id' => $schoolClass->id,
+                        ]
+                    );
 
                 } else {
                     SchoolStaffProfile::updateOrCreate(
