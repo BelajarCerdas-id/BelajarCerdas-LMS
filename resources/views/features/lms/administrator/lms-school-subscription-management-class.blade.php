@@ -228,7 +228,7 @@
 @endif
 
 <!---- paginate lms subscription management class ---->
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-class.js') }}"></script> <!--- lms subscription management class ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-class.js') }}"></script> <!--- lms subscription management class ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

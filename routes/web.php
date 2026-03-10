@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
+use App\Http\Controllers\PublicLibraryController;
 use App\Http\Controllers\SchoolPartnerController;
 use App\Http\Controllers\SchoolSyllabusController;
 use App\Http\Controllers\ServiceRuleController;
@@ -39,6 +40,10 @@ Route::middleware([RedirectIfAuthenticated::class])->group(function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// ROUTES PUBLIC LIBRARY
+Route::get('/public-library', [PublicLibraryController::class, 'index'])->name('public-library.index');
+Route::get('/public-library/{id}/download', [PublicLibraryController::class, 'download'])->whereNumber('id')->name('public-library.download');
+
 // ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
 Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kelas by fase
 
@@ -66,6 +71,12 @@ Route::get('/service/{service}/rules', [ServiceRuleController::class, 'index']);
 Route::middleware([AuthMiddleware::class])->group(function () {
     // DASHBOARD
     Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
+
+    // ADMIN PUBLIC LIBRARY
+    Route::get('/public-library/manage', [PublicLibraryController::class, 'manage'])->name('public-library.manage');
+    Route::post('/public-library/manage/store', [PublicLibraryController::class, 'store'])->name('public-library.store');
+    Route::post('/public-library/manage/{id}/edit', [PublicLibraryController::class, 'update'])->whereNumber('id')->name('public-library.update');
+    Route::post('/public-library/manage/{id}/delete', [PublicLibraryController::class, 'destroy'])->whereNumber('id')->name('public-library.destroy');
 
     //ROUTES SYLLABUS-SERVICES
     // VIEWS

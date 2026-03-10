@@ -1,0 +1,5 @@
+Dummy konten Public Library
+Judul: Modul Fisika Gerak Lurus
+Author: Dafa Administrator
+Mapel: Fisika
+Kelas: 10

@@ -69,7 +69,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-account.js') }}"></script> <!--- lms subscription management account ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-account.js') }}"></script> <!--- lms subscription management account ---->
 
 <!--- PUSHER LISTENER ---->
 <script src="{{ asset('assets/js/pusher-listener/lms/administrator/management-account.js') }}"></script> <!--- pusher listener pada saat manage account ---->

@@ -751,10 +751,10 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/form-teacher-assessment-management.js') }}"></script> <!--- form teacher assessment management ---->
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}"></script> <!--- teacher assessment management step form ---->
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}"></script> <!--- paginate teacher assessment management ---->
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/assessment-file-upload-preview.js') }}"></script> <!--- assessment file upload preview ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js') }}"></script> <!--- form teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}"></script> <!--- teacher assessment management step form ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}"></script> <!--- paginate teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js') }}"></script> <!--- assessment file upload preview ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

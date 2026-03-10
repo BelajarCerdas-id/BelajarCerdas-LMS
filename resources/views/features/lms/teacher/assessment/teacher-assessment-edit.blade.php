@@ -224,8 +224,8 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/form-teacher-assessment-management-edit.js') }}"></script> <!--- form teacher assessment management edit ---->
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment/assessment-render-file-viewer.js') }}"></script> <!--- teacher assessment management edit ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management-edit.js') }}"></script> <!--- form teacher assessment management edit ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-render-file-viewer.js') }}"></script> <!--- teacher assessment management edit ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

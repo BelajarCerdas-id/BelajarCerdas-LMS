@@ -21,6 +21,13 @@
                     </a>
                 </li>
                 <li class="list-menu-sidebar-dekstop-student">
+                    <a href="{{ route('public-library.index') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Public Library</span>
+                    </a>
+                </li>
+                <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('lms.student.view', [
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
@@ -242,6 +249,13 @@
                         <span>Beranda</span>
                     </a>
                 </li>
+                <li class="list-menu-sidebar-mobile-student">
+                    <a href="{{ route('public-library.index') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Public Library</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- LOGOUT -->
@@ -273,6 +287,17 @@
                         <a href="{{ route('beranda') }}" class="link-href text-[14px]">
                             Beranda
                         </a>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4">
+                    <div class="dropdown-menu">
+                        <div class="content-menu text-sm flex items-center gap-3 px-3.75">
+                            <div class="">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <a href="{{ route('public-library.index') }}" class="link-href flex flex-col text-[14px]">Public Library</a>
+                        </div>
                     </div>
                 </li>
 
@@ -519,6 +544,15 @@
                     <li class="list-item m-2 pb-3">
                         <div class="dropdown-menu">
                             <div class="content-menu text-sm flex items-center gap-3">
+                                <i class="fa-solid fa-book-open"></i>
+                                <a href="{{ route('public-library.index') }}" class="link-href flex flex-col text-[13px]">Public Library</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
                                 <div class="">
                                     <i class="fa-solid fa-layer-group"></i>
                                 </div>
@@ -615,6 +649,15 @@
                         <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
                         <a href="{{ route('beranda') }}" class="link-href text-[14px]">
                             Beranda
+                        </a>
+                    </div>
+                </li>
+
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-book-open text-[15px] w-5 text-center"></i>
+                        <a href="{{ route('public-library.index') }}" class="link-href text-[14px]">
+                            Public Library
                         </a>
                     </div>
                 </li>
@@ -904,6 +947,15 @@
                         <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
                         <a href="{{ route('beranda') }}" class="link-href text-[14px]">
                             Beranda
+                        </a>
+                    </div>
+                </li>
+
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-book-open text-[15px] w-5 text-center"></i>
+                        <a href="{{ route('public-library.index') }}" class="link-href text-[14px]">
+                            Public Library
                         </a>
                     </div>
                 </li>
