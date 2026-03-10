@@ -31,6 +31,16 @@ class SchoolAssessment extends Model
         'status',
     ];
 
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
+
+    public function SchoolAssessmentQuestion()
+    {
+        return $this->hasMany(SchoolAssessmentQuestion::class, 'school_assessment_id');
+    }
+
     public function UserAccount()
     {
         return $this->belongsTo(UserAccount::class, 'user_id');

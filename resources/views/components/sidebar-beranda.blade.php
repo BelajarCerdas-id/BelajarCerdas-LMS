@@ -688,6 +688,13 @@
                                         ]) }}" class="link-href block py-2 text-[12px]">
                                         Question Bank Management
                                     </a>
+                                    <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Question Bank For Release
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -976,6 +983,13 @@
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                         ]) }}" class="link-href block py-2 text-[12px]">
                                         Question Bank Management
+                                    </a>
+                                    <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Question Bank For Release
                                     </a>
                                 </div>
                             </div>
