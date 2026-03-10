@@ -242,6 +242,17 @@
                         <span>Beranda</span>
                     </a>
                 </li>
+                <li class="list-menu-sidebar-dekstop-student">
+                    <a href="{{ route('lms.student.view', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
+                    ]) }}"
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                        <i class="fa-solid fa-school-flag"></i>
+                        <span>LMS</span>
+                    </a>
+                </li>
             </ul>
 
             <!-- LOGOUT -->
