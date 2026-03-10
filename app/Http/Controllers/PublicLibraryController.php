@@ -88,10 +88,11 @@ class PublicLibraryController extends Controller
             'file.max' => 'Ukuran file maksimal 100MB.',
         ]);
 
-        $thumbnailPath = $this->storeUploadedFile($request->file('thumbnail'), 'uploads/public-library/thumbnails');
-        $filePath = $this->storeUploadedFile($request->file('file'), 'uploads/public-library/files');
+        $uploadedFile = $request->file('file');
+        $fileMeta = $this->extractUploadedFileMeta($uploadedFile);
 
-        $originalFileName = basename((string) $request->file('file')->getClientOriginalName());
+        $thumbnailPath = $this->storeUploadedFile($request->file('thumbnail'), 'uploads/public-library/thumbnails');
+        $filePath = $this->storeUploadedFile($uploadedFile, 'uploads/public-library/files');
 
         PublicLibrary::create([
             'user_id' => Auth::id(),
@@ -101,10 +102,10 @@ class PublicLibraryController extends Controller
             'class_level' => $validated['class_level'],
             'thumbnail_path' => $thumbnailPath,
             'file_path' => $filePath,
-            'original_file_name' => $originalFileName,
-            'file_extension' => strtolower((string) $request->file('file')->getClientOriginalExtension()),
-            'file_mime' => $request->file('file')->getClientMimeType(),
-            'file_size' => $request->file('file')->getSize(),
+            'original_file_name' => $fileMeta['original_file_name'],
+            'file_extension' => $fileMeta['file_extension'],
+            'file_mime' => $fileMeta['file_mime'],
+            'file_size' => $fileMeta['file_size'],
         ]);
 
         return redirect()->route('public-library.manage')->with('success', 'Materi berhasil ditambahkan.');
@@ -146,12 +147,15 @@ class PublicLibraryController extends Controller
         }
 
         if ($request->hasFile('file')) {
+            $uploadedFile = $request->file('file');
+            $fileMeta = $this->extractUploadedFileMeta($uploadedFile);
+
             $this->deleteFileIfExists($item->file_path);
-            $payload['file_path'] = $this->storeUploadedFile($request->file('file'), 'uploads/public-library/files');
-            $payload['original_file_name'] = basename((string) $request->file('file')->getClientOriginalName());
-            $payload['file_extension'] = strtolower((string) $request->file('file')->getClientOriginalExtension());
-            $payload['file_mime'] = $request->file('file')->getClientMimeType();
-            $payload['file_size'] = $request->file('file')->getSize();
+            $payload['file_path'] = $this->storeUploadedFile($uploadedFile, 'uploads/public-library/files');
+            $payload['original_file_name'] = $fileMeta['original_file_name'];
+            $payload['file_extension'] = $fileMeta['file_extension'];
+            $payload['file_mime'] = $fileMeta['file_mime'];
+            $payload['file_size'] = $fileMeta['file_size'];
         }
 
         $item->update($payload);
@@ -228,6 +232,16 @@ class PublicLibraryController extends Controller
         $file->move($directory, $name);
 
         return $relativeDirectory . '/' . $name;
+    }
+
+    private function extractUploadedFileMeta(UploadedFile $file): array
+    {
+        return [
+            'original_file_name' => basename((string) $file->getClientOriginalName()),
+            'file_extension' => strtolower((string) $file->getClientOriginalExtension()),
+            'file_mime' => $file->getClientMimeType(),
+            'file_size' => (int) ($file->getSize() ?? 0),
+        ];
     }
 
     private function deleteFileIfExists(?string $relativePath): void
