@@ -20,7 +20,8 @@ class PublicLibraryController extends Controller
                     $filter->where('title', 'like', "%{$search}%")
                         ->orWhere('publisher', 'like', "%{$search}%")
                         ->orWhere('subject', 'like', "%{$search}%")
-                        ->orWhere('class_level', 'like', "%{$search}%");
+                        ->orWhere('class_level', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -55,7 +56,8 @@ class PublicLibraryController extends Controller
                     $filter->where('title', 'like', "%{$search}%")
                         ->orWhere('publisher', 'like', "%{$search}%")
                         ->orWhere('subject', 'like', "%{$search}%")
-                        ->orWhere('class_level', 'like', "%{$search}%");
+                        ->orWhere('class_level', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -73,12 +75,14 @@ class PublicLibraryController extends Controller
             'title' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'class_level' => 'required|string|max:100',
+            'description' => 'nullable|string|max:2000',
             'thumbnail' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mov,avi,mkv,webm,txt,zip,rar|max:102400',
         ], [
             'title.required' => 'Judul materi wajib diisi.',
             'subject.required' => 'Mata pelajaran wajib diisi.',
             'class_level.required' => 'Kelas wajib diisi.',
+            'description.max' => 'Deskripsi maksimal 2000 karakter.',
             'thumbnail.required' => 'Thumbnail wajib diunggah.',
             'thumbnail.image' => 'Thumbnail harus berupa gambar.',
             'thumbnail.mimes' => 'Format thumbnail harus jpg, jpeg, png, atau webp.',
@@ -100,6 +104,7 @@ class PublicLibraryController extends Controller
             'publisher' => $this->resolveAuthorName(),
             'subject' => $validated['subject'],
             'class_level' => $validated['class_level'],
+            'description' => $this->normalizeDescription($validated['description'] ?? null),
             'thumbnail_path' => $thumbnailPath,
             'file_path' => $filePath,
             'original_file_name' => $fileMeta['original_file_name'],
@@ -121,12 +126,14 @@ class PublicLibraryController extends Controller
             'title' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'class_level' => 'required|string|max:100',
+            'description' => 'nullable|string|max:2000',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mov,avi,mkv,webm,txt,zip,rar|max:102400',
         ], [
             'title.required' => 'Judul materi wajib diisi.',
             'subject.required' => 'Mata pelajaran wajib diisi.',
             'class_level.required' => 'Kelas wajib diisi.',
+            'description.max' => 'Deskripsi maksimal 2000 karakter.',
             'thumbnail.image' => 'Thumbnail harus berupa gambar.',
             'thumbnail.mimes' => 'Format thumbnail harus jpg, jpeg, png, atau webp.',
             'thumbnail.max' => 'Ukuran thumbnail maksimal 2MB.',
@@ -139,6 +146,7 @@ class PublicLibraryController extends Controller
             'publisher' => $this->resolveAuthorName(),
             'subject' => $validated['subject'],
             'class_level' => $validated['class_level'],
+            'description' => $this->normalizeDescription($validated['description'] ?? null),
         ];
 
         if ($request->hasFile('thumbnail')) {
@@ -255,5 +263,12 @@ class PublicLibraryController extends Controller
         if (file_exists($fullPath)) {
             @unlink($fullPath);
         }
+    }
+
+    private function normalizeDescription(?string $description): ?string
+    {
+        $normalized = trim((string) $description);
+
+        return $normalized !== '' ? $normalized : null;
     }
 }

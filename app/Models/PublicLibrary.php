@@ -15,6 +15,7 @@ class PublicLibrary extends Model
         'publisher',
         'subject',
         'class_level',
+        'description',
         'thumbnail_path',
         'file_path',
         'original_file_name',

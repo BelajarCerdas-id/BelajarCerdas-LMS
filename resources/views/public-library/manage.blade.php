@@ -55,6 +55,13 @@
                         class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none" required>
                 </div>
 
+                <div class="md:col-span-2">
+                    <label class="mb-1 block text-sm font-semibold text-slate-600">Deskripsi</label>
+                    <textarea name="description" rows="4" maxlength="2000"
+                        placeholder="Tulis ringkasan materi, tujuan belajar, atau poin penting..."
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none">{{ old('description') }}</textarea>
+                </div>
+
                 <div>
                     <label class="mb-1 block text-sm font-semibold text-slate-600">Thumbnail</label>
                     <input type="file" name="thumbnail" accept=".jpg,.jpeg,.png,.webp"
@@ -102,7 +109,7 @@
 
                 <form method="GET" action="{{ route('public-library.manage') }}" class="flex w-full max-w-md gap-2">
                     <input type="text" name="search" value="{{ $search }}"
-                        placeholder="Cari judul, author, mapel, kelas..."
+                        placeholder="Cari judul, author, mapel, kelas, atau deskripsi..."
                         class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none">
                     <button type="submit"
                         class="rounded-xl bg-[#0071BC] px-4 py-2.5 text-sm font-semibold text-white">
@@ -131,6 +138,7 @@
                                         <p><span class="font-semibold">Kelas:</span> {{ $item->class_level }}</p>
                                         <p><span class="font-semibold">File:</span> {{ $item->original_file_name }}</p>
                                         <p><span class="font-semibold">Ukuran:</span> {{ $formatFileSize($item->file_size) }}</p>
+                                        <p><span class="font-semibold">Deskripsi:</span> {{ $item->description ?: '-' }}</p>
                                     </div>
                                 </div>
 
@@ -183,6 +191,13 @@
                                         <label class="mb-1 block text-sm font-semibold text-slate-600">Kelas</label>
                                         <input type="text" name="class_level" value="{{ $item->class_level }}"
                                             class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none" required>
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="mb-1 block text-sm font-semibold text-slate-600">Deskripsi</label>
+                                        <textarea name="description" rows="4" maxlength="2000"
+                                            placeholder="Tulis ringkasan materi, tujuan belajar, atau poin penting..."
+                                            class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:outline-none">{{ $item->description }}</textarea>
                                     </div>
 
                                     <div>

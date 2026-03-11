@@ -44,60 +44,70 @@ class PublicLibraryDummySeeder extends Seeder
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Matematika',
                 'class_level' => '7',
+                'description' => 'Materi penguatan konsep bilangan, operasi hitung, dan latihan soal dasar untuk kelas 7.',
             ],
             [
                 'title' => 'Ringkasan IPA Sistem Tata Surya',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'IPA',
                 'class_level' => '7',
+                'description' => 'Rangkuman sistem tata surya lengkap dengan penjelasan planet dan kuis evaluasi singkat.',
             ],
             [
                 'title' => 'Latihan Soal Bahasa Indonesia Teks Eksplanasi',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Bahasa Indonesia',
                 'class_level' => '8',
+                'description' => 'Kumpulan latihan memahami struktur, kaidah kebahasaan, dan analisis teks eksplanasi.',
             ],
             [
                 'title' => 'Worksheet Bahasa Inggris Daily Activity',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Bahasa Inggris',
                 'class_level' => '8',
+                'description' => 'Worksheet kosakata dan grammar untuk topik aktivitas harian dengan latihan terarah.',
             ],
             [
                 'title' => 'Materi IPS Interaksi Sosial',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'IPS',
                 'class_level' => '9',
+                'description' => 'Pembahasan konsep interaksi sosial, faktor pendorong, serta studi kasus di lingkungan sekitar.',
             ],
             [
                 'title' => 'Panduan Informatika Berpikir Komputasional',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Informatika',
                 'class_level' => '9',
+                'description' => 'Panduan langkah berpikir komputasional mulai dari dekomposisi hingga penyusunan algoritma sederhana.',
             ],
             [
                 'title' => 'Modul PJOK Kebugaran Jasmani',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'PJOK',
                 'class_level' => '10',
+                'description' => 'Modul latihan kebugaran jasmani dan panduan kegiatan fisik aman untuk siswa SMA.',
             ],
             [
                 'title' => 'Pengantar Ekonomi Permintaan dan Penawaran',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Ekonomi',
                 'class_level' => '11',
+                'description' => 'Pengantar konsep permintaan-penawaran disertai contoh grafik, kasus pasar, dan latihan analisis.',
             ],
             [
                 'title' => 'Modul Fisika Gerak Lurus',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Fisika',
                 'class_level' => '10',
+                'description' => 'Materi gerak lurus beraturan dan berubah beraturan dengan contoh soal dan pembahasan.',
             ],
             [
                 'title' => 'Catatan Kimia Struktur Atom',
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => 'Kimia',
                 'class_level' => '10',
+                'description' => 'Ringkasan struktur atom, konfigurasi elektron, dan latihan soal tingkat dasar-menengah.',
             ],
         ];
 
@@ -137,6 +147,7 @@ class PublicLibraryDummySeeder extends Seeder
                 'publisher' => 'Belajar Cerdas Press',
                 'subject' => $subject,
                 'class_level' => $classLevel,
+                'description' => "Materi {$subject} {$topic} untuk kelas {$classLevel}, dilengkapi ringkasan konsep dan latihan terstruktur.",
             ];
         }
 
@@ -170,6 +181,7 @@ class PublicLibraryDummySeeder extends Seeder
                     'publisher' => $authorName,
                     'subject' => $item['subject'],
                     'class_level' => $item['class_level'],
+                    'description' => $item['description'] ?? null,
                     'thumbnail_path' => 'uploads/public-library/thumbnails/' . $thumbnailFileName,
                     'file_path' => 'uploads/public-library/files/' . $fileName,
                     'original_file_name' => $fileName,
