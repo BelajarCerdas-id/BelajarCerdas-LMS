@@ -12,10 +12,31 @@
             </p>
 
             <div class="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
-                <span class="rounded-full border border-white/25 bg-white/10 px-3 py-1">{{ number_format($items->total()) }} Materi</span>
-                <span class="rounded-full border border-white/25 bg-white/10 px-3 py-1">Akses Publik</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1">
+                    <svg class="h-3.5 w-3.5 text-sky-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M4.75 3.5A2.25 2.25 0 0 0 2.5 5.75v8.5A2.25 2.25 0 0 0 4.75 16.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-8.5A2.25 2.25 0 0 0 15.25 3.5H4.75Zm0 1.5h4.5v10h-4.5a.75.75 0 0 1-.75-.75v-8.5c0-.414.336-.75.75-.75Zm6 0h4.5c.414 0 .75.336.75.75v8.5a.75.75 0 0 1-.75.75h-4.5V5Z" />
+                    </svg>
+                    {{ number_format($items->total()) }} Materi
+                </span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1">
+                    <svg class="h-3.5 w-3.5 text-emerald-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm3.78 6.28a.75.75 0 0 0-1.06-1.06L9.25 10.69 7.78 9.22a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4-4Z" clip-rule="evenodd" />
+                    </svg>
+                    Akses Publik
+                </span>
                 @if ($search !== '')
-                    <span class="rounded-full border border-white/25 bg-white/10 px-3 py-1">Pencarian: {{ $search }}</span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1">
+                        <svg class="h-3.5 w-3.5 text-sky-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 1 0 3.47 9.768l3.63 3.631a.75.75 0 1 0 1.06-1.06l-3.631-3.63A5.5 5.5 0 0 0 8.5 3ZM4.5 8.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                        </svg>
+                        Pencarian: {{ $search }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1">
+                        <svg class="h-3.5 w-3.5 text-amber-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M2.5 4.75A1.25 1.25 0 0 1 3.75 3.5h12.5a1.25 1.25 0 0 1 .984 2.02l-4.61 5.846a1.25 1.25 0 0 0-.264.774v3.11a1.25 1.25 0 0 1-1.83 1.108l-2.5-1.25a1.25 1.25 0 0 1-.69-1.118V12.14a1.25 1.25 0 0 0-.264-.774L2.766 5.52A1.25 1.25 0 0 1 2.5 4.75Z" clip-rule="evenodd" />
+                        </svg>
+                        Filter: {{ $searchFilterOptions[$searchFilter] ?? 'Semua Field' }}
+                    </span>
                 @endif
             </div>
         </div>
@@ -43,23 +64,93 @@
     </div>
 </div>
 
-<form method="GET" action="{{ route('public-library.index') }}" class="mb-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <div class="flex flex-col gap-3 sm:flex-row">
-        <input type="text" name="search" value="{{ $search }}"
-            placeholder="Cari judul, author, mapel, kelas, atau deskripsi..."
-            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-sky-300 focus:outline-none">
+<form method="GET" action="{{ route('public-library.index') }}"
+    class="relative mb-7 overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] p-4 shadow-[0_24px_48px_-34px_rgba(15,23,42,0.22)] md:p-5">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(14,165,233,0.10),_transparent_32%)]"></div>
+    <div class="relative">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Search Console</p>
+                <h2 class="mt-1 text-lg font-semibold text-slate-800">Temukan materi lebih cepat</h2>
+                <p class="mt-1 text-sm text-slate-500">Pilih scope pencarian, lalu masukkan kata kunci yang ingin dicari.</p>
+            </div>
 
-        @if ($search !== '')
-            <a href="{{ route('public-library.index') }}"
-                class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400">
-                Reset
-            </a>
-        @endif
+            @if ($search !== '')
+                <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sky-700">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M2.5 4.75A1.25 1.25 0 0 1 3.75 3.5h12.5a1.25 1.25 0 0 1 .984 2.02l-4.61 5.846a1.25 1.25 0 0 0-.264.774v3.11a1.25 1.25 0 0 1-1.83 1.108l-2.5-1.25a1.25 1.25 0 0 1-.69-1.118V12.14a1.25 1.25 0 0 0-.264-.774L2.766 5.52A1.25 1.25 0 0 1 2.5 4.75Z" clip-rule="evenodd" />
+                        </svg>
+                        {{ $searchFilterOptions[$searchFilter] ?? 'Semua Field' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">
+                        <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 1 0 3.47 9.768l3.63 3.631a.75.75 0 1 0 1.06-1.06l-3.631-3.63A5.5 5.5 0 0 0 8.5 3ZM4.5 8.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                        </svg>
+                        "{{ $search }}"
+                    </span>
+                </div>
+            @endif
+        </div>
 
-        <button type="submit"
-            class="rounded-xl bg-[#0071BC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#005f9f]">
-            Cari Materi
-        </button>
+        <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-[220px_minmax(0,1fr)_auto_auto]">
+            <label class="block">
+                <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Filter
+                </span>
+                <div class="relative" data-filter-picker-root>
+                    <input type="hidden" name="filter" value="{{ $searchFilter }}" data-filter-input>
+                    <button type="button" data-filter-trigger
+                        class="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/90 py-3 pl-11 pr-4 text-left text-sm font-medium text-slate-700 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.28)] outline-none transition hover:border-slate-300 focus:border-sky-300 focus:ring-4 focus:ring-sky-100">
+                        <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M2.5 4.75A1.25 1.25 0 0 1 3.75 3.5h12.5a1.25 1.25 0 0 1 .984 2.02l-4.61 5.846a1.25 1.25 0 0 0-.264.774v3.11a1.25 1.25 0 0 1-1.83 1.108l-2.5-1.25a1.25 1.25 0 0 1-.69-1.118V12.14a1.25 1.25 0 0 0-.264-.774L2.766 5.52A1.25 1.25 0 0 1 2.5 4.75Z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <span data-filter-label>{{ $searchFilterOptions[$searchFilter] ?? 'Semua Field' }}</span>
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition" aria-hidden="true">
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.51a.75.75 0 0 1-1.08 0l-4.25-4.51a.75.75 0 0 1 .02-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+            </label>
+
+            <label class="block">
+                <span class="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Kata Kunci
+                </span>
+                <span class="relative block">
+                    <span class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 1 0 3.47 9.768l3.63 3.631a.75.75 0 1 0 1.06-1.06l-3.631-3.63A5.5 5.5 0 0 0 8.5 3ZM4.5 8.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    <input type="text" name="search" value="{{ $search }}"
+                        placeholder="Cari materi sesuai filter yang dipilih..."
+                        class="w-full rounded-2xl border border-slate-200 bg-white/90 py-3 pl-11 pr-4 text-sm text-slate-700 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.28)] outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100">
+                </span>
+            </label>
+
+            @if ($search !== '')
+                <a href="{{ route('public-library.index') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.18)] transition hover:border-slate-300 hover:bg-slate-50 lg:self-end">
+                    <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M4.78 4.22a.75.75 0 0 1 1.06 0L10 8.44l4.16-4.22a.75.75 0 0 1 1.08 1.04L11.06 9.5l4.18 4.24a.75.75 0 1 1-1.08 1.04L10 10.56l-4.16 4.22a.75.75 0 1 1-1.08-1.04L8.94 9.5 4.76 5.26a.75.75 0 0 1 .02-1.04Z" clip-rule="evenodd" />
+                    </svg>
+                    Reset
+                </a>
+            @endif
+
+            <button type="submit"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,_#0284c7,_#0369a1)] px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_38px_-24px_rgba(2,132,199,0.7)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_42px_-26px_rgba(2,132,199,0.72)] lg:self-end">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8.5 3a5.5 5.5 0 1 0 3.47 9.768l3.63 3.631a.75.75 0 1 0 1.06-1.06l-3.631-3.63A5.5 5.5 0 0 0 8.5 3ZM4.5 8.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd" />
+                </svg>
+                Cari Materi
+            </button>
+        </div>
     </div>
 </form>
 
@@ -87,7 +178,7 @@
         <p class="text-lg font-semibold text-slate-700">Materi belum ditemukan</p>
         <p class="mt-2 text-sm text-slate-500">
             @if ($search !== '')
-                Coba gunakan kata kunci lain atau reset pencarian.
+                Coba gunakan kata kunci lain, ganti filter dropdown, atau reset pencarian.
             @else
                 Materi belum tersedia saat ini.
             @endif
@@ -219,3 +310,4 @@
 @endif
 
 @include('public-library.partials.file-preview-modal')
+@include('public-library.partials.search-filter-picker-modal')

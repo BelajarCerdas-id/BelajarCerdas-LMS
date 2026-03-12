@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PublicLibrary;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -13,22 +14,15 @@ class PublicLibraryController extends Controller
     public function index(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
+        $searchFilterOptions = $this->searchFilterOptions();
+        $searchFilter = $this->resolveSearchFilter($request->query('filter', 'all'), $searchFilterOptions);
 
-        $items = PublicLibrary::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($filter) use ($search) {
-                    $filter->where('title', 'like', "%{$search}%")
-                        ->orWhere('publisher', 'like', "%{$search}%")
-                        ->orWhere('subject', 'like', "%{$search}%")
-                        ->orWhere('class_level', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            })
+        $items = $this->applySearchFilter(PublicLibrary::query(), $search, $searchFilter)
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
-        return view('public-library.index', compact('items', 'search'));
+        return view('public-library.index', compact('items', 'search', 'searchFilter', 'searchFilterOptions'));
     }
 
     public function download(int $id)
@@ -49,22 +43,15 @@ class PublicLibraryController extends Controller
         $this->ensureAdministrator();
 
         $search = trim((string) $request->query('search', ''));
+        $searchFilterOptions = $this->searchFilterOptions();
+        $searchFilter = $this->resolveSearchFilter($request->query('filter', 'all'), $searchFilterOptions);
 
-        $items = PublicLibrary::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($filter) use ($search) {
-                    $filter->where('title', 'like', "%{$search}%")
-                        ->orWhere('publisher', 'like', "%{$search}%")
-                        ->orWhere('subject', 'like', "%{$search}%")
-                        ->orWhere('class_level', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            })
+        $items = $this->applySearchFilter(PublicLibrary::query(), $search, $searchFilter)
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        return view('public-library.manage', compact('items', 'search'));
+        return view('public-library.manage', compact('items', 'search', 'searchFilter', 'searchFilterOptions'));
     }
 
     public function store(Request $request)
@@ -225,6 +212,46 @@ class PublicLibraryController extends Controller
         }
 
         return 'Unknown Author';
+    }
+
+    private function searchFilterOptions(): array
+    {
+        return [
+            'all' => 'Semua Field',
+            'title' => 'Judul',
+            'publisher' => 'Publisher',
+            'subject' => 'Mata Pelajaran',
+            'class_level' => 'Kelas',
+            'description' => 'Deskripsi',
+            'file_extension' => 'Tipe File',
+        ];
+    }
+
+    private function resolveSearchFilter(mixed $requestedFilter, array $availableFilters): string
+    {
+        $filter = strtolower(trim((string) $requestedFilter));
+
+        return array_key_exists($filter, $availableFilters) ? $filter : 'all';
+    }
+
+    private function applySearchFilter(Builder $query, string $search, string $searchFilter): Builder
+    {
+        if ($search === '') {
+            return $query;
+        }
+
+        if ($searchFilter === 'all') {
+            return $query->where(function (Builder $filter) use ($search) {
+                $filter->where('title', 'like', "%{$search}%")
+                    ->orWhere('publisher', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('class_level', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('file_extension', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->where($searchFilter, 'like', "%{$search}%");
     }
 
     private function storeUploadedFile(UploadedFile $file, string $relativeDirectory): string
