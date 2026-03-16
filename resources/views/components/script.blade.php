@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Document</title>
+
+    <title id="title-icon-web" data-school-name="{{ Auth::check() ? (Auth::user()->StudentProfile?->SchoolPartner?->nama_sekolah ?? Auth::user()->SchoolStaffProfile?->SchoolPartner?->nama_sekolah) 
+        : null }}"></title>
+    <link rel="shortcut icon" type="image/png" href="{{ asset('assets/images/favicon/favicon.png') }}">
 
     <!-- Your compiled app.css (includes Tailwind, DaisyUI if configured) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -27,3 +30,14 @@
     
 </body>
 </html>
+
+<script>
+    const titleIconWeb = document.getElementById('title-icon-web');
+    const schoolPartnerName = titleIconWeb.getAttribute('data-school-name');
+
+    if (schoolPartnerName) {
+        document.title = `LMS - ${schoolPartnerName}`
+    } else {
+        document.title = 'LMS - BelajarCerdas'
+    }
+</script>
