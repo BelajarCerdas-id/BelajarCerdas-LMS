@@ -14,9 +14,13 @@
             <!-- MENU -->
             <ul class="mt-14 space-y-4 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('beranda') }}"
+                    <a href="{{ route('lms.student.dashboard', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah ?? 'sekolah',
+                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id ?? 1
+                    ]) }}"
                     class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-home"></i>
+                        <i class="fa-solid fa-gauge"></i>
                         <span>Beranda</span>
                     </a>
                 </li>
@@ -31,37 +35,7 @@
                         <span>LMS</span>
                     </a>
                 </li>
-
-                    <!-- Menu Library -->
-                    <li class="list-menu-sidebar-dekstop-student">
-
-<div class="flex flex-col">
-
-    <!-- MENU LIBRARY -->
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
-        </div>
-
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </a>
-
-    <!-- DROPDOWN -->
-    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
-
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
-
-    </div>
-</div>
-
-</li>
-                </ul>
+            </ul>
 
             <!-- FOOTER -->
             <div class="mt-auto">
@@ -794,6 +768,31 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </li>
+                <li class="list-item mt-1">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
+                            <span class="text-[14px]">Informasi</span>
+                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6 pr-3.5 w-full">
+                            <div class="flex flex-col py-2 mt-1">
+                                <a href="{{ route('lms.teacherCalendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    Kalender Akademik
+                                </a>
+                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    Jadwal Pelajaran
+                                </a>
+                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    Polling
+                                </a>
+                            </div>
+                        </div>
+                        
                     </div>
                 </li>
 
