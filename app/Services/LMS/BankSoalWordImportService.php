@@ -283,17 +283,34 @@ class BankSoalWordImportService
                         break;
 
                     case 'matching':
+                    case 'pg_kompleks':
                         if ($isEmpty($dataSoal['ANSWER'] ?? null)) {
                             $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya ANSWER.";
                             break;
                         }
 
-                        // LEFT & RIGHT
-                        $leftKeys = array_keys(array_filter($dataSoal, fn($v,$k) =>
-                            str_starts_with($k,'LEFT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH));
+                        $isMatrix = $type === 'pg_kompleks';
 
-                        $rightKeys = array_keys(array_filter($dataSoal, fn($v,$k) =>
-                            str_starts_with($k,'RIGHT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH));
+                        foreach ($dataSoal as $k => $v) {
+                            if (str_starts_with($k, 'ITEM')) {
+                                $dataSoal[str_replace('ITEM', 'LEFT', $k)] = $v;
+                            }
+
+                            if (str_starts_with($k, 'CATEGORY')) {
+                                $dataSoal[str_replace('CATEGORY', 'RIGHT', $k)] = $v;
+                            }
+                        }
+
+                        // LEFT & RIGHT
+                        $leftKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) =>
+                            (str_starts_with($k,'LEFT') || str_starts_with($k,'ITEM')) && !$isEmpty($v),
+                            ARRAY_FILTER_USE_BOTH
+                        )));
+
+                        $rightKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) =>
+                            (str_starts_with($k,'RIGHT') || str_starts_with($k,'CATEGORY')) && !$isEmpty($v),
+                            ARRAY_FILTER_USE_BOTH
+                        )));
 
                         if (!$leftKeys || !$rightKeys) {
                             $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya LEFT & RIGHT.";
@@ -310,10 +327,10 @@ class BankSoalWordImportService
 
                                 $parts = preg_split('/\s*,\s*/', trim($line));
 
-                                // WAJIB tepat 2 token
+                                // WAJIB 2 token
                                 if (count($parts) !== 2) {
                                     $validationErrors[] =
-                                        "Soal ke-$soalNumber: Format ANSWER salah (harus LEFT,RIGHT).";
+                                        "Soal ke-$soalNumber: format ANSWER harus ITEM/CATEGORY atau LEFT/RIGHT.";
                                     continue;
                                 }
 
@@ -325,26 +342,27 @@ class BankSoalWordImportService
                                 // LEFT valid
                                 if (!in_array($l, $leftKeys)) {
                                     $validationErrors[] =
-                                        "Soal ke-$soalNumber: LEFT '$l' tidak valid.";
+                                        "Soal ke-$soalNumber: ITEM/LEFT '$l' tidak valid.";
                                     continue;
                                 }
 
                                 // RIGHT valid
                                 if (!in_array($r, $rightKeys)) {
                                     $validationErrors[] =
-                                        "Soal ke-$soalNumber: RIGHT '$r' tidak valid.";
+                                        "Soal ke-$soalNumber: CATEGORY/RIGHT '$r' tidak valid.";
                                     continue;
                                 }
 
-                                // LEFT duplicate
+                                // LEFT tidak boleh duplicate (semua mode)
                                 if (isset($pairMap[$l])) {
                                     $validationErrors[] =
-                                        "Soal ke-$soalNumber: LEFT '$l' dipakai lebih dari sekali.";
+                                        "Soal ke-$soalNumber: ITEM/LEFT '$l' dipakai lebih dari sekali.";
                                     continue;
                                 }
 
-                                // RIGHT duplicate
-                                if (in_array($r, $rightUsed)) {
+                                // matching = tidak boleh duplicate RIGHT
+                                // pg_kompleks = boleh duplicate RIGHT
+                                if (!$isMatrix && in_array($r, $rightUsed)) {
                                     $validationErrors[] =
                                         "Soal ke-$soalNumber: RIGHT '$r' dipakai lebih dari sekali.";
                                     continue;
@@ -354,10 +372,16 @@ class BankSoalWordImportService
                                 $rightUsed[] = $r;
                             }
 
-                            // Jumlah pasangan harus sama dengan LEFT
-                            if (count($pairMap) !== count($leftKeys)) {
+                            // MATCHING: semua LEFT wajib punya pasangan
+                            if (!$isMatrix && count($pairMap) !== count($leftKeys)) {
                                 $validationErrors[] =
-                                    "Soal ke-$soalNumber: Jumlah pasangan harus sama dengan jumlah LEFT.";
+                                    "Soal ke-$soalNumber: semua LEFT harus punya pasangan.";
+                            }
+
+                            // PG KOMPLEKS: minimal 1 jawaban saja sudah valid
+                            if ($isMatrix && count($pairMap) < 1) {
+                                $validationErrors[] =
+                                    "Soal ke-$soalNumber: minimal harus ada 1 pasangan jawaban.";
                             }
 
                             break;
@@ -441,6 +465,7 @@ class BankSoalWordImportService
                         'bab_id' => $request->bab_id,
                         'sub_bab_id' => $request->sub_bab_id,
                         'questions' => $dataSoal['QUESTION'],
+                        'header_item'  => trim(strip_tags($dataSoal['HEADER_ITEM'] ?? '')),
                         'difficulty' => trim(strip_tags($dataSoal['DIFFICULTY'] ?? '')),
                         'bloom' => trim(strip_tags($dataSoal['BLOOM'] ?? '')),
                         'explanation' => $dataSoal['EXPLANATION'] ?? '',
@@ -527,12 +552,66 @@ class BankSoalWordImportService
 
                             LmsQuestionOption::create([
                                 'question_id'   => $createBankSoal->id,
-                                'options_key'   => $leftKey,        // LEFT1
+                                'options_key'   => $leftKey, // LEFT1
                                 'options_value' => $value,
                                 'is_correct'    => false,
                                 'extra_data'    => [
                                     'side'      => 'left',
                                     'pair_with' => $pairMap[$leftKey] ?? null, // RIGHTx
+                                ],
+                            ]);
+                        }
+                    } else if ($type === 'pg_kompleks') {
+                        $pairMap = [];
+                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
+
+                        foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
+                            $line = trim($line);
+                            if (!$line) continue;
+
+                            [$l, $r] = array_map(
+                                fn($v) => strtoupper(trim($v)),
+                                preg_split('/\s*,\s*/', $line)
+                            );
+
+                            if ($l && $r) {
+                                $pairMap[$l] = $r;
+                            }
+                        }
+
+                        // Simpan CATEGORY (kolom)
+                        foreach ($dataSoal as $key => $value) {
+                            if (!is_string($key)) continue;
+                            if (!str_starts_with($key, 'CATEGORY')) continue;
+                            if ($extractor->isMeaningfullyEmpty($value)) continue;
+
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => strtoupper(trim($key)),
+                                'options_value' => $value,
+                                'is_correct'    => false,
+                                'extra_data'    => [
+                                    'side' => 'category',
+                                ],
+                            ]);
+                        }
+
+                        // Simpan ITEM (baris + jawaban)
+                        foreach ($dataSoal as $key => $value) {
+                            if (!is_string($key)) continue;
+                            if (!str_starts_with($key, 'ITEM')) continue;
+                            if ($extractor->isMeaningfullyEmpty($value)) continue;
+
+                            $itemKey = strtoupper(trim($key));
+
+                            LmsQuestionOption::create([
+                                'question_id'   => $createBankSoal->id,
+                                'options_key'   => $itemKey,
+                                'options_value' => $value,
+                                'is_correct'    => false,
+                                'extra_data'    => [
+                                    'side'   => 'item',
+                                    'answer' => $pairMap[$itemKey] ?? null,
                                 ],
                             ]);
                         }

@@ -34,6 +34,8 @@ function formQuestionBankEdit() {
                         return renderMCMA();
                     case 'MATCHING':
                         return renderMatching();
+                    case 'PG_KOMPLEKS':
+                        return renderPGKompleks();
                     default:
                         return '';
                 }
@@ -107,7 +109,7 @@ function formQuestionBankEdit() {
                                     ${opt.options_value}
                                 </textarea>
 
-                                <span id="error-options-${opt.id}" class="text-red-500 font-bold text-xs"></span>
+                                <span id="error-options-${opt.id}" class="text-red-500 font-bold text-xs pt-2"></span>
                             </div>
 
                         `).join('')}
@@ -115,7 +117,7 @@ function formQuestionBankEdit() {
 
                     <!-- GLOBAL ERROR MCMA -->
                     <div class="lg:col-span-2">
-                        <span id="error-answer_key" class="text-red-500 font-bold text-xs"></span>
+                        <span id="error-answer_key" class="text-red-500 font-bold text-xs pt-2"></span>
                     </div>
                 `;
 
@@ -141,7 +143,7 @@ function formQuestionBankEdit() {
                                     </label>
 
                                     <textarea class="editor w-full" name="left[${l.id}]">${l.options_value}</textarea>
-                                    <span id="error-left-${l.id}" class="text-red-500 font-bold text-xs"></span>
+                                    <span id="error-left-${l.id}" class="text-red-500 font-bold text-xs pt-2"></span>
                                 </div>
                             `).join('')}
                         </div>
@@ -153,7 +155,7 @@ function formQuestionBankEdit() {
                                 <div class="mb-4 p-2 border border-gray-300 rounded">
                                     <label class="text-sm font-semibold">${r.options_key}</label>
                                     <textarea class="editor w-full" name="right[${r.id}]">${r.options_value}</textarea>
-                                    <span id="error-right-${r.id}" class="text-red-500 font-bold text-xs"></span>
+                                    <span id="error-right-${r.id}" class="text-red-500 font-bold text-xs pt-2"></span>
                                 </div>
                             `).join('')}
                         </div>
@@ -162,6 +164,85 @@ function formQuestionBankEdit() {
                 `;
             }
 
+            function renderPGKompleks() {
+
+                const options = response.options;
+
+                const categories = options.filter(o => o.extra_data?.side === 'category');
+                const items = options.filter(o => o.extra_data?.side === 'item');
+
+                return `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+
+                        <!-- LEFT: ITEMS -->
+                        <div>
+                            <h4 class="font-bold mb-3">Item</h4>
+
+                            <div class="mb-4">
+                                <label class="block text-sm mb-1">
+                                    Header Item
+                                    <sup class="text-red-500">*</sup>
+                                </label>
+                                <input type="text" name="header_item" value="${question.header_item ?? ''}" placeholder="Contoh: Pernyataan / Gambar / Kasus"
+                                    class="w-full bg-white shadow-lg h-12 text-sm  border border-gray-300 outline-none rounded-md px-2"/>
+                                <span id="error-header_item" class="text-red-500 font-bold text-xs pt-2"></span>
+                            </div>
+
+                            <div class="space-y-3">
+                                ${items.map(item => {
+                                const answer = item.extra_data?.answer;
+
+                                return `
+                                        <div class="flex flex-col gap-2 p-3 border border-gray-300 rounded-lg">
+
+                                            <!-- ITEM EDITOR -->
+                                            <textarea class="editor w-full" name="item[${item.id}]">
+                                                ${item.options_value}
+                                            </textarea>
+                                            <span id="error-item-${item.id}" class="text-red-500 font-bold text-xs pt-2"></span>
+
+                                            <!-- SELECT CATEGORY -->
+                                            <div class="flex justify-end">
+                                                <select name="answer[${item.id}]" class="border border-gray-300 rounded px-3 py-1 text-sm cursor-pointer">
+
+                                                        <option value="" class="hidden">Pilih Kategori</option>
+
+                                                        ${categories.map(cat => `
+                                                            <option value="${cat.options_key}" 
+                                                                ${answer === cat.options_key ? 'selected' : ''}>
+                                                                ${cat.options_value}
+                                                            </option>
+                                                        `).join('')}
+
+                                                </select>
+                                                <span id="error-answer-${item.id}" class="text-red-500 font-bold text-xs pt-2"></span>
+                                            </div>
+
+                                        </div>
+                                    `;
+                            }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: CATEGORIES -->
+                        <div>
+                            <h4 class="font-bold mb-3">Kategori</h4>
+
+                            <div class="space-y-3">
+                                ${categories.map(cat => `
+                                    <div class="w-full p-3 border border-gray-300 rounded-lg flex flex-col gap-3">
+                                        <textarea class="editor w-full" name="category[${cat.id}]">
+                                            ${cat.options_value}
+                                        </textarea>
+                                        <span id="error-category-${cat.id}" class="text-red-500 font-bold text-xs pt-2"></span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                    </div>
+                `;
+            }
 
             // options value select
             const optionsValue = renderOptionsByType(
@@ -170,7 +251,7 @@ function formQuestionBankEdit() {
             
             const formHtml = `
                 <form id="bank-soal-edit-question-form" data-source="${source}" data-sub-bab-id="${subBabId}" data-question-id="${questionId}" 
-                    data-school-name="${schoolName}" data-school-id="${schoolId}" enctype="multipart/form-data">
+                    data-school-name="${schoolName}" data-school-id="${schoolId}" enctype="multipart/form-data" autocomplete="off">
 
                     <input type="hidden" name="question_type" value="${questionTypeNormalized}">
 
@@ -178,7 +259,7 @@ function formQuestionBankEdit() {
                     <div class="leading-10 mb-6 w-full">
                         <span>Question<sup class="text-red-500 pl-1">*</sup></span>
                         <textarea name="questions" id="questions" class="editor">${question.questions}</textarea>
-                        <span id="error-questions" class="text-red-500 font-bold text-xs"></span>
+                        <span id="error-questions" class="text-red-500 font-bold text-xs pt-2"></span>
                     </div>
 
                     <div>
@@ -207,8 +288,9 @@ function formQuestionBankEdit() {
                                 Bloom
                                 <sup class="text-red-500">&#42;</sup>
                             </label>
-                                <input type="text" id="bloom" name="bloom" class="bg-white shadow-lg h-12 text-sm  border border-gray-300 outline-none rounded-md px-2" value="${question.bloom}">
-                            <span id="error-difficulty" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <input type="text" id="bloom" name="bloom" class="bg-white shadow-lg h-12 text-sm  border border-gray-300 outline-none rounded-md px-2" value="${question.bloom}"
+                                placeholder="Masukkan bloom">
+                            <span id="error-bloom" class="text-red-500 font-bold text-xs pt-2"></span>
                         </div>
                     </div>
 
@@ -218,7 +300,7 @@ function formQuestionBankEdit() {
                             <sup class="text-red-500">&#42;</sup>
                         </span>
                         <textarea name="explanation" id="explanation" class="editor">${question.explanation}</textarea>
-                        <span id="error-explanation" class="text-red-500 font-bold text-xs"></span>
+                        <span id="error-explanation" class="text-red-500 font-bold text-xs pt-2"></span>
                     </div>
 
                     <div class="flex justify-end mt-20 lg:mt-8">
@@ -310,6 +392,23 @@ $(document).on('change', '.mcma-checkbox', function () {
     }
 });
 
+// Hapus error ketika user mengetik di input/textarea biasa
+document.addEventListener('input', function (e) {
+    const target = e.target;
+
+    // Cek apakah target adalah input atau textarea di form bank soal
+    if ((target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') && target.closest('#bank-soal-edit-question-form')) {
+        // Hapus border merah
+        target.classList.remove('border-red-400', 'border-2');
+
+        // Hapus pesan error terkait
+        const errorSpan = target.closest('div')?.querySelector('[id^="error-"]');
+        if (errorSpan) {
+            errorSpan.textContent = '';
+        }
+    }
+});
+
 let isProcessing = false;
 
 // Form Action edit question
@@ -394,7 +493,7 @@ $(document).ready(function () {
                         }
                         
                         // Tambahkan border ke field yang error
-                        $(`[name="${inputName}"]`).addClass('border-red-400 border-2');
+                        $(`[name="${inputName}"]`).addClass('border-red-400 border');
 
                         // Tampilkan pesan error
                         $(`#${errorId}`).text(messages[0]);

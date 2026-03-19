@@ -1385,6 +1385,7 @@ class LmsController extends Controller
         $rules = [
             'questions'   => 'required|string',
             'difficulty'  => 'required|in:Mudah,Sedang,Sukar',
+            'bloom'       => 'required',
             'explanation' => 'required|string',
         ];
 
@@ -1392,6 +1393,7 @@ class LmsController extends Controller
             'questions.required'   => 'Pertanyaan wajib diisi.',
             'difficulty.required'  => 'Difficulty wajib dipilih.',
             'difficulty.in'        => 'Difficulty tidak valid.',
+            'bloom.required'       => 'Bloom wajib diisi.',
             'explanation.required' => 'Pembahasan wajib diisi.',
         ];
 
@@ -1430,6 +1432,22 @@ class LmsController extends Controller
             $messages += [
                 'left.*.required' => 'Harap isi jawaban soal.',
                 'right.*.required' => 'Harap isi jawaban soal.',
+            ];
+        }
+
+        if ($questionType === 'PG_KOMPLEKS') {
+            $rules += [
+                'header_item' => 'required',
+                'item.*' => 'required',
+                'category.*' => 'required',
+                'answer.*' => 'required',
+            ];
+
+            $messages += [
+                'header_item.required' => 'Harap isi header item soal.',
+                'item.*.required' => 'Harap isi item soal.',
+                'category.*.required' => 'Harap isi kategori soal.',
+                'answer.*.required' => 'Harap pilih jawaban kategori soal.',
             ];
         }
 
@@ -1498,6 +1516,41 @@ class LmsController extends Controller
                 foreach ($request->right as $id => $value) {
                     LmsQuestionOption::where('id', $id)->update([
                         'options_value' => $value,
+                    ]);
+                }
+
+            case 'PG_KOMPLEKS':
+
+                lmsQuestionBank::where('id', $questionId)->update([
+                    'header_item' => $request->header_item
+                ]);
+
+                // Update ITEM
+                foreach ($request->item as $id => $value) {
+                    LmsQuestionOption::where('id', $id)->update([
+                        'options_value' => $value,
+                    ]);
+                }
+
+                // Update CATEGORY
+                foreach ($request->category as $id => $value) {
+                    LmsQuestionOption::where('id', $id)->update([
+                        'options_value' => $value,
+                    ]);
+                }
+
+                // Update ANSWER katgori pada item
+                foreach ($request->answer as $id => $value) {
+                    $option = LmsQuestionOption::find($id);
+
+                    // ambil data lama
+                    $extra = $option->extra_data ?? [];
+
+                    // update hanya field answer
+                    $extra['answer'] = $value;
+
+                    $option->update([
+                        'extra_data' => $extra
                     ]);
                 }
 

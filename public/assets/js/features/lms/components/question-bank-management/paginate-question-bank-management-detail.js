@@ -165,13 +165,13 @@ function paginateBankSoalDetail() {
                     }
                     
                     // tampilkan opsi jawaban benar pada tipe soal selain matching
-                    let matchingContainer = '';
+                    let correctAnswerHTML = '';
                         
                     // ambil opsi jawaban benar
                     const correctAnswers = options.filter(item => item.is_correct).map(item => [optionsMap[item.options_key]]).join(', ');
                         
-                    if (question.tipe_soal !== 'MATCHING' && question.tipe_soal !== 'ESSAY') {
-                        matchingContainer = `
+                    if (question.tipe_soal !== 'MATCHING' && question.tipe_soal !== 'ESSAY' && question.tipe_soal !== 'PG_KOMPLEKS') {
+                        correctAnswerHTML = `
                             <div>
                                 <span class="font-bold opacity-70">Jawaban Benar:</span>
                                 <span class="font-bold text-green-400">${correctAnswers}</span>
@@ -269,6 +269,65 @@ function paginateBankSoalDetail() {
                             </div>
                         `;
 
+                        let pgKompleksHTML = '';
+
+                        if (question.tipe_soal === 'PG_KOMPLEKS') {
+
+                            const categories = options.filter(item => item.extra_data?.side === 'category');
+                            const items = options.filter(item => item.extra_data?.side === 'item');
+
+                            pgKompleksHTML = `
+                                <div class="overflow-x-auto mt-6">
+                                    <table class="w-full border border-gray-300 text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-100 text-center">
+                                                <th class="border px-4 py-2">${question.header_item ?? 'Pernyataan'}</th>
+                                                ${categories.map(category => `<th class="border px-4 py-2">${category.options_value}</th>`).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${items.map(item => {
+                                                const answer = item.extra_data?.answer;
+                                                const content = addClassToImgTags(item.options_value, 'max-w-[100px] sm:max-w-[200px] rounded');
+
+                                                return `
+                                                    <tr>
+                                                        <td class="border px-4 py-3">
+                                                            ${content}
+                                                        </td>
+                                                        ${categories.map(cat => `
+                                                            <td class="border text-center">
+                                                                ${answer === cat.options_key
+                                                                ?
+                                                                    `
+                                                                    <div class="flex justify-center items-center">
+                                                                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+                                                                            <i class="fa-solid fa-check text-xs"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    `
+                                                                : ''}
+                                                            </td>
+                                                        `).join('')}
+                                                    </tr>
+                                                `;
+                                                }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+
+                        let answerSectionHTML = '';
+
+                        if (question.tipe_soal === 'PG_KOMPLEKS') {
+                            answerSectionHTML = pgKompleksHTML;
+                        } else if (question.tipe_soal === 'MATCHING') {
+                            answerSectionHTML = matchingHTML;
+                        } else {
+                            answerSectionHTML = optionsHTML;
+                        }
+
                         const card = `
                             ${buttonEditQuestion}
                         
@@ -285,9 +344,9 @@ function paginateBankSoalDetail() {
                                     <div class="content-accordion relative text-justify h-0 overflow-hidden transition-all duration-500 ease-in-out">
                                         <div class="max-w-7xl text-sm mt-6">
                                             <div>${questionHTML}</div>
-                                            <div>${question.tipe_soal === 'MATCHING' ? matchingHTML : optionsHTML}</div>
+                                            <div>${answerSectionHTML}</div>
                                         <div class="flex flex-col gap-6 mb-8 mt-6">
-                                            ${matchingContainer}
+                                            ${correctAnswerHTML}
                                             <div>
                                                 <p class="font-bold opacity-70 mb-4">Penjelasan:</p>
                                                 ${videoExplanation}
