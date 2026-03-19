@@ -274,8 +274,10 @@ class TeacherQuestionBankReleaseController extends Controller
 
         $defaultLevel = $startLevelMap[$jenjang] ?? 1;
 
-        $query = SchoolAssessmentQuestion::with(['SchoolAssessment', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.Mapel',
-            'SchoolAssessment.SchoolAssessmentType'])->orderBy('created_at', 'desc')->get();
+        $query = SchoolAssessmentQuestion::with(['SchoolAssessment', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolAssessmentType'
+        ])->whereHas('SchoolAssessment', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->orderBy('created_at', 'desc')->get();
 
         // TAHUN AJARAN
         $tahunAjaran = $query->pluck('SchoolAssessment.SchoolClass.tahun_ajaran')->unique()->sortDesc()->values();
