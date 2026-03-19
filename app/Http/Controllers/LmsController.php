@@ -1363,6 +1363,9 @@ class LmsController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
+        // cek apakah soal suda dipake untuk assessment atau belum
+        $isUsed = $editQuestion->SchoolAssessmentQuestion()->whereHas('StudentAssessmentAnswer')->exists();
+
         return response()->json([
             'status' => 'success',
             'data' => $groupedSoal,
@@ -1370,6 +1373,7 @@ class LmsController extends Controller
             'options' => $editQuestion->LmsQuestionOption,
             'matching' => $matching,
             'type' => strtoupper($editQuestion->tipe_soal),
+            'isUsed' => $isUsed
         ]);
     }
 
@@ -1427,11 +1431,13 @@ class LmsController extends Controller
             $rules += [
                 'left.*'     => 'required',
                 'right.*'    => 'required',
+                'pair_with.*' => 'required',
             ];
 
             $messages += [
                 'left.*.required' => 'Harap isi jawaban soal.',
                 'right.*.required' => 'Harap isi jawaban soal.',
+                'pair_with.*.required' => 'Harap pilih pasangan.',
             ];
         }
 
@@ -1449,6 +1455,70 @@ class LmsController extends Controller
                 'category.*.required' => 'Harap isi kategori soal.',
                 'answer.*.required' => 'Harap pilih jawaban kategori soal.',
             ];
+        }
+
+        $isUsed = $question->SchoolAssessmentQuestion()->whereHas('StudentAssessmentAnswer')->exists();
+
+        if ($questionType === 'MATCHING') {
+            // Ambil semua pasangan lama (LEFT) dari DB
+            $existingPairs = LmsQuestionOption::where('question_id', $question->id)->where('options_key', 'like', 'LEFT%')->pluck('extra_data', 'id');
+    
+            $isPairChanged = false;
+    
+            // Loop semua input pair dari request
+            foreach ($request->pair_with as $id => $newPair) {
+    
+                // Ambil data lama berdasarkan id
+                $oldExtra = $existingPairs[$id] ?? null;
+    
+                // Ambil value pair_with dari extra_data
+                $oldPair = is_array($oldExtra) ? ($oldExtra['pair_with'] ?? null) : (json_decode($oldExtra, true)['pair_with'] ?? null);
+    
+                // Bandingkan pair lama vs baru
+                if ($oldPair != $newPair) {
+                    $isPairChanged = true;
+                    break;
+                }
+            }
+    
+            if ($isUsed && $questionType === 'MATCHING' && $isPairChanged) {
+                return response()->json([
+                    'status' => 'error',
+                    'isUsed' => true,
+                    'message' => 'Soal sudah digunakan, pasangan tidak bisa diubah.'
+                ], 422);
+            }
+        }
+
+        if ($questionType === 'PG_KOMPLEKS') {
+            // Ambil semua option yang merupakan ITEM (bukan category)
+            $existingAnswers = LmsQuestionOption::where('question_id', $question->id)->get()->filter(fn($opt) => ($opt->extra_data['side'] ?? null) === 'item')->pluck('extra_data', 'id');
+    
+            $isAnswerChanged = false;
+    
+            // Loop semua jawaban (mapping item -> category)
+            foreach ($request->input('answer', []) as $itemId => $newCategory) {
+    
+                // Ambil extra_data lama dari DB
+                $oldExtra = $existingAnswers[$itemId] ?? [];
+    
+                // Ambil category lama (answer)
+                $oldCategory = $oldExtra['answer'] ?? null;
+    
+                // Bandingkan category lama vs baru
+                if ($oldCategory != $newCategory) {
+                    $isAnswerChanged = true;
+                    break;
+                }
+            }
+    
+            if ($isUsed && $isAnswerChanged) {
+                return response()->json([
+                    'status' => 'error',
+                    'isUsed' => true,
+                    'message' => 'Soal sudah digunakan, pasangan category tidak dapat diubah.'
+                ], 422);
+            }
         }
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -1518,6 +1588,23 @@ class LmsController extends Controller
                         'options_value' => $value,
                     ]);
                 }
+
+                // Update PAIR WITH
+                foreach ($request->pair_with as $id => $value) {
+                    $option = LmsQuestionOption::find($id);
+
+                    // ambil data lama
+                    $extra = $option->extra_data ?? [];
+
+                    // update hanya field answer
+                    $extra['pair_with'] = $value;
+
+                    $option->update([
+                        'extra_data' => $extra
+                    ]);
+                }
+
+            break;
 
             case 'PG_KOMPLEKS':
 

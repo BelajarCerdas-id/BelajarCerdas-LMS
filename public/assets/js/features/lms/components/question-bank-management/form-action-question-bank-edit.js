@@ -134,18 +134,52 @@ function formQuestionBankEdit() {
                         <!-- LEFT Column -->
                         <div>
                             <h4 class="font-bold mb-2">LEFT</h4>
-                            ${left.map(l => `
-                                <div class="mb-4 p-2 border border-gray-300 rounded">
-                                    <label class="text-sm font-semibold">
-                                        ${l.options_key}
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                        ${response.matching[l.options_key] ?? '-'}
-                                    </label>
+                            <div class="space-y-4">
 
-                                    <textarea class="editor w-full" name="left[${l.id}]">${l.options_value}</textarea>
-                                    <span id="error-left-${l.id}" class="text-red-500 font-bold text-xs pt-2"></span>
-                                </div>
-                            `).join('')}
+                                ${left.map(l => {
+
+                                    const selected = response.matching?.[l.options_key] ?? '';
+                                    const isUsed = response.isUsed;
+
+                                    return `
+                                        <div class="flex flex-col gap-3 p-3 border border-gray-300 rounded-lg">
+
+                                            <!-- LABEL -->
+                                            <label class="text-sm font-semibold">
+                                                ${l.options_key}
+                                            </label>
+
+                                            <!-- EDITOR LEFT -->
+                                            <textarea class="editor w-full" name="left[${l.id}]">
+                                                ${l.options_value ?? ''}
+                                            </textarea>
+
+                                            <!-- SELECT PASANGAN -->
+                                            <div class="flex justify-end">
+                                                <select name="pair_with[${l.id}]" class="border border-gray-300 rounded px-3 py-1 text-sm cursor-pointer w-full lg:w-auto outline-none 
+                                                " >
+
+                                                    <option value="" class="hidden">
+                                                        Pilih pasangan
+                                                    </option>
+
+                                                    ${right.map(r => `
+                                                        <option value="${r.options_key}" ${selected === r.options_key ? 'selected' : ''}>
+                                                            ${r.options_key}
+                                                        </option>
+                                                    `).join('')}
+
+                                                </select>
+                                            </div>
+
+                                            <!-- ERROR -->
+                                            <span id="error-pair_with-${l.id}" class="text-red-500 font-bold text-xs"></span>
+
+                                        </div>
+                                    `;
+                                }).join('')}
+
+                            </div>
                         </div>
 
                         <!-- RIGHT Column -->
@@ -203,7 +237,7 @@ function formQuestionBankEdit() {
 
                                             <!-- SELECT CATEGORY -->
                                             <div class="flex justify-end">
-                                                <select name="answer[${item.id}]" class="border border-gray-300 rounded px-3 py-1 text-sm cursor-pointer">
+                                                <select name="answer[${item.id}]" class="border border-gray-300 rounded px-3 py-1 text-sm cursor-pointer outline-none">
 
                                                         <option value="" class="hidden">Pilih Kategori</option>
 
@@ -478,27 +512,38 @@ $(document).ready(function () {
             },
             error: function (xhr, status, error) {
                 if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
+                    const response = xhr.responseJSON;
 
-                    // Tampilkan pesan error (jika input nya ada array, seperti options_value ini)
-                    $.each(errors, function (field, messages) {
-                        let inputName = field;
-                        let errorId = `error-${field}`;
+                    if (response?.isUsed) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Submit Gagal',
+                            text: response.message,
+                            confirmButtonText: 'OK',
+                        });
 
-                        // Tangani format field dengan titik seperti 'options_value.639'
-                        if (field.includes('.')) {
-                            const [name, index] = field.split('.');
-                            inputName = `${name}[${index}]`; // options_value[639]
-                            errorId = `error-${name}-${index}`; // error-options_value-639
-                        }
-                        
-                        // Tambahkan border ke field yang error
-                        $(`[name="${inputName}"]`).addClass('border-red-400 border');
+                        isProcessing = false;
+                        btn.prop('disabled', false);
+                        return;
+                    }
 
-                        // Tampilkan pesan error
-                        $(`#${errorId}`).text(messages[0]);
-                    });
+                    const errors = response.errors;
 
+                    if (errors) {
+                        $.each(errors, function (field, messages) {
+                            let inputName = field;
+                            let errorId = `error-${field}`;
+
+                            if (field.includes('.')) {
+                                const [name, index] = field.split('.');
+                                inputName = `${name}[${index}]`;
+                                errorId = `error-${name}-${index}`;
+                            }
+
+                            $(`[name="${inputName}"]`).addClass('border-red-400 border');
+                            $(`#${errorId}`).text(messages[0]);
+                        });
+                    }
                 } else if (xhr.status === 419) {
                     alert('CSRF token mismatch. Coba refresh halaman.');
                 } else {
