@@ -173,7 +173,7 @@
 
                     <!-- FILTER CONTAINER -->
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             <div id="container-dropdown-tahun-ajaran">
                                 <!-- show data in ajax -->
                             </div>

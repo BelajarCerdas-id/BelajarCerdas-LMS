@@ -27,7 +27,7 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                 containerDropdownTahunAjaran.innerHTML = `
                     <div class="flex flex-col w-full mb-2">
                         <label class="text-sm font-medium text-gray-600 mb-1">Pilih Tahun Ajaran</label>
-                        <select id="dropdown-filter-tahun-ajaran" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-6 cursor-pointer outline-none">
+                        <select id="dropdown-filter-tahun-ajaran" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm cursor-pointer outline-none">
                             <option value="" class="hidden">Pilih Tahun Ajaran</option>
                             ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
                         </select>
@@ -39,7 +39,7 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                 containerDropdownClass.innerHTML = `
                     <div class="flex flex-col w-full mb-2">
                         <label class="text-sm font-medium text-gray-600 mb-1">Filter Kelas</label>
-                        <select id="dropdown-filter-class" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-24 cursor-pointer outline-none">
+                        <select id="dropdown-filter-class" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm cursor-pointer outline-none">
                             <option value="" class="hidden">Filter Kelas</option>
                             ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
                         </select>
