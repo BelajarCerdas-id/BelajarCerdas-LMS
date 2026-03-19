@@ -18,6 +18,7 @@ class LmsQuestionBank extends Model
         'bab_id',
         'sub_bab_id',
         'questions',
+        'header_item',
         'difficulty',
         'bloom',
         'explanation',

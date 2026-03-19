@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('bab_id')->constrained('babs');
             $table->foreignId('sub_bab_id')->constrained('sub_babs');
             $table->text('questions');
+            $table->string('header_item')->nullable();
             $table->string('difficulty');
             $table->string('bloom');
             $table->text('explanation')->nullable();
