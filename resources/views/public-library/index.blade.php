@@ -7,9 +7,9 @@
     $contentWrapperClass = 'relative left-0 w-full z-20';
 
     if ($isAdministrator) {
-        $contentWrapperClass = 'relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20';
+        $contentWrapperClass = 'relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20 min-h-screen';
     } elseif ($isStudentOrTeacher) {
-        $contentWrapperClass = 'relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20';
+        $contentWrapperClass = 'relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 min-h-screen';
     }
 @endphp
 

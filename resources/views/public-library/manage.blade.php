@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Public Library Management'])
 
-<div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] z-20">
+<div class="relative left-0 md:left-62.5 min-h-screen w-full md:w-[calc(100%-250px)] z-20">
     <div class="my-15 mx-4 md:mx-7.5">
         <div class="rounded-2xl bg-white p-5 shadow">
             <h1 class="text-xl font-bold text-slate-700">Upload Materi Public Library</h1>
