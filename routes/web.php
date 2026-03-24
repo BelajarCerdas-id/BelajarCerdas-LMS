@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LearningResourceController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
+use App\Http\Controllers\PracticeExamController;
 use App\Http\Controllers\PublicLibraryController;
 use App\Http\Controllers\SchoolPartnerController;
 use App\Http\Controllers\SchoolSyllabusController;
@@ -13,6 +15,8 @@ use App\Http\Controllers\TeacherAssessmentController;
 use App\Http\Controllers\TeacherContentController;
 use App\Http\Controllers\TeacherContentReleaseController;
 use App\Http\Controllers\TeacherQuestionBankController;
+use App\Http\Controllers\TkaExamController;
+use App\Http\Controllers\VirtualLabController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -40,9 +44,30 @@ Route::middleware([RedirectIfAuthenticated::class])->group(function () {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// ==========================================
+// LIBRARY (LEARNING RESOURCES)
+// ==========================================
+Route::middleware([AuthMiddleware::class])->group(function () {
+    // Public routes for students
+    Route::get('/library', [LearningResourceController::class, 'index'])->name('library.index');
+    Route::get('/library/{id}', [LearningResourceController::class, 'show'])->whereNumber('id')->name('library.show');
+    Route::get('/library/{id}/preview', [LearningResourceController::class, 'preview'])->whereNumber('id')->name('library.preview');
+    Route::get('/library/{id}/preview-file', [LearningResourceController::class, 'previewFile'])->whereNumber('id')->name('library.preview-file');
+    Route::get('/library/{id}/download', [LearningResourceController::class, 'download'])->whereNumber('id')->name('library.download');
+    
+    // Admin management routes
+    Route::get('/library/manage', [LearningResourceController::class, 'manage'])->name('library.manage');
+    Route::get('/library/create', [LearningResourceController::class, 'create'])->name('library.create');
+    Route::post('/library/store', [LearningResourceController::class, 'store'])->name('library.store');
+    Route::get('/library/{id}/edit', [LearningResourceController::class, 'edit'])->whereNumber('id')->name('library.edit');
+    Route::post('/library/{id}/update', [LearningResourceController::class, 'update'])->whereNumber('id')->name('library.update');
+    Route::post('/library/{id}/delete', [LearningResourceController::class, 'destroy'])->whereNumber('id')->name('library.delete');
+});
+
 // ROUTES PUBLIC LIBRARY
 Route::get('/public-library', [PublicLibraryController::class, 'index'])->name('public-library.index');
 Route::get('/public-library/{id}/download', [PublicLibraryController::class, 'download'])->whereNumber('id')->name('public-library.download');
+
 
 // ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
 Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']); // kelas by fase
@@ -148,7 +173,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/store', [SchoolSyllabusController::class, 'subBabStore'])->name('schoolSubBabManagement.store');
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/edit', [SchoolSyllabusController::class, 'subBabEdit'])->name('schoolSubBabManagement.edit');
     Route::put('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/activate', [SchoolSyllabusController::class, 'subBabActivate'])->name('schoolSubBabManagement.activate');
-    
+
     // paginate
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/kurikulum/paginate', [SchoolSyllabusController::class, 'paginateCurriculum'])->name('schoolCurriculumManagement.paginate');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/fase/paginate', [SchoolSyllabusController::class, 'paginateFase'])->name('schoolFaseManagement.paginate');
@@ -290,7 +315,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // view content management edit no school partner & school partner
     Route::get('/lms/content-management/{contentId}/edit', [LmsController::class, 'lmsContentManagementEditView'])->name('lms.contentManagement.edit.view.noSchoolPartner');
     Route::get('/lms/school-subscription/content-management/{contentId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'lmsContentManagementEditView'])->name('lms.contentManagement.edit.view.schoolPartner');
-    
+
     // view content management review no school partner & school partner
     Route::get('/lms/content-management/{contentId}/review', [LmsController::class, 'lmsReviewContent'])->name('lms.contentManagement.review.noSchoolPartner');
     Route::get('/lms/school-subscription/content-management/{contentId}/{schoolName}/{schoolId}/review', [LmsController::class, 'lmsReviewContent'])->name('lms.contentManagement.review.schoolPartner');
@@ -392,6 +417,65 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // paginate
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/paginate', [TeacherAssessmentController::class, 'paginateTeacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.paginate');
+
+    // ==========================================
+    // TKA EXAMS (Simulasi Soal TKA)
+    // ==========================================
+    // TKA EXAMS
+    Route::get('/tka-exams', [TkaExamController::class, 'index'])->name('tka-exams.index');
+    Route::get('/tka-exams/{id}', [TkaExamController::class, 'show'])->whereNumber('id')->name('tka-exams.show');
+    Route::get('/tka-exams/{id}/start', [TkaExamController::class, 'start'])->whereNumber('id')->name('tka-exams.start');
+    Route::get('/tka-exams/attempts/{attemptId}/take', [TkaExamController::class, 'take'])->whereNumber('attemptId')->name('tka-exams.take');
+    Route::post('/tka-exams/attempts/{attemptId}/save-answer', [TkaExamController::class, 'saveAnswer'])->whereNumber('attemptId')->name('tka-exams.save-answer');
+    Route::post('/tka-exams/attempts/{attemptId}/submit', [TkaExamController::class, 'submit'])->whereNumber('attemptId')->name('tka-exams.submit');
+    Route::get('/tka-exams/attempts/{attemptId}/result', [TkaExamController::class, 'result'])->whereNumber('attemptId')->name('tka-exams.result');
+    
+    // TKA Management (Admin)
+    Route::get('/tka-exams/manage', [TkaExamController::class, 'manage'])->name('tka-exams.manage');
+    Route::get('/tka-exams/create', [TkaExamController::class, 'create'])->name('tka-exams.create');
+    Route::post('/tka-exams/store', [TkaExamController::class, 'store'])->name('tka-exams.store');
+    Route::get('/tka-exams/{id}/edit', [TkaExamController::class, 'edit'])->whereNumber('id')->name('tka-exams.edit');
+    Route::post('/tka-exams/{id}/update', [TkaExamController::class, 'update'])->whereNumber('id')->name('tka-exams.update');
+    Route::post('/tka-exams/{id}/delete', [TkaExamController::class, 'destroy'])->whereNumber('id')->name('tka-exams.delete');
+
+    // ==========================================
+    // PRACTICE EXAMS (Koleksi Latihan Soal/Ujian)
+    // ==========================================
+    // Student routes
+    Route::get('/practice-exams', [PracticeExamController::class, 'index'])->name('practice-exams.index');
+    
+    // Admin Management routes
+    Route::get('/practice-exams/manage', [PracticeExamController::class, 'manage'])->name('practice-exams.manage');
+    Route::get('/practice-exams/create', [PracticeExamController::class, 'create'])->name('practice-exams.create');
+    Route::post('/practice-exams/store', [PracticeExamController::class, 'store'])->name('practice-exams.store');
+    Route::get('/practice-exams/{id}/edit', [PracticeExamController::class, 'edit'])->whereNumber('id')->name('practice-exams.edit');
+    Route::post('/practice-exams/{id}/update', [PracticeExamController::class, 'update'])->whereNumber('id')->name('practice-exams.update');
+    Route::post('/practice-exams/{id}/delete', [PracticeExamController::class, 'destroy'])->whereNumber('id')->name('practice-exams.delete');
+    Route::get('/practice-exams', [PracticeExamController::class, 'index'])->name('practice-exams.index');
+    Route::get('/practice-exams/{id}', [PracticeExamController::class, 'show'])->whereNumber('id')->name('practice-exams.show');
+    Route::get('/practice-exams/{id}/start', [PracticeExamController::class, 'start'])->whereNumber('id')->name('practice-exams.start');
+    Route::get('/practice-exams/attempts/{attemptId}/take', [PracticeExamController::class, 'take'])->whereNumber('attemptId')->name('practice-exams.take');
+    Route::post('/practice-exams/attempts/{attemptId}/save-answer', [PracticeExamController::class, 'saveAnswer'])->whereNumber('attemptId')->name('practice-exams.save-answer');
+    Route::post('/practice-exams/attempts/{attemptId}/submit', [PracticeExamController::class, 'submit'])->whereNumber('attemptId')->name('practice-exams.submit');
+    Route::get('/practice-exams/attempts/{attemptId}/result', [PracticeExamController::class, 'result'])->whereNumber('attemptId')->name('practice-exams.result');
+    Route::get('/practice-exams/attempts/{attemptId}/questions/{questionId}/explanation', [PracticeExamController::class, 'viewExplanation'])->whereNumber(['attemptId', 'questionId'])->name('practice-exams.explanation');
+
+    // ==========================================
+    // VIRTUAL LABS (Koleksi Virtual Lab)
+    // ==========================================
+    Route::get('/virtual-labs', [VirtualLabController::class, 'index'])->name('virtual-labs.index');
+    Route::get('/virtual-labs/{id}', [VirtualLabController::class, 'show'])->whereNumber('id')->name('virtual-labs.show');
+    Route::get('/virtual-labs/{id}/preview', [VirtualLabController::class, 'preview'])->whereNumber('id')->name('virtual-labs.preview');
+    Route::post('/virtual-labs/{id}/track-progress', [VirtualLabController::class, 'trackProgress'])->whereNumber('id')->name('virtual-labs.track-progress');
+    Route::post('/virtual-labs/{id}/review', [VirtualLabController::class, 'submitReview'])->whereNumber('id')->name('virtual-labs.submit-review');
+    
+    // Admin Management
+    Route::get('/virtual-labs/manage', [VirtualLabController::class, 'manage'])->name('virtual-labs.manage');
+    Route::get('/virtual-labs/create', [VirtualLabController::class, 'create'])->name('virtual-labs.create');
+    Route::post('/virtual-labs/store', [VirtualLabController::class, 'store'])->name('virtual-labs.store');
+    Route::get('/virtual-labs/{id}/edit', [VirtualLabController::class, 'edit'])->whereNumber('id')->name('virtual-labs.edit');
+    Route::post('/virtual-labs/{id}/update', [VirtualLabController::class, 'update'])->whereNumber('id')->name('virtual-labs.update');
+    Route::post('/virtual-labs/{id}/delete', [VirtualLabController::class, 'destroy'])->whereNumber('id')->name('virtual-labs.delete');
 });
 
 // ROUTES SCHOOL PARTNER

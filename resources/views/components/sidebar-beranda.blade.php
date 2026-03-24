@@ -12,7 +12,7 @@
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
 
             <!-- MENU -->
-            <ul class="mt-14 space-y-4 px-2">
+            <ul class="mt-14 space-y-2 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('beranda') }}"
                     class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
@@ -20,13 +20,42 @@
                         <span>Beranda</span>
                     </a>
                 </li>
+                
+                <!-- Learning Resources Dropdown -->
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('public-library.index') }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-book-open"></i>
-                        <span>Public Library</span>
-                    </a>
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition cursor-pointer list-none">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-folder-open"></i>
+                                <span>Learning Resources</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-xs transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <div class="mt-1 pl-4 pr-2 space-y-1">
+                            <a href="{{ route('library.index') }}"
+                            class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[#FFFFFF26] rounded-lg transition">
+                                <i class="fa-solid fa-book text-sm"></i>
+                                <span>Library</span>
+                            </a>
+                            <a href="{{ route('tka-exams.index') }}"
+                            class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[#FFFFFF26] rounded-lg transition">
+                                <i class="fa-solid fa-graduation-cap text-sm"></i>
+                                <span>Simulasi TKA</span>
+                            </a>
+                            <a href="{{ route('practice-exams.index') }}"
+                            class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[#FFFFFF26] rounded-lg transition">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                <span>Latihan Soal</span>
+                            </a>
+                            <a href="{{ route('virtual-labs.index') }}"
+                            class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-[#FFFFFF26] rounded-lg transition">
+                                <i class="fa-solid fa-flask text-sm"></i>
+                                <span>Virtual Lab</span>
+                            </a>
+                        </div>
+                    </details>
                 </li>
+                
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('lms.student.view', [
                         'role' => Auth::user()->role,
@@ -62,7 +91,7 @@
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
             <!-- Navbar for PC -->
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5 sticky top-0 z-50">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -290,16 +319,133 @@
                     </div>
                 </li>
 
-                <li class="list-item pb-4">
-                    <div class="dropdown-menu">
-                        <div class="content-menu text-sm flex items-center gap-3 px-3.75">
-                            <div class="">
-                                <i class="fa-solid fa-book-open"></i>
+                <!-- Learning Resources Dropdown (DaisyUI Style) -->
+                <li class="list-item pb-2">
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-3 py-2 cursor-pointer list-none">
+                            <div class="content-menu flex items-center gap-3">
+                                <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
+                                <span class="link-href text-[14px]">Learning Resources</span>
                             </div>
-                            <a href="{{ route('public-library.index') }}" class="link-href flex flex-col text-[14px]">Public Library</a>
-                        </div>
-                    </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <ul class="mt-1 pl-8 pr-2 space-y-1">
+                            <li>
+                                <a href="{{ route('library.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-book text-[12px] mr-2"></i>Library
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('tka-exams.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-graduation-cap text-[12px] mr-2"></i>Simulasi TKA
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('practice-exams.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-pen-to-square text-[12px] mr-2"></i>Latihan Soal
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('virtual-labs.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-flask text-[12px] mr-2"></i>Virtual Lab
+                                </a>
+                            </li>
+                        </ul>
+                    </details>
                 </li>
+
+                <!-- Admin Only: Learning Resources Management -->
+                @if(Auth::check() && Auth::user()->role === 'Administrator')
+                <li class="list-item pb-2">
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-3 py-2 cursor-pointer list-none rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <div class="content-menu flex items-center gap-3">
+                                <i class="fa-solid fa-layer-group text-[15px] w-5 text-center"></i>
+                                <span class="link-href text-[14px] font-semibold">LR Management</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <ul class="mt-2 pl-8 pr-2 space-y-1">
+                            <!-- Library Section -->
+                            <li class="pt-2">
+                                <div class="flex items-center gap-2 px-4 py-1">
+                                    <i class="fa-solid fa-book text-[11px] text-blue-300"></i>
+                                    <span class="text-[11px] text-white/70 font-bold uppercase tracking-wide">Library</span>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="{{ route('library.manage') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-white hover:bg-[#FFFFFF26] rounded-lg transition">
+                                    <i class="fa-solid fa-list-check text-[12px]"></i>
+                                    <span>Manage Library</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('library.create') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-white hover:bg-[#FFFFFF26] rounded-lg transition">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[12px]"></i>
+                                    <span>Upload Resource</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Divider -->
+                            <li class="py-1">
+                                <div class="border-t border-white/20"></div>
+                            </li>
+                            
+                            <!-- TKA Section -->
+                            <li>
+                                <div class="flex items-center gap-2 px-4 py-1">
+                                    <i class="fa-solid fa-graduation-cap text-[11px] text-green-300"></i>
+                                    <span class="text-[11px] text-white/70 font-bold uppercase tracking-wide">Simulasi TKA</span>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="{{ route('tka-exams.manage') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-white hover:bg-[#FFFFFF26] rounded-lg transition">
+                                    <i class="fa-solid fa-list-check text-[12px]"></i>
+                                    <span>Manage TKA</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Divider -->
+                            <li class="py-1">
+                                <div class="border-t border-white/20"></div>
+                            </li>
+                            
+                            <!-- Practice Exam Section -->
+                            <li>
+                                <div class="flex items-center gap-2 px-4 py-1">
+                                    <i class="fa-solid fa-pen-to-square text-[11px] text-yellow-300"></i>
+                                    <span class="text-[11px] text-white/70 font-bold uppercase tracking-wide">Latihan Soal</span>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="{{ route('practice-exams.manage') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-white hover:bg-[#FFFFFF26] rounded-lg transition">
+                                    <i class="fa-solid fa-list-check text-[12px]"></i>
+                                    <span>Manage Latihan Soal</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Divider -->
+                            <li class="py-1">
+                                <div class="border-t border-white/20"></div>
+                            </li>
+                            
+                            <!-- Virtual Lab Section -->
+                            <li>
+                                <div class="flex items-center gap-2 px-4 py-1">
+                                    <i class="fa-solid fa-flask text-[11px] text-purple-300"></i>
+                                    <span class="text-[11px] text-white/70 font-bold uppercase tracking-wide">Virtual Lab</span>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="{{ route('virtual-labs.manage') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-white hover:bg-[#FFFFFF26] rounded-lg transition">
+                                    <i class="fa-solid fa-list-check text-[12px]"></i>
+                                    <span>Manage Virtual Lab</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </details>
+                </li>
+                @endif
 
                 <li class="list-item pb-4">
                     <div class="dropdown-menu">
@@ -376,7 +522,7 @@
     <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
             <!-- Navbar for PC -->
-            <div class="w-full h-24 bg-white shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-24 bg-white shadow-lg flex items-center justify-between px-12.5 sticky top-0 z-50">
                 <header class="text-[20px] font-bold opacity-70 flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -562,57 +708,56 @@
                     </li>
 
                     <li class="list-item m-2 pb-3">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
+                        <details class="group">
+                            <summary class="w-full flex items-center justify-between gap-3.5 cursor-pointer list-none py-2">
+                                <div class="flex items-center gap-3.5">
+                                    <i class="fa-solid fa-book-bookmark text-[14px]"></i>
+                                    <span class="text-[14px]">Belajar Cerdas LMS</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-[14px] transition-transform group-open:rotate-180"></i>
+                            </summary>
 
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
-                                <i class="fa-solid fa-book-bookmark text-[14px]"></i>
-                                <span class="text-[14px]">Belajar Cerdas LMS</span>
-                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
-                            </div>
-
-                            <div class="content-dropdown px-2 w-full">
-                                <div class="flex flex-col">
-                                    <div
-                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                            <div class="content-dropdown px-2 w-full mt-1">
+                                <details class="group">
+                                    <summary class="flex items-center justify-between cursor-pointer py-2 text-[14px] list-none">
                                         <span>Content</span>
-                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                    </div>
-
+                                        <i class="fas fa-chevron-down text-[12px] transition-transform group-open:rotate-180"></i>
+                                    </summary>
                                     <div class="list-content-dropdown pl-4">
                                         <a href="{{ route('lms.contentManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
                                             Manage Content
                                         </a>
                                     </div>
-                                </div>
+                                </details>
 
-                                <div class="flex flex-col">
-                                    <div
-                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[13px]">
+                                <details class="group">
+                                    <summary class="flex items-center justify-between cursor-pointer py-2 text-[13px] list-none">
                                         <span>Question</span>
-                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                    </div>
-
+                                        <i class="fas fa-chevron-down text-[12px] transition-transform group-open:rotate-180"></i>
+                                    </summary>
                                     <div class="list-content-dropdown pl-4">
                                         <a href="{{ route('lms.questionBankManagement.view.noSchoolPartner') }}" class="link-href block py-2 text-[12px]">
                                             Manage Question
                                         </a>
                                     </div>
-                                </div>
+                                </details>
                             </div>
-                        </div>
+                        </details>
                     </li>
 
                     <li class="list-item m-2 pb-3">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
-                                <i class="fa-solid fa-school-flag text-[12px]"></i>
-                                <span class="text-[14px]">School Partner</span>
-                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
-                            </div>
+                        <details class="group">
+                            <summary class="w-full flex items-center justify-between gap-3.5 cursor-pointer list-none py-2">
+                                <div class="flex items-center gap-3.5">
+                                    <i class="fa-solid fa-school-flag text-[12px]"></i>
+                                    <span class="text-[14px]">School Partner</span>
+                                </div>
+                                <i class="fas fa-chevron-down text-[14px] transition-transform group-open:rotate-180"></i>
+                            </summary>
                             <div class="content-dropdown">
                                 <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex flex-col px-2 py-2 text-[13px]">LMS</a>
                             </div>
-                        </div>
+                        </details>
                     </li>
                 </ul>
 
@@ -653,33 +798,58 @@
                     </div>
                 </li>
 
-                <li class="list-item">
-                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                        <i class="fa-solid fa-book-open text-[15px] w-5 text-center"></i>
-                        <a href="{{ route('public-library.index') }}" class="link-href text-[14px]">
-                            Public Library
-                        </a>
-                    </div>
+                <!-- Learning Resources Dropdown -->
+                <li>
+                    <details class="group">
+                        <summary class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition cursor-pointer list-none">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Learning Resources</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-[13px] transition-transform group-open:rotate-180"></i>
+                        </summary>
+                        <ul class="mt-1 pl-6 pr-2 space-y-1">
+                            <li>
+                                <a href="{{ route('library.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-book text-[12px] mr-2"></i>Library
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('tka-exams.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-graduation-cap text-[12px] mr-2"></i>Simulasi TKA
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('practice-exams.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-pen-to-square text-[12px] mr-2"></i>Latihan Soal
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('virtual-labs.index') }}" class="link-href text-[13px] block py-1">
+                                    <i class="fa-solid fa-flask text-[12px] mr-2"></i>Virtual Lab
+                                </a>
+                            </li>
+                        </ul>
+                    </details>
                 </li>
 
                 <!-- AKTIVITAS GURU -->
                 <li class="list-item">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
+                    <details class="group">
+                        <summary class="w-full flex items-center justify-between gap-3 cursor-pointer list-none px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Aktivitas Guru</span>
+                            </div>
+                            <i class="fas fa-chevron-down absolute right-3 text-[13px] transition-transform group-open:rotate-180"></i>
+                        </summary>
 
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Aktivitas Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                        <div class="content-dropdown pl-6 pr-3.5 w-full mt-1">
+                            <details class="group">
+                                <summary class="flex items-center justify-between cursor-pointer py-2 text-[14px] list-none">
                                     <span>Assessment</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
+                                    <i class="fas fa-chevron-down text-[12px] transition-transform group-open:rotate-180"></i>
+                                </summary>
                                 <div class="list-content-dropdown pl-4">
                                     <a href="{{ route('lms.teacherAssessmentManagement.view', [
                                             'role' => Auth::user()->role,
@@ -689,15 +859,13 @@
                                         Assessment Mangement
                                     </a>
                                 </div>
-                            </div>
+                            </details>
 
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                            <details class="group">
+                                <summary class="flex items-center justify-between cursor-pointer py-2 text-[14px] list-none">
                                     <span>Content</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
+                                    <i class="fas fa-chevron-down text-[12px] transition-transform group-open:rotate-180"></i>
+                                </summary>
                                 <div class="list-content-dropdown pl-4">
                                     <a href="{{ route('lms.teacherContentManagement.view', [
                                             'role' => Auth::user()->role,
@@ -714,15 +882,13 @@
                                         Content For Release
                                     </a>
                                 </div>
-                            </div>
+                            </details>
 
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                            <details class="group">
+                                <summary class="flex items-center justify-between cursor-pointer py-2 text-[14px] list-none">
                                     <span>Question</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
+                                    <i class="fas fa-chevron-down text-[12px] transition-transform group-open:rotate-180"></i>
+                                </summary>
                                 <div class="list-content-dropdown pl-4">
                                     <a href="{{ route('lms.teacherQuestionBankManagement.view', [
                                             'role' => Auth::user()->role,
@@ -732,9 +898,9 @@
                                         Question Bank Management
                                     </a>
                                 </div>
-                            </div>
+                            </details>
                         </div>
-                    </div>
+                    </details>
                 </li>
             </ul>
 
@@ -760,7 +926,7 @@
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
             <!-- Navbar for PC -->
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5 sticky top-0 z-50">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
