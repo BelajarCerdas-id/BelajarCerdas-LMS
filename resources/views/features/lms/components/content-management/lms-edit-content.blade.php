@@ -101,7 +101,7 @@
     </section>
 </main>
 
-<script src="{{ asset('assets/js/Features/lms/components/content-management/lms-content-management-edit.js') }}"></script> <!--- lms content management edit ---->
+<script src="{{ asset('assets/js/features/lms/components/content-management/lms-content-management-edit.js') }}"></script> <!--- lms content management edit ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->

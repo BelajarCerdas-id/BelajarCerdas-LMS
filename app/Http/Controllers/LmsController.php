@@ -192,7 +192,7 @@ class LmsController extends Controller
     // function lms management roles view
     public function lmsManagementRolesView($schoolName, $schoolId)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-role-account', compact('schoolName', 'schoolId'));
+        return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('schoolName', 'schoolId'));
     }
 
     // function paginate lms management roles
@@ -225,7 +225,7 @@ class LmsController extends Controller
     // function lms management account view
     public function lmsManagementAccountView($schoolName, $schoolId, $role)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role'));
     }
 
     // function paginate lms management account
@@ -360,7 +360,7 @@ class LmsController extends Controller
     // function lms management majors view
     public function lmsManagementMajorsView($schoolName, $schoolId, $role)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-majors', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-majors', compact('schoolName', 'schoolId', 'role'));
     }
 
     // function paginate lms management majors
@@ -497,7 +497,7 @@ class LmsController extends Controller
 
         $phases = Fase::whereIn(DB::raw('LOWER(kode)'), $allowedPhases)->get();
 
-        return view('Features.lms.administrator.lms-school-subscription-management-class', compact('schoolName', 'schoolId', 'role', 'majorId', 'phases'));
+        return view('features.lms.administrator.lms-school-subscription-management-class', compact('schoolName', 'schoolId', 'role', 'majorId', 'phases'));
     }
 
     // function paginate lms management class
@@ -746,7 +746,7 @@ class LmsController extends Controller
     // function lms management students view
     public function lmsManagementStudentsView($schoolName, $schoolId, $role, $classId, $majorId = null)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-students', compact('schoolName', 'schoolId', 'role', 'classId', 'majorId'));
+        return view('features.lms.administrator.lms-school-subscription-management-students', compact('schoolName', 'schoolId', 'role', 'classId', 'majorId'));
     }
 
     // function paginate lms management users
@@ -1692,7 +1692,7 @@ class LmsController extends Controller
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms content
@@ -1860,7 +1860,7 @@ class LmsController extends Controller
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function edit content view
@@ -1870,7 +1870,7 @@ class LmsController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 
+        return view('features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 
             'schoolName', 'schoolId'));
     }
 

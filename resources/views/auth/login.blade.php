@@ -60,6 +60,12 @@
                     Masuk
                 </button>
             </form>
+
+            <div class="mt-5 text-center">
+                <a href="{{ route('public-library.index') }}" class="text-sm font-semibold text-[#0071BC] hover:underline">
+                    Lihat Public Library
+                </a>
+            </div>
         </div>
     </div>
 </div>

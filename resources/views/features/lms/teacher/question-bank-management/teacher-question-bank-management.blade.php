@@ -284,8 +284,8 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/question-bank-management/teacher-paginate-question-bank-management.js') }}"></script> <!--- teacher paginate lms question bank ---->
-<script src="{{ asset('assets/js/Features/lms/bank-soal/form-action-bank-soal.js') }}"></script> <!--- form action upload bank soal ---->
+<script src="{{ asset('assets/js/features/lms/teacher/question-bank-management/teacher-paginate-question-bank-management.js') }}"></script> <!--- teacher paginate lms question bank ---->
+<script src="{{ asset('assets/js/features/lms/bank-soal/form-action-bank-soal.js') }}"></script> <!--- form action upload bank soal ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown ---->

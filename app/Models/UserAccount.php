@@ -111,4 +111,9 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(SchoolAssessmentTypeWeight::class, 'user_id');
     }
+
+    public function PublicLibrary()
+    {
+        return $this->hasMany(PublicLibrary::class, 'user_id');
+    }
 }
