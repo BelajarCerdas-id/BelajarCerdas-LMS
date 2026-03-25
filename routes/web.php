@@ -516,7 +516,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentList'])->name('lms.assessmentGradingStudentList.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/{studentId}/scoring/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentAnswer'])->name('lms.assessmentGradingStudentAnswer.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/{studentId}/scoring/project', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentProject'])->name('lms.assessmentGradingStudentProject');
-=======
+
     // ==========================================
     // TKA EXAMS (Simulasi Soal TKA)
     // ==========================================
@@ -528,7 +528,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/tka-exams/attempts/{attemptId}/save-answer', [TkaExamController::class, 'saveAnswer'])->whereNumber('attemptId')->name('tka-exams.save-answer');
     Route::post('/tka-exams/attempts/{attemptId}/submit', [TkaExamController::class, 'submit'])->whereNumber('attemptId')->name('tka-exams.submit');
     Route::get('/tka-exams/attempts/{attemptId}/result', [TkaExamController::class, 'result'])->whereNumber('attemptId')->name('tka-exams.result');
-    
+
     // TKA Management (Admin)
     Route::get('/tka-exams/manage', [TkaExamController::class, 'manage'])->name('tka-exams.manage');
     Route::get('/tka-exams/create', [TkaExamController::class, 'create'])->name('tka-exams.create');
@@ -542,15 +542,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // ==========================================
     // Student routes
     Route::get('/practice-exams', [PracticeExamController::class, 'index'])->name('practice-exams.index');
-    
-    // Admin Management routes
-    Route::get('/practice-exams/manage', [PracticeExamController::class, 'manage'])->name('practice-exams.manage');
-    Route::get('/practice-exams/create', [PracticeExamController::class, 'create'])->name('practice-exams.create');
-    Route::post('/practice-exams/store', [PracticeExamController::class, 'store'])->name('practice-exams.store');
-    Route::get('/practice-exams/{id}/edit', [PracticeExamController::class, 'edit'])->whereNumber('id')->name('practice-exams.edit');
-    Route::post('/practice-exams/{id}/update', [PracticeExamController::class, 'update'])->whereNumber('id')->name('practice-exams.update');
-    Route::post('/practice-exams/{id}/delete', [PracticeExamController::class, 'destroy'])->whereNumber('id')->name('practice-exams.delete');
-    Route::get('/practice-exams', [PracticeExamController::class, 'index'])->name('practice-exams.index');
     Route::get('/practice-exams/{id}', [PracticeExamController::class, 'show'])->whereNumber('id')->name('practice-exams.show');
     Route::get('/practice-exams/{id}/start', [PracticeExamController::class, 'start'])->whereNumber('id')->name('practice-exams.start');
     Route::get('/practice-exams/attempts/{attemptId}/take', [PracticeExamController::class, 'take'])->whereNumber('attemptId')->name('practice-exams.take');
@@ -558,6 +549,14 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/practice-exams/attempts/{attemptId}/submit', [PracticeExamController::class, 'submit'])->whereNumber('attemptId')->name('practice-exams.submit');
     Route::get('/practice-exams/attempts/{attemptId}/result', [PracticeExamController::class, 'result'])->whereNumber('attemptId')->name('practice-exams.result');
     Route::get('/practice-exams/attempts/{attemptId}/questions/{questionId}/explanation', [PracticeExamController::class, 'viewExplanation'])->whereNumber(['attemptId', 'questionId'])->name('practice-exams.explanation');
+
+    // Admin Management routes
+    Route::get('/practice-exams/manage', [PracticeExamController::class, 'manage'])->name('practice-exams.manage');
+    Route::get('/practice-exams/create', [PracticeExamController::class, 'create'])->name('practice-exams.create');
+    Route::post('/practice-exams/store', [PracticeExamController::class, 'store'])->name('practice-exams.store');
+    Route::get('/practice-exams/{id}/edit', [PracticeExamController::class, 'edit'])->whereNumber('id')->name('practice-exams.edit');
+    Route::post('/practice-exams/{id}/update', [PracticeExamController::class, 'update'])->whereNumber('id')->name('practice-exams.update');
+    Route::post('/practice-exams/{id}/delete', [PracticeExamController::class, 'destroy'])->whereNumber('id')->name('practice-exams.delete');
 
     // ==========================================
     // VIRTUAL LABS (Koleksi Virtual Lab)
@@ -567,7 +566,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/virtual-labs/{id}/preview', [VirtualLabController::class, 'preview'])->whereNumber('id')->name('virtual-labs.preview');
     Route::post('/virtual-labs/{id}/track-progress', [VirtualLabController::class, 'trackProgress'])->whereNumber('id')->name('virtual-labs.track-progress');
     Route::post('/virtual-labs/{id}/review', [VirtualLabController::class, 'submitReview'])->whereNumber('id')->name('virtual-labs.submit-review');
-    
+
     // Admin Management
     Route::get('/virtual-labs/manage', [VirtualLabController::class, 'manage'])->name('virtual-labs.manage');
     Route::get('/virtual-labs/create', [VirtualLabController::class, 'create'])->name('virtual-labs.create');
@@ -575,7 +574,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/virtual-labs/{id}/edit', [VirtualLabController::class, 'edit'])->whereNumber('id')->name('virtual-labs.edit');
     Route::post('/virtual-labs/{id}/update', [VirtualLabController::class, 'update'])->whereNumber('id')->name('virtual-labs.update');
     Route::post('/virtual-labs/{id}/delete', [VirtualLabController::class, 'destroy'])->whereNumber('id')->name('virtual-labs.delete');
->>>>>>> Zaky
 });
 
 // ROUTES SCHOOL PARTNER
