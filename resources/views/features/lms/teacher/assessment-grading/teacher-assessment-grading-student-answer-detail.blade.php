@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Scoring',
-    'linkBackButton' => route('lms.assessmentGradingStudentList.view', [$role, $schoolName, $schoolId, $assessmentId]),
+    'linkBackButton' => route('lms.assessmentGradingStudentList.view', [$role, $schoolName, $schoolId, $rootAssessmentId, 'main']),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -12,7 +12,7 @@
 
             <main>
                 <section id="container-assessment-grading-student-answer" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
-                    data-assessment-id="{{ $assessmentId }}" data-student-id="{{ $studentId }}">
+                    data-assessment-id="{{ $assessmentId }}" data-mode="{{ $mode }}" data-student-id="{{ $studentId }}">
 
                     <!-- HEADER -->
                     <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-2xl p-5 md:p-7 mb-8 shadow-lg">

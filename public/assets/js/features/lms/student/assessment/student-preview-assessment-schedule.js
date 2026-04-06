@@ -16,11 +16,15 @@ function changeSemester(semester) {
     const curriculumId = container.data('curriculum-id');
     const mapelId = container.data('mapel-id');
     const assessmentTypeId = container.data('assessment-type-id');
+    const mode = container.data('mode');
+    const parentAssessmentId = container.data('parent-assessment-id')
 
     if (!container) return;
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${selectedSemester}`,
+        url: !mode && !parentAssessmentId
+            ? `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${selectedSemester}`
+            : `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${selectedSemester}/mode/${mode}/${parentAssessmentId}`,
         type: 'GET',
         dataType: 'json',
 
@@ -67,7 +71,7 @@ function changeSemester(semester) {
 
                 let btnStartExam = '';
 
-                if (isAfter || (total_questions > 0 && total_questions === total_answers)) {
+                if (isAfter || (total_answers > 0)) {
 
                     btnStartExam = `
                         <a href="${resultTestHref}">

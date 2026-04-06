@@ -9,6 +9,7 @@ use App\Models\SchoolPartner;
 use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use App\Services\LMS\AssessmentManagement\Teacher\LmsReviewFileService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -28,11 +29,17 @@ class TeacherAssessmentController extends Controller
     }
     
     // function teacher assessment management view
-    public function teacherAssessmentManagement($role, $schoolName, $schoolId)
+    public function teacherAssessmentManagement($role, $schoolName, $schoolId, $mode = null, $parentAssessmentId = null)
     {
         $schoolAssessmentType = SchoolAssessmentType::where('school_partner_id', $schoolId)->get();
 
-        return view('features.lms.teacher.assessment.teacher-assessment', compact('role', 'schoolName', 'schoolId', 'schoolAssessmentType'));
+        $parent = null;
+
+        if ($parentAssessmentId) {
+            $parent = SchoolAssessment::with(['SchoolClass', 'Mapel'])->find($parentAssessmentId);
+        }
+
+        return view('features.lms.teacher.assessment.teacher-assessment', compact('role', 'schoolName', 'schoolId', 'schoolAssessmentType', 'mode', 'parent', 'parentAssessmentId'));
     }
 
     // function teacher assessment management form
@@ -181,6 +188,8 @@ class TeacherAssessmentController extends Controller
         }
 
         if ($step == 1) {
+            $clientNow = Carbon::parse($request->client_now);
+
             if ($assessmentMode->code !== 'project') {
                 $rules['duration'] = 'required|integer|min:1';
                 $messages['duration.required'] = 'Harap isi durasi.';
@@ -196,13 +205,88 @@ class TeacherAssessmentController extends Controller
             }
 
             foreach ($request->school_class_id as $index => $classId) {
-    
+
                 $mapelId = $request->mapel_id[$index] ?? null;
-    
+                $currentMode = $request->mode ?? 'main';
+
+                // cari parent (main)
+                $parentAssessment = SchoolAssessment::where(['school_class_id' => $classId, 'mapel_id' => $mapelId, 'semester' => $request->semester, 
+                    'assessment_type_id' => $request->assessment_type_id, 'assessment_category' => 'main', 'school_partner_id' => $schoolId])->first();
+
+                // selain main WAJIB ada parent
+                if ($currentMode !== 'main' && !$parentAssessment) {
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => [
+                            'assessment_type_id' => ['Asesmen utama belum tersedia.']
+                        ],
+                    ], 422);
+                }
+
+                // REMEDIAL
+                if ($currentMode === 'remedial') {
+
+                    $type = SchoolAssessmentType::find($request->assessment_type_id);
+
+                    if (!$type || !$type->is_remedial_allowed) {
+                        return response()->json([
+                            'status' => 'error',
+                            'errors' => [
+                                'assessment_type_id' => ['Remedial tidak diizinkan untuk tipe asesmen ini.']
+                            ],
+                        ], 422);
+                    }
+
+                    $maxRemedial = $type->max_remedial_attempt ?? 0;
+
+                    // cek masih ada yang aktif
+                    $activeRemedial = SchoolAssessment::where('parent_assessment_id', $parentAssessment->id)->where('assessment_category', 'remedial')->where('end_date', '>', $clientNow)->exists();
+
+                    if ($activeRemedial) {
+                        return response()->json([
+                            'status' => 'error',
+                            'errors' => [
+                                'assessment_type_id' => ['Masih ada remedial yang sedang berlangsung.']
+                            ],
+                        ], 422);
+                    }
+
+                    // cek limit
+                    $remedialCount = SchoolAssessment::where('parent_assessment_id', $parentAssessment->id)->where('assessment_category', 'remedial')->count();
+
+                    if ($remedialCount >= $maxRemedial) {
+                        return response()->json([
+                            'status' => 'error',
+                            'errors' => [
+                                'assessment_type_id' => ["Maksimal remedial ({$maxRemedial}x) sudah tercapai."]
+                            ],
+                        ], 422);
+                    }
+                }
+
+                // SUSULAN & PENGAYAAN (NO OVERLAP)
+                if (in_array($currentMode, ['susulan', 'pengayaan'])) {
+
+                    $active = SchoolAssessment::where('parent_assessment_id', $parentAssessment->id)
+                        ->where('assessment_category', $currentMode)
+                        ->where('end_date', '>', $clientNow)
+                        ->exists();
+
+                    if ($active) {
+                        return response()->json([
+                            'status' => 'error',
+                            'errors' => [
+                                'assessment_type_id' => ["Masih ada {$currentMode} yang sedang berlangsung."]
+                            ],
+                        ], 422);
+                    }
+                }
+
+                // MAIN (EXAM)
                 $exists = SchoolAssessment::where('school_class_id', $classId)->where('mapel_id', $mapelId)->where('semester', $request->semester)
-                ->where('assessment_type_id', $request->assessment_type_id)->where('school_partner_id', $schoolId)->exists();
-    
-                if ($assessmentMode->code == 'exam') {
+                    ->where('assessment_type_id', $request->assessment_type_id)->where('school_partner_id', $schoolId)->where('assessment_category', $currentMode)->exists();
+
+                if ($assessmentMode->code == 'exam' && $currentMode === 'main') {
                     if ($exists) {
                         return response()->json([
                             'status' => 'error',
@@ -254,6 +338,9 @@ class TeacherAssessmentController extends Controller
             $file->move(public_path('assessment/assessment-file'), $filename);
         }
 
+        $mode = $request->mode; // main | remedial | susulan | dll
+        $parentId = $request->parent_assessment_id;
+
         foreach ($request->school_class_id as $index => $schoolClassId) {
 
             $mapelId = $request->mapel_id[$index] ?? null;
@@ -264,6 +351,8 @@ class TeacherAssessmentController extends Controller
                 'school_class_id' => $schoolClassId,
                 'mapel_id' => $mapelId,
                 'assessment_type_id' => $request->assessment_type_id,
+                'assessment_category' => $mode ?? 'main',
+                'parent_assessment_id' => $parentId ?? null,
                 'title' => $request->title,
                 'assessment_instruction' => $request->assessment_instruction,
                 'duration' => $request->duration,

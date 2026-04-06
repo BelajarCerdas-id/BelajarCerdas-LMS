@@ -13,20 +13,52 @@
         <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-2xl p-6 md:p-8 mb-8 shadow-lg hidden">
             <!-- show header in ajax -->
         </div>
+
+        <section>
+            <div id="action-buttons" class="flex gap-2 justify-end"></div>
+        </section>
         
         <section>
             <div id="container-assessment-grading-student-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-assessment-id="{{ $assessmentId }}" 
-                class="overflow-x-auto mt-6 pb-20">
+                data-mode="{{ $mode }}" class="overflow-x-auto mt-6 pb-20">
                 <table id="table-assessment-grading-student-list" class="min-w-full text-sm border-collapse">
                     <thead class="thead-table-assessment-grading-student-list bg-gray-50 shadow-inner">
-                        <tr>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama Siswa</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Submit</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Nilai</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
-                        </tr>
+                        @if ($mode === 'main')
+                            <tr>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Pengerjaan</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Awal</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Susulan</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Remedial</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Akhir</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Pengayaan</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Penilaian</th>
+                            </tr>
+                        @elseif ($mode === 'remedial')
+                            <tr>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Utama</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">KKM</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status</th>
+                            </tr>
+
+                        @elseif ($mode === 'susulan')
+                            <tr>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Keterangan</th>
+                            </tr>
+                        @else
+                            <tr>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Akhir</th>
+                                <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status</th>
+                            </tr>
+                        @endif
                     </thead>
                     <tbody id="tbody-assessment-grading-student-list">
                         <!-- show data in ajax -->

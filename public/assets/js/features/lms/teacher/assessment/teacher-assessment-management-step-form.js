@@ -6,6 +6,10 @@ const backBtn = document.getElementById("backBtn");
 const draftBtn = document.getElementById("submit-button-draft-create-assessment");
 const publishBtn = document.getElementById("submit-button-publish-create-assessment");
 const progressLine = document.getElementById("progress-line");
+const now = new Date();
+
+const clientNow = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
 
 function updateUI() {
 
@@ -70,6 +74,7 @@ nextBtn.addEventListener("click", function (e) {
     const form = $('#create-assessment-form')[0];
     const formData = new FormData(form);
     formData.append('step', currentStep);
+    formData.append('client_now', clientNow);
 
     // Kirim AJAX ke route validasi
     $.ajax({

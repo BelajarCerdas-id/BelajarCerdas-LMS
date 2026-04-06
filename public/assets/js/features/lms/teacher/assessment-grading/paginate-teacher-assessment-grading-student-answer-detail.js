@@ -8,16 +8,17 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const assessmentId = container.dataset.assessmentId;
+    const mode = container.dataset.mode;
     const studentId = container.dataset.studentId;
 
-    if (!role || !schoolName || !schoolId || !assessmentId || !studentId) return;
+    if (!role || !schoolName || !schoolId || !assessmentId || !mode || !studentId) return;
 
     fetchData();
 
     function fetchData() {
 
         $.ajax({
-            url: `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/student-list/${studentId}/scoring/paginate`,
+            url: `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/mode/${mode}/student-list/${studentId}/scoring/paginate`,
             method: 'GET',
 
             success: function (response) {
@@ -32,11 +33,12 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                 const assessment = response.assessment;
                 const student = response.student;
 
+                let correctCount = 0;
+
                 const previousStudent = response.previousStudent;
                 const nextStudent = response.nextStudent;
 
                 const previousUrl = previousStudent ? `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/student-list/${previousStudent}/scoring` : '#';
-
                 const nextUrl = nextStudent ? `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/student-list/${nextStudent}/scoring` : '#';
 
                 const assessmentInfo = $('#header-assessment-info');
@@ -99,9 +101,12 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                     const questionsAnswer = response.questionsAnswer;
 
                     const question = questions[selectedIndex];
-                    const scoreUser = questionsAnswer[question.id]?.question_score ?? 0;
-                    const teacherFeedback = questionsAnswer[question.id]?.teacher_feedback ?? '';
-                    const statusAnswer = questionsAnswer[question.id]?.status_answer ?? 'draft';
+                    const key = `${assessment.id}_${question.id}`;
+                    const answerData = questionsAnswer[key] ?? {};
+
+                    const scoreUser = answerData?.question_score ?? 0;
+                    const teacherFeedback = answerData?.teacher_feedback ?? '';
+                    const statusAnswer = answerData?.status_answer ?? 'draft';
 
                     const questionType = question?.lms_question_bank?.tipe_soal?.toLowerCase();
                     const options = question?.lms_question_bank?.lms_question_option ?? [];
@@ -429,7 +434,7 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                         const categories = options.filter(item => item.extra_data?.side === 'category');
                         const items = options.filter(item => item.extra_data?.side === 'item');
 
-                        let existingAnswer = questionsAnswer[question.id]?.answer_value || {};
+                        let existingAnswer = answerData?.answer_value || {};
 
                         if (typeof existingAnswer === 'string') {
                             try {
@@ -540,6 +545,35 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                     `;
                     }
 
+                    const isRemedial = assessment.assessment_category === 'remedial';
+                    const totalQuestions = questions.length;
+                    const scorePerQuestion = totalQuestions > 0 ? (100 / totalQuestions) : 0;
+
+                    const isCorrect = questionStatus === 'correct';
+
+                    // ================= SCORE =================
+                    let displayScore = 0;
+                    let maxScore = 0;
+
+                    if (isRemedial) {
+
+                        // REMEDIAL → AUTO SCORING
+                        displayScore = isCorrect ? scorePerQuestion : 0;
+                        maxScore = scorePerQuestion;
+
+                    } else {
+
+                        // NON REMEDIAL → MANUAL / DARI DB
+                        displayScore = answerData?.question_score ?? 0;
+                        maxScore = question.question_weight ?? 100;
+
+                    }
+
+                    // OPTIONAL: hitung total benar (kalau mau dipakai nanti)
+                    if (isCorrect) {
+                        correctCount++;
+                    }
+
                     // RENDER ESSAY
                     function renderEssay() {
 
@@ -642,10 +676,11 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                     // NAVIGATION NUMBER
                     const nomorSoalHTML = response.data.map((item, index) => {
 
-                        const answer = questionsAnswer[item.id];
+                        const itemKey = `${assessment.id}_${item.id}`;
+                        const answer = questionsAnswer[itemKey];
                         const itemType = item?.lms_question_bank?.tipe_soal?.toLowerCase();
-                        const itemStatus = questionsAnswer[item.id]?.status_answer ?? 'draft';
-                        const itemGradingStatus = questionsAnswer[item.id]?.grading_status ?? 'pending';
+                        const itemStatus = answer?.status_answer ?? 'draft';
+                        const itemGradingStatus = answer?.grading_status ?? 'pending';
 
                         // Format nama tipe soal
                         let questionTypeLabel = 'Unknown';
@@ -788,7 +823,7 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                                     </span>
 
                                                     <span class="text-[#4189E0]">
-                                                        ${scoreUser} / ${question.question_weight}
+                                                        ${displayScore.toFixed(2)} / ${maxScore.toFixed(2)}
                                                     </span>
                                                 </div>
 

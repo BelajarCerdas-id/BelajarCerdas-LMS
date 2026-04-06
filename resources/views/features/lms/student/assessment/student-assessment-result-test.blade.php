@@ -20,19 +20,112 @@
 
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-10 items-center w-full">
 
-                    {{-- LEFT --}}
-                    <div class="flex flex-col text-center space-y-3 lg-space-y-0 items-center xl:items-start">
-                        <h2 class="text-2xl font-semibold">
-                            Nilai Kamu Telah
-                        </h2>
-                        <h1 class="text-3xl font-bold leading-14 lg:leading-none">
-                            Melampaui Batas KKM!
-                        </h1>
+                    @if (!$hasAttempt && $category !== 'pengayaan')
 
-                        <button class="mt-6 bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-semibold shadow-md transition">
-                            Pengayaan
-                        </button>
-                    </div>
+                        <!-- SUSULAN -->
+                        <div class="flex flex-col text-center items-center xl:items-start">
+                            <h2 class="text-2xl font-semibold">
+                                Kamu Belum Mengerjakan
+                            </h2>
+                            <h1 class="text-3xl font-bold">
+                                Asesmen Ini
+                            </h1>
+
+                            <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'susulan', $assessmentId]) }}">
+                                <button class="mt-6 bg-yellow-500 px-30 py-2 rounded-lg font-semibold cursor-pointer">
+                                    Ikuti Susulan
+                                </button>
+                            </a>
+                        </div>
+
+                    @elseif(!$schoolAssessment->show_score)
+
+                        <!-- BELUM DIPUBLISH -->
+                        <div class="flex flex-col items-center xl:items-start text-center xl:text-left">
+                            <h2 class="text-xl font-semibold">
+                                Hasil Asesmen Sedang Diproses
+                            </h2>
+
+                            <h1 class="text-3xl font-bold mt-2">
+                                Nilai Belum Dipublikasikan
+                            </h1>
+
+                            <button class="mt-6 bg-gray-400 px-10 py-2 rounded-lg font-semibold cursor-not-allowed">
+                                Menunggu Publikasi
+                            </button>
+                        </div>
+
+                    @elseif ($category === 'pengayaan' && !$hasAttempt)
+                        <div class="flex flex-col text-center items-center xl:items-start">
+                            <h2 class="text-xl font-semibold">
+                                Kamu Tidak Mengikuti Pengayaan
+                            </h2>
+
+                            <h1 class="text-2xl font-bold text-center xl:text-left">
+                                Nilai Kamu Tetap Menggunakan Hasil Sebelumnya
+                            </h1>
+
+                            <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'pengayaan', $assessmentId]) }}">
+                                <button class="mt-6 bg-green-500 px-30 py-2 rounded-lg font-semibold cursor-pointer">
+                                    Pengayaan
+                                </button>
+                            </a>
+                        </div>
+                    @elseif ($category === 'pengayaan')
+
+                        <!-- PENGAYAAN (FINAL STATE) -->
+                        <div class="flex flex-col text-center items-center xl:items-start">
+                            <h2 class="text-xl font-semibold">
+                                Selamat! Kamu Sudah Lulus
+                            </h2>
+                            <h1 class="text-2xl font-bold text-center xl:text-left">
+                                Pertahankan dan Tingkatkan Hasilmu
+                            </h1>
+
+                            <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'pengayaan', $assessmentId]) }}">
+                                <button class="mt-6 bg-green-500 px-30 py-2 rounded-lg font-semibold cursor-pointer">
+                                    Pengayaan
+                                </button>
+                            </a>
+                        </div>
+
+                    @elseif ($finalScoreGlobal >= $kkm)
+
+                        <!-- LULUS -> MASUK PENGAYAAN -->
+                        <div class="flex flex-col text-center items-center xl:items-start">
+                            <h2 class="text-2xl font-semibold">
+                                Nilai Kamu Telah
+                            </h2>
+                            <h1 class="text-3xl font-bold">
+                                Melampaui Batas KKM!
+                            </h1>
+
+                            <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'pengayaan', $assessmentId]) }}">
+                                <button class="mt-6 bg-green-500 px-30 py-2 rounded-lg font-semibold cursor-pointer">
+                                    Pengayaan
+                                </button>
+                            </a>
+                        </div>
+
+                    @else
+
+                        <!-- BELUM LULUS -> REMEDIAL -->
+                        <div class="flex flex-col text-center items-center xl:items-start">
+                            <h2 class="text-2xl font-semibold">
+                                Nilai Kamu Belum
+                            </h2>
+                            <h1 class="text-3xl font-bold">
+                                Mencapai Batas KKM!
+                            </h1>
+
+                            <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'remedial', $assessmentId]) }}">
+                                <button class="mt-6 bg-[#F64650] px-30 py-2 rounded-lg font-semibold cursor-pointer">
+                                    Remedial
+                                </button>
+                            </a>
+                        </div>
+
+                    @endif
 
                     {{-- RIGHT MINI STATS --}}
                     <div class="w-full xl:flex xl:justify-end">

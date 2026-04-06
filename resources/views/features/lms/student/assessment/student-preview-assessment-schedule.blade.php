@@ -38,10 +38,11 @@
 
                     <!-- POPUP CARD -->
                     <div id="container-load-assessment-schedule" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                        data-curriculum-id="{{ $curriculumId }}" data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}">
+                        data-curriculum-id="{{ $curriculumId }}" data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}"
+                        data-mode="{{ $mode }}" data-parent-assessment-id="{{ $parentAssessmentId }}">
 
                         <!-- CONTENT -->
-                        <div id="load-content-assessment-schedule"> 
+                        <div id="load-content-assessment-schedule" class="flex flex-col gap-6"> 
                             <!-- show data in ajax -->
                         </div>
                     </div>

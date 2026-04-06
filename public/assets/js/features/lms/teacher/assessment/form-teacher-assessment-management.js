@@ -5,6 +5,8 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
+    const MODE = container.dataset.mode;
+    const PARENT = JSON.parse(container.dataset.parent || 'null');
     if (!role || !schoolName || !schoolId) return;
 
     $.ajax({
@@ -12,8 +14,8 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
         method: 'GET',
         data: {
             search_year,
-            search_class,
-            mapel_id,
+            search_class: MODE ? PARENT?.school_class?.class_name : search_class,
+            mapel_id: MODE ? PARENT?.mapel?.id : mapel_id,
         },
         success: function (response) {
             enableFlatpickrCreate(); // inisialisasi flatpickr
@@ -66,6 +68,12 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
 
                 (response.rombel || []).forEach((item) => {
 
+                    if (MODE && PARENT) {
+                        if (item.school_class?.id != PARENT.school_class_id) {
+                            return; // skip semua selain parent
+                        }
+                    }
+
                     const rombelClassList = `
                         <label class="rombel-card cursor-pointer border border-gray-300 rounded-xl p-4 flex flex-col transition hover:border-blue-400">
                             <div class="flex items-start justify-between">
@@ -97,6 +105,7 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
 
                 setupReview();
                 updateRombelSelectedCount();
+                applyModePrefill();
                 $('#empty-message-rombel-class-assessment-management-list').hide();
             } else {
                 $('#empty-message-rombel-class-assessment-management-list').show();
@@ -113,6 +122,99 @@ document.addEventListener('DOMContentLoaded', function () {
     setupAssessmentMode();
     setupReview();
 });
+
+function applyModePrefill() {
+    const container = document.getElementById('container');
+    const MODE = container.dataset.mode;
+    const PARENT = JSON.parse(container.dataset.parent);
+
+    const className = PARENT.school_class?.class_name || '';
+    const classLevel = parseInt(className.match(/\d+/)?.[0]);
+    
+    if (!MODE || !PARENT) return;
+
+    // TITLE
+    const prefixMap = {
+        remedial: 'remedial',
+        susulan: 'susulan',
+        pengayaan: 'pengayaan'
+    };
+
+    $('input[name="title"]').val(`${prefixMap[MODE]} - ${PARENT.title}`);
+
+    $('#dropdown-tahun-ajaran').val(PARENT.school_class?.tahun_ajaran).prop('disabled', true);
+
+    $('#dropdown-filter-class').val(classLevel).prop('disabled', true);
+
+    // MAPEL
+    $('#dropdown-filter-mapel').val(PARENT.mapel_id).prop('disabled', true);
+
+    $('#mode').val(MODE);
+    $('#parent-assessment-id').val(PARENT.id);
+
+    // SEMESTER
+    $('#semester').val(PARENT.semester).prop('disabled', true);
+    $('#semester-hidden').val(PARENT.semester);
+
+    // INSTRUCTION (optional copy)
+    $('textarea[name="assessment_instruction"]').val(PARENT.assessment_instruction);
+
+    // DURATION
+    $('input[name="duration"]').val(PARENT.duration);
+
+    // reset dulu
+    $('#create-assessment-form input[data-mapel-id]').remove();
+
+    let selectedMapelIds = [];
+
+    $('.rombel-checkbox').each(function () {
+        const classId = $(this).val();
+        const mapelId = PARENT.mapel_id;
+
+        if (classId == PARENT.school_class_id && mapelId == $(this).data('mapel')) {
+            $(this).prop('checked', true);
+            selectedMapelIds.push(mapelId);
+        }
+    });
+
+    // unique
+    selectedMapelIds = [...new Set(selectedMapelIds)];
+
+    // inject hidden SEKALI
+    selectedMapelIds.forEach(mapelId => {
+        $('#create-assessment-form').append(
+            `<input type="hidden" name="mapel_id[]" value="${mapelId}" data-mapel-id="${mapelId}">`
+        );
+    });
+
+    // update counter setelah check
+    updateRombelSelectedCount();
+
+    // DISABLE setelah checked
+    $('.rombel-checkbox').on('click', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    $('#toggle-select-rombel').hide();
+
+    $('select[name="assessment_type_id"]').val(PARENT.assessment_type_id).prop('disabled', true);
+    $('#assessment-type-hidden').val(PARENT.assessment_type_id);
+
+    setupAssessmentMode();
+
+    const selectedOption = $('select[name="assessment_type_id"] option:selected')[0];
+    const mode = selectedOption?.dataset.mode;
+
+    handleAssessmentTypeUI(mode);
+
+    // HEADER INFO
+    $('#container').prepend(`
+        <div class="mb-6 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+            Mode <b>${MODE.toUpperCase()}</b> dari asesmen: <b>${PARENT.title}</b>
+        </div>
+    `);
+}
 
 function setupAssessmentMode() {
     const assessmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
@@ -475,14 +577,10 @@ $('#submit-button-publish-create-assessment, #submit-button-draft-create-assessm
     });
 });
 
-const assesmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
-const questionSettingSection = document.getElementById('question-settings-section');
-const projectSettingSection = document.getElementById('project-settings-section');
-const durationSection = document.getElementById('duration-section');
-
-assesmentTypeSelect.addEventListener('change', function () {
-    const selectedOption = this.options[this.selectedIndex];
-    const mode = selectedOption.dataset.mode;
+function handleAssessmentTypeUI(mode) {
+    const questionSettingSection = document.getElementById('question-settings-section');
+    const projectSettingSection = document.getElementById('project-settings-section');
+    const durationSection = document.getElementById('duration-section');
 
     if (mode === 'project') {
         questionSettingSection.classList.add('hidden');
@@ -493,6 +591,16 @@ assesmentTypeSelect.addEventListener('change', function () {
     } else {
         questionSettingSection.classList.remove('hidden');
         projectSettingSection.classList.add('hidden');
+
         durationSection.classList.remove('hidden');
     }
+}
+
+const assesmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
+
+assesmentTypeSelect.addEventListener('change', function () {
+    const selectedOption = this.options[this.selectedIndex];
+    const mode = selectedOption.dataset.mode;
+
+    handleAssessmentTypeUI(mode);
 });

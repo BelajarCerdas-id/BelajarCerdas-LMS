@@ -6,35 +6,124 @@ use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolAssessmentType;
 use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
+use App\Models\StudentSchoolClass;
+use App\Models\SubjectPassingGradeCriteria;
 use Illuminate\Support\Facades\Auth;
 
 class StudentAssessmentController extends Controller
 {
-    public function studentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId)
+    public function studentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $mode = null, $parentAssessmentId = null)
     {
         $getAssessmentType = SchoolAssessmentType::where('id', $assessmentTypeId)->first();
 
         $getAssessment = SchoolAssessment::where('assessment_type_id', $assessmentTypeId)->first();
 
         return view('features.lms.student.assessment.student-preview-assessment-schedule', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
-            'mapelId', 'assessmentTypeId', 'getAssessmentType', 'getAssessment'));
+            'mapelId', 'assessmentTypeId', 'mode', 'parentAssessmentId', 'getAssessmentType', 'getAssessment'));
     }
 
-    public function loadStudentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester) 
+    public function loadStudentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $mode = null, $parentAssessmentId = null) 
     {
         $user = Auth::user();
 
-        $assessments = SchoolAssessment::with(['SchoolAssessmentType', 'SchoolClass', 'Mapel'])
-            ->whereHas('SchoolClass.StudentSchoolClass', function ($query) use ($user) {
-                $query->where('student_id', $user->id)->where('student_class_status', 'active');
-            })->where('assessment_type_id', $assessmentTypeId)->where('semester', $semester)->where('mapel_id', $mapelId)->get();
+        $assessment = null;
+        $rootAssessmentId = null;
+
+        if ($parentAssessmentId) {
+            $assessment = SchoolAssessment::find($parentAssessmentId);
+
+            $rootAssessmentId = $assessment->parent_assessment_id ?? $assessment->id;
+        }
+        
+        $assessments = SchoolAssessment::with(['SchoolAssessmentType', 'SchoolClass', 'Mapel'])->whereHas('SchoolClass.StudentSchoolClass', function ($query) use ($user) {
+            $query->where('student_id', $user->id)->where('student_class_status', 'active');
+        })->where('assessment_type_id', $assessmentTypeId)->where('semester', $semester)->where('mapel_id', $mapelId)->when(!$mode || $mode === 'main', function ($query) {
+                $query->whereNull('parent_assessment_id');
+            })
+            ->when($mode && $mode !== 'main' && $parentAssessmentId, function ($query) use ($mode, $rootAssessmentId) {
+                $query->where('assessment_category', $mode)->where('parent_assessment_id', $rootAssessmentId);
+            })
+        ->orderBy('created_at', 'desc')->get();
 
         if (!$assessments) {
             return response()->json(['data' => null]);
         }
 
-        $data = $assessments->map(function ($assessment) use ($user) {
+        $schoolYear = $assessments->first()?->SchoolClass?->tahun_ajaran;
+
+        $studentClass = StudentSchoolClass::where('student_id', $user->id)->where('student_class_status', 'active')->where(function ($q) {
+            $q->whereNull('academic_action')->orWhere('academic_action', '');
+        })->first();
+
+        $kkm = SubjectPassingGradeCriteria::where('mapel_id', $mapelId)->where('kelas_id', $studentClass?->SchoolClass->kelas_id)->where('school_year', $schoolYear)->latest()->value('kkm_value');
+
+        if (!$rootAssessmentId) {
+            $rootAssessmentId = $assessments->first()?->id;
+        }
+
+        $summary = StudentAssessmentSummary::where('student_id', $user->id)->where('root_assessment_id', $rootAssessmentId ?? null)->first();
+
+        $finalScore = null;
+
+        $finalScore = null;
+        $hasPassed = false;
+
+        if ($summary) {
+
+            $mainScore = $summary->main_score;
+            $susulanScore = $summary->susulan_score;
+            $remedialScore = $summary->last_remedial_score;
+
+            // ambil nilai terbaik (bukan urutan fallback)
+            $finalScore = max($mainScore ?? 0, $susulanScore ?? 0, $remedialScore ?? 0
+            );
+
+            // FLAG PERNAH LULUS ATAU TIDAK
+            $hasPassed = ($mainScore !== null && $mainScore >= $kkm) || ($susulanScore !== null && $susulanScore >= $kkm) || ($remedialScore !== null && $remedialScore >= $kkm);
+        }
+
+        $data = $assessments->filter(function ($assessment) use ($summary, $finalScore, $kkm, $hasPassed) {
+
+            $category = strtolower($assessment->assessment_category ?? 'main');
+
+            // MAIN -> selalu tampil
+            if ($category === 'main') return true;
+
+            if (!$summary) return false;
+
+            // SUSULAN -> jika belum ada nilai main
+            if ($category === 'susulan') {
+                return is_null($summary->main_score);
+            }
+
+            // REMEDIAL
+            if ($category === 'remedial') {
+
+                if (!$summary) return false;
+
+                $lastRemedialId = $summary->last_remedial_assessment_id;
+
+                // SUDAH PERNAH LULUS -> LOCK (tidak boleh remedial lagi)
+                if ($hasPassed) {
+                    return $assessment->id <= $lastRemedialId; // hanya history
+                }
+
+                // BELUM LULUS -> lanjut chain
+                if (!$lastRemedialId) return true;
+
+                return $assessment->id > $lastRemedialId;
+            }
+
+            // PENGAYAAN -> kalau lulus
+            if ($category === 'pengayaan') {
+                return $hasPassed;
+            }
+
+            return true;
+
+        })->values()->map(function ($assessment) use ($user) {
 
             $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->count();
 
@@ -70,7 +159,6 @@ class StudentAssessmentController extends Controller
                 'projectResultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/project-result'
             ];
         });
-
 
         return response()->json([
             'data' => $data,

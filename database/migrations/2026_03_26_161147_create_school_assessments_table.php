@@ -18,6 +18,8 @@ return new class extends Migration
             $table->foreignId('school_class_id')->constrained('school_classes');
             $table->foreignId('mapel_id')->constrained('mapels');
             $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
+            $table->string('assessment_category')->default('main'); // Kategori main / remedial / susulan / pengayaan / dll
+            $table->foreignId('parent_assessment_id')->nullable()->constrained('school_assessments'); // Untuk parent assessment (misal remedial atau susulan dari main)
             $table->string('title');
             $table->text('assessment_instruction')->nullable();
             $table->integer('duration')->nullable();
