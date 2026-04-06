@@ -53,7 +53,7 @@ class TeacherQuestionBankReleaseController extends Controller
 
         $defaultLevel = $startLevelMap[$jenjang] ?? 1;
 
-        $query = SchoolAssessment::with(['Mapel', 'SchoolClass', 'SchoolAssessmentType'])
+        $query = SchoolAssessment::with(['Mapel', 'SchoolClass', 'SchoolAssessmentType'])->whereNot('assessment_category', 'remedial')->whereNot('assessment_category', 'susulan')
         ->whereHas('SchoolAssessmentType.AssessmentMode', function ($query) {
             $query->whereNot('code', 'project');
         })->where('user_id', $user->id)->where('school_partner_id', $schoolId)->orderBy('created_at', 'desc');

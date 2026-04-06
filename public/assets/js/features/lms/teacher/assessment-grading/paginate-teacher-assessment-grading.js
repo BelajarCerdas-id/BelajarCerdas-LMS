@@ -59,7 +59,7 @@ function paginateAssessmentGrading(search_year = null, search_class = null, sear
 
                 $.each(response.data, function (index, item) {
                     const assessmentGradingStudentList = response.assessmentGradingStudentList.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
-                        .replace(':assessmentId', item.id);
+                        .replace(':assessmentId', item.id).replace(':mode', item.assessment_category);
                     
                     $('#tbody-assessment-grading-list').append(`
                         <tr>

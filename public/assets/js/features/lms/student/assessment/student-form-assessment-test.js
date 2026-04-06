@@ -104,6 +104,27 @@ function studentFormAssessment(selectedIndex = 0) {
                             return `<img ${before}class="${existingClasses} ${className}"`;
                         });
                 }
+
+                const assessmentCategory = response.schoolAssessment.assessment_category;
+                const totalQuestions = questions.length;
+
+                const weight = calculateQuestionWeight(question, totalQuestions, assessmentCategory);
+
+                function calculateQuestionWeight(question, totalQuestions, assessmentCategory) {
+
+                    // jika bukan remedial -> pakai dari DB
+                    if (!['remedial', 'susulan'].includes((assessmentCategory || '').toLowerCase())) {
+                        return question.question_weight;
+                    }
+
+                    // jika remedial -> hitung ulang
+                    let rawScore = 100 / totalQuestions;
+
+                    // ambil 2 desimal dengan pembulatan normal
+                    let rounded = Math.round(rawScore * 100) / 100;
+
+                    return rounded;
+                }
     
                 // ===== GENERATE OPTIONS =====
                 const generateOptions = (options = []) => {
@@ -222,7 +243,7 @@ function studentFormAssessment(selectedIndex = 0) {
                     }).join('');
                 };
     
-                const generateEssay = () => {
+                const generateEssay = (weight) => {
                     const teacherFeedback = questionsAnswer[question.id]?.teacher_feedback ?? '';
                     const score = questionsAnswer[question.id]?.question_score ?? null;
 
@@ -268,7 +289,7 @@ function studentFormAssessment(selectedIndex = 0) {
                                         ${score !== null ?
                                             `
                                                 <div class="mt-3 text-sm font-semibold text-gray-700">
-                                                    Score: ${score} / ${question.question_weight}
+                                                    Score: ${score} / ${weight}
                                                 </div>`
                                             : ''
                                         }
@@ -582,7 +603,7 @@ function studentFormAssessment(selectedIndex = 0) {
                 const rightItems = options.filter(item => item.options_key.startsWith('RIGHT'));
     
                 if (questionType === 'essay') {
-                    submitAnswerType = generateEssay();
+                    submitAnswerType = generateEssay(weight);
                 } else if (questionType === 'matching') {
                     submitAnswerType = generateMatching(leftItems, rightItems);
                 } else if (questionType === 'pg_kompleks') {
@@ -807,7 +828,7 @@ function studentFormAssessment(selectedIndex = 0) {
                                             </span>
     
                                             <span class="text-[11px] sm:text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 font-semibold">
-                                                Bobot: ${question.question_weight}
+                                                Bobot: ${weight}
                                             </span>
     
                                             <span class="text-xs px-4 py-1.5 rounded-full 

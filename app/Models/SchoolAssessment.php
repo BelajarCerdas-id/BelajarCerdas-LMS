@@ -15,6 +15,8 @@ class SchoolAssessment extends Model
         'school_class_id',
         'mapel_id',
         'assessment_type_id',
+        'assessment_category',
+        'parent_assessment_id',
         'title',
         'assessment_instruction',
         'duration',
@@ -73,5 +75,20 @@ class SchoolAssessment extends Model
     public function SchoolAssessmentType()
     {
         return $this->belongsTo(SchoolAssessmentType::class, 'assessment_type_id');
+    }
+
+    public function parentAssessment()
+    {
+        return $this->belongsTo(SchoolAssessment::class, 'parent_assessment_id');
+    }
+
+    public function childAssessment()
+    {
+        return $this->hasMany(SchoolAssessment::class, 'parent_assessment_id');
+    }
+
+    public function StudentAssessmentSummary()
+    {
+        return $this->hasMany(SchoolAssessment::class, 'root_assessment_id');
     }
 }

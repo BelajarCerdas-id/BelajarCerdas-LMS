@@ -9,7 +9,8 @@
             <div id="alert-success-edit-assessment"></div>
 
             <main class="bg-white rounded-2xl shadow-lg p-8 border border-gray-300">
-                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200 pb-10">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
+                    data-mode="{{ $mode }}" data-parent="{{ $parent }}" class="border-b border-gray-200 pb-10">
                     <div>
                         <div>
                             <!-- HEADER -->
@@ -60,6 +61,14 @@
 
                             <!-- FORM -->
                             <form id="create-assessment-form">
+
+                                <!-- Jika ada $mode & $parent maka gunakan input hidden ini, karena kedua dropdown ini di disable -->
+                                @if ($mode && $parent)
+                                    <input type="hidden" id="mode" name="mode" value="">
+                                    <input type="hidden" id="parent-assessment-id" name="parent_assessment_id" value="">
+                                    <input type="hidden" name="semester" id="semester-hidden">
+                                    <input type="hidden" name="assessment_type_id" id="assessment-type-hidden">
+                                @endif
 
                                 <!-- STEP 1 Academic Info -->
                                 <div class="step" id="step-1">
