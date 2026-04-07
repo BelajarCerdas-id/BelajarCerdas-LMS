@@ -6,28 +6,38 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
+        // Kita gunakan create atau update. 
+        // Jika ingin fresh, pastikan jalankan php artisan migrate:fresh nanti.
+        Schema::dropIfExists('lesson_schedules');
+        
         Schema::create('lesson_schedules', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('school_partner_id'); // ID Sekolah
-            $table->string('class_name'); // Contoh: "Kelas X-A"
-            $table->string('day_of_week'); // Contoh: "Senin", "Selasa"
-            $table->time('start_time'); // Jam mulai, cth: 07:00:00
-            $table->time('end_time'); // Jam selesai, cth: 07:45:00
             
-            // Kunci utama untuk fitur Anti-Bentrok:
-            $table->unsignedBigInteger('teacher_id'); 
+            // Relasi ke instansi/sekolah
+            $table->unsignedBigInteger('school_partner_id');
             
-            $table->string('teacher_name'); // Nama guru (disimpan agar loading UI lebih cepat)
-            $table->string('subject_name'); // Nama Mata Pelajaran
-            $table->string('color')->default('#0071BC'); // Warna kotak jadwal (untuk UI)
+            // Relasi ke kelas
+            $table->unsignedBigInteger('class_id');
+            $table->string('class_name'); // Denormalisasi nama kelas untuk mempercepat pencarian
+            $table->string('class_id')->after('school_partner_id')->nullable();
+            // Status jadwal (draft agar tidak langsung tampil di siswa, atau published)
+            $table->enum('status', ['draft', 'published'])->default('draft');
             
-            $table->enum('status', ['draft', 'published'])->default('draft'); // Status tayang
             $table->timestamps();
+
+            // Indexing untuk kecepatan query
+            $table->index(['school_partner_id', 'class_id']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('lesson_schedules');
