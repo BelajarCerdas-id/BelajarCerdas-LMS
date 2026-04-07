@@ -2243,4 +2243,395 @@ class LmsController extends Controller
             'message' => 'Status berhasil diubah.',
         ]);
     }
+   public function lmsTeacherView($schoolName, $schoolId)
+    {
+        $tanggalDipilih = request('date', date('Y-m-d'));
+        $user = \Illuminate\Support\Facades\Auth::user();
+    
+        if (!$user || $user->role !== 'Guru') {
+        abort(403, 'Akses Ditolak.');
+        }   
+
+        $teacherId = $user->teacher_id ?? $user->id; 
+
+        $totalKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->where('lesson_schedules.school_partner_id', $schoolId)
+            ->where('lesson_schedule_items.teacher_id', $teacherId)
+            ->distinct('lesson_schedules.class_id')
+            ->count('lesson_schedules.class_id');
+
+        $englishDaySekarang = date('l'); 
+        $mapHari = [
+            'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 
+            'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu', 'Sunday' => 'Minggu'
+        ];
+        $hariIni = $mapHari[$englishDaySekarang] ?? 'Senin';
+
+        $dbSchedules = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->where('lesson_schedules.school_partner_id', $schoolId)
+            ->where('lesson_schedule_items.teacher_id', $teacherId)
+            ->where('lesson_schedule_items.day_of_week', $hariIni)
+            ->where('lesson_schedules.status', 'published')
+            ->orderBy('lesson_schedule_items.start_time', 'asc')
+            ->select(
+                'lesson_schedules.id',
+                'lesson_schedule_items.subject_name',
+                'lesson_schedule_items.start_time',
+                'lesson_schedule_items.end_time',
+                'lesson_schedules.class_name'
+            )
+            ->get();
+
+        $jadwalMengajar = [];
+        $totalJadwalHariIni = 0;
+        $currentGroup = null;
+
+        foreach ($dbSchedules as $schedule) {
+            $totalJadwalHariIni++; 
+
+            if (!$currentGroup ||
+                $currentGroup->mapel !== $schedule->subject_name ||
+                $currentGroup->kelas !== $schedule->class_name) {
+
+                if ($currentGroup) {
+                    $jadwalMengajar[] = $currentGroup;
+                }
+
+                $currentGroup = (object)[
+                    'ids'     => $schedule->id,
+                    'mapel'   => $schedule->subject_name,
+                    'kelas'   => $schedule->class_name,
+                    'ruangan' => 'Ruang ' . $schedule->class_name,
+                    'details' => [
+                        (object)[
+                            'jam_mulai'   => substr($schedule->start_time, 0, 5),
+                            'jam_selesai' => substr($schedule->end_time, 0, 5)
+                        ]
+                    ]
+                ];
+            } else {
+                $currentGroup->ids .= ',' . $schedule->id;
+                $currentGroup->details[] = (object)[
+                    'jam_mulai'   => substr($schedule->start_time, 0, 5),
+                    'jam_selesai' => substr($schedule->end_time, 0, 5)
+                ];
+            }
+        }
+        
+        if ($currentGroup) {
+            $jadwalMengajar[] = $currentGroup;
+        }
+        $monthlyEvents = \App\Models\AcademicCalendar::where('school_partner_id', $schoolId)
+            ->whereDate('date', $tanggalDipilih) 
+            ->get();
+
+        $recentPolls = \App\Models\Poll::where('school_partner_id', $schoolId)
+            ->where('teacher_id', $user->id) 
+            ->orderBy('created_at', 'desc')
+            ->take(4) 
+            ->get();
+
+        foreach ($recentPolls as $poll) {
+            $options = \App\Models\PollOption::where('poll_id', $poll->id)->get();
+            $labels = [];
+            $votes = [];
+            
+            foreach ($options as $opt) {
+                $labels[] = $opt->option_text;
+                $count = \Illuminate\Support\Facades\DB::table('poll_votes')
+                            ->where('poll_option_id', $opt->id)
+                            ->count();
+                $votes[] = $count; 
+            }
+            
+            $poll->chart_labels = json_encode($labels);
+            $poll->chart_data = json_encode($votes);
+        }
+
+        return view('features.lms.teacher.dashboard', compact(
+            'schoolName', 
+            'schoolId', 
+            'totalKelas', 
+            'totalJadwalHariIni', 
+            'jadwalMengajar', 
+            'monthlyEvents',
+            'recentPolls',
+            'hariIni',
+            'tanggalDipilih'
+        ));
+    }
+    public function classDetailView($schoolName, $schoolId, $scheduleId)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user || $user->role !== 'Guru') abort(403, 'Akses Ditolak.');
+
+        $jadwal = \App\Models\LessonSchedule::findOrFail($scheduleId);
+
+        $totalSiswa = \Illuminate\Support\Facades\DB::table('student_school_classes')
+            ->where('school_class_id', $jadwal->class_id) 
+            ->count();
+
+        $pengumumanTerkini = \Illuminate\Support\Facades\DB::table('announcements')
+            ->where('school_partner_id', $schoolId)
+            ->where(function($query) use ($jadwal) {
+                $query->where('target_class_id', $jadwal->class_id)
+                      ->orWhereNull('target_class_id'); 
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(4) 
+            ->get();
+
+        $today = date('Y-m-d');
+        $attendances = \Illuminate\Support\Facades\DB::table('attendances')
+            ->where('schedule_id', $scheduleId)
+            ->where('date', $today)
+            ->get();
+
+        $tugasKelas = \Illuminate\Support\Facades\DB::table('class_tasks')
+            ->where('class_id', $jadwal->class_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($tugasKelas as $tugas) {
+            $tugas->terkumpul = \Illuminate\Support\Facades\DB::table('class_task_submissions')
+                ->where('task_id', $tugas->id)
+                ->count();
+        }
+
+        $statistik = (object)[
+            'totalSiswa'      => $totalSiswa,
+            'totalMateri'     => 0, 
+            'totalAssessment' => 0, 
+            
+            'totalPr'         => $tugasKelas->count(), 
+            
+            'hadir'           => $attendances->where('status', 'hadir')->count(), 
+            'izin'            => $attendances->where('status', 'izin')->count(),
+            'sakit'           => $attendances->where('status', 'sakit')->count(),
+            'alpa'            => $attendances->where('status', 'alpa')->count(),
+        ];
+
+        return view('features.lms.teacher.class_detail', compact(
+            'schoolName', 
+            'schoolId', 
+            'jadwal',    
+            'statistik',
+            'pengumumanTerkini',
+            'tugasKelas'
+        ));
+    }
+    public function getStudentsForAttendance($classId)
+    {
+        try {
+            $today = date('Y-m-d');
+            $scheduleId = request('schedule_id'); 
+            
+            $students = \Illuminate\Support\Facades\DB::table('student_school_classes')
+                ->join('student_profiles', 'student_school_classes.student_id', '=', 'student_profiles.user_id')
+                ->leftJoin('attendances', function($join) use ($today, $scheduleId) {
+                    $join->on('student_school_classes.student_id', '=', 'attendances.student_id')
+                         ->where('attendances.date', '=', $today)
+                         ->where('attendances.schedule_id', '=', $scheduleId);
+                })
+                ->where('student_school_classes.school_class_id', $classId)
+                ->where('student_school_classes.student_class_status', 'active')
+                ->select(
+                    'student_profiles.user_id as id', 
+                    'student_profiles.nama_lengkap as name',
+                    'attendances.status' 
+                )
+                ->orderBy('student_profiles.nama_lengkap', 'asc')
+                ->get();
+
+            return response()->json($students);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function saveAttendance(Request $request) 
+    {
+        try {
+            $scheduleId = $request->schedule_id;
+            $date = date('Y-m-d');
+            
+            foreach($request->attendance as $studentId => $status) {
+                \Illuminate\Support\Facades\DB::table('attendances')->updateOrInsert(
+                    [
+                        'schedule_id' => $scheduleId, 
+                        'student_id'  => $studentId, 
+                        'date'        => $date
+                    ],
+                    [
+                        'status'      => $status, 
+                        'updated_at'  => now()
+                    ]
+                );
+            }
+            
+            return response()->json(['success' => true, 'message' => 'Presensi berhasil disimpan ke database!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+        }
+    }
+    public function lmsStudentView($schoolName = null, $schoolId = null)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'Siswa') {
+            abort(403, 'Akses Ditolak. Halaman ini khusus untuk Siswa.');
+        }
+        $school = \App\Models\SchoolPartner::find($schoolId);
+        $jadwalSiswa = []; 
+        $hariInggris = date('l');
+        $mapHari = [
+            'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 
+            'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu', 'Sunday' => 'Minggu'
+        ];
+        $hariIni = $mapHari[$hariInggris] ?? 'Senin';
+        
+        return view('features.lms.students.dashboard', compact(
+            'schoolName', 
+            'schoolId', 
+            'user',
+            'jadwalSiswa',
+            'hariIni'
+        ));
+    }
+    public function storePengumuman(Request $request)
+    {
+        try {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            
+            $schoolId = $request->school_id ?? $user->school_partner_id ?? 1; 
+
+            \Illuminate\Support\Facades\DB::table('announcements')->insert([
+                'school_partner_id' => $schoolId,
+                'teacher_id'        => $user->id,
+                'target_class_id'   => $request->class_id, // Bisa null jika global, atau ID kelas jika spesifik
+                'title'             => $request->title,
+                'content'           => $request->content,
+                'type'              => $request->type,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Pengumuman berhasil disiarkan!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function markAsRead(Request $request)
+    {
+        try {
+            $announcementId = $request->id;
+            $studentId = \Illuminate\Support\Facades\Auth::id();
+            $alreadyRead = \Illuminate\Support\Facades\DB::table('announcement_views')
+                ->where('announcement_id', $announcementId)
+                ->where('student_id', $studentId)
+                ->exists();
+
+            if (!$alreadyRead) {
+                \Illuminate\Support\Facades\DB::table('announcement_views')->insert([
+                    'announcement_id' => $announcementId,
+                    'student_id'      => $studentId,
+                    'created_at'      => now(),
+                    'updated_at'      => now()
+                ]);
+                \Illuminate\Support\Facades\DB::table('announcements')
+                    ->where('id', $announcementId)
+                    ->increment('views_count');
+            }
+
+            return response()->json(['success' => true, 'message' => 'Tracking berhasil']);
+        } catch (\Exception $e) {
+            // PERUBAHAN DI SINI: Kita tangkap pesan error aslinya!
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    public function storeTugas(Request $request)
+    {
+        try {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            
+            \Illuminate\Support\Facades\DB::table('class_tasks')->insert([
+                'school_partner_id' => $request->school_id,
+                'class_id'          => $request->class_id,
+                'teacher_id'        => $user->id,
+                'judul_tugas'       => $request->judul_tugas,
+                'deadline'          => $request->deadline,
+                'max_score'         => $request->max_score,
+                'instructions'      => $request->instructions,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Tugas berhasil dipublikasikan!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+        }
+    }
+    public function getTaskSubmissions($taskId)
+    {
+        try {
+            $task = \Illuminate\Support\Facades\DB::table('class_tasks')->where('id', $taskId)->first();
+            if (!$task) return response()->json(['error' => 'Tugas tidak ditemukan'], 404);
+
+            $students = \Illuminate\Support\Facades\DB::table('student_school_classes')
+                ->join('student_profiles', 'student_school_classes.student_id', '=', 'student_profiles.user_id')
+                ->leftJoin('class_task_submissions', function($join) use ($taskId) {
+                    $join->on('student_school_classes.student_id', '=', 'class_task_submissions.student_id')
+                         ->where('class_task_submissions.task_id', '=', $taskId);
+                })
+                ->where('student_school_classes.school_class_id', $task->class_id)
+                ->where('student_school_classes.student_class_status', 'active')
+                ->select(
+                    'student_profiles.user_id as student_id',
+                    'student_profiles.nama_lengkap as name',
+                    'class_task_submissions.id as submission_id',
+                    'class_task_submissions.score',
+                    'class_task_submissions.status'
+                )
+                ->orderBy('student_profiles.nama_lengkap', 'asc')
+                ->get();
+
+            return response()->json([
+                'task' => $task,
+                'students' => $students
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    public function saveTaskGrades(Request $request)
+    {
+        try {
+            $taskId = $request->task_id;
+            $grades = $request->grades; // Array { student_id: score }
+
+            foreach ($grades as $studentId => $score) {
+                // Jika input tidak kosong, masukkan nilainya
+                $scoreVal = $score !== '' ? $score : null;
+
+                \Illuminate\Support\Facades\DB::table('class_task_submissions')->updateOrInsert(
+                    [
+                        'task_id' => $taskId,
+                        'student_id' => $studentId
+                    ],
+                    [
+                        'score' => $scoreVal,
+                        'status' => $scoreVal !== null ? 'graded' : 'pending',
+                        'updated_at' => now()
+                    ]
+                );
+            }
+
+            return response()->json(['success' => true, 'message' => 'Nilai tugas berhasil disimpan!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+        }
+    }
 }
