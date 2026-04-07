@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\LmsMeetingContent;
 use App\Models\Mapel;
 use App\Models\SchoolAssessmentType;
-use App\Models\SchoolClass;
 use App\Models\Service;
 use App\Models\StudentSchoolClass;
 use Illuminate\Support\Facades\Auth;
@@ -175,18 +174,28 @@ class StudentLearningController extends Controller
             abort(404, 'Content tidak ditemukan');
         }
 
-        $contentItem = $item->LmsContent->LmsContentItem->first();
+        $contentItem = $item->LmsContent->LmsContentItem->whereNotNull('value_file')->first();
 
-        if (!$contentItem || !$contentItem->value_file) {
+        if (!$contentItem) {
             abort(404, 'File tidak tersedia');
         }
 
-        $filePath = public_path('lms-contents/' . $contentItem->value_file);
+        $safeFilename = basename($contentItem->value_file);
+        $filePath = public_path('lms-contents/' . $safeFilename);
 
-        if (!file_exists($filePath)) {
+        if (!is_file($filePath) || !is_readable($filePath)) {
             abort(404, 'File tidak ditemukan di server');
         }
 
-        return response()->download($filePath);
+        clearstatcache(true, $filePath);
+        if ((int) filesize($filePath) <= 0) {
+            abort(404, 'File kosong atau rusak di server');
+        }
+
+        $downloadName = $contentItem->original_filename ?: $safeFilename;
+
+        return response()->download($filePath, $downloadName, [
+            'X-Accel-Buffering' => 'no',
+        ]);
     }
 }
