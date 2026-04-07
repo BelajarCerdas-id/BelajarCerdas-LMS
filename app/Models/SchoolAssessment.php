@@ -89,6 +89,6 @@ class SchoolAssessment extends Model
 
     public function StudentAssessmentSummary()
     {
-        return $this->hasMany(SchoolAssessment::class, 'root_assessment_id');
+        return $this->hasMany(StudentAssessmentSummary::class, 'root_assessment_id');
     }
 }
