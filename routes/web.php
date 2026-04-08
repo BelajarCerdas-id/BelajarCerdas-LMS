@@ -18,6 +18,7 @@ use App\Http\Controllers\TeacherContentController;
 use App\Http\Controllers\TeacherContentReleaseController;
 use App\Http\Controllers\TeacherQuestionBankController;
 use App\Http\Controllers\TeacherQuestionBankReleaseController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -491,7 +492,36 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentList'])->name('lms.assessmentGradingStudentList.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/{studentId}/scoring/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentAnswer'])->name('lms.assessmentGradingStudentAnswer.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/{studentId}/scoring/project', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentProject'])->name('lms.assessmentGradingStudentProject');
+
+    Route::get('/administrator/library', [LibraryController::class,'index'])->name('library.index');
+
+    Route::post('/administrator/library/store', [LibraryController::class,'store'])->name('library.store');
+
+    Route::post('/administrator/library/update/{id}', [LibraryController::class,'update'])->name('library.update');
+
+    Route::put('/administrator/library/update/{id}', [LibraryController::class,'update'])->name('library.update');
+    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
+    Route::get('/administrator/library', [LibraryController::class, 'administrator'])
+        ->name('library.administrator');
+
+    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])
+    ->name('student.library');
+
+Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])
+    ->name('student.library.read');
+
+Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])
+    ->name('student.library.submit');
+
+    Route::post('/administrator/library/chapter/store',[LibraryController::class,'storeChapter'])->name('library.chapter.store');
+
+    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
+    ->name('student.library.mapel');
+
+    Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 });
+
+
 
 // ROUTES SCHOOL PARTNER
 Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
