@@ -221,11 +221,11 @@ $(document).ready(function () {
 });
 
 $(document).on('change', '#dropdown-filter-class', function () {
-    managementClassSchoolSubscription(null, $('#dropdown-filter-year').val());
+    managementClassSchoolSubscription($(this).val(), $('#dropdown-filter-year').val());
 });
 
 $(document).on('change', '#dropdown-filter-tahun-ajaran', function () {
-    managementClassSchoolSubscription(null, $(this).val());
+    managementClassSchoolSubscription($('#dropdown-filter-class').val(), $(this).val());
 });
 
 // activate class
