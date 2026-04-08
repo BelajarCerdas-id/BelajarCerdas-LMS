@@ -35,7 +35,23 @@
                         <span>LMS</span>
                     </a>
                 </li>
-            </ul>
+
+                    <!-- Menu Library -->
+                    <li class="list-menu-sidebar-dekstop-student">
+
+    <a href="{{ route('student.library') }}" 
+       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+       
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-book"></i>
+            <span>Library</span>
+        </div>
+
+        <!-- Hilangkan chevron karena tidak ada dropdown -->
+    </a>
+
+</li>
+                </ul>
 
             <!-- FOOTER -->
             <div class="mt-auto">
@@ -243,8 +259,10 @@
                         <span>Beranda</span>
                     </a>
                 </li>
+
+                  <!-- Menu Library -->
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('lms.student.view', [
+                    <a href="{{ route('lms.student.view', [ 
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                         'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
@@ -254,6 +272,20 @@
                         <span>LMS</span>
                     </a>
                 </li>
+                <li class="list-menu-sidebar-dekstop-student">
+
+    <a href="{{ route('student.library') }}" 
+       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+       
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-book"></i>
+            <span>Library</span>
+        </div>
+
+        <!-- Hilangkan chevron karena tidak ada dropdown -->
+    </a>
+
+</li>
             </ul>
 
             <!-- LOGOUT -->
@@ -286,6 +318,15 @@
                             Beranda
                         </a>
                     </div>
+                </li>
+
+                  <!-- Menu Library -->
+                <li class="list-item pb-2">
+                    <a href="{{ route('library.administrator') }}"
+                    class="content-menu flex items-center gap-3 px-3 py-2">
+                        <i class="fa-solid fa-book text-[15px] w-5 text-center"></i>
+                        <span>Library</span>
+                    </a>
                 </li>
 
                 <li class="list-item pb-4">
@@ -525,6 +566,18 @@
                                 <i class="fas fa-house"></i>
                                 <a href="{{ route('beranda') }}" class="link-href flex flex-col text-[13px]">Beranda</a>
                             </div>
+                        </div>
+                    </li>
+
+                     <!-- Menu Library -->
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
+                                <i class="fa-solid fa-book"></i>
+                            <a href="{{ route('library.administrator') }}"
+                            class="link-href flex flex-col text-[13px]"> Library
+                            </a> 
+                            </div>       
                         </div>
                     </li>
 
@@ -1106,7 +1159,21 @@
     <p>You do not have access to this dashboard.</p>
 @endif
 
-<!-- COMPONENTS -->
-<script src="{{ asset('assets/js/components/sidebar-administrator.js') }}"></script> <!-- sidebar administrator -->
-<script src="{{ asset('assets/js/components/sidebar-student.js') }}"></script> <!-- sidebar student -->
-<script src="{{ asset('assets/js/components/navbar-button-profile.js') }}"></script> <!-- button profile user in navbar -->
+<script src="{{ asset('assets/js/components/sidebar-administrator.js') }}"></script>
+<script src="{{ asset('assets/js/components/sidebar-student.js') }}"></script>
+<script src="{{ asset('assets/js/components/navbar-button-profile.js') }}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const dropdown = document.querySelector(".library-dropdown");
+    const submenu = document.getElementById("librarySubmenu");
+
+    if (dropdown && submenu) {
+        dropdown.addEventListener("click", function () {
+            submenu.classList.toggle("hidden");
+        });
+    }
+
+});
+</script>
