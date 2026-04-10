@@ -111,7 +111,7 @@ class TeacherGradebookController extends Controller
         return view('features.lms.teacher.gradebook.teacher-gradebook-management', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
     }
 
-    public function paginateGradebookManagement($role, $schoolName, $schoolId, $subjectTeacherId)
+    public function paginateGradebookManagement(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)
     {
         $user = Auth::user();
 
@@ -125,15 +125,18 @@ class TeacherGradebookController extends Controller
 
         $data = [];
 
+        $semester = $request->semester ?? 1;
+
         foreach ($students as $student) {
 
             $studentId = $student->student_id;
 
             $summaries = StudentAssessmentSummary::with('SchoolAssessment.SchoolAssessmentType')
                 ->where('student_id', $studentId)
-                ->whereHas('SchoolAssessment', function ($q) use ($teacherMapel) {
+                ->whereHas('SchoolAssessment', function ($q) use ($teacherMapel, $semester) {
                     $q->where('school_class_id', $teacherMapel->school_class_id)
-                    ->where('mapel_id', $teacherMapel->mapel_id);
+                    ->where('mapel_id', $teacherMapel->mapel_id)
+                    ->where('semester', $semester);
                 })
                 ->get();
 
@@ -201,10 +204,10 @@ class TeacherGradebookController extends Controller
         ]);
     }
 
-    public function exportGradebook($role, $schoolName, $schoolId, $subjectTeacherId)
+    public function exportGradebook(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)
     {
         // reuse logic dari paginate (penting biar konsisten)
-        $response = $this->paginateGradebookManagement($role, $schoolName, $schoolId, $subjectTeacherId)->getData(true);
+        $response = $this->paginateGradebookManagement($request, $role, $schoolName, $schoolId, $subjectTeacherId)->getData(true);
 
         $data = $response['data'];
         $assessmentTypes = $response['assessmentTypes'];

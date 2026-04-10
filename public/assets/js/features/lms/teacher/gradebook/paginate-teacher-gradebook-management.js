@@ -1,4 +1,4 @@
-function teacherGradebook() {
+function teacherGradebook(semester = 1) {
     const container = document.getElementById('container-teacher-gradebook');
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
@@ -14,6 +14,9 @@ function teacherGradebook() {
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/${subjectTeacherId}/paginate`,
         method: 'GET',
+        data: {
+            semester: semester
+        },
         success: function (response) {
             $('#tbody-teacher-gradebook').empty();
             $('.pagination-container-teacher-gradebook').empty();
@@ -37,6 +40,15 @@ function teacherGradebook() {
                             <i class="fa-solid fa-circle text-[5px]"></i>
 
                             ${teacherMapel.school_class?.class_name}
+                            <i class="fa-solid fa-circle text-[5px]"></i>
+
+                            ${teacherMapel.school_class?.tahun_ajaran ?? '-'}
+                            <i class="fa-solid fa-circle text-[5px]"></i>
+
+                            <select id="filter-semester" class="bg-white border text-gray-700 text-xs rounded-md px-2 py-1 outline-none cursor-pointer">
+                                <option value="1" ${semester == 1 ? 'selected' : ''}>Semester 1</option>
+                                <option value="2" ${semester == 2 ? 'selected' : ''}>Semester 2</option>
+                            </select>
                         </p>
                     </div>
 
@@ -157,6 +169,10 @@ function teacherGradebook() {
 
 $(document).ready(function () {
     teacherGradebook();
+});
+
+$(document).on('change', '#filter-semester', function () {
+    teacherGradebook($(this).val());
 });
 
 $(document).on('click', '#btn-export-gradebook', function () {
