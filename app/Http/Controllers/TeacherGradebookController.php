@@ -123,6 +123,11 @@ class TeacherGradebookController extends Controller
 
         $students = StudentSchoolClass::with('UserAccount')->where('school_class_id', $teacherMapel->school_class_id)->where('student_class_status', 'active')->get();
 
+        // SORT A-Z BY NAME
+        $students = $students->sortBy(function ($student) {
+            return strtolower($student->UserAccount->StudentProfile->nama_lengkap ?? '');
+        })->values();
+
         $data = [];
 
         $semester = $request->semester ?? 1;
@@ -165,6 +170,17 @@ class TeacherGradebookController extends Controller
                 ];
             }
 
+            // NILAI TANPA BOBOT
+            $totalAvg = 0;
+            $totalTypes = count($row['types']);
+
+            foreach ($row['types'] as $type) {
+                $totalAvg += $type['avg'];
+            }
+
+            $finalNormalized = $totalTypes > 0 ? round($totalAvg / $totalTypes) : 0;
+
+            // KONTRIBUSI RAPORT
             $total = 0;
             $totalWeight = 0;
 
@@ -177,7 +193,6 @@ class TeacherGradebookController extends Controller
                 }
             }
 
-            $finalNormalized = $totalWeight > 0 ? round($total / $totalWeight) : 0;
             $finalAbsolute = round($total / 100);
 
             $row['final_normalized'] = $finalNormalized;
