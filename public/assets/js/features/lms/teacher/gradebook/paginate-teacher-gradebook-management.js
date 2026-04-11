@@ -115,7 +115,7 @@ function teacherGradebook(semester = 1) {
                         });
 
                         header += `
-                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Saat Ini</th>
+                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai Rata Rata</th>
                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Kontribusi Raport</th>
                 </tr>
             `;
