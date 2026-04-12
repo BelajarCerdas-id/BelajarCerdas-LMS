@@ -168,8 +168,8 @@ class TeacherQuestionBankController extends Controller
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
-        if (!$editQuestion) {
-            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolId, $schoolName, $source, $questionType, $subBabId]);
+        if (!$editQuestion || !$editQuestion->school_partner_id) {
+            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $subBabId]);
         }
 
         // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
