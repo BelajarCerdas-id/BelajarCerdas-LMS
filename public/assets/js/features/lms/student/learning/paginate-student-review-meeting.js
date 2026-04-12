@@ -1,4 +1,7 @@
-function assessmentActivity() {
+let selectedSemester = 1;
+function changeSemester(semester) {
+    selectedSemester = semester;
+
     const container = document.getElementById('container-review-meeting');
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
@@ -19,7 +22,7 @@ function assessmentActivity() {
 
     function fetchService() {
         $.ajax({
-            url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/service/${serviceId}/paginate`,
+            url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/service/${serviceId}/semester/${selectedSemester}/paginate`,
             method: 'GET',
             success: function (response) {
                 const containerMeetingList = $('#grid-list-review-meeting');
@@ -100,8 +103,9 @@ function assessmentActivity() {
 }
 
 $(document).ready(function () {
-    assessmentActivity();
+    changeSemester(selectedSemester);
 });
+
 
 function openReviewModal(meetingId) {
     const container = document.getElementById('container-review-meeting');
