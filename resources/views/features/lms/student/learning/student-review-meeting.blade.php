@@ -13,6 +13,28 @@
 
                     <!-- TOP NAV -->
                     <div class="w-full mb-6 mt-10">
+                        <!-- Semester Tabs -->
+                        <div class="flex my-10 max-w-xl mx-auto">
+                            <div class="w-full hover:bg-gray-100" onclick="changeSemester(1)">
+                                <input type="radio" class="hidden" name="radio" id="radio1" checked>
+                                <div class="checked-timeline">
+                                    <label for="radio1" class="cursor-pointer flex flex-col gap-2">
+                                        <span class="text-md flex justify-center relative top-1 font-bold opacity-70">Semester 1</span>
+                                        <div class="w-full border-b border-gray-300 h-2"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="w-full hover:bg-gray-100" onclick="changeSemester(2)">
+                                <input type="radio" class="hidden" name="radio" id="radio2">
+                                <div class="checked-timeline">
+                                    <label for="radio2" class="cursor-pointer flex flex-col gap-2">
+                                        <span class="text-md flex justify-center relative top-1 font-bold opacity-70">Semester 2</span>
+                                        <div class="w-full border-b border-gray-300 h-2"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                             <!-- LEFT : BACK -->
@@ -23,19 +45,6 @@
                                     <span>Kembali</span>
                                 </button>
                             </div>
-
-                            <!-- CENTER : SERVICE NAME -->
-                            <div class="lg:absolute lg:left-1/2 lg:-translate-x-1/2 text-center w-full lg:w-auto">
-                                <h2 id="service-title"
-                                    class="text-base md:text-lg font-semibold text-[#0071BC] pb-1">
-                                    {{ $getService->name }}
-                                </h2>
-
-                                <div class="border-b-2 border-[#0071BC] w-full lg:w-82.25"></div>
-                            </div>
-
-                            <!-- RIGHT SPACER -->
-                            <div class="hidden lg:block lg:w-1/3"></div>
 
                         </div>
                     </div>

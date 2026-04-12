@@ -109,7 +109,7 @@ class StudentLearningController extends Controller
     }
 
     // function paginate review meeting
-    public function paginateStudentReviewMeeting($role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId) {
+    public function paginateStudentReviewMeeting($role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId, $semester) {
 
         $getMeeting = LmsMeetingContent::with(['LmsContent.SchoolLmsContent' => function ($query) use ($schoolId) {
             $query->where('school_partner_id', $schoolId)->where('is_active', true);
@@ -130,7 +130,7 @@ class StudentLearningController extends Controller
                     });
                 });
             });
-        })->where('service_id', $serviceId)->get();
+        })->where('service_id', $serviceId)->where('semester', $semester)->get();
 
         return response()->json([
             'data' => $getMeeting,
