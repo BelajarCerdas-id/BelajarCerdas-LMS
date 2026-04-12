@@ -106,20 +106,25 @@ function showData() {
     const showScore = container.dataset.showScore === '1';
     const showAnswer = container.dataset.showAnswer === '1';
 
-    if (shuffleQuestions) {
-        document.getElementById('edit-shuffle-questions').checked = shuffleQuestions;
+    const shuffleQuestionsEl = document.getElementById('edit-shuffle-questions');
+    const shuffleOptionsEl = document.getElementById('edit-shuffle-options');
+    const showScoreEl = document.getElementById('edit-show-score');
+    const showAnswerEl = document.getElementById('edit-show-answer');
+
+    if (shuffleQuestionsEl && shuffleQuestions) {
+        shuffleQuestionsEl.checked = true;
     }
-    
-    if (shuffleOptions) {
-        document.getElementById('edit-shuffle-options').checked = shuffleOptions;
+
+    if (shuffleOptionsEl && shuffleOptions) {
+        shuffleOptionsEl.checked = true;
     }
-    
-    if (showScore) {
-        document.getElementById('edit-show-score').checked = showScore;
-    } 
-    
-    if (showAnswer) {
-        document.getElementById('edit-show-answer').checked = showAnswer;
+
+    if (showScoreEl && showScore) {
+        showScoreEl.checked = true;
+    }
+
+    if (showAnswerEl && showAnswer) {
+        showAnswerEl.checked = true;
     }
 
     document.getElementById('edit-assessment-title').value = title;
@@ -127,8 +132,9 @@ function showData() {
     document.getElementById('edit-start-date').value = startDate;
     document.getElementById('edit-end-date').value = endDate;
     
-    if (duration) {
-        document.getElementById('edit-duration').value = duration;
+    const durationEl = document.getElementById('edit-duration');
+    if (durationEl && duration) {
+        durationEl.value = duration;
     }
     
     if (instruction) {
@@ -147,9 +153,9 @@ function enableFlatpickrEdit() {
         enableTime: true,
         time_24hr: true,
         dateFormat: "Y-m-d H:i",
-        minDate: "today",
+        minDate: endInput.value || "today",
         disableMobile: true,
-        onChange: function (selectedDates, dateStr, instance) {
+        onChange: function (selectedDates) {
             if (selectedDates.length > 0) {
                 startPicker.set('maxDate', selectedDates[0]);
             }
@@ -157,21 +163,33 @@ function enableFlatpickrEdit() {
         }
     });
 
+    let lastStartDate = startInput.value ? new Date(startInput.value) : null;
+
     const startPicker = flatpickr(startInput, {
         enableTime: true,
         time_24hr: true,
         dateFormat: "Y-m-d H:i",
-        minDate: "today",
+        minDate: startInput.value || "today",
         disableMobile: true,
-        onChange: function (selectedDates, dateStr, instance) {
+        onChange: function (selectedDates) {
             if (selectedDates.length === 0) return;
 
             let startDate = selectedDates[0];
-            let durationMinutes = parseInt(durationInput.value) || 0;
 
-            // Atur minDate endPicker sesuai duration
+            if (lastStartDate && startDate.getTime() === lastStartDate.getTime()) {
+                return;
+            }
+
+            lastStartDate = startDate;
+
+            let durationMinutes = durationInput ? parseInt(durationInput.value) || 0 : 0;
+
             let minEndDate = new Date(startDate.getTime() + durationMinutes * 60000);
             endPicker.set('minDate', minEndDate);
+
+            if (endPicker.selectedDates[0] && endPicker.selectedDates[0] < minEndDate) {
+                endPicker.clear();
+            }
 
             document.getElementById('error-start_date').textContent = '';
         }
@@ -188,11 +206,6 @@ function enableFlatpickrEdit() {
 
                 // jika end date saat ini lebih kecil dari minEndDate, reset end date
                 if (endPicker.selectedDates[0] && endPicker.selectedDates[0] < minEndDate) {
-                    endPicker.clear();
-                }
-
-                // jika end date saat ini lebih besar dari minEndDate, reset end date
-                if (endPicker.selectedDates[0] && endPicker.selectedDates[0] > minEndDate) {
                     endPicker.clear();
                 }
             }

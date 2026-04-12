@@ -464,7 +464,7 @@ class TeacherAssessmentController extends Controller
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
             'schoolAssessmentType' => $schoolAssessmentType,
-            'assessmentManagementEdit' => '/lms/:role/:schoolName/:schoolId/teacher-assessment-management/:assessmentId/edit'
+            'assessmentManagementEdit' => '/lms/:role/:schoolName/:schoolId/teacher-assessment-management/:assessmentId/edit/view'
         ]);
     }
 
