@@ -168,6 +168,10 @@ class TeacherContentController extends Controller
     {
         $content = LmsContent::with(['Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service'])->findOrFail($contentId);
 
+        if (!$content->school_partner_id) {
+            return redirect()->route('lms.teacherContentManagement.view', [$role, $schoolName, $schoolId]);
+        }
+
         $getCurriculum = Kurikulum::all();
 
         return view('features.lms.teacher.content-management.teacher-edit-content', compact('role', 'schoolName', 'schoolId', 'contentId', 'content', 'getCurriculum'));

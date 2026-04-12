@@ -94,6 +94,19 @@ function paginateContentManagemet(search_class = null, search_year = null, page 
                         </label>
                     `;
 
+                    let editContentTd = '';
+
+                    if (item.school_partner_id) {
+                        editContentTd = `
+                            <li class="text-md">
+                                <a href="${editContent}" class="btn-edit-content">
+                                    <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                    Edit Content
+                                </a>
+                            </li>
+                        `;
+                    }
+
                     $('#tbody-content-management-list').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
@@ -136,12 +149,8 @@ function paginateContentManagemet(search_class = null, search_year = null, page 
                                                 History Content
                                             </span>
                                         </li>
-                                        <li class="text-md">
-                                            <a href="${editContent}" class="btn-edit-content">
-                                                <i class="fa-solid fa-pen text-[#0071BC]"></i>
-                                                Edit Content
-                                            </a>
-                                        </li>
+
+                                        ${editContentTd}
                                     </ul>
                                 </div>
                             </td>
