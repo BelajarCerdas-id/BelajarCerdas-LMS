@@ -20,6 +20,7 @@ use App\Http\Controllers\TeacherGradebookController;
 use App\Http\Controllers\TeacherQuestionBankController;
 use App\Http\Controllers\TeacherQuestionBankReleaseController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\TeacherGradeLedgerController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
@@ -508,6 +509,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // gradebook export
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/export', [TeacherGradebookController::class, 'exportGradebook']);
+
+    // TEACHER GRADE LEDGER MANAGEMENT
+    // views
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list', [TeacherGradeLedgerController::class, 'teacherClassList'])->name('lms.teacherClassListGradeLedger.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}', [TeacherGradeLedgerController::class, 'teacherGradeLedger'])->name('lms.teacherGradeLedger.view');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherClassList'])->name('lms.teacherClassListGradeLedger.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherGradeLedger'])->name('lms.teacherGradeLedger.paginate');
+
+    // grade ledger export
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradeLedgerController::class, 'exportGradeLedger']);
 
     // Information
     // Calender
