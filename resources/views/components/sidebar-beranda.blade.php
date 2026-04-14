@@ -14,13 +14,9 @@
             <!-- MENU -->
             <ul class="mt-14 space-y-4 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('lms.student.dashboard', [
-                        'role' => Auth::user()->role,
-                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah ?? 'sekolah',
-                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id ?? 1
-                    ]) }}"
+                    <a href="{{ route('beranda') }}"
                     class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-gauge"></i>
+                        <i class="fa-solid fa-home"></i>
                         <span>Beranda</span>
                     </a>
                 </li>
@@ -37,7 +33,38 @@
                 </li>
             </ul>
 
-            <!-- FOOTER -->
+                    <!-- Menu Library -->
+                    <li class="list-menu-sidebar-dekstop-student">
+
+<div class="flex flex-col">
+
+    <!-- MENU LIBRARY -->
+    <a href="{{ route('student.library') }}" 
+       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+       
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-book"></i>
+            <span>Library</span>
+        </div>
+
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+    </a>
+
+    <!-- DROPDOWN -->
+    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
+
+    <a href="{{ route('student.library.ppt') }}" 
+       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
+        Power Point
+    </a>
+
+    </div>
+</div>
+
+</li>
+                </ul>
+
+            <!-- FOOTER (DIPAKSA KE BAWAH) -->
             <div class="mt-auto">
                 <hr class="border-white border opacity-60 mb-10 mx-6">
 
@@ -246,7 +273,7 @@
 
                   <!-- Menu Library -->
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('lms.student.view', [ 
+                    <a href="{{ route('lms.student.view', [
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                         'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
@@ -770,31 +797,6 @@
                         </div>
                     </div>
                 </li>
-                <li class="list-item mt-1">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-                        
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Informasi</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('lms.teacherCalendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Kalender Akademik
-                                </a>
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Jadwal Pelajaran
-                                </a>
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Polling
-                                </a>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </li>
 
                 <!-- Meja Guru -->
                 <li class="list-item">
@@ -825,12 +827,15 @@
             <div class="mt-auto">
                 <hr class="border-white border opacity-60 mb-10 mx-6">
 
-                <div class="pb-16 -ml-2 flex justify-center">
-                    <div class="flex flex-col w-max">
-                        <span class="text-[13px] mb-3">
-                            Powered By:
-                        </span>
-                        <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain">
+                <div class="pb-16 -ml-2">
+                    <span class="text-sm mb-6 flex justify-center font-bold">
+                        Partnership By:
+                    </span>
+
+                    <div class="flex justify-center w-full">
+                        <img
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                        >
                     </div>
                 </div>
             </div>
