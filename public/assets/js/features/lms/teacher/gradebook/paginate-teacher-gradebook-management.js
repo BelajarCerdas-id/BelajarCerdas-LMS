@@ -181,8 +181,7 @@ $(document).on('click', '#btn-export-gradebook', function () {
     const schoolId = $('#container-teacher-gradebook').data('schoolId');
     const subjectTeacherId = $('#container-teacher-gradebook').data('subjectTeacherId');
 
-    window.open(
-        `/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/${subjectTeacherId}/export`,
-        '_blank'
-    );
+    const semester = $('#filter-semester').val();
+
+    window.open(`/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/${subjectTeacherId}/semester/${semester}/export`);
 });

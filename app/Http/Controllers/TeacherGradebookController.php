@@ -8,6 +8,7 @@ use App\Models\SchoolAssessmentTypeWeight;
 use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentSchoolClass;
+use App\Models\SubjectPassingGradeCriteria;
 use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
@@ -123,13 +124,11 @@ class TeacherGradebookController extends Controller
 
         $students = StudentSchoolClass::with('UserAccount')->where('school_class_id', $teacherMapel->school_class_id)->where('student_class_status', 'active')->get();
 
-        // SORT A-Z BY NAME
         $students = $students->sortBy(function ($student) {
             return strtolower($student->UserAccount->StudentProfile->nama_lengkap ?? '');
         })->values();
 
         $data = [];
-
         $semester = $request->semester ?? 1;
 
         foreach ($students as $student) {
@@ -153,10 +152,19 @@ class TeacherGradebookController extends Controller
             foreach ($assessmentTypes as $type) {
 
                 $scores = [];
+                $details = [];
 
                 foreach ($summaries as $summary) {
                     if ($summary->SchoolAssessment->assessment_type_id == $type->id) {
-                        $scores[] = $summary->final_score;
+
+                        $score = $summary->final_score;
+
+                        $scores[] = $score;
+
+                        $details[] = [
+                            'title' => $summary->SchoolAssessment->title,
+                            'score' => $score
+                        ];
                     }
                 }
 
@@ -166,11 +174,11 @@ class TeacherGradebookController extends Controller
                     'type_id' => $type->id,
                     'type_name' => $type->name,
                     'avg' => round($avg),
-                    'count' => count($scores)
+                    'count' => count($scores),
+                    'details' => $details
                 ];
             }
 
-            // NILAI TANPA BOBOT
             $totalAvg = 0;
             $totalTypes = count($row['types']);
 
@@ -180,16 +188,13 @@ class TeacherGradebookController extends Controller
 
             $finalNormalized = $totalTypes > 0 ? round($totalAvg / $totalTypes) : 0;
 
-            // KONTRIBUSI RAPORT
             $total = 0;
-            $totalWeight = 0;
 
             foreach ($row['types'] as $type) {
                 $weight = $weights[$type['type_id']]->weight ?? 0;
 
                 if ($type['count'] > 0 && $weight > 0) {
                     $total += $type['avg'] * $weight;
-                    $totalWeight += $weight;
                 }
             }
 
@@ -205,7 +210,6 @@ class TeacherGradebookController extends Controller
 
         $summary = [
             'total_students' => count($data),
-
             'avg_normalized' => $finalNormalizedList->avg() ? round($finalNormalizedList->avg()) : 0,
             'max_normalized' => $finalNormalizedList->max() ?? 0,
             'min_normalized' => $finalNormalizedList->min() ?? 0,
@@ -219,14 +223,27 @@ class TeacherGradebookController extends Controller
         ]);
     }
 
-    public function exportGradebook(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)
+    public function exportGradebook(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId, $semester)
     {
-        // reuse logic dari paginate (penting biar konsisten)
+        // reuse logic dari paginate
         $response = $this->paginateGradebookManagement($request, $role, $schoolName, $schoolId, $subjectTeacherId)->getData(true);
 
         $data = $response['data'];
         $assessmentTypes = $response['assessmentTypes'];
 
-        return Excel::download(new GradebookExport($data, $assessmentTypes), 'gradebook.xlsx');
+        $semester = $request->semester ?? 1;
+        $tahunAjaran = $response['teacherMapel']['school_class']['tahun_ajaran'] ?? '-';
+        $schoolClass = $response['teacherMapel']['school_class']['class_name'] ?? '-';
+        $subject = $response['teacherMapel']['mapel']['mata_pelajaran'];
+        $kkm = SubjectPassingGradeCriteria::where('school_partner_id', $schoolId)->where('kelas_id', $response['teacherMapel']['school_class']['kelas_id'])
+        ->where('mapel_id', $response['teacherMapel']['mapel_id'])->value('kkm_value') ?? 75;
+
+        // SAFE filename
+        $schoolNameSafe = str_replace(['/', '\\'], '-', $schoolName);
+        $tahunAjaranSafe = str_replace(['/', '\\'], '-', $tahunAjaran);
+
+        $fileName = "Buku Nilai - {$schoolNameSafe} - {$schoolClass} - Semester {$semester} - {$tahunAjaranSafe}.xlsx";
+
+        return Excel::download(new GradebookExport($data, $assessmentTypes, $schoolName, $schoolClass, $semester, $tahunAjaran, $subject, $kkm), $fileName);
     }
 }
