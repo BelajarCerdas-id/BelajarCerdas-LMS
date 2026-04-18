@@ -14,10 +14,9 @@
             <!-- MENU -->
             <ul class="mt-14 space-y-4 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('lms.student.dashboard') }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                    <a href="{{ route('lms.student.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
                         <i class="fa-solid fa-gauge"></i>
-                        <span>Beranda</span>
+                        <span> Beranda </span>
                     </a>
                 </li>
                 <li class="list-menu-sidebar-dekstop-student">
@@ -243,14 +242,14 @@
             <!-- MENU -->
             <ul class="flex-1 px-3 py-2 space-y-1 text-sm mt-6 flex flex-col gap-4">
                 <li class="list-menu-sidebar-mobile-student">
-                    <a href="{{ route('beranda') }}"
+                    <a href="{{ route('lms.student.dashboard') }}"
                     class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
                         <i class="fa-solid fa-home"></i>
                         <span>Beranda</span>
                     </a>
                 </li>
 
-                <li class="list-menu-sidebar-mobile-studentt">
+                <li class="list-menu-sidebar-mobile-student">
                     <a href="{{ route('lms.student.view', [ 
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
@@ -658,7 +657,11 @@
                 <li class="list-item">
                     <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                         <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                        <a href="{{ route('beranda') }}" class="link-href text-[14px]">
+                        <a href="{{ route('lms.teacher.view', [
+                                'role' => Auth::user()->role, 
+                                'schoolName' => $schoolName, 
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href text-[14px]">
                             Beranda
                         </a>
                     </div>
@@ -1019,7 +1022,11 @@
                     <li class="list-item">
                         <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                             <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                            <a href="{{ route('beranda') }}" class="link-href text-[14px]">
+                            <a href="{{ route('lms.teacher.view', [
+                                    'role' => Auth::user()->role, 
+                                    'schoolName' => $schoolName, 
+                                    'schoolId' => $schoolId
+                                ]) }}" class="link-href text-[14px]">
                                 Beranda
                             </a>
                         </div>

@@ -9,16 +9,21 @@ class LessonSchedule extends Model
 {
     use HasFactory;
 
+    protected $table = 'lesson_schedules';
+
     protected $fillable = [
         'school_partner_id',
+        'class_id',
         'class_name',
-        'day_of_week',
-        'start_time',
-        'end_time',
-        'teacher_id',
-        'teacher_name',
-        'subject_name',
-        'color',
         'status',
     ];
+
+    /**
+     * Relasi ke detail jam pelajaran (One-to-Many)
+     * Satu header jadwal memiliki banyak item pelajaran
+     */
+    public function items()
+    {
+        return $this->hasMany(LessonScheduleItem::class, 'lesson_schedule_id', 'id');
+    }
 }
