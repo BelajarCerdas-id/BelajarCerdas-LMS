@@ -14,11 +14,7 @@
             <!-- MENU -->
             <ul class="mt-14 space-y-4 px-2">
                 <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('lms.student.dashboard', [
-                        'role' => Auth::user()->role,
-                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah ?? 'sekolah',
-                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id ?? 1
-                    ]) }}"
+                    <a href="{{ route('lms.student.dashboard') }}"
                     class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
                         <i class="fa-solid fa-gauge"></i>
                         <span>Beranda</span>
@@ -36,22 +32,16 @@
                     </a>
                 </li>
 
-                    <!-- Menu Library -->
-                    <li class="list-menu-sidebar-dekstop-student">
-
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
-        </div>
-
-        <!-- Hilangkan chevron karena tidak ada dropdown -->
-    </a>
-
-</li>
-                </ul>
+                <!-- Menu Library -->
+                <li class="list-menu-sidebar-dekstop-student">
+                    <a href="{{ route('student.library') }}" class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">                    
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-book"></i>
+                            <span>Library</span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
 
             <!-- FOOTER -->
             <div class="mt-auto">
@@ -260,32 +250,25 @@
                     </a>
                 </li>
 
-                  <!-- Menu Library -->
-                <li class="list-menu-sidebar-dekstop-student">
+                <li class="list-menu-sidebar-mobile-studentt">
                     <a href="{{ route('lms.student.view', [ 
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                         'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
                     ]) }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
                         <i class="fa-solid fa-school-flag"></i>
                         <span>LMS</span>
                     </a>
                 </li>
-                <li class="list-menu-sidebar-dekstop-student">
-
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
-        </div>
-
-        <!-- Hilangkan chevron karena tidak ada dropdown -->
-    </a>
-
-</li>
+                <li class="list-menu-sidebar-mobile-student">
+                    <a href="{{ route('student.library') }}" class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-gray-200 transition">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-book"></i>
+                            <span>Library</span>
+                        </div>
+                    </a>
+                </li>
             </ul>
 
             <!-- LOGOUT -->
@@ -320,7 +303,7 @@
                     </div>
                 </li>
 
-                  <!-- Menu Library -->
+                <!-- Menu Library -->
                 <li class="list-item pb-2">
                     <a href="{{ route('library.administrator') }}"
                     class="content-menu flex items-center gap-3 px-3 py-2">
@@ -569,7 +552,7 @@
                         </div>
                     </li>
 
-                     <!-- Menu Library -->
+                    <!-- Menu Library -->
                     <li class="list-item m-2 pb-3">
                         <div class="dropdown-menu">
                             <div class="content-menu text-sm flex items-center gap-3">
@@ -663,7 +646,6 @@
 @elseif (Auth::user()->role === 'Guru')
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
-        <!-- HEADER PUTIH (MAIN LOGO) -->
         <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
             <i class="fa-solid fa-school text-4xl mb-2"></i>
             <span class="text-sm font-medium">Logo sekolah tidak tersedia.</span>
@@ -671,10 +653,8 @@
 
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
 
-            <!-- MENU -->
             <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
 
-                <!-- BERANDA -->
                 <li class="list-item">
                     <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                         <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
@@ -684,7 +664,6 @@
                     </div>
                 </li>
 
-                <!-- AKTIVITAS GURU -->
                 <li class="list-item">
                     <div class="dropdown-menu w-full flex flex-col items-start">
 
@@ -825,12 +804,19 @@
                                     ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                     Kalender Akademik
                                 </a>
-
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300">
+                                <a href="{{ route('lms.teacherSchedule.view', [
+                                        'role' => Auth::user()->role, 
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                    }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                     Jadwal Pelajaran
                                 </a>
 
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300">
+                                <a href="{{ route('lms.teacherPolling.view', [
+                                        'role' => Auth::user()->role, 
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                    }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                     Polling
                                 </a>
                             </div>
@@ -840,7 +826,6 @@
                 </li>
             </ul>
 
-            <!-- FOOTER -->
             <div class="mt-auto">
                 <hr class="border-white border opacity-60 mb-10 mx-6">
 
@@ -858,7 +843,6 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <!-- Navbar for PC -->
             <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
@@ -895,7 +879,6 @@
                             </div>
                             <i class="fas fa-circle-user text-4xl text-white opacity-85 toggle-menu-button-profile cursor-pointer"></i>
 
-                            <!-- DROPDOWN -->
                             <div
                                 class="content-dropdown-button-profile absolute right-0 top-full mt-2 bg-white border border-gray-200 shadow-lg w-55 rounded-lg">
                                 <a href="{{ route('beranda') }}">
@@ -918,7 +901,6 @@
                     </div>
                 </div>
 
-                <!-- profile button rounded mobile -->
                 <div class="list-item-button-profile relative lg:hidden z-40">
                     <div class="dropdown-menu">
                         <div class="toggle-menu-button-profile cursor-pointer">
@@ -949,7 +931,6 @@
         </div>
     </div>
 
-    <!--- Sidebar Beranda for mobile ---->
     <nav class="navbar-beranda-phone w-full h-20 flex justify-between items-center md:hidden bg-white shadow-lg px-6">
         <div class="flex items-center h-full">
             <label for="my-drawer-1">
@@ -960,7 +941,6 @@
             </a>
         </div>
         <div class="flex items-center gap-8 text-2xl relative top-1 z-40">
-            <!-- profile button rounded -->
             <div class="list-item-button-profile relative md:hidden">
                 <div class="dropdown-menu">
                     <div class="toggle-menu-button-profile cursor-pointer">
@@ -990,93 +970,87 @@
         </div>
     </nav>
 
-<div class="drawer md:hidden z-9999">
-    <input id="my-drawer-1" type="checkbox" class="drawer-toggle"/>
+    <div class="drawer md:hidden z-9999">
+        <input id="my-drawer-1" type="checkbox" class="drawer-toggle"/>
 
-    <div class="drawer-side">
-        <label for="my-drawer-1" class="drawer-overlay"></label>
+        <div class="drawer-side">
+            <label for="my-drawer-1" class="drawer-overlay"></label>
 
-        <div class="bg-gray-50 min-h-full min-w-[65vw] flex flex-col">
+            <div class="bg-gray-50 min-h-full min-w-[65vw] flex flex-col">
 
-            <!-- HEADER -->
-            <header class="h-20 px-4 bg-[#0071BC] flex items-center justify-between shadow-sm">
-                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" class="h-9 object-contain" alt="Belajar Cerdas">
+                <header class="h-20 px-4 bg-[#0071BC] flex items-center justify-between shadow-sm">
+                    <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" class="h-9 object-contain" alt="Belajar Cerdas">
 
-                <label for="my-drawer-1">
-                    <i class="fas fa-xmark text-2xl text-white cursor-pointer"></i>
-                </label>
-            </header>
+                    <label for="my-drawer-1">
+                        <i class="fas fa-xmark text-2xl text-white cursor-pointer"></i>
+                    </label>
+                </header>
 
-            <!-- CARD SEKOLAH -->
-            <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                <div class="mx-4 mt-4 p-4 flex flex-col items-center">
 
-                @if(!empty($school?->logo))
-                    <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
-                @else
-                    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                        <i class="fa-solid fa-school text-3xl text-gray-400"></i>
-                    </div>
-                    <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
-                @endif
-            </div>
-
-            <div class="border border-gray-200"></div>
-
-            <!-- PROFILE SISWA -->
-            <div class="flex items-center gap-3 px-4 py-4 mt-2">
-                <i class="fas fa-circle-user text-3xl text-gray-400"></i>
-                <div>
-                    <p class="text-sm font-semibold leading-tight">
-                        {{ Str::limit(Auth::user()->SchoolStaffProfile->nama_lengkap ?? '', 20) }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                        {{ Auth::user()->role }}
-                    </p>
-                </div>
-            </div>
-
-            <div class="border border-gray-200"></div>
-
-            <!-- MENU -->
-            <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
-                
-                <!-- BERANDA -->
-                <li class="list-item">
-                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                        <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                        <a href="{{ route('beranda') }}" class="link-href text-[14px]">
-                            Beranda
-                        </a>
-                    </div>
-                </li>
-
-                <!-- AKTIVITAS GURU -->
-                <li class="list-item">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Aktivitas Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                    @if(!empty($school?->logo))
+                        <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
+                    @else
+                        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                            <i class="fa-solid fa-school text-3xl text-gray-400"></i>
                         </div>
+                        <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
+                    @endif
+                </div>
 
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Assessment</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
+                <div class="border border-gray-200"></div>
 
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherAssessmentManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Assessment Mangement
-                                    </a>
-                                    <a href="{{ route('lms.assessmentGradingManagement.view', [
+                <div class="flex items-center gap-3 px-4 py-4 mt-2">
+                    <i class="fas fa-circle-user text-3xl text-gray-400"></i>
+                    <div>
+                        <p class="text-sm font-semibold leading-tight">
+                            {{ Str::limit(Auth::user()->SchoolStaffProfile->nama_lengkap ?? '', 20) }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ Auth::user()->role }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="border border-gray-200"></div>
+
+                <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
+                    
+                    <li class="list-item">
+                        <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
+                            <a href="{{ route('beranda') }}" class="link-href text-[14px]">
+                                Beranda
+                            </a>
+                        </div>
+                    </li>
+
+                    <li class="list-item">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Aktivitas Guru</span>
+                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                <div class="flex flex-col">
+                                    <div
+                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                        <span>Assessment</span>
+                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                    </div>
+
+                                    <div class="list-content-dropdown pl-4">
+                                        <a href="{{ route('lms.teacherAssessmentManagement.view', [
+                                                'role' => Auth::user()->role,
+                                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                            ]) }}" class="link-href block py-2 text-[12px]">
+                                            Assessment Mangement
+                                        </a>
+                                        <a href="{{ route('lms.assessmentGradingManagement.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
@@ -1084,142 +1058,149 @@
                                         Assessment Belum Dinilai
                                     </a>
                                 </div>
-                            </div>
-                            
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Content</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                </div>
+                                
+                                <div class="flex flex-col">
+                                    <div
+                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                        <span>Content</span>
+                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                    </div>
+
+                                    <div class="list-content-dropdown pl-4">
+                                        <a href="{{ route('lms.teacherContentManagement.view', [
+                                                'role' => Auth::user()->role,
+                                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                            ]) }}" class="link-href block py-2 text-[12px]">
+                                            Content Mangement
+                                        </a>
+                                        <a href="{{ route('lms.teacherContentForRelease.view', [
+                                                'role' => Auth::user()->role,
+                                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                            ]) }}" class="link-href block py-2 text-[12px]">
+                                            Content For Release
+                                        </a>
+                                    </div>
                                 </div>
 
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherContentManagement.view', [
+                                <div class="flex flex-col">
+                                    <div
+                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
+                                        <span>Question</span>
+                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
+                                    </div>
+
+                                    <div class="list-content-dropdown pl-4">
+                                        <a href="{{ route('lms.teacherQuestionBankManagement.view', [
+                                                'role' => Auth::user()->role,
+                                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                            ]) }}" class="link-href block py-2 text-[12px]">
+                                            Question Bank Management
+                                        </a>
+                                        <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
+                                                'role' => Auth::user()->role,
+                                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                            ]) }}" class="link-href block py-2 text-[12px]">
+                                            Question Bank For Release
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- MEJA GURU -->
+                    <li class="list-item">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Meja Guru</span>
+                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                <div class="flex flex-col">
+                                    <a href="{{ route('lms.teacherClassList.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                         ]) }}" class="link-href block py-2 text-[12px]">
-                                        Content Mangement
+                                        Buku Nilai
                                     </a>
-                                    <a href="{{ route('lms.teacherContentForRelease.view', [
+
+                                    <a href="{{ route('lms.teacherClassListGradeLedger.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                         ]) }}" class="link-href block py-2 text-[12px]">
-                                        Content For Release
+                                        Leger Nilai
                                     </a>
                                 </div>
                             </div>
 
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Question</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
+                        </div>
+                    </li>
 
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherQuestionBankManagement.view', [
+                    <!-- INFORMASI -->
+                    <li class="list-item mt-1">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Informasi</span>
+                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                <div class="flex flex-col py-2 mt-1">
+                                    <a href="{{ route('lms.teacherCalendar.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Question Bank Management
+                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
+                                        Kalender Akademik
                                     </a>
-                                    <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Question Bank For Release
+
+                                    <a href="{{ route('lms.teacherSchedule.view', [
+                                            'role' => Auth::user()->role, 
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                        }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
+                                        Jadwal Pelajaran
+                                    </a>
+
+                                    <a href="{{ route('lms.teacherPolling.view', [
+                                            'role' => Auth::user()->role, 
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                        }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
+                                        Polling
                                     </a>
                                 </div>
                             </div>
+
                         </div>
-                    </div>
-                </li>
+                    </li>
+                </ul>
 
-                <!-- MEJA GURU -->
-                <li class="list-item">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Meja Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <a href="{{ route('lms.teacherClassList.view', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Buku Nilai
-                                </a>
-
-                                <a href="{{ route('lms.teacherClassListGradeLedger.view', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Leger Nilai
-                                </a>
-                            </div>
-                        </div>
-
-                    </div>
-                </li>
-
-                <!-- INFORMASI -->
-                <li class="list-item mt-1">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Informasi</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('lms.teacherCalendar.view', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
-                                    Kalender Akademik
-                                </a>
-
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300">
-                                    Jadwal Pelajaran
-                                </a>
-
-                                <a href="#" class="link-href block py-2 text-[13px] hover:text-gray-300">
-                                    Polling
-                                </a>
-                            </div>
-                        </div>
-
-                    </div>
-                </li>
-            </ul>
-
-            <!-- LOGOUT -->
-            <div class="p-4 border-t border-gray-300">
-                <form action="{{ route('logout') }}" method="POST">
-                    @csrf
-                    <button
-                        class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        Keluar
-                    </button>
-                </form>
+                <div class="p-4 border-t border-gray-300">
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button
+                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            Keluar
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 @else
     <p>You do not have access to this dashboard.</p>
 @endif
