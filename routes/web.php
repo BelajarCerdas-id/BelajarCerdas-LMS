@@ -508,7 +508,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradebookController::class, 'paginateGradebookManagement'])->name('lms.teacherGradebook.paginate');
 
     // gradebook export
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/export', [TeacherGradebookController::class, 'exportGradebook']);
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradebookController::class, 'exportGradebook']);
 
     // TEACHER GRADE LEDGER MANAGEMENT
     // views
