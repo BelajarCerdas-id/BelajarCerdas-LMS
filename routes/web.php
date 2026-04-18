@@ -25,6 +25,7 @@ use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TeacherInformationController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -196,6 +197,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/edit', [SchoolSyllabusController::class, 'subBabEdit'])->name('schoolSubBabManagement.edit');
     Route::put('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/activate', [SchoolSyllabusController::class, 'subBabActivate'])->name('schoolSubBabManagement.activate');
 
+
     // paginate
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/kurikulum/paginate', [SchoolSyllabusController::class, 'paginateCurriculum'])->name('schoolCurriculumManagement.paginate');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/fase/paginate', [SchoolSyllabusController::class, 'paginateFase'])->name('schoolFaseManagement.paginate');
@@ -253,13 +255,20 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/move-class', [LmsController::class, 'lmsManagementMoveClass'])->name('lms.managementMoveClass.create');
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/move-major', [LmsController::class, 'lmsManagementMoveMajor'])->name('lms.managementMoveMajor.create');
 
-    // options
+    // get promotion next class / repeat class / move class / move major options
+    // promote-to-next-class routes by major and no major
     Route::get('/lms/school/{schoolId}/{majorId}/promotion-to-next-class-options', [LmsController::class, 'promotionClassOptions']);
     Route::get('/lms/school/{schoolId}/promotion-to-next-class-options', [LmsController::class, 'promotionClassOptions']);
+
+    // promote-to-repeat-class routes by major and no major
     Route::get('/lms/school/{schoolId}/{majorId}/repeat-class-options', [LmsController::class, 'repeatClassOptions']);
     Route::get('/lms/school/{schoolId}/repeat-class-options', [LmsController::class, 'repeatClassOptions']);
+
+    // promote-to-move-class routes by major and no major
     Route::get('/lms/school/{schoolId}/{majorId}/move-class-options', [LmsController::class, 'moveClassOptions']);
     Route::get('/lms/school/{schoolId}/move-class-options', [LmsController::class, 'moveClassOptions']);
+
+    // move major routes by major and no major
     Route::get('/lms/school/{schoolId}/{majorId}/move-major-options', [LmsController::class, 'moveMajorOptions']);
     Route::get('/lms/school/{schoolId}/move-major-options', [LmsController::class, 'moveMajorOptions']);
 
@@ -314,6 +323,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/content-management/{contentId}/edit', [LmsController::class, 'lmsContentManagementEditView'])->name('lms.contentManagement.edit.view.noSchoolPartner');
     Route::get('/lms/school-subscription/content-management/{contentId}/{schoolName}/{schoolId}/edit', [LmsController::class, 'lmsContentManagementEditView'])->name('lms.contentManagement.edit.view.schoolPartner');
 
+    // view content management review no school partner & school partner
     Route::get('/lms/content-management/{contentId}/review', [LmsController::class, 'lmsReviewContent'])->name('lms.contentManagement.review.noSchoolPartner');
     Route::get('/lms/school-subscription/content-management/{contentId}/{schoolName}/{schoolId}/review', [LmsController::class, 'lmsReviewContent'])->name('lms.contentManagement.review.schoolPartner');
 
@@ -381,14 +391,63 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/subject-progress/data', [StudentSubjectProgressController::class, 'data'])->name('lms.studentSubjectProgress.data');
 
     // learning routes
-    Route::get('/lms/{role}/{schoolName}/{schoolId}', [LmsController::class, 'lmsStudentView'])->name('lms.student.view');
-    //polling
+    Route::get('/lms/{role}/{schoolName}/{schoolId}', [StudentLearningController::class, 'lmsStudentView'])->name('lms.student.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning', [StudentLearningController::class, 'studentLearning'])->name('lms.studentLearning.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/service/{serviceId}', [StudentLearningController::class, 'studentReviewMeeting'])->name('lms.studentReviewMeeting.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/service/{serviceId}/show-content/{meetingContentId}', [StudentLearningController::class, 'showStudentReviewContent'])->name('lms.studentReviewContent.show');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/service/{serviceId}/download-content/{meetingContentId}', [StudentLearningController::class, 'downloadStudentContent'])->name('lms.studentContent.download');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/paginate', [StudentLearningController::class, 'paginateLmsStudent'])->name('lms.student.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/paginate', [StudentLearningController::class, 'paginateStudentLearning'])->name('lms.studentLearning.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/service/{serviceId}/semester/{semester}/paginate', [StudentLearningController::class, 'paginateStudentReviewMeeting'])->name('lms.studentReviewMeeting.paginate');
+
+    // preview assessment routes
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.mode.view');
+
+    // load assessment data by semester
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment.mode');
+    Route::get('/lms/check-assessment-status/{assessmentId}', [StudentAssessmentController::class, 'checkAssessmentStatus'])->name('lms.checkAssessmentStatus');
+
+    // assessment (exam)
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/test/{assessmentId}', [StudentAssessmentExamController::class, 'studentAssessmentExam'])->name('lms.studentAssessmentExan.view');
+
+    // form
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}', [StudentAssessmentExamController::class, 'studentAssessmentExamForm'])->name('lms.studentAssessmentExan.form');
+
+    // routes timer
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/start-timer', [StudentAssessmentExamController::class, 'startTimer'])->name('lms.startTimer.test');
+
+    // routes report tab switch (cheating detection)
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/report-tab-switch', [StudentAssessmentExamController::class, 'reportTabSwitch'])->name('lms.reportTabSwitch.cheating');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/attempt-status', [StudentAssessmentExamController::class, 'checkAttemptStatus'])->name('lms.checkAttemptStatus.cheating');
+
+    // answer
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/answer', [StudentAssessmentExamController::class, 'studentAssessmentExamAnswer'])->name('lms.studentAssessmentExan.answer');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/project-submission', [StudentAssessmentExamController::class, 'studentProjectSubmission'])->name('lms.studentProjectSubmission.answer');
+
+    // end assessment
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/emd', [StudentAssessmentExamController::class, 'studentAssessmentExamEnd'])->name('lms.studentAssessmentExan.emd');
+
+    // routes store and delete image essay
+    Route::post('/lms/image-essay/store-image/endpoint', [StudentAssessmentExamController::class, 'storeImageEssay'])->name('assessment-test.storeImage');
+    Route::post('/lms/image-essay/delete-image/endpoint', [StudentAssessmentExamController::class, 'deleteImageEssay'])->name('assessment-test.deleteImage');
+
+    // results
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/result-test', [StudentAssessmentExamController::class, 'studentResultAssessment'])->name('lms.studentAssessment.result');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/project-result', [StudentAssessmentExamController::class, 'studentProjectResult'])->name('lms.studentProjectAssessment.result');
+    Route::get('/lms/student/dashboard', [App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
+    Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [\App\Http\Controllers\TeacherInformationController::class, 'getScheduleDataAjax']);
+    // polling
     Route::post('/lms/student/polling/vote', [App\Http\Controllers\StudentDashboardController::class, 'submitVote'])->name('lms.studentPolling.vote');
 
     // ROUTES TEACHER LMS
     // =========================================================
 
     // content management
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/beranda', [LmsController::class, 'lmsTeacherView'])->name('lms.teacher.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management', [TeacherContentController::class, 'teacherContentManagement'])->name('lms.teacherContentManagement.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/review', [TeacherContentController::class, 'teacherReviewContent'])->name('lms.teacherContentManagement.review.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/edit', [TeacherContentController::class, 'teacherEditContent'])->name('lms.teacherContentManagement.edit.view');
@@ -488,76 +547,54 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // grade ledger export
     Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradeLedgerController::class, 'exportGradeLedger']);
 
-    // =========================================================
-    // WILDCARD LMS STUDENT — HARUS PALING BAWAH!
-    // =========================================================
-    Route::get('/lms/{role}/{schoolName}/{schoolId}', [StudentLearningController::class, 'lmsStudentView'])->name('lms.student.view');
-    Route::put('/library/update/{id}', [LibraryController::class,'update'])->name('library.update');
-    
+    // Information
+    // Calender
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-academic-calendar', [App\Http\Controllers\TeacherInformationController::class, 'teacherCalendarView'])->name('lms.teacherCalendar.view');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-academic-calendar/save', [App\Http\Controllers\TeacherInformationController::class, 'saveCalendarData'])->name('lms.teacherCalendar.save');
+
+    // Jadwal
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule', [App\Http\Controllers\TeacherInformationController::class, 'scheduleView'])->name('lms.teacherSchedule.view');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule/save', [App\Http\Controllers\TeacherInformationController::class, 'saveSchedule'])->name('lms.teacherSchedule.save');
+    Route::get('/lms/{schoolId}/teacher-schedule/get-data/{className}', [App\Http\Controllers\TeacherInformationController::class, 'getScheduleData'])->name('lms.teacherSchedule.get');
+
+    // Polling
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling', [App\Http\Controllers\TeacherInformationController::class, 'teacherPollingView'])->name('lms.teacherPolling.view');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/save', [App\Http\Controllers\TeacherInformationController::class, 'savePollingData'])->name('lms.teacherPolling.save');
+
+    // Rute detail kelas
+    Route::get('/lms/guru/api/get-students/{classId}', [\App\Http\Controllers\LmsController::class, 'getStudentsForAttendance'])->name('lms.guru.get_students');
+    Route::post('/lms/teacher/pengumuman/store', [App\Http\Controllers\LmsController::class, 'storePengumuman'])->name('lms.teacher.pengumuman.store');
+    Route::post('/lms/student/announcement/mark-as-read', [App\Http\Controllers\LmsController::class, 'markAsRead'])->name('lms.student.announcement.read');
+    Route::get('/lms/guru/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [\App\Http\Controllers\LmsController::class, 'classDetailView'])->name('lms.teacher.class.detail');
+    Route::post('/lms/teacher/attendance/store', [App\Http\Controllers\LmsController::class, 'saveAttendance'])->name('lms.teacher.attendance.store');
+    Route::get('/lms/teacher/tugas/{taskId}/submissions', [App\Http\Controllers\LmsController::class, 'getTaskSubmissions'])->name('lms.teacher.tugas.submissions');
+    Route::post('/lms/teacher/tugas/grades', [App\Http\Controllers\LmsController::class, 'saveTaskGrades'])->name('lms.teacher.tugas.grades');
+    Route::post('/lms/teacher/tugas/store', [App\Http\Controllers\LmsController::class, 'storeTugas'])->name('lms.teacher.tugas.store');
+
+    // ROUTES LIBRARY FEATURE
+    Route::get('/administrator/library', [LibraryController::class, 'index'])->name('library.index');
+
+    Route::post('/administrator/library/store', [LibraryController::class, 'store'])->name('library.store');
+
+    Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
+
+    Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
+    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
+    Route::get('/administrator/library', [LibraryController::class, 'administrator'])->name('library.administrator');
+
+    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])->name('student.library');
+
+    Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])->name('student.library.read');
+
+    Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])->name('student.library.submit');
+
+    Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
+
+    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])->name('student.library.mapel');
+
+    Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
+
     // ROUTES SCHOOL PARTNER
     Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
     Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
-
-
-Route::get('/cek-akun-jadwal', function() {
-    // Cari semua sekolah
-    $semuaSekolah = \Illuminate\Support\Facades\DB::table('school_partners')->get();
-    
-    foreach($semuaSekolah as $sekolah) {
-        // Cari 1 Guru di sekolah ini
-        $guru = \Illuminate\Support\Facades\DB::table('user_accounts')
-            ->join('school_staff_profiles', 'user_accounts.id', '=', 'school_staff_profiles.user_id')
-            ->where('school_staff_profiles.school_partner_id', $sekolah->id)
-            ->where('user_accounts.role', 'Guru')
-            ->select('user_accounts.email', 'school_staff_profiles.nama_lengkap')
-            ->first();
-            
-        // Cari 1 Siswa di sekolah yang sama
-        $siswa = \Illuminate\Support\Facades\DB::table('user_accounts')
-            ->join('student_profiles', 'user_accounts.id', '=', 'student_profiles.user_id')
-            ->where('student_profiles.school_partner_id', $sekolah->id)
-            ->where('user_accounts.role', 'Siswa')
-            ->select('user_accounts.id', 'user_accounts.email', 'student_profiles.nama_lengkap')
-            ->first();
-            
-        if($guru && $siswa) {
-            // Cari siswa ini ada di kelas mana
-            $kelas = \Illuminate\Support\Facades\DB::table('student_school_classes')
-                ->join('school_classes', 'student_school_classes.school_class_id', '=', 'school_classes.id')
-                ->where('student_school_classes.student_id', $siswa->id)
-                ->select('school_classes.class_name')
-                ->first();
-                
-            $namaKelas = $kelas ? $kelas->class_name : 'Belum Masuk Kelas (Jadwal tidak akan tampil)';
-            
-            return "
-            <div style='font-family: sans-serif; padding: 20px;'>
-                <h2 style='color: #0071BC;'>🎉 Pasangan Akun Uji Coba Ditemukan!</h2>
-                <p><b>🏫 Sekolah:</b> {$sekolah->nama_sekolah}</p>
-                <hr style='border: 1px solid #eee;'>
-                
-                <h3 style='color: #F59E0B;'>👨‍🏫 LOGIN SEBAGAI GURU (Pembuat Jadwal)</h3>
-                <p><b>Email:</b> <code>{$guru->email}</code></p>
-                <p><b>Nama:</b> {$guru->nama_lengkap}</p>
-                <p><i>*Saat buat jadwal nanti, pastikan pilih kelas <b>{$namaKelas}</b>.</i></p>
-
-                <h3 style='color: #10B981; margin-top: 30px;'>🎓 LOGIN SEBAGAI SISWA (Pelihat Jadwal)</h3>
-                <p><b>Email:</b> <code>{$siswa->email}</code></p>
-                <p><b>Nama:</b> {$siswa->nama_lengkap}</p>
-                <p><b>Kelas:</b> {$namaKelas}</p>
-                
-                <br>
-                <p style='color: gray; font-size: 12px;'>*Gunakan password asli yang biasa Anda gunakan saat seeder/register (misal: password atau 12345678).</p>
-            </div>
-            ";
-        }
-    }
-    return "Belum ada sekolah di database yang memiliki minimal 1 Guru dan 1 Siswa sekaligus.";
 });
-
-Route::get('/cek-kolom', function() {
-    $kolom = \Illuminate\Support\Facades\Schema::getColumnListing('student_school_classes');
-    return response()->json($kolom);
-});     
-});
-
