@@ -6,7 +6,7 @@
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
-@if (Auth::user()->role === 'Administrator')
+@if (Auth::user()->role === 'Administrator' || Auth::user()->role === 'Admin Sekolah')
     <div class="relative ml-0 md:ml-62.5 w-full transition-[margin] md:w-[calc(100%-250px)] duration-500 ease-in-out">
         <div class="my-15 mx-7.5">
             <!-- load question bank detail -->

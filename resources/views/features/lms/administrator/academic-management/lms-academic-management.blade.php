@@ -1,10 +1,16 @@
-@include('components/sidebar-beranda', [
-    'headerSideNav' => 'LMS Manajemen Akademik',
-    'linkBackButton' => route('lms.schoolSubscription.view'),
-    'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
-]);
+@if(Auth::user()->role === 'Administrator')
+    @include('components/sidebar-beranda', [
+        'headerSideNav' => 'LMS Manajemen Akademik',
+        'linkBackButton' => route('lms.schoolSubscription.view'),
+        'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
+    ]);
+@else
+    @include('components/sidebar-beranda', [
+        'headerSideNav' => 'LMS Manajemen Akademik',
+    ]);
+@endif
 
-@if (Auth::user()->role === 'Administrator')
+@if (Auth::user()->role === 'Administrator' || Auth::user()->role === 'Admin Sekolah')
     <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
         <div class="my-15 mx-7.5">
                 <!---- list card academic management ---->
