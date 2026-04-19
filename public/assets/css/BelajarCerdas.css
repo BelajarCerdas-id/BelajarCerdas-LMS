@@ -148,6 +148,18 @@ body {
     font-weight: bold;
 }
 
+/* sidebar beranda school admin  */
+.sidebar-beranda-school-admin {
+    width: 250px;
+    background-color: #0071BC;
+    color: white;
+    height: 100vh;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
 .question-bank-preview ul {
     list-style: disc !important;
     padding-left: 15px;
