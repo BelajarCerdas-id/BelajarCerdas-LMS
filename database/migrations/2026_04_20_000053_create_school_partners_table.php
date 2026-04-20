@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('npsn');
             $table->foreignId('kepsek_id')->constrained('user_accounts');
             $table->string('jenjang_sekolah');
+            $table->string('logo')->nullable();
             $table->timestamps();
         });
     }
