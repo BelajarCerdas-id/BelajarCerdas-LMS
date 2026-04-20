@@ -35,9 +35,9 @@ class RoleController extends Controller
             'data' => $groupedRoles->values(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'lmsManagementAccounts' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-accounts',
-            'lmsManagementMajors' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-majors',
-            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-class',
+            'lmsManagementAccounts' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-accounts',
+            'lmsManagementMajors' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-majors',
+            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class',
         ]);
     }
 }

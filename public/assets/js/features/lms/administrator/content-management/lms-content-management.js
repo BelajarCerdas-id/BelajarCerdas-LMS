@@ -40,8 +40,8 @@ function paginateContentManagemet(page = 1) {
                     let reviewContent = '';
 
                     if (schoolId) {
-                        editContent = response.editContentBySchool.replace(':contentId', item.id).replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                        reviewContent = response.reviewContentBySchool.replace(':contentId', item.id).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                        editContent = response.editContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id);
+                        reviewContent = response.reviewContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id)
                     } else {
                         editContent = response.editContent.replace(':contentId', item.id);
                         reviewContent = response.reviewContent.replace(':contentId', item.id)

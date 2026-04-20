@@ -90,8 +90,8 @@ function paginateBankSoal(page = 1) {
                         let lmsReviewQuestion = '';
 
                         if (schoolId) {
-                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
-                                .replace(':subBabId', first.sub_bab_id).replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':source', first.question_source)
+                                .replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
                         } else {
                             lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
                         }
