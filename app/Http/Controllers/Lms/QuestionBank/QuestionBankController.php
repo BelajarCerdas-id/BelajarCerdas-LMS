@@ -116,7 +116,7 @@ class QuestionBankController extends Controller
             'countUsers' => $countUsers,
             'source' => $source ?? null,
             'lmsReviewQuestion' => '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
-            'lmsReviewQuestionBySchool' => '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:schoolName/:schoolId',
+            'lmsReviewQuestionBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
         ]);
     }
 
@@ -167,9 +167,15 @@ class QuestionBankController extends Controller
         ]);
     }
 
+    // function bank soal detail view (milik bc)
+    public function lmsDefaultQuestionBankManagementDetailView($source, $questionType, $subBabId, $schoolName = null, $schoolId = null)
+    {
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 
+        'subBabId', 'schoolName', 'schoolId'));
+    }
 
-    // function bank soal detail view
-    public function lmsQuestionBankManagementDetailView($source, $questionType, $subBabId, $schoolName = null, $schoolId = null)
+    // function bank soal detail view (milik sekolah)
+    public function lmsSchoolQuestionBankManagementDetailView($schoolName, $schoolId, $source, $questionType, $subBabId)
     {
         return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 
         'subBabId', 'schoolName', 'schoolId'));
@@ -204,7 +210,7 @@ class QuestionBankController extends Controller
 
         if ($user->role === 'Administrator' || $user->role === 'Admin Sekolah') {
             $response['lmsEditQuestion'] = '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
-            $response['lmsEditQuestionBySchool'] = '/lms/school-subscription/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/:schoolName/:schoolId/edit';
+            $response['lmsEditQuestionBySchool'] = '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
         } else if ($user->role === 'Guru') {
             $response['lmsEditQuestion'] = '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
         }
@@ -213,7 +219,31 @@ class QuestionBankController extends Controller
     }
 
     // function edit question view
-    public function lmsQuestionBankManagementEditView($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    public function lmsDefaultQuestionBankManagementEditView($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    {
+        // Mengambil data soal berdasarkan ID
+        $editQuestion = LmsQuestionBank::find($questionId);
+
+        if (!$editQuestion) {
+            if ($schoolId) {
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $questionType, $subBabId, $schoolName, $schoolId]);
+            } else {
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]);
+            }
+        }
+
+        // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
+        $dataSoal = LmsQuestionBank::where('questions', $editQuestion->questions)->get()->groupBy('questions');
+
+        // Simpan hasil pengelompokan ke variabel baru
+        $groupedSoal = $dataSoal;
+
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
+        'schoolName', 'schoolId', 'questionType'));
+    }
+
+    // function edit question view
+    public function lmsSchoolQuestionBankManagementEditView($schoolName, $schoolId, $source, $questionType, $subBabId, $questionId)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);

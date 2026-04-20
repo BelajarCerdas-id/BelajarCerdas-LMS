@@ -34,14 +34,14 @@ class AcademicDashboardController extends Controller
             'data' => $groupedRoles->values(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/',
-            'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/question-bank-management/',
-            'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/kurikulum',
-            'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/content-management',
-            'lmsAssessmentTypeManagement' => '/lms/school-subscription/:schoolName/:schoolId/assessment-type-management',
-            'lmsTeacherSubjectManagement' => '/lms/school-subscription/:schoolName/:schoolId/subject-teacher-management',
-            'lmsAssessmentWeightManagement' => '/lms/school-subscription/:schoolName/:schoolId/assessment-weight-management',
-            'lmsSubjectPassingGradeCriteria' => '/lms/school-subscription/:schoolName/:schoolId/subject-passing-grade-criteria-management',
+            'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account',
+            'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management',
+            'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/kurikulum',
+            'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/content-management',
+            'lmsAssessmentTypeManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/assessment-type-management',
+            'lmsTeacherSubjectManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/subject-teacher-management',
+            'lmsAssessmentWeightManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/assessment-weight-management',
+            'lmsSubjectPassingGradeCriteria' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/subject-passing-grade-criteria-management',
         ]);
     }
 }

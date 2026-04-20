@@ -34,7 +34,7 @@ class SchoolSyllabusController extends Controller
         return response()->json([
             'data' => $getCurriculum->items(),
             'links' => (string) $getCurriculum->links(),
-            'faseDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/fase',
+            'faseDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/fase',
         ]);
     }
 
@@ -79,7 +79,7 @@ class SchoolSyllabusController extends Controller
             'data' => $dataFase,
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'kelasDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/kelas',
+            'kelasDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/kelas',
         ]);
     }
 
@@ -111,7 +111,7 @@ class SchoolSyllabusController extends Controller
             'links' => (string) $dataKelas->links(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'mapelDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
+            'mapelDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
         ]);
     }
 
@@ -173,7 +173,7 @@ class SchoolSyllabusController extends Controller
             'links' => (string) $dataSchoolMapel->links(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'babDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
+            'babDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
         ]);
     }
 
@@ -346,7 +346,7 @@ class SchoolSyllabusController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'mapel' => $mapel,
-            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
 
@@ -499,7 +499,7 @@ class SchoolSyllabusController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'bab' => $bab,
-            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
 

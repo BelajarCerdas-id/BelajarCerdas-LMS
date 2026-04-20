@@ -140,8 +140,8 @@ class ClassController extends Controller
             'tahunAjaran' => $tahunAjaran,
             'selectedYear' => $selectedYear,
             'selectedClass' => $selectedClass,
-            'lmsManagementStudentsWithMajor' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-class/:classId/management-majors/:majorId/management-students',
-            'lmsManagementStudentsNoMajor' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-class/:classId/management-students',
+            'lmsManagementStudentsWithMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-majors/:majorId/management-students',
+            'lmsManagementStudentsNoMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-students',
         ]);
     }
 
