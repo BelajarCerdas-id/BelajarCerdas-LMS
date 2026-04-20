@@ -4,9 +4,24 @@
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
         <!-- HEADER PUTIH (MAIN LOGO) -->
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
-            <i class="fa-solid fa-school text-4xl mb-2"></i>
-            <span class="text-sm font-medium">Logo sekolah tidak tersedia.</span>
+        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+
+            <!-- LOGO WRAPPER -->
+            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
+
+                @if(!empty(Auth::user()->StudentProfile->SchoolPartner->logo))
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->StudentProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                @else
+                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                @endif
+            </div>
+
+            <!-- TEXT -->
+            @if(empty(Auth::user()->StudentProfile->SchoolPartner->logo))
+                <span class="text-center text-sm">
+                    Logo sekolah tidak tersedia.
+                </span>
+            @endif
         </div>
 
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
@@ -210,17 +225,25 @@
             </header>
 
             <!-- CARD SEKOLAH -->
-            <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                <div class="relative flex flex-col items-center">
 
-                @if(!empty($school?->logo))
-                    <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
-                @else
-                    <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                        <i class="fa-solid fa-school text-3xl text-gray-400"></i>
+                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                        <!-- LOGO -->
+                        @if(!empty(Auth::user()->StudentProfile->SchoolPartner->logo))
+                            <img src="{{ asset(Auth::user()->StudentProfile->SchoolPartner->logo) }}"
+                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Sekolah">
+                        @else
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 mb-2">
+                                <i class="fa-solid fa-school text-3xl text-gray-400"></i>
+                            </div>
+
+                            <span class="text-center text-sm">
+                                Logo sekolah tidak tersedia.
+                            </span>
+                        @endif
                     </div>
-                    <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
-                @endif
-            </div>
+
+                </div>
 
             <div class="border border-gray-200"></div>
 
@@ -652,9 +675,24 @@
 @elseif (Auth::user()->role === 'Guru')
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
-            <i class="fa-solid fa-school text-4xl mb-2"></i>
-            <span class="text-sm font-medium">Logo sekolah tidak tersedia.</span>
+        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+
+            <!-- LOGO WRAPPER -->
+            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
+
+                @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                @else
+                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                @endif
+            </div>
+
+            <!-- TEXT -->
+            @if(empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                <span class="text-center">
+                    Logo sekolah tidak tersedia.
+                </span>
+            @endif
         </div>
 
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
@@ -996,16 +1034,24 @@
                     </label>
                 </header>
 
-                <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                <div class="relative flex flex-col items-center">
 
-                    @if(!empty($school?->logo))
-                        <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
-                    @else
-                        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                            <i class="fa-solid fa-school text-3xl text-gray-400"></i>
-                        </div>
-                        <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
-                    @endif
+                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                        <!-- LOGO -->
+                        @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                            <img src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}"
+                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Sekolah">
+                        @else
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 mb-2">
+                                <i class="fa-solid fa-school text-3xl text-gray-400"></i>
+                            </div>
+
+                            <span class="text-center text-sm">
+                                Logo sekolah tidak tersedia.
+                            </span>
+                        @endif
+                    </div>
+
                 </div>
 
                 <div class="border border-gray-200"></div>
@@ -1219,9 +1265,38 @@
     <aside class="sidebar-beranda-school-admin hidden md:flex flex-col">
 
         <!-- HEADER PUTIH (MAIN LOGO) -->
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
-            <i class="fa-solid fa-school text-4xl mb-2"></i>
-            <span class="text-sm font-medium">Logo sekolah tidak tersedia.</span>
+        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+
+            <!-- LOGO WRAPPER -->
+            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
+
+                @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                @else
+                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                @endif
+            </div>
+
+            <!-- TEXT -->
+            @if(empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                <span id="logo-text" class="text-sm font-medium flex flex-col gap-1 text-center">
+                    Logo sekolah tidak tersedia </br>
+                    <p class="text-xs">Klik untuk menambahkan logo</p>
+                </span>
+            @endif
+
+            @if(Auth::user()->role === 'Admin Sekolah')
+                <!-- OVERLAY -->
+                <label id="btn-open-edit-logo-dekstop"
+                    class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+
+                    <i class="fa-solid fa-pen text-white text-lg mb-1"></i>
+                    <span class="text-white text-xs">Ubah Logo</span>
+                </label>
+
+                <!-- INPUT -->
+                <input type="file" id="upload-logo" class="hidden" accept="image/*">
+            @endif
         </div>
 
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
@@ -1241,7 +1316,6 @@
                 </li>
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('lms.academicManagement.view', [
-                            'role' => Auth::user()->role,
                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                         ]) }}" class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
@@ -1420,16 +1494,32 @@
                 </header>
 
                 <!-- CARD SEKOLAH -->
-                <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                <div id="btn-open-edit-logo-mobile" class="relative flex flex-col items-center cursor-pointer">
 
-                    @if(!empty($school?->logo))
-                        <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
-                    @else
-                        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                            <i class="fa-solid fa-school text-3xl text-gray-400"></i>
-                        </div>
-                        <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
-                    @endif
+                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                        <!-- LOGO -->
+                        @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                            <img src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}"
+                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Sekolah">
+                        @else
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 mb-2">
+                                <i class="fa-solid fa-school text-3xl text-gray-400"></i>
+                            </div>
+
+                            <span class="text-center text-sm">
+                                Logo sekolah tidak tersedia <br>
+                                <span class="text-xs">Klik untuk menambahkan logo</span>
+                            </span>
+                        @endif
+                    </div>
+
+                    <!-- OVERLAY MOBILE -->
+                    <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition">
+
+                        <i class="fa-solid fa-pen text-white text-lg mb-1"></i>
+                        <span class="text-white text-xs">Ubah Logo</span>
+                    </div>
+
                 </div>
 
                 <div class="border border-gray-200"></div>
@@ -1490,6 +1580,69 @@
             </div>
         </div>
     </div>
+        
+    <div id="alert-success-insert-school-logo"></div>
+
+    <!--- modal ubah logo sekolah --->
+    <dialog id="edit-school-logo" class="modal">
+        <div class="modal-box bg-white w-105">
+            <form id="edit-school-logo-form" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
+                <!-- TITLE -->
+                <h3 class="font-bold text-lg text-center mb-6">
+                    Ubah Logo Sekolah
+                </h3>
+    
+                <!-- PREVIEW -->
+                <div class="flex justify-center mb-6">
+                    <div id="preview-container" class="w-32 h-32 flex items-center justify-center transition-all duration-200">
+    
+                        <div id="preview-inner" class="w-full h-full flex items-center justify-center
+                            {{ Auth::user()->SchoolStaffProfile->SchoolPartner->logo ? '' : 'rounded-full bg-gray-100 border border-gray-300 overflow-hidden' }}">
+    
+                            <!-- IMAGE -->
+                            <img id="preview-logo-modal" src="{{ !empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) ? asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) : '' }}" 
+                            class="max-w-full max-h-full object-cover {{ empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) ? 'hidden' : '' }}">
+    
+                            <!-- ICON -->
+                            @if(empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                                <i id="icon-logo-modal" class="fa-solid fa-school text-3xl text-gray-400"></i>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- UPLOAD AREA -->
+                <label for="input-school-logo"
+                    class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#0071BC] transition">
+    
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
+                    <span class="text-sm text-gray-500">
+                        Klik untuk upload logo
+                    </span>
+                    <span class="text-xs text-gray-400">
+                        JPG, JPEG, PNG, (Max 2MB)
+                    </span>
+                </label>
+    
+                <!-- INPUT -->
+                <input id="input-school-logo" name="school_logo" type="file" class="hidden" onchange="previewSchoolLogoInput(event, 'input-school-logo')" accept=".jpg, .jpeg, .png">
+    
+                <!-- ERROR -->
+                <p id="error-school_logo" class="text-red-500 text-xs mt-2"></p>
+    
+                <!-- ACTION -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="btn-save-school-logo" class="bg-[#0071BC] text-white px-6 py-2 rounded-lg font-bold cursor-pointer outline-none disabled:cursor-default">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
 @else
     <p>You do not have access to this dashboard.</p>
 @endif
@@ -1497,6 +1650,7 @@
 <script src="{{ asset('assets/js/components/sidebar-administrator.js') }}"></script>
 <script src="{{ asset('assets/js/components/sidebar-student.js') }}"></script>
 <script src="{{ asset('assets/js/components/navbar-button-profile.js') }}"></script>
+<script src="{{ asset('assets/js/components/form-submit-school-logo.js') }}"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

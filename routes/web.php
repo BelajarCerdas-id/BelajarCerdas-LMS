@@ -433,7 +433,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // ROUTES TEACHER LMS
     // content management
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/beranda', [LmsController::class, 'lmsTeacherView'])->name('lms.teacher.view');
+    Route::get('/lms/Guru/{schoolName}/{schoolId}/beranda', [LmsController::class, 'lmsTeacherView'])->name('lms.teacher.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management', [TeacherContentController::class, 'teacherContentManagement'])->name('lms.teacherContentManagement.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/review', [TeacherContentController::class, 'teacherReviewContent'])->name('lms.teacherContentManagement.review.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/edit', [TeacherContentController::class, 'teacherEditContent'])->name('lms.teacherContentManagement.edit.view');
@@ -591,6 +591,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // ROUTES SCHOOL ADMIN
     // dashboard
     Route::get('/lms/{role}/{schoolName}/{schoolId}/beranda', [SchoolAdminDashboardController::class, 'index'])->name('lms.schoolAdmin.dashboard.view');
+
+    // edit school logo
+    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/edit-school-logo', [LmsController::class, 'editSchoolLogo'])->name('lms.editLogo');
 
     // ROUTES SCHOOL PARTNER
     Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');

@@ -12,6 +12,7 @@ use App\Models\SchoolPartner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class LmsController extends Controller
 {
@@ -81,7 +82,66 @@ class LmsController extends Controller
         ]);
     }
 
-    public function lmsTeacherView($role, $schoolName, $schoolId)
+    // function edit school logo
+    public function editSchoolLogo(Request $request, $schoolName, $schoolId)
+    {
+        // VALIDATION
+        $validator = Validator::make($request->all(), [
+            'school_logo' => 'required|image|mimes:jpg,jpeg,png|max:2000'
+        ], [
+            'school_logo.required' => 'Logo wajib diupload.',
+            'school_logo.image'    => 'File harus berupa gambar.',
+            'school_logo.mimes'    => 'Format harus JPG, JPEG, atau PNG.',
+            'school_logo.max'      => 'Ukuran maksimal 2MB.'
+        ]);
+
+        // HANDLE ERROR 422
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        // AMBIL DATA
+        $school = SchoolPartner::findOrFail($schoolId);
+
+        // HANDLE FILE
+        if ($request->hasFile('school_logo')) {
+
+            $file = $request->file('school_logo');
+
+            // nama file unik
+            $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
+
+            $destinationPath = public_path('school-logo');
+
+            // buat folder kalau belum ada
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+
+            // HAPUS FILE LAMA
+            if (!empty($school->logo) && file_exists(public_path($school->logo))) {
+                unlink(public_path($school->logo));
+            }
+
+            // SIMPAN FILE
+            $file->move($destinationPath, $filename);
+
+            // simpan ke db
+            $school->logo = 'school-logo/' . $filename;
+            $school->save();
+        }
+
+        // RESPONSE SUCCESS
+        return response()->json([
+            'message'  => 'Logo berhasil diperbarui',
+            'logo_url' => asset($school->logo)
+        ], 200);
+    }
+
+    public function lmsTeacherView($schoolName, $schoolId)
     {
         $tanggalDipilih = request('date', date('Y-m-d'));
         $user = Auth::user();
@@ -189,7 +249,6 @@ class LmsController extends Controller
         }
 
         return view('features.lms.teacher.dashboard', compact(
-            'role',
             'schoolName', 
             'schoolId', 
             'totalKelas', 

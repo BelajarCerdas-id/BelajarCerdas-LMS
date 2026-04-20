@@ -13,6 +13,7 @@ class SchoolPartner extends Model
         'npsn',
         'kepsek_id',
         'jenjang_sekolah',
+        'logo',
     ];
 
     public function Transactions()
