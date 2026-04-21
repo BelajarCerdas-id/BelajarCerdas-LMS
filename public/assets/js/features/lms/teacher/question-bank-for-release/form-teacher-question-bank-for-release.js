@@ -338,6 +338,65 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
                             </div>
                         `;
 
+                        let pgKompleksHTML = '';
+
+                        if (item.tipe_soal === 'PG_KOMPLEKS') {
+
+                            const categories = item.lms_question_option.filter(item => item.extra_data?.side === 'category');
+                            const items = item.lms_question_option.filter(item => item.extra_data?.side === 'item');
+
+                            pgKompleksHTML = `
+                                <div class="overflow-x-auto mt-6">
+                                    <table class="w-full border border-gray-300 text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-100 text-center">
+                                                <th class="border px-4 py-2">${item.lms_question_bank?.header_item ?? 'Pernyataan'}</th>
+                                                ${categories.map(category => `<th class="border px-4 py-2">${category.options_value}</th>`).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${items.map(item => {
+                                                const answer = item.extra_data?.answer;
+                                                const content = addClassToImgTags(item.options_value, 'max-w-[100px] sm:max-w-[200px] rounded');
+
+                                                return `
+                                                    <tr>
+                                                        <td class="border px-4 py-3">
+                                                            ${content}
+                                                        </td>
+                                                        ${categories.map(cat => `
+                                                            <td class="border text-center">
+                                                                ${answer === cat.options_key
+                                                                    ?
+                                                                    `
+                                                                    <div class="flex justify-center items-center">
+                                                                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+                                                                            <i class="fa-solid fa-check text-xs"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    `
+                                                                : ''}
+                                                            </td>
+                                                        `).join('')}
+                                                    </tr>
+                                                `;
+                                                }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+
+                        let answerSectionHTML = '';
+
+                        if (item.tipe_soal === 'PG_KOMPLEKS') {
+                            answerSectionHTML = pgKompleksHTML;
+                        } else if (item.tipe_soal === 'MATCHING') {
+                            answerSectionHTML = matchingHTML;
+                        } else {
+                            answerSectionHTML = optionsHtml;
+                        }
+
                         modalContent.innerHTML = `
                             <div class="bg-white rounded-2xl space-y-6">
 
@@ -349,7 +408,7 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
 
                                     <div class="question-bank-preview leading-relaxed text-gray-800">
                                         <div>${addClassToImgTags(item.questions, 'max-w-full md:max-w-[300px] h-auto')}</div>
-                                        <div>${item.tipe_soal === 'MATCHING' ? matchingHTML : optionsHtml}</div>
+                                        <div>${answerSectionHTML}</div>
                                     </div>
                                 </div>
 
