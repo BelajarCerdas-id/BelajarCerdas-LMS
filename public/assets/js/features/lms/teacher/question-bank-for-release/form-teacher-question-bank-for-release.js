@@ -1,4 +1,4 @@
-let selectedAssessmentId = null;
+let selectedAssessmentIds = new Set();
 function formQuestionForRelease(search_year = null, search_class = null, search_assessment_type = null, search_subject = null, search_semester = null, search_question = null,
     kurikulum_id = null, kelas_id = null, mapel_id = null, bab_id = null, sub_bab_id = null) {
     const container = document.getElementById('container-form-teacher-question-bank-for-release');
@@ -109,8 +109,8 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
 
                     row.innerHTML = `
                         <td class="border border-gray-300 px-3 py-2 text-center">
-                            <input type="radio" name="school_assessment_id" value="${item.id}" class="school-assessment-checkbox cursor-pointer"
-                                ${selectedAssessmentId == item.id ? 'checked' : ''}>
+                            <input type="checkbox" name="school_assessment_id[]" value="${item.id}" class="school-assessment-checkbox cursor-pointer"
+                                ${selectedAssessmentIds.has(String(item.id)) ? 'checked' : ''}>
                         </td>
 
                         <td class="border border-gray-300 px-3 py-2 text-center">
@@ -551,6 +551,22 @@ $(document).on('change', '.school-assessment-checkbox', function () {
     selectedAssessmentId = $(this).val();
 });
 
+// hapus state checkbox assessment yang dicentang
+document.addEventListener('change', function (e) {
+    if (e.target.classList.contains('school-assessment-checkbox')) {
+
+        const id = e.target.value;
+
+        if (e.target.checked) {
+            selectedAssessmentIds.add(id);
+        } else {
+            selectedAssessmentIds.delete(id);
+        }
+
+        updateSchoolAssessmentSelected();
+    }
+});
+
 // FUNCTION UPDATE SELECTED COUNT
 function updateSelectedCount() {
 
@@ -716,6 +732,9 @@ $('#submit-button-publish-question-for-release, #submit-button-draft-question-fo
             btn.prop('disabled', false);
 
             selectedQuestions.clear();
+
+            // Hapus semua input hidden assessment
+            selectedAssessmentIds.clear();
 
             // kalau ada hidden sync
             syncHiddenInputs?.();

@@ -203,13 +203,14 @@ class TeacherQuestionBankReleaseController extends Controller
     public function teacherQuestionBankForReleaseStore(Request $request, $role, $schoolName, $schoolId)
     {
         $validator = Validator::make($request->all(), [
-            'school_assessment_id' => 'required',
+            'school_assessment_id' => 'required|array|min:1',
+            'school_assessment_id.*' => 'required|integer',
             'question_id' => 'required|array|min:1',
             'question_id.*' => 'required|integer',
             'question_weight' => 'required|array|min:1',
             'question_weight.*' => 'required|integer',
         ], [
-            'school_assessment_id.required' => 'Harap pilih rombel kelas.',
+            'school_assessment_id.required' => 'Harap pilih setidaknya 1 asesmen.',
             'question_id.required' => 'Harap pilih soal.',
             'question_weight.*.required' => 'Harap pilih bobot soal.',
         ]);
@@ -238,17 +239,18 @@ class TeacherQuestionBankReleaseController extends Controller
             ], 422);
         }
 
-        foreach ($request->question_id as $questionId) {
+        foreach ($request->school_assessment_id as $assessmentId) {
+            foreach ($request->question_id as $questionId) {
 
-            $questionWeight = $request->question_weight[$questionId];
+                $questionWeight = $request->question_weight[$questionId];
 
-            $data = [
-                'school_assessment_id' => $request->school_assessment_id,
-                'question_bank_id' => $questionId,
-                'question_weight' => $questionWeight
-            ];
-
-            SchoolAssessmentQuestion::create($data);
+                SchoolAssessmentQuestion::firstOrCreate([
+                    'school_assessment_id' => $assessmentId,
+                    'question_bank_id' => $questionId,
+                ], [
+                    'question_weight' => $questionWeight
+                ]);
+            }
         }
 
         return response()->json([
