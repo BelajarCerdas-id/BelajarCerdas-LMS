@@ -103,7 +103,7 @@ class TeacherGradebookController extends Controller
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
             'subject' => $subjects,
-            'teacherGradebook' => '/lms/:role/:schoolName/:schoolId/teacher-class-list/teacher-gradebook/subject-teacher/:subjectTeacherId'
+            'teacherGradebook' => '/lms/:role/:schoolName/:schoolId/gradebook/classes/subject-teacher/:subjectTeacherId'
         ]);
     }
 

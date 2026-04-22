@@ -10,7 +10,7 @@ function teacherClassList(search_year = null, search_class = null, search_subjec
     if (!schoolId) return;
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/paginate`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/gradebook/classes/paginate`,
         method: 'GET',
         data: {
             search_year: search_year,
