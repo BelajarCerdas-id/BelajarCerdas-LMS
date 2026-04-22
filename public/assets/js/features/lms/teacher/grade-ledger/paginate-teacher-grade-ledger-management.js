@@ -12,7 +12,7 @@ function teacherGradeLedger(semester = 1) {
     if (!subjectTeacherId) return;
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/${subjectTeacherId}/paginate`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/grade-ledger/classes/subject-teacher/${subjectTeacherId}/paginate`,
         method: 'GET',
         data: {
             semester: semester
@@ -143,5 +143,5 @@ $(document).on('click', '#btn-export-grade-ledger', function () {
 
     const semester = $('#filter-semester').val();
 
-    window.open(`/lms/${role}/${schoolName}/${schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/${subjectTeacherId}/semester/${semester}/export`, '_blank');
+    window.open(`/lms/${role}/${schoolName}/${schoolId}/grade-ledger/classes/subject-teacher/${subjectTeacherId}/semester/${semester}/export`, '_blank');
 });

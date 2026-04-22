@@ -12,7 +12,7 @@ function teacherGradebook(semester = 1) {
     if (!subjectTeacherId) return;
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/${subjectTeacherId}/paginate`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/gradebook/classes/subject-teacher/${subjectTeacherId}/paginate`,
         method: 'GET',
         data: {
             semester: semester
@@ -183,5 +183,5 @@ $(document).on('click', '#btn-export-gradebook', function () {
 
     const semester = $('#filter-semester').val();
 
-    window.open(`/lms/${role}/${schoolName}/${schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/${subjectTeacherId}/semester/${semester}/export`);
+    window.open(`/lms/${role}/${schoolName}/${schoolId}/gradebook/classes/subject-teacher/${subjectTeacherId}/semester/${semester}/export`);
 });

@@ -519,27 +519,27 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // TEACHER GRADEBOOK MANAGEMENT
     // views
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list', [TeacherGradebookController::class, 'teacherClassList'])->name('lms.teacherClassList.view');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}', [TeacherGradebookController::class, 'gradebookManagement'])->name('lms.teacherGradebook.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes', [TeacherGradebookController::class, 'teacherClassList'])->name('lms.teacherClassList.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}', [TeacherGradebookController::class, 'gradebookManagement'])->name('lms.teacherGradebook.view');
 
     // paginate
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/paginate', [TeacherGradebookController::class, 'paginateTeacherClassList'])->name('lms.teacherClassList.paginate');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradebookController::class, 'paginateGradebookManagement'])->name('lms.teacherGradebook.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/paginate', [TeacherGradebookController::class, 'paginateTeacherClassList'])->name('lms.teacherClassList.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradebookController::class, 'paginateGradebookManagement'])->name('lms.teacherGradebook.paginate');
 
     // gradebook export
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-class-list/teacher-gradebook/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradebookController::class, 'exportGradebook']);
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradebookController::class, 'exportGradebook']);
 
     // TEACHER GRADE LEDGER MANAGEMENT
     // views
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list', [TeacherGradeLedgerController::class, 'teacherClassList'])->name('lms.teacherClassListGradeLedger.view');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}', [TeacherGradeLedgerController::class, 'teacherGradeLedger'])->name('lms.teacherGradeLedger.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes', [TeacherGradeLedgerController::class, 'teacherClassList'])->name('lms.teacherClassListGradeLedger.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes/subject-teacher/{subjectTeacherId}', [TeacherGradeLedgerController::class, 'teacherGradeLedger'])->name('lms.teacherGradeLedger.view');
 
     // paginate
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherClassList'])->name('lms.teacherClassListGradeLedger.paginate');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherGradeLedger'])->name('lms.teacherGradeLedger.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherClassList'])->name('lms.teacherClassListGradeLedger.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradeLedgerController::class, 'paginateTeacherGradeLedger'])->name('lms.teacherGradeLedger.paginate');
 
     // grade ledger export
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/management/teacher-class-list/grade-ledger/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradeLedgerController::class, 'exportGradeLedger']);
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradeLedgerController::class, 'exportGradeLedger']);
 
     // Information
     // Calender

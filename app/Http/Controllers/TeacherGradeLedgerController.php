@@ -103,7 +103,7 @@ class TeacherGradeLedgerController extends Controller
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
             'subject' => $subjects,
-            'teacherGradeLedger' => '/lms/:role/:schoolName/:schoolId/management/teacher-class-list/grade-ledger/subject-teacher/:subjectTeacherId'
+            'teacherGradeLedger' => '/lms/:role/:schoolName/:schoolId/grade-ledger/classes/subject-teacher/:subjectTeacherId'
         ]);
     }
 
