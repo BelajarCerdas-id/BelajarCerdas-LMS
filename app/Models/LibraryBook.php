@@ -16,7 +16,8 @@ class LibraryBook extends Model
     'file',
     'kelas_id',
     'mapel_id',
-    'bab_id'
+    'bab_id',
+    'tipe'
 ];
 
     public function kelas()
