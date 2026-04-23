@@ -4,14 +4,20 @@
 use Illuminate\Support\Str;
 @endphp
 
+@php
+use Illuminate\Support\Str;
+@endphp
+
 @if (Auth::user()->role === 'Administrator')
 
 <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)]">
+
 <div class="my-6 mx-4">
 
 <main>
+<main>
 
-<!-- ================= HEADER ================= -->
+<!-- HEADER -->
 
 <div class="flex justify-between items-center mb-6">
 
@@ -30,7 +36,7 @@ Tambah Buku
 </div>
 
 
-<!-- ================= TAB ================= -->
+<!-- TAB -->
 
 <div class="flex gap-4 mb-4 border-b">
 
@@ -47,8 +53,7 @@ PPT
 </div>
 
 
-
-<!-- ================= TABLE BUKU ================= -->
+<!-- TABLE BUKU -->
 
 <div id="table_buku">
 
@@ -73,7 +78,9 @@ PPT
 
 <tbody class="divide-y">
 
-@foreach($books->where('tipe','buku') as $book)
+@foreach($books as $book)
+
+@if($book->tipe === 'buku')
 
 <tr class="hover:bg-gray-50">
 
@@ -81,8 +88,7 @@ PPT
 
 <td class="px-4 py-2">
 @if($book->cover)
-<img src="{{ asset('library/sampul/'.$book->cover) }}"
-class="w-16 h-20 object-cover rounded">
+<img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-16 h-20 object-cover rounded">
 @endif
 </td>
 
@@ -105,11 +111,16 @@ class="w-16 h-20 object-cover rounded">
 <td class="px-4 py-2">
 
 @if($book->file)
-<a href="{{ asset('library/file/'.$book->file) }}"
+
+<a
+href="{{ asset('library/file/'.$book->file) }}"
 target="_blank"
 class="text-blue-500 text-xs">
+
 Lihat
+
 </a>
+
 @endif
 
 </td>
@@ -125,19 +136,25 @@ onclick="openEditModal(
 `{{ $book->description }}`,
 '{{ $book->kelas_id }}',
 '{{ $book->mapel_id }}',
-'{{ $book->bab_id }}'
+'{{ $book->bab_id }}',
+'{{ $book->tipe }}'
 )"
 class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
+
 Edit
+
 </button>
 
 <form action="{{ route('library.delete',$book->id) }}" method="POST">
+
 @csrf
 @method('DELETE')
 
 <button
 class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
+
 Delete
+
 </button>
 
 </form>
@@ -148,6 +165,8 @@ Delete
 
 </tr>
 
+@endif
+
 @endforeach
 
 </tbody>
@@ -155,11 +174,11 @@ Delete
 </table>
 
 </div>
+
 </div>
 
 
-
-<!-- ================= TABLE PPT ================= -->
+<!-- TABLE PPT -->
 
 <div id="table_ppt" class="hidden">
 
@@ -184,7 +203,9 @@ Delete
 
 <tbody class="divide-y">
 
-@foreach($books->where('tipe','ppt') as $book)
+@foreach($books as $book)
+
+@if($book->tipe === 'ppt')
 
 <tr class="hover:bg-gray-50">
 
@@ -192,8 +213,7 @@ Delete
 
 <td class="px-4 py-2">
 @if($book->cover)
-<img src="{{ asset('library/sampul/'.$book->cover) }}"
-class="w-16 h-20 object-cover rounded">
+<img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-16 h-20 object-cover rounded">
 @endif
 </td>
 
@@ -216,31 +236,61 @@ class="w-16 h-20 object-cover rounded">
 <td class="px-4 py-2">
 
 @if($book->file)
-<a href="{{ asset('library/file/'.$book->file) }}"
+
+<a
+href="{{ asset('library/file/'.$book->file) }}"
 target="_blank"
 class="text-blue-500 text-xs">
+
 Lihat
+
 </a>
+
 @endif
 
 </td>
 
 <td class="px-4 py-2">
 
+<div class="flex gap-2">
+
+<button
+onclick="openEditModal(
+'{{ $book->id }}',
+`{{ $book->title }}`,
+`{{ $book->description }}`,
+'{{ $book->kelas_id }}',
+'{{ $book->mapel_id }}',
+'{{ $book->bab_id }}',
+'{{ $book->tipe }}'
+)"
+class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
+
+Edit
+
+</button>
+
 <form action="{{ route('library.delete',$book->id) }}" method="POST">
+
 @csrf
 @method('DELETE')
 
 <button
 class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
+
 Delete
+
 </button>
 
 </form>
 
+</div>
+
 </td>
 
 </tr>
+
+@endif
 
 @endforeach
 
@@ -249,137 +299,16 @@ Delete
 </table>
 
 </div>
-</div>
 
+</div>
 
 </main>
 
 </div>
+
 </div>
 
 @endif
-
-
-
-<!-- ================= MODAL TAMBAH ================= -->
-
-<dialog id="modal_add_book" class="modal">
-
-<div class="modal-box w-[450px]">
-
-<h3 class="font-bold text-lg mb-4 text-center">
-Tambah Library
-</h3>
-
-<form action="{{ route('library.store') }}" method="POST" enctype="multipart/form-data">
-
-@csrf
-
-<div class="space-y-3">
-
-<input
-type="text"
-name="title"
-placeholder="Judul"
-class="border rounded w-full px-3 py-2">
-
-
-<textarea
-name="description"
-placeholder="Deskripsi"
-class="border rounded w-full px-3 py-2"></textarea>
-
-
-<select name="kelas_id" class="border rounded w-full px-3 py-2">
-
-<option value="">Pilih Kelas</option>
-
-@foreach($kelas as $k)
-<option value="{{ $k->id }}">
-{{ $k->kelas }}
-</option>
-@endforeach
-
-</select>
-
-
-<select id="mapel_add" name="mapel_id"
-class="border rounded w-full px-3 py-2">
-
-<option value="">Pilih Mapel</option>
-
-@foreach($mapels as $mapel)
-<option value="{{ $mapel->id }}">
-{{ $mapel->mata_pelajaran }}
-</option>
-@endforeach
-
-</select>
-
-
-
-<select id="bab_add"
-name="bab_id"
-class="border rounded w-full px-3 py-2">
-
-<option value="">Pilih Bab</option>
-
-@foreach($babs as $bab)
-
-<option
-value="{{ $bab->id }}"
-data-mapel="{{ $bab->mapel_id }}">
-
-{{ $bab->nama_bab }}
-
-</option>
-
-@endforeach
-
-</select>
-
-
-<select name="tipe" class="border rounded w-full px-3 py-2">
-
-<option value="buku">Buku</option>
-<option value="ppt">PPT</option>
-
-</select>
-
-
-<input
-type="file"
-name="file"
-id="file_pdf"
-class="border rounded w-full px-3 py-2">
-
-
-<input
-type="hidden"
-name="auto_cover"
-id="auto_cover">
-
-</div>
-
-
-<div class="flex justify-end mt-4">
-
-<button
-class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
-Simpan
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-<form method="dialog" class="modal-backdrop">
-<button>close</button>
-</form>
-
-</dialog>
 
 
 <!-- MODAL EDIT -->
@@ -479,51 +408,185 @@ Update
 <button>close</button>
 </form>
 
+
+<div class="modal-box w-96">
+
+<h3 class="font-bold text-center mb-4">
+Edit Buku
+</h3>
+
+<form id="editForm" method="POST" enctype="multipart/form-data">
+
+@csrf
+@method('PUT')
+
+<div class="space-y-3">
+
+<input id="edit_title"
+type="text"
+name="title"
+class="border rounded w-full px-3 py-2">
+
+<textarea id="edit_description"
+name="description"
+class="border rounded w-full px-3 py-2"></textarea>
+
+<select id="edit_kelas"
+name="kelas_id"
+class="border rounded w-full px-3 py-2">
+
+@foreach($kelas as $k)
+
+<option value="{{ $k->id }}">
+{{ $k->kelas }}
+</option>
+
+@endforeach
+
+</select>
+
+
+<select id="edit_mapel"
+name="mapel_id"
+class="border rounded w-full px-3 py-2">
+
+@foreach($mapels as $mapel)
+
+<option value="{{ $mapel->id }}">
+{{ $mapel->mata_pelajaran }}
+</option>
+
+@endforeach
+
+</select>
+
+
+<select id="edit_bab"
+name="bab_id"
+class="border rounded w-full px-3 py-2">
+
+@foreach($babs as $bab)
+
+<option value="{{ $bab->id }}">
+{{ $bab->nama_bab }}
+</option>
+
+@endforeach
+
+</select>
+
+<input
+type="file"
+name="file"
+class="border rounded w-full px-2 py-1">
+
+</div>
+
+<div class="flex justify-end mt-5">
+
+<button
+type="submit"
+class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+
+Update
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+<form method="dialog" class="modal-backdrop">
+<button>close</button>
+</form>
+
 </dialog>
+
 
 <!-- ================= SCRIPT ================= -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
+<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
 
 <script>
 
+
 function showTab(tab){
 
-['buku','ppt'].forEach(function(t){
+const tabs = ['buku','ppt'];
+
+tabs.forEach(function(t){
 
 document.getElementById('table_'+t).classList.add('hidden');
 
-document.getElementById('tab_'+t)
-.classList.remove('border-blue-500','text-blue-600','font-semibold');
+const btn = document.getElementById('tab_'+t);
 
-document.getElementById('tab_'+t)
-.classList.add('text-gray-500');
+btn.classList.remove('border-blue-500','text-blue-600','font-semibold');
+
+btn.classList.add('text-gray-500');
 
 });
 
 document.getElementById('table_'+tab).classList.remove('hidden');
 
-document.getElementById('tab_'+tab)
-.classList.add('border-blue-500','text-blue-600','font-semibold');
+const activeTab = document.getElementById('tab_'+tab);
+
+activeTab.classList.remove('text-gray-500');
+
+activeTab.classList.add('border-blue-500','text-blue-600','font-semibold');
 
 }
 
-function openEditModal(id,title,description,kelas,mapel,bab){
+function openEditModal(id,title,desc,kelas,mapel,bab,tipe){
 
-    const modal = document.getElementById('modal_edit_book');
+document.getElementById("edit_title").value = title;
+document.getElementById("edit_description").value = desc;
 
-    document.getElementById('edit_title').value = title;
-    document.getElementById('edit_description').value = description;
+document.getElementById("edit_kelas").value = kelas;
+document.getElementById("edit_mapel").value = mapel;
+document.getElementById("edit_bab").value = bab;
 
-    document.getElementById('edit_kelas').value = kelas;
-    document.getElementById('edit_mapel').value = mapel;
-    document.getElementById('edit_bab').value = bab;
+document.getElementById("editForm").action = "/library/update/"+id;
 
-    document.getElementById('editForm').action =
-        "/administrator/library/update/" + id;
+modal_edit_book.showModal();
 
-    modal.showModal();
+}
+
+function switchForm(tab){
+
+const formBuku = document.getElementById('form_buku');
+const formPPT = document.getElementById('form_ppt');
+
+const tabBuku = document.getElementById('tabFormBuku');
+const tabPPT = document.getElementById('tabFormPPT');
+
+if(tab === 'buku'){
+
+formBuku.classList.remove('hidden');
+formPPT.classList.add('hidden');
+
+tabBuku.classList.add('border-blue-500','text-blue-600','font-semibold');
+tabBuku.classList.remove('text-gray-500');
+
+tabPPT.classList.remove('border-blue-500','text-blue-600','font-semibold');
+tabPPT.classList.add('text-gray-500');
+
+}
+
+if(tab === 'ppt'){
+
+formPPT.classList.remove('hidden');
+formBuku.classList.add('hidden');
+
+tabPPT.classList.add('border-blue-500','text-blue-600','font-semibold');
+tabPPT.classList.remove('text-gray-500');
+
+tabBuku.classList.remove('border-blue-500','text-blue-600','font-semibold');
+tabBuku.classList.add('text-gray-500');
+
+}
 
 }
 
@@ -562,6 +625,7 @@ const autoCoverInput = document.getElementById("auto_cover");
 fileInput?.addEventListener("change", function(e){
 
 const file = e.target.files[0];
+
 if(!file) return;
 
 const ext = file.name.split('.').pop().toLowerCase();
@@ -574,6 +638,8 @@ const reader = new FileReader();
 reader.onload = function(){
 
 const typedarray = new Uint8Array(this.result);
+
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
 
 pdfjsLib.getDocument(typedarray).promise.then(function(pdf){
 
@@ -621,11 +687,11 @@ canvas.height = 800;
 ctx.fillStyle = "#2563EB";
 ctx.fillRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle = "#fff";
-ctx.font = "bold 40px Arial";
-ctx.textAlign="center";
+ctx.fillStyle = "#FFFFFF";
+ctx.font = "bold 42px Arial";
+ctx.textAlign = "center";
 
-ctx.fillText(ext.toUpperCase()+" FILE",300,400);
+ctx.fillText(ext.toUpperCase()+" FILE", canvas.width/2, canvas.height/2);
 
 autoCoverInput.value = canvas.toDataURL("image/jpeg");
 
