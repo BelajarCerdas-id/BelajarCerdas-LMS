@@ -17,10 +17,10 @@ public function administrator()
 {
     $books = LibraryBook::with(['kelas','mapel','bab'])->get();
 
-    $mapels = Mapel::select('id','mata_pelajaran')
-        ->distinct()
-        ->orderBy('mata_pelajaran')
-        ->get();
+    $mapels = Mapel::selectRaw('MIN(id) as id, mata_pelajaran')
+    ->groupBy('mata_pelajaran')
+    ->orderBy('mata_pelajaran')
+    ->get();
 
     $babs = Bab::orderBy('nama_bab')->get();
 

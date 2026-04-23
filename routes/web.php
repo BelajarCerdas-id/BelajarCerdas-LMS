@@ -469,8 +469,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     Route::get('/lms/{role}/{schoolName}/{schoolId}', [StudentLearningController::class, 'lmsStudentView'])->name('lms.student.view');
     Route::put('/library/update/{id}', [LibraryController::class,'update'])->name('library.update');
+    
+    // ROUTES SCHOOL PARTNER
+    Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
+    Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
 });
 
-// ROUTES SCHOOL PARTNER
-Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
-Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
