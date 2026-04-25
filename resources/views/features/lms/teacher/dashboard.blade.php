@@ -159,6 +159,69 @@
                             @endforelse
                         </div>
                     </div>
+
+                    <!-- TEACHER ASSESSMENT CHEATING HISTORY -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-red-50 p-6 md:p-8 flex flex-col">
+                        
+                        <!-- HEADER -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-linear-to-br from-red-50 to-red-100 text-red-600 rounded-xl flex items-center justify-center shadow-inner font-bold text-lg">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-red-900 text-lg leading-tight">Pelanggaran Asesmen</h3>
+                                    <p class="text-xs text-red-600/70 font-medium">Aktivitas mencurigakan saat asesmen berlangsung</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIST -->
+                        <div id="container-teacher-assessment-cheating-history" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="flex flex-col gap-4">
+
+                            <!-- FILTER CONTAINER -->
+                            <div class="my-6 bg-gray-50 shadow-sm border border-gray-300 rounded-2xl p-6">
+
+                                <!-- Header Filter -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-filter text-[#0071BC]"></i>
+                                        <h3 class="text-base font-semibold text-gray-800">
+                                            Filter Riwayat
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                <!-- Filter Fields -->
+                                <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4">
+
+                                    <div id="container-dropdown-school-year-cheating-history"></div>
+
+                                    <div id="container-dropdown-rombel-class-cheating-history"></div>
+
+                                    <div id="container-dropdown-subject-teacher-cheating-history"></div>
+
+                                    <div id="container-dropdown-assessment-type-cheating-history"></div>
+
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-4 max-h-87.5 overflow-y-auto pr-2 custom-scrollbar">
+
+                                <div id="grid-list-teacher-assessment-cheating-history" class="flex flex-col gap-8">
+                                    <!-- show data in ajax -->
+                                </div>
+
+                                <div id="empty-message-teacher-assessment-cheating-history" class="py-8 text-center border-2 border-dashed border-red-50 rounded-2xl bg-red-50/20 hidden">
+                                    <div class="flex flex-col items-center justify-center ">
+                                        <i class="fas fa-check-circle text-3xl mb-3 text-green-400"></i>
+                                        <p class="text-sm font-bold text-green-800">Tidak Ada Pelanggaran</p>
+                                        <p class="text-xs font-bold text-green-800 mt-1">Semua siswa tertib</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="xl:col-span-1 flex flex-col gap-8">
@@ -293,6 +356,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
+<script src="{{ asset('assets/js/features/lms/teacher/dashboard/paginate-teacher-assessment-cheating-history.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>

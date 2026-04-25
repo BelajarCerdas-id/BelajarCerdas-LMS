@@ -435,6 +435,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // ROUTES TEACHER LMS
     // content management
     Route::get('/lms/Guru/{schoolName}/{schoolId}/beranda', [LmsController::class, 'lmsTeacherView'])->name('lms.teacher.view');
+    Route::get('/lms/Guru/{schoolName}/{schoolId}/beranda/cheating-history', [LmsController::class, 'getTeacherAssessmentCheatingHistory'])->name('lms.teacherAssessmentCheatingHistory.data');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management', [TeacherContentController::class, 'teacherContentManagement'])->name('lms.teacherContentManagement.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/review', [TeacherContentController::class, 'teacherReviewContent'])->name('lms.teacherContentManagement.review.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-content-management/{contentId}/edit', [TeacherContentController::class, 'teacherEditContent'])->name('lms.teacherContentManagement.edit.view');

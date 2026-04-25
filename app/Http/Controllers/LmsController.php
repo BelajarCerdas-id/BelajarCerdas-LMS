@@ -7,8 +7,12 @@ use App\Models\AcademicCalendar;
 use App\Models\LessonSchedule;
 use App\Models\Poll;
 use App\Models\PollOption;
+use App\Models\SchoolAssessmentType;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolPartner;
+use App\Models\StudentAssessmentAttempt;
+use App\Models\TeacherMapel;
+use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +20,13 @@ use Illuminate\Support\Facades\Validator;
 
 class LmsController extends Controller
 {
+    // function extract class level
+    private function extractClassLevel($className)
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->extractClassLevel($className);
+    }
+    
     // function lms school subscription view
     public function lmsSchoolSubscriptionView()
     {
@@ -257,9 +268,140 @@ class LmsController extends Controller
             'monthlyEvents',
             'recentPolls',
             'hariIni',
-            'tanggalDipilih'
+            'tanggalDipilih',
         ));
     }
+
+    // function get teacher assessment cheating history
+    public function getTeacherAssessmentCheatingHistory(Request $request, $schoolName, $schoolId)
+    {
+        $user = Auth::user();
+
+        $schoolPartner = SchoolPartner::findOrFail($schoolId);
+        $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
+
+        $startLevelMap = [
+            'SD'  => 1, 'MI'  => 1,
+            'SMP' => 7, 'MTS' => 7,
+            'SMA' => 10, 'SMK' => 10,
+            'MA'  => 10, 'MAK' => 10,
+        ];
+
+        $defaultLevel = $startLevelMap[$jenjang] ?? 1;
+
+        // TEACHER MAPEL
+        $baseQuery = TeacherMapel::where('user_id', $user->id)->where('is_active', true)->whereHas('SchoolClass', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->whereHas('Mapel', function ($q) use ($schoolId) {
+                // MAPEL KHUSUS SEKOLAH
+                $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
+                    $q1->where('school_partner_id', $schoolId)
+                        ->where('is_active', 1);
+                })
+
+                // ATAU MAPEL GLOBAL
+                ->orWhere(function ($q2) use ($schoolId) {
+                    $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
+
+                        // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                        ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                            $sq->where('school_partner_id', $schoolId);
+                    });
+                });
+            })->with(['Mapel', 'SchoolClass' => function ($q) {
+                    $q->withCount(['StudentSchoolClass as student_school_class_count' => function ($q) {
+                        $q->where('student_class_status', 'active')
+                        ->where(function ($sub) {
+                            $sub->whereNull('academic_action')
+                                ->orWhere('academic_action', '');
+                        });
+                    }]);
+                }
+            ]);
+
+        $allData = $baseQuery->get();
+
+        // TAHUN AJARAN
+        $tahunAjaran = $allData->pluck('SchoolClass.tahun_ajaran')->filter()->unique()->sortDesc()->values();
+
+        $searchYear = $request->search_year ?? $tahunAjaran->first();
+
+        $dataByYear = $allData->where('SchoolClass.tahun_ajaran', $searchYear);
+
+        // KELAS LEVEL
+        $classLevels = $dataByYear->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+
+        $selectedClass = $request->search_class ?? $classLevels->first() ?? $defaultLevel;
+
+        $dataByClass = $dataByYear->filter(function ($item) use ($selectedClass) {
+            return (int)$this->extractClassLevel($item->SchoolClass->class_name) === (int)$selectedClass;
+        });
+
+        // MAPEL
+        $subjects = $dataByClass->unique('mapel_id')->map(fn($item) => [
+            'id' => $item->mapel_id,
+            'name' => $item->Mapel->mata_pelajaran ?? '-'
+        ])->values();
+
+        $subjectId = $request->subject_id ?? null;
+
+        // ambil assessment type
+        $schoolAssessmentType = SchoolAssessmentType::where('school_partner_id', $schoolId)->where('is_active', 1)->get()->map(fn($t) => [
+            'id' => $t->id,
+            'name' => $t->name
+        ]);
+
+        // ambil filter assessment type
+        $assessmentTypeId = $request->search_assessment_type ?? null;
+
+        // AMBIL ASSIGNMENT
+        $teacherAssignments = $dataByClass;
+
+        // QUERY CHEATING
+        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
+            ->where('status', 'cheating')->whereHas('SchoolAssessment', function ($q) use ($teacherAssignments, $schoolId, $user, $searchYear, $subjectId, $assessmentTypeId) {
+                $q->where('school_partner_id', $schoolId);
+
+                $q->where(function ($subQ) use ($teacherAssignments, $user) {
+                    foreach ($teacherAssignments as $assign) {
+                        $subQ->orWhere(function ($inner) use ($assign, $user) {
+                            $inner->where('school_class_id', $assign->school_class_id)
+                                ->where('mapel_id', $assign->mapel_id)
+                                ->where('user_id', $user->id);
+                        });
+                    }
+                });
+
+                if ($searchYear) {
+                    $q->whereHas('SchoolClass', function ($qq) use ($searchYear) {
+                        $qq->where('tahun_ajaran', $searchYear);
+                    });
+                }
+
+                if ($subjectId) {
+                    $q->where('mapel_id', $subjectId);
+                }
+
+                // filter assessment type
+                if ($assessmentTypeId) {
+                    $q->where('assessment_type_id', $assessmentTypeId);
+                }
+            });
+
+        $data = $query->latest()->get();
+
+        return response()->json([
+            'data' => $data,
+            'tahunAjaran' => $tahunAjaran,
+            'selectedYear' => $searchYear,
+            'className' => $classLevels,
+            'selectedClass' => $selectedClass,
+            'subject' => $subjects,
+            'schoolAssessmentType' => $schoolAssessmentType,
+        ]);
+    }
+
     public function classDetailView($schoolName, $schoolId, $scheduleId)
     {
         $user = Auth::user();
