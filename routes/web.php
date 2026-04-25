@@ -34,6 +34,7 @@ use App\Http\Controllers\Lms\UserManagement\AccountController;
 use App\Http\Controllers\Lms\UserManagement\RoleController;
 use App\Http\Controllers\SchoolAdminDashboardController;
 use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\TeacherAcademicTranscriptController;
 use App\Http\Controllers\TeacherGradeLedgerController;
 use App\Http\Controllers\TeacherInformationController;
 use App\Http\Middleware\AuthMiddleware;
@@ -540,6 +541,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // grade ledger export
     Route::get('/lms/{role}/{schoolName}/{schoolId}/grade-ledger/classes/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradeLedgerController::class, 'exportGradeLedger']);
+
+    // TEACHER ACADEMIC TRANSCRIPT MANAGEMENT
+    // views
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes', [TeacherAcademicTranscriptController::class, 'teacherClassList'])->name('lms.teacherClassListAcademicTranscript.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes/subject-teacher/{subjectTeacherId}', [TeacherAcademicTranscriptController::class, 'teacherAcademicTranscript'])->name('lms.teacherAcademicTranscript.view');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes/paginate', [TeacherAcademicTranscriptController::class, 'paginateTeacherClassList'])->name('lms.teacherClassListAcademicTranscript.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes/subject-teacher/{subjectTeacherId}/paginate', [TeacherAcademicTranscriptController::class, 'paginateTeacherAcademicTranscript'])->name('lms.teacherAcademicTranscript.paginate');
+
+    // academic transcript export
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes/subject-teacher/{subjectTeacherId}/export', [TeacherAcademicTranscriptController::class, 'exportAcademicTranscript']);
 
     // Information
     // Calender

@@ -827,6 +827,14 @@
                                     ]) }}" class="link-href block py-2 text-[12px]">
                                     Leger Nilai
                                 </a>
+
+                                <a href="{{ route('lms.teacherClassListAcademicTranscript.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    Transkrip Nilai
+                                </a>
                             </div>
                         </div>
 
@@ -1199,6 +1207,13 @@
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                         ]) }}" class="link-href block py-2 text-[12px]">
                                         Leger Nilai
+                                    </a>
+                                    <a href="{{ route('lms.teacherClassListAcademicTranscript.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Transkrip Nilai
                                     </a>
                                 </div>
                             </div>
