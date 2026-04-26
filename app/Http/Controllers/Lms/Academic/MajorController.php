@@ -31,7 +31,7 @@ class MajorController extends Controller
         return response()->json([
             'data' => $majors,
             'schoolIdentity' => $getSchool,
-            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/management-role-account/:role/management-majors/:majorId/management-class',
+            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-majors/:majorId/management-class',
         ]);
     }
 
