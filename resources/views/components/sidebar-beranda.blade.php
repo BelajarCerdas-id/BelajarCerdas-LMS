@@ -395,9 +395,7 @@
                         </div>
 
                         <div class="content-dropdown pl-6">
-                            <a href="{{ route('lms.schoolSubscription.view', [
-                                'role' => Auth::user()->role
-                            ]) }}"
+                            <a href="{{ route('lms.schoolSubscription.view') }}"
                                 class="link-href flex py-2 text-[14px]">
                                 LMS
                             </a>
@@ -647,11 +645,8 @@
                                 <span class="text-[14px]">School Partner</span>
                                 <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
                             </div>
-                            <div class="content-dropdown">
-                                <a href="{{ route('lms.schoolSubscription.view', [
-                                        'role' => Auth::user()->role
-                                    ]) }}"class="link-href flex py-2 text-[14px]">
-                                    
+                            <div class="content-dropdown px-2 w-full">
+                                <a href="{{ route('lms.schoolSubscription.view') }}" class="link-href flex py-2 text-[14px]">
                                     LMS
                                 </a>
                             </div>
