@@ -328,6 +328,36 @@
                         </div>
                     </div>
 
+                    <!-- CHEATING HISTORY -->
+                    <div id="container-student-assessment-cheating-history" class="bg-linear-to-br from-white to-red-50/60 rounded-4xl shadow-sm border border-red-100 p-6 flex flex-col">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-red-100/50">
+                            <div class="w-10 h-10 bg-linear-to-br from-red-500 to-red-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-red-200">
+                                <i class="fas fa-triangle-exclamation"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-red-900 text-lg leading-tight">Riwayat Pelanggaran</h3>
+                                <p class="text-xs text-red-600/70 font-medium">Catatan aktivitas selama pengerjaan asesmenmu</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-4 max-h-87.5 overflow-y-auto pr-2 custom-scrollbar">
+
+                            <div id="grid-list-student-assessment-cheating-history" class="flex flex-col gap-8">
+                                <!-- show data in ajax -->
+                            </div>
+
+                            <div id="empty-message-student-assessment-cheating-history" class="py-8 text-center border-2 border-dashed border-red-50 rounded-2xl bg-red-50/20 hidden">
+                                <div class="flex flex-col items-center justify-center ">
+                                    <i class="fas fa-check-circle text-3xl mb-3 text-green-400"></i>
+                                    <p class="text-sm font-bold text-green-800">Tidak Ada Pelanggaran</p>
+                                    <p class="text-xs font-bold text-green-800 mt-1">Kamu menyelesaikan asesmen dengan baik</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -441,6 +471,8 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
+
+<script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
 
 <script>
     // ================= FUNGSI SLIDER MODUL =================

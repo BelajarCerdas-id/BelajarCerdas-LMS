@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StudentAssessmentAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -255,5 +256,21 @@ class StudentDashboardController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error Sistem: ' . $e->getMessage()], 500);
         }
+    }
+
+    // function get student assessment cheating history
+    public function getStudentAssessmentCheatingHistory()
+    {
+        $user = Auth::user();
+
+        // QUERY CHEATING
+        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
+            ->where('status', 'cheating')->where('student_id', $user->id);
+
+        $data = $query->latest()->get();
+
+        return response()->json([
+            'data' => $data,
+        ]);
     }
 }
