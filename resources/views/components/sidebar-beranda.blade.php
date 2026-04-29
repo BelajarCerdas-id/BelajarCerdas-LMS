@@ -46,16 +46,36 @@
                     </a>
                 </li>
 
-                <!-- Menu Library -->
-                <li class="list-menu-sidebar-dekstop-student">
-                    <a href="{{ route('student.library') }}" class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">                    
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-book"></i>
-                            <span>Library</span>
-                        </div>
-                    </a>
-                </li>
-            </ul>
+                    <!-- Menu Library -->
+                    <li class="list-menu-sidebar-dekstop-student">
+
+<div class="flex flex-col">
+
+    <!-- MENU LIBRARY -->
+    <a href="{{ route('student.library') }}" 
+       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+       
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-book"></i>
+            <span>Library</span>
+        </div>
+
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+    </a>
+
+    <!-- DROPDOWN -->
+    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
+
+    <a href="{{ route('student.library.ppt') }}" 
+       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
+        Power Point
+    </a>
+
+    </div>
+</div>
+
+</li>
+                </ul>
 
             <!-- FOOTER -->
             <div class="mt-auto">
@@ -283,14 +303,34 @@
                         <span>LMS</span>
                     </a>
                 </li>
-                <li class="list-menu-sidebar-mobile-student">
-                    <a href="{{ route('student.library') }}" class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-gray-200 transition">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-book"></i>
-                            <span>Library</span>
-                        </div>
-                    </a>
-                </li>
+                <li class="list-menu-sidebar-dekstop-student">
+<div class="flex flex-col">
+
+    <!-- MENU LIBRARY -->
+    <a href="{{ route('student.library') }}" 
+       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+       
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-book"></i>
+            <span>Library</span>
+        </div>
+
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+    </a>
+
+    <!-- DROPDOWN -->
+<div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
+
+    <a href="{{ route('student.library.ppt') }}" 
+       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
+        Power Point
+    </a>
+
+</div>
+
+</div>
+
+</li>
             </ul>
 
             <!-- LOGOUT -->
@@ -1674,5 +1714,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+});
+</script>
+<script>
+function openLibraryMenu() {
+    localStorage.setItem("openLibrary", "true");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const openLibrary = localStorage.getItem("openLibrary");
+
+    if (openLibrary === "true") {
+        const el = document.getElementById("libraryDropdown");
+        if (el) el.classList.remove("hidden");
+    }
 });
 </script>

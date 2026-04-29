@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\LibraryBook;
 use Illuminate\Database\Eloquent\Model;
 
 class Mapel extends Model
@@ -92,4 +93,9 @@ class Mapel extends Model
     {
         return $this->hasMany(SubjectPassingGradeCriteria::class, 'mapel_id');
     }
+
+    public function libraryBooks()
+{
+    return $this->hasMany(LibraryBook::class, 'mapel_id');
+}
 }
