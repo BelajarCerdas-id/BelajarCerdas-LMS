@@ -111,7 +111,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-role-account.js') }}"></script> <!--- lms subscription management role account ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-role-account.js') }}"></script> <!--- lms subscription management role account ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/preview/excel-upload-preview.js') }}"></script> <!--- show excel preview ---->

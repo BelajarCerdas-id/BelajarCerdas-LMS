@@ -218,7 +218,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/content-management/teacher-content-management.js') }}"></script> <!--- lms content management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-management/teacher-content-management.js') }}"></script> <!--- lms content management ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->

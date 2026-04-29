@@ -41,4 +41,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/gradebook/paginate-teacher-gradebook-management.js') }}"></script> <!--- paginate teacher gradebook management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/gradebook/paginate-teacher-gradebook-management.js') }}"></script> <!--- paginate teacher gradebook management ---->

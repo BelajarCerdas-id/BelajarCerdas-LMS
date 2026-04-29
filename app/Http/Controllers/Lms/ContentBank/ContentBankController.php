@@ -28,7 +28,7 @@ class ContentBankController extends Controller
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms content
@@ -196,7 +196,7 @@ class ContentBankController extends Controller
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function review content school view (function untuk review content milik sekolah)
@@ -204,7 +204,7 @@ class ContentBankController extends Controller
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function edit content default view (function untuk edit content milik bc)
@@ -214,7 +214,7 @@ class ContentBankController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function edit content default view (function untuk edit content milik sekolah)
@@ -224,7 +224,7 @@ class ContentBankController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function form edit content

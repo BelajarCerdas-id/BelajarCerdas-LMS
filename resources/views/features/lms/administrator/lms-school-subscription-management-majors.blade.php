@@ -155,7 +155,7 @@
 @endif
 
 <!---- paginate lms subscription management majors ---->
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-majors.js') }}"></script> <!--- lms subscription management majors ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-majors.js') }}"></script> <!--- lms subscription management majors ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

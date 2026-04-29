@@ -14,7 +14,7 @@ class AccountController extends Controller
     // function lms management account view
     public function lmsManagementAccountView($schoolName, $schoolId, $role)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role'));
     }
 
     // function paginate lms management account

@@ -11,7 +11,7 @@ class RoleController extends Controller
     // function lms management roles view
     public function lmsManagementRolesView($schoolName, $schoolId)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-role-account', compact('schoolName', 'schoolId'));
+        return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('schoolName', 'schoolId'));
     }
 
     // function paginate lms management roles
