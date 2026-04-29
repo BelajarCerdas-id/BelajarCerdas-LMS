@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\GradebookExport;
+use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolAssessmentTypeWeight;
 use App\Models\SchoolPartner;
@@ -145,6 +146,7 @@ class TeacherGradebookController extends Controller
                 ->get();
 
             $row = [
+                'student_id' => $studentId,
                 'name' => $student->UserAccount->StudentProfile->nama_lengkap ?? '-',
                 'types' => []
             ];
@@ -170,12 +172,17 @@ class TeacherGradebookController extends Controller
 
                 $avg = count($scores) ? array_sum($scores) / count($scores) : 0;
 
+                $totalAssessments = SchoolAssessment::where('assessment_type_id', $type->id)->where('school_class_id', $teacherMapel->school_class_id)
+                    ->where('mapel_id', $teacherMapel->mapel_id)->where('semester', $semester)->where('assessment_category', 'main')->count();
+
                 $row['types'][] = [
                     'type_id' => $type->id,
                     'type_name' => $type->name,
                     'avg' => round($avg),
-                    'count' => count($scores),
-                    'details' => $details
+                    'count_done' => count($scores), // total asesmen yang telah siswa selesaikan
+                    'count_total' => $totalAssessments, // total asesmen yang ada
+                    'details' => $details,
+                    'gradebookAssessmentPreview' => '/lms/:role/:schoolName/:schoolId/gradebook/classes/subject-teacher/:subjectTeacherId/assessment-type/:assessmentTypeId/student/:studentId/preview/semester/:semester'
                 ];
             }
 
@@ -193,7 +200,7 @@ class TeacherGradebookController extends Controller
             foreach ($row['types'] as $type) {
                 $weight = $weights[$type['type_id']]->weight ?? 0;
 
-                if ($type['count'] > 0 && $weight > 0) {
+                if ($type['count_done'] > 0 && $weight > 0) {
                     $total += $type['avg'] * $weight;
                 }
             }
@@ -219,7 +226,7 @@ class TeacherGradebookController extends Controller
             'data' => $data,
             'summary' => $summary,
             'teacherMapel' => $teacherMapel,
-            'assessmentTypes' => $assessmentTypes
+            'assessmentTypes' => $assessmentTypes,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GradebookAssessmentController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
 use App\Http\Controllers\SchoolPartnerController;
@@ -524,13 +525,21 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // views
     Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes', [TeacherGradebookController::class, 'teacherClassList'])->name('lms.teacherClassList.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}', [TeacherGradebookController::class, 'gradebookManagement'])->name('lms.teacherGradebook.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/assessment-type/{assessmentTypeId}/student/{studentId}/preview/semester/{semester}', [GradebookAssessmentController::class, 'teacherGradebookAssessmentPreview'])->name('lms.teacherGradebookAssessment.view');
 
     // paginate
     Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/paginate', [TeacherGradebookController::class, 'paginateTeacherClassList'])->name('lms.teacherClassList.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/paginate', [TeacherGradebookController::class, 'paginateGradebookManagement'])->name('lms.teacherGradebook.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/assessment-type/{assessmentTypeId}/student/{studentId}/preview/semester/{semester}/paginate', [GradebookAssessmentController::class, 'paginateTeacherGradebookAssessment'])->name('lms.teacherGradebookAssessment.paginate');
 
     // gradebook export
     Route::get('/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/semester/{semester}/export', [TeacherGradebookController::class, 'exportGradebook']);
+
+    // update nilai
+    Route::post(
+        '/lms/{role}/{schoolName}/{schoolId}/gradebook/classes/subject-teacher/{subjectTeacherId}/assessment-type/{assessmentTypeId}/student/{studentId}/semester/{semester}/bulk-update',
+        [GradebookAssessmentController::class, 'bulkUpdateScore']
+    );
 
     // TEACHER GRADE LEDGER MANAGEMENT
     // views
