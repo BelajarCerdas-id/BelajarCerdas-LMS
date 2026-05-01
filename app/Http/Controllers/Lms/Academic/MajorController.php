@@ -14,7 +14,7 @@ class MajorController extends Controller
     // function lms management majors view
     public function lmsManagementMajorsView($schoolName, $schoolId, $role)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-majors', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-majors', compact('schoolName', 'schoolId', 'role'));
     }
 
     // function paginate lms management majors
