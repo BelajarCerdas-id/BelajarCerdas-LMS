@@ -6,164 +6,303 @@ use App\Models\StudentAssessmentAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class StudentDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $schoolId = $user->StudentProfile->school_partner_id ?? null;
-        $studentId = $user->id;
 
+        // 1. Validasi Akses
+        if (!$user || $user->role !== 'Siswa') {
+            abort(403, 'Akses Ditolak. Halaman ini khusus untuk Siswa.');
+        }
+
+        $studentProfile = \App\Models\StudentProfile::where('user_id', $user->id)->first();
+        if (!$studentProfile) {
+            abort(403, 'Profil Siswa tidak ditemukan.');
+        }
+
+        $schoolId = $studentProfile->school_partner_id;
+        $studentUserId = $user->id;
+
+        // Ambil Nama Sekolah (Sudah dibersihkan dari duplikasi)
         $schoolName = 'Belum Ada Sekolah';
         if ($schoolId) {
-            $schoolRecord = DB::table('school_partners')
-                ->where('id', $schoolId)
-                ->first();
-                
+            $schoolRecord = DB::table('school_partners')->where('id', $schoolId)->first();
             if ($schoolRecord) {
-
                 $schoolName = $schoolRecord->school_name ?? $schoolRecord->name ?? 'Sekolah Mitra';
             }
         }
 
         $studentClass = 'Belum Ada Kelas';
-        $studentClassId = null; 
-        
+        $studentClassId = null;
+        $statusHadir = 'Belum Ada Data';
+
+        // Ambil Kelas Siswa (Sudah dibersihkan dari duplikasi where)
         $classRecord = DB::table('student_school_classes')
             ->join('school_classes', 'student_school_classes.school_class_id', '=', 'school_classes.id')
-            ->where('student_school_classes.student_id', $studentId)
-            ->where('student_school_classes.student_class_status', 'active') 
-            ->select('school_classes.class_name', 'student_school_classes.school_class_id') 
+            ->where('student_school_classes.student_id', $studentUserId)
+            ->where('student_school_classes.student_class_status', 'active')
+            ->select('school_classes.id as class_id', 'school_classes.class_name', 'student_school_classes.school_class_id') 
             ->first();
 
         if ($classRecord) {
             $studentClass = $classRecord->class_name;
-            $studentClassId = $classRecord->school_class_id; 
+            $studentClassId = $classRecord->class_id;
         }
 
-
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        $allAgenda = [];
+        // Ambil Absen Hari Ini
+        $attendance = DB::table('attendances')
+            ->where('student_id', $studentUserId)
+            ->whereDate('date', now()->format('Y-m-d'))
+            ->first();
         
-        if ($schoolId) {
-            $dbEvents = \App\Models\AcademicCalendar::where('school_partner_id', $schoolId)
-                ->where('status', 'published') 
-                ->whereMonth('date', $currentMonth)
-                ->whereYear('date', $currentYear)
-                ->get();
-
-            foreach ($dbEvents as $ev) {
-                $allAgenda[] = [
-                    'date' => $ev->date,
-                    'title' => $ev->title,
-                    'color' => $ev->color
-                ];
-            }
+        if ($attendance) {
+            $statusHadir = ucfirst($attendance->status);
         }
 
-        $nationalHolidays = [
-            "2026-01-01" => "Tahun Baru 2026 Masehi", 
-            "2026-01-16" => "Isra Mikraj Nabi Muhammad SAW",
-            "2026-02-16" => "Cuti Bersama Imlek",
-            "2026-02-17" => "Tahun Baru Imlek 2577 Kongzili", 
-            "2026-03-18" => "Cuti Bersama Nyepi",
-            "2026-03-19" => "Hari Suci Nyepi",
-            "2026-03-20" => "Cuti Bersama Idul Fitri", 
-            "2026-03-21" => "Idul Fitri 1447 Hijriah", 
-            "2026-03-22" => "Idul Fitri 1447 Hijriah",
-            "2026-03-23" => "Cuti Bersama Idul Fitri", 
-            "2026-03-24" => "Cuti Bersama Idul Fitri", 
-            "2026-04-03" => "Wafat Yesus Kristus", 
-            "2026-04-05" => "Hari Paskah",
-            "2026-05-01" => "Hari Buruh Internasional", 
-            "2026-05-14" => "Kenaikan Yesus Kristus",
-            "2026-05-15" => "Cuti Bersama Kenaikan Yesus Kristus",
-            "2026-05-27" => "Idul Adha 1447 Hijriah", 
-            "2026-05-28" => "Cuti Bersama Idul Adha", 
-            "2026-05-31" => "Hari Raya Waisak 2570 BE",
-            "2026-06-01" => "Hari Lahir Pancasila", 
-            "2026-06-16" => "Tahun Baru Islam 1448 Hijriah",
-            "2026-08-17" => "Proklamasi Kemerdekaan RI", 
-            "2026-08-25" => "Maulid Nabi Muhammad SAW",
-            "2026-12-24" => "Cuti Bersama Natal",
-            "2026-12-25" => "Hari Raya Natal"
+        // Data Utama Siswa
+        $dataSiswa = (object)[
+            'nama_lengkap'       => $studentProfile->nama_lengkap,
+            'kelas'              => $studentClass,
+            'kehadiran_hari_ini' => $statusHadir
+        ];
+
+        // =========================================================
+        // 3. JADWAL PELAJARAN (Dinamis dengan Navigasi STRICT)
+        // =========================================================
+        $selectedJadwalDate = $request->query('jadwal_date', now()->format('Y-m-d'));
+        $carbonJadwal = Carbon::parse($selectedJadwalDate);
+        
+        $hariInggris = $carbonJadwal->format('l');
+        $mapHari = [
+            'Monday'    => 'Senin', 
+            'Tuesday'   => 'Selasa', 
+            'Wednesday' => 'Rabu', 
+            'Thursday'  => 'Kamis', 
+            'Friday'    => 'Jumat', 
+            'Saturday'  => 'Sabtu', 
+            'Sunday'    => 'Minggu'
         ];
         
-        $prefixFilter = $currentYear . '-' . $currentMonth;
-        foreach ($nationalHolidays as $date => $title) {
-            if (strpos($date, $prefixFilter) === 0) {
-                $allAgenda[] = ['date' => $date, 'title' => $title, 'color' => '#B91C1C'];
-            }
-        }
+        $hariDipilih = isset($mapHari[$hariInggris]) ? $mapHari[$hariInggris] : ''; 
+        $jadwalHariIni = []; 
 
-        usort($allAgenda, function ($a, $b) { return strtotime($a['date']) - strtotime($b['date']); });
-        $monthlyEvents = json_decode(json_encode($allAgenda));
-
-        $hariInggris = date('l');
-        $mapHari = ['Monday'=>'Senin', 'Tuesday'=>'Selasa', 'Wednesday'=>'Rabu', 'Thursday'=>'Kamis', 'Friday'=>'Jumat', 'Saturday'=>'Sabtu', 'Sunday'=>'Minggu'];
-        $hariIni = $mapHari[$hariInggris] ?? 'Senin';
-
-        $dbSchedules = [];
-
-        if ($schoolId && $studentClassId) {
+        if ($schoolId && $studentClassId && $hariDipilih !== '') {
             $dbSchedules = DB::table('lesson_schedule_items')
                 ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
-                ->leftJoin('users', 'lesson_schedule_items.teacher_id', '=', 'users.id') 
+                ->leftJoin('school_staff_profiles', 'lesson_schedule_items.teacher_id', '=', 'school_staff_profiles.user_id')
                 ->where('lesson_schedules.school_partner_id', $schoolId)
                 ->where('lesson_schedules.class_id', $studentClassId) 
-                ->where('lesson_schedule_items.day_of_week', $hariIni) 
-                ->where('lesson_schedules.status', 'published') 
+                ->where('lesson_schedule_items.day_of_week', $hariDipilih) 
+                ->where('lesson_schedules.status', 'published')
                 ->orderBy('lesson_schedule_items.start_time', 'asc')
                 ->select(
                     'lesson_schedule_items.start_time',
                     'lesson_schedule_items.end_time',
                     'lesson_schedule_items.subject_name',
                     'lesson_schedules.class_name',
-                    'users.name as teacher_name'
+                    'school_staff_profiles.nama_lengkap as teacher_name'
                 )
+                ->get();
+
+            foreach ($dbSchedules as $jadwal) {
+                $jadwalHariIni[] = [
+                    'is_break'   => false,
+                    'start_time' => $jadwal->start_time,
+                    'jam'        => substr($jadwal->start_time, 0, 5) . ' - ' . substr($jadwal->end_time, 0, 5),
+                    'mapel'      => $jadwal->subject_name,
+                    'guru'       => $jadwal->teacher_name, 
+                    'ruang'      => $jadwal->class_name,
+                    'color'      => '#0071BC'
+                ];
+            }
+
+            if (in_array($hariDipilih, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']) && count($jadwalHariIni) > 0) {
+                $jadwalHariIni[] = ['is_break' => true, 'start_time' => '10:00:00', 'jam' => '10:00 - 10:45', 'mapel' => 'ISTIRAHAT PERTAMA', 'color' => '#f97316'];
+                $jadwalHariIni[] = ['is_break' => true, 'start_time' => '12:15:00', 'jam' => '12:15 - 13:00', 'mapel' => 'ISTIRAHAT KEDUA', 'color' => '#f97316'];
+            }
+            
+            if (count($jadwalHariIni) > 0) {
+                usort($jadwalHariIni, function ($a, $b) { 
+                    return strcmp($a['start_time'], $b['start_time']); 
+                });
+            }
+        }
+
+        $hariIni = $hariDipilih; 
+
+        // =========================================================
+        // 4. AGENDA MINGGUAN
+        // =========================================================
+        $selectedDate = $request->query('date', now()->format('Y-m-d'));
+        $startOfWeek = Carbon::parse($selectedDate)->startOfWeek()->format('Y-m-d');
+        $endOfWeek   = Carbon::parse($selectedDate)->endOfWeek()->format('Y-m-d');
+
+        $agendaSekolah = [];
+        if ($schoolId) {
+            $agendaSekolah = \App\Models\AcademicCalendar::where('school_partner_id', $schoolId)
+                ->where('status', 'published')
+                ->whereBetween('date', [$startOfWeek, $endOfWeek])
+                ->orderBy('date', 'asc')
                 ->get();
         }
 
-        $jadwalHariIni = [];
-        foreach ($dbSchedules as $jadwal) {
-            $jadwalHariIni[] = [
-                'is_break'   => false,
-                'start_time' => $jadwal->start_time,
-                'jam'        => substr($jadwal->start_time, 0, 5) . ' - ' . substr($jadwal->end_time, 0, 5),
-                'mapel'      => $jadwal->subject_name,
-                'guru'       => $jadwal->teacher_name ?? 'Guru', 
-                'ruang'      => $jadwal->class_name,
-                'color'      => '#0071BC'
-            ];
+        // =========================================================
+        // 5. CONTENT (MODUL / MATERI)
+        // =========================================================
+        $unreadModules = collect();
+        if ($studentClassId) {
+            $materiSiswaRaw = \App\Models\LmsMeetingContent::with(['LmsContent.LmsContentItem', 'Mapel'])
+                ->where('school_class_id', $studentClassId)
+                ->where('is_active', 1)
+                ->orderBy('meeting_date', 'desc')
+                ->take(6)
+                ->get();
+
+            foreach ($materiSiswaRaw as $materi) {
+                $judul = 'Materi Pembelajaran';
+                $deskripsi = 'Silakan pelajari modul materi ini untuk persiapan belajar.';
+                $fileUrl = '#';
+
+                if ($materi->LmsContent && $materi->LmsContent->LmsContentItem && $materi->LmsContent->LmsContentItem->count() > 0) {
+                    $item = $materi->LmsContent->LmsContentItem->first();
+                    $judul = $item->original_filename ?? 'Materi Pembelajaran';
+                    $rawText = strip_tags($item->value_text);
+                    
+                    if(!empty($rawText)){
+                        $deskripsi = substr($rawText, 0, 100) . '...';
+                    }
+                    if (!empty($item->value_file)) {
+                        $fileUrl = asset('lms-contents/' . $item->value_file);
+                    }
+                }
+
+                $unreadModules->push((object)[
+                    'id'        => $materi->id,
+                    'mapel'     => $materi->Mapel->mata_pelajaran ?? 'Mata Pelajaran',
+                    'judul'     => $judul,
+                    'deskripsi' => $deskripsi,
+                    'file_url'  => $fileUrl
+                ]);
+            }
         }
 
-        if (in_array($hariIni, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'])) {
-            $jadwalHariIni[] = ['is_break' => true, 'start_time' => '10:00:00', 'jam' => '10:00 - 10:45', 'mapel' => 'ISTIRAHAT PERTAMA', 'color' => '#f97316'];
-            $jadwalHariIni[] = ['is_break' => true, 'start_time' => '12:15:00', 'jam' => '12:15 - 13:00', 'mapel' => 'ISTIRAHAT KEDUA', 'color' => '#f97316'];
+        // =========================================================
+        // 6. ASSESSMENT (TUGAS & UJIAN)
+        // =========================================================
+        $pendingTasks = collect();
+        $jadwalUjian = collect();
+
+        if ($studentClassId) {
+            $semuaAsesmenSiswa = \App\Models\SchoolAssessment::with(['SchoolAssessmentType.AssessmentMode', 'Mapel'])
+                ->where('school_class_id', $studentClassId)
+                ->get();
+
+            // A. TUGAS PENDING (Mode: project)
+            $tugasRaw = $semuaAsesmenSiswa->filter(function($item) {
+                return $item->SchoolAssessmentType 
+                    && $item->SchoolAssessmentType->AssessmentMode 
+                    && $item->SchoolAssessmentType->AssessmentMode->code === 'project';
+            })->sortBy('end_date');
+
+            foreach ($tugasRaw as $tugas) {
+                $sudahKirim = \Illuminate\Support\Facades\DB::table('class_task_submissions')
+                    ->where('task_id', $tugas->id)
+                    ->where('student_id', $studentUserId)
+                    ->exists();
+                
+                if (!$sudahKirim) {
+                    $pendingTasks->push((object)[
+                        'id'          => $tugas->id,
+                        'judul_tugas' => $tugas->title,
+                        'mapel'       => $tugas->Mapel->mata_pelajaran ?? 'Mata Pelajaran',
+                        'deadline'    => $tugas->end_date
+                    ]);
+                }
+            }
+
+            // B. JADWAL UJIAN (Mode: non-project)
+            $ujianRaw = $semuaAsesmenSiswa->filter(function($item) {
+                return $item->SchoolAssessmentType 
+                    && $item->SchoolAssessmentType->AssessmentMode 
+                    && $item->SchoolAssessmentType->AssessmentMode->code !== 'project';
+            })->sortBy('start_date');
+
+            foreach ($ujianRaw as $ujian) {
+                if (\Carbon\Carbon::parse($ujian->end_date)->isPast() && !\Carbon\Carbon::parse($ujian->end_date)->isToday()) {
+                    continue; 
+                }
+
+                $tglMulai = \Carbon\Carbon::parse($ujian->start_date);
+                $selisihHari = now()->startOfDay()->diffInDays($tglMulai->copy()->startOfDay(), false); 
+                
+                $h_min = '';
+                if ($selisihHari < 0) {
+                    $h_min = 'Berlangsung';
+                } elseif ($selisihHari == 0) {
+                    $h_min = 'Hari Ini';
+                } else {
+                    $h_min = 'H-' . ceil($selisihHari);
+                }
+
+                $jadwalUjian->push((object)[
+                    'id'      => $ujian->id,
+                    'tipe'    => $ujian->SchoolAssessmentType->name ?? 'Ujian', 
+                    'mapel'   => $ujian->Mapel->mata_pelajaran ?? 'Mata Pelajaran', 
+                    'tanggal' => $tglMulai->format('d M Y'),
+                    'waktu'   => $tglMulai->format('H:i'),
+                    'h_min'   => $h_min,
+                ]);
+            }
         }
-        
-        usort($jadwalHariIni, function ($a, $b) { return strcmp($a['start_time'], $b['start_time']); });
+
+        // =========================================================
+        // 7. STATISTIK TUGAS & MATERI (PLACEHOLDER SEMENTARA)
+        // =========================================================
+        $statistikMapel = collect([
+            (object)['mapel' => 'Matematika Peminatan', 'tugas_total' => 12, 'tugas_selesai' => 10, 'materi_total' => 5, 'materi_dibaca' => 5],
+            (object)['mapel' => 'Bahasa Inggris', 'tugas_total' => 8, 'tugas_selesai' => 8, 'materi_total' => 4, 'materi_dibaca' => 2],
+        ]);
+
+        // =========================================================
+        // 8. POLLING (DIFILTER BERDASARKAN KELAS & TARGET SISWA)
+        // =========================================================
         $activePolls = [];
         $votedPolls = [];
 
         if ($schoolId) {
-            $polls = \App\Models\Poll::where('school_partner_id', $schoolId)
-                        ->where('status', 'active')
-                        ->where(function ($query) use ($studentClassId) {
-                            $query->where('class_id', $studentClassId)
-                                  ->orWhereNull('class_id'); 
-                        })
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+            $pollsDb = \App\Models\Poll::where('school_partner_id', $schoolId)
+                ->where('status', 'active')
+                // 👇 FILTER TARGET: Siswa hanya bisa melihat polling yang ditujukan untuk Warga Sekolah atau khusus Siswa
+                ->whereIn('target', ['Semua Warga Sekolah', 'Semua Siswa', 'Semua'])
+                ->where(function ($query) use ($studentClassId) {
+                    $query->where('class_id', $studentClassId)
+                          ->orWhereNull('class_id'); 
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-            foreach ($polls as $poll) {
-                $options = \App\Models\PollOption::where('poll_id', $poll->id)->get();
-                $hasVoted = \App\Models\PollVote::where('poll_id', $poll->id)
-                                ->where('student_id', $studentId)
-                                ->exists();
+            foreach ($pollsDb as $poll) {
+                // Ambil Nama Kelas secara Dinamis
+                $namaKelas = 'Semua Kelas (Global)';
+                if ($poll->class_id) {
+                    $kelasInfo = DB::table('school_classes')->where('id', $poll->class_id)->first();
+                    $namaKelas = $kelasInfo ? $kelasInfo->class_name : 'Kelas Dihapus';
+                }
+
+                // Cek Status Vote (Memastikan menggunakan user_id, bukan student_id)
+                $userVote = \App\Models\PollVote::where('poll_id', $poll->id)
+                    ->where('user_id', $studentUserId) 
+                    ->first();
+                
+                $hasVoted = $userVote ? true : false;
+                $votedOptionId = $hasVoted ? $userVote->poll_option_id : null;
+                
                 $totalVotes = \App\Models\PollVote::where('poll_id', $poll->id)->count();
+                $options = \App\Models\PollOption::where('poll_id', $poll->id)->get();
 
                 $formattedOptions = [];
                 foreach ($options as $opt) {
@@ -171,18 +310,26 @@ class StudentDashboardController extends Controller
                     $percentage = $totalVotes > 0 ? round(($votesForOption / $totalVotes) * 100) : 0;
                     
                     $formattedOptions[] = (object)[
-                        'id'         => $opt->id,
-                        'text'       => $opt->option_text,
-                        'votes'      => $votesForOption,
-                        'percentage' => $percentage
+                        'id'          => $opt->id,
+                        'text'        => $opt->option_text,
+                        'votes'       => $votesForOption,
+                        'percentage'  => $percentage,
+                        'is_selected' => ($opt->id === $votedOptionId) 
                     ];
                 }
 
+                // Menyuntikkan seluruh variabel yang dibutuhkan frontend
                 $pollData = (object)[
-                    'id'          => $poll->id,
-                    'question'    => $poll->question,
-                    'total_votes' => $totalVotes,
-                    'options'     => $formattedOptions
+                    'id'              => $poll->id,
+                    'pertanyaan'      => $poll->question,
+                    'pembuat'         => $poll->author_role ?? 'Guru',
+                    'target'          => $poll->target ?? 'Semua Warga Sekolah',
+                    'nama_kelas'      => $namaKelas,
+                    'total_votes'     => $totalVotes,
+                    'opsi'            => $formattedOptions,
+                    'sudah_vote'      => $hasVoted,
+                    'voted_option_id' => $votedOptionId,
+                    'created_at'      => $poll->created_at
                 ];
 
                 if ($hasVoted) {
@@ -193,38 +340,27 @@ class StudentDashboardController extends Controller
             }
         }
 
+        // =========================================================
+        // 9. PENGUMUMAN TERKINI
+        // =========================================================
         $pengumumanTerkini = [];
-        $totalSiswaKelas = 1; 
-        
-        if ($schoolId && $studentClassId) {
-
-            $totalSiswaKelas = DB::table('student_school_classes')
-                ->where('school_class_id', $studentClassId)
-                ->where('student_class_status', 'active')
-                ->count();
-
+        if ($schoolId) {
             $pengumumanTerkini = DB::table('announcements')
                 ->where('school_partner_id', $schoolId)
                 ->where(function ($query) use ($studentClassId) {
-                    $query->where('target_class_id', $studentClassId)->orWhereNull('target_class_id'); 
+                    $query->where('target_class_id', $studentClassId)
+                          ->orWhereNull('target_class_id'); 
                 })
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get();
-                
-            
         }
 
         return view('features.lms.students.dashboard', compact(
-            'schoolName',
-            'monthlyEvents', 
-            'jadwalHariIni', 
-            'hariIni', 
-            'studentClass', 
-            'activePolls', 
-            'votedPolls',
-            'pengumumanTerkini', 
-            'totalSiswaKelas'    
+            'dataSiswa', 'schoolName', 'agendaSekolah', 'selectedDate', 
+            'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',
+            'jadwalHariIni', 'hariIni', 'selectedJadwalDate', 'hariDipilih',
+            'unreadModules', 'pendingTasks'
         ));
     }
 
@@ -236,27 +372,38 @@ class StudentDashboardController extends Controller
             $optionId = $request->option_id;
 
             $sudahVote = \App\Models\PollVote::where('poll_id', $pollId)
-                            ->where('student_id', $userId)
-                            ->exists();
+                ->where('user_id', $userId) 
+                ->exists();
 
             if ($sudahVote) {
-                return response()->json(['success' => false, 'message' => 'Kamu sudah pernah mengisi polling ini!']);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Kamu sudah pernah mengisi polling ini!'
+                ]);
             }
 
             \App\Models\PollVote::insert([
                 'poll_id'        => $pollId,
                 'poll_option_id' => $optionId,
-                'student_id'     => $userId,
+                'user_id'        => $userId,
                 'created_at'     => now(),
                 'updated_at'     => now()
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Suaramu berhasil direkam!']);
+            \App\Models\PollOption::where('id', $optionId)->increment('votes_count');
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Hore! Suaramu berhasil direkam!'
+            ]);
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Error Sistem: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error Sistem: ' . $e->getMessage()
+            ], 500);
         }
-    }
+    }   
 
     // function get student assessment cheating history
     public function getStudentAssessmentCheatingHistory()

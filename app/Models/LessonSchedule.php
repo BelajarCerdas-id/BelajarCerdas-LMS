@@ -26,4 +26,5 @@ class LessonSchedule extends Model
     {
         return $this->hasMany(LessonScheduleItem::class, 'lesson_schedule_id', 'id');
     }
+
 }

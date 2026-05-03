@@ -1,98 +1,119 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Beranda Siswa'])
 
 @if (Auth::user()->role === 'Siswa')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-100 min-h-screen">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-50 min-h-screen pb-12">
 
-        <div class="p-6 md:p-8">
+        <div class="p-4 sm:p-6 md:p-8">
             
-            <div class="mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[2rem] p-8 shadow-lg shadow-blue-500/20 relative overflow-hidden">
+            {{-- ======================================= --}}
+            {{-- 1. HERO SECTION                         --}}
+            {{-- ======================================= --}}
+            <div class="mb-6 md:mb-8 bg-gradient-to-r from-[#0071BC] to-[#005B94] rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 shadow-lg shadow-blue-500/20 relative overflow-hidden">
                 <div class="absolute top-0 right-0 -translate-y-12 translate-x-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute bottom-0 right-32 translate-y-1/2 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute bottom-0 right-32 translate-y-1/2 w-40 h-40 bg-sky-400/20 rounded-full blur-2xl pointer-events-none"></div>
                 <div class="absolute top-8 left-1/2 w-32 h-32 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="relative z-10">
                     <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-                        Halo, {{ explode(' ', Auth::user()->StudentProfile->nama_lengkap)[0] ?? 'Siswa' }} 👋
+                        Halo, {{ Auth::user()->StudentProfile->nama_lengkap ?? 'Siswa' }} 👋
                     </h1>
-                    <p class="text-blue-100 mt-2 text-sm font-medium">Mari bersiap untuk kegiatan belajarmu hari ini. Jangan lupa cek tugasmu!</p>
+                    <p class="text-blue-100 mt-1 md:mt-2 text-xs md:text-sm font-medium">Mari bersiap untuk kegiatan belajarmu hari ini. Jangan lupa cek tugasmu!</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
                 
-                <div class="xl:col-span-2 flex flex-col gap-8">
+                {{-- ======================================= --}}
+                {{-- KOLOM KIRI (Lebar 2/3)                  --}}
+                {{-- ======================================= --}}
+                <div class="xl:col-span-2 flex flex-col gap-6 md:gap-8">
                     
-                    <div class="bg-gradient-to-br from-white to-blue-50/50 rounded-[2rem] shadow-sm border border-blue-100 p-6 md:p-8 flex flex-col max-h-[500px]">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-blue-100/50 gap-4 shrink-0">
-                            <h2 class="text-xl font-bold text-[#0071BC] flex items-center gap-3">
+                    {{-- A. JADWAL PELAJARAN --}}
+                    <div class="bg-gradient-to-br from-white to-blue-50/50 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-8 flex flex-col max-h-[450px] md:max-h-[500px]">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 pb-4 border-b border-blue-100/50 gap-4 shrink-0">
+                            <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-200">
                                     <i class="fas fa-book-open text-lg"></i>
                                 </div>
-                                Jadwal Pelajaran
-                            </h2>
-                            <span class="text-sm font-semibold text-blue-700 bg-white px-5 py-2 rounded-full border border-blue-200 shadow-sm">
-                                {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
-                            </span>
+                                <div>
+                                    <h2 class="text-lg md:text-xl font-bold text-[#0071BC] leading-tight">Jadwal Pelajaran</h2>
+                                    <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mt-0.5">Hari {{ $hariDipilih }}</p>
+                                </div>
+                            </div>
+                            
+                            {{-- NAVIGASI JADWAL --}}
+                            <div class="flex items-center gap-2 md:gap-3 bg-white px-2 py-1.5 md:px-3 md:py-2 rounded-2xl border border-blue-100 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
+                                <a href="{{ request()->fullUrlWithQuery(['jadwal_date' => \Carbon\Carbon::parse($selectedJadwalDate)->subDay()->format('Y-m-d')]) }}" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-600 transition-colors">
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </a>
+                                <span class="text-xs md:text-sm font-bold text-slate-700 px-2 text-center flex-1 sm:min-w-[110px]">
+                                    {{ \Carbon\Carbon::parse($selectedJadwalDate)->translatedFormat('d M Y') }}
+                                </span>
+                                <a href="{{ request()->fullUrlWithQuery(['jadwal_date' => \Carbon\Carbon::parse($selectedJadwalDate)->addDay()->format('Y-m-d')]) }}" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-600 transition-colors">
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                            @if(in_array($hariIni, ['Sabtu', 'Minggu']))
-                                <div class="flex flex-col items-center justify-center py-10 px-6 text-center bg-white/60 rounded-2xl border border-blue-100 h-full backdrop-blur-sm">
-                                    <div class="w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-blue-50 shadow-inner border border-blue-100 text-[#0071BC]">
-                                        <i class="fas fa-umbrella-beach text-2xl"></i>
+                            @if(in_array($hariDipilih, ['Sabtu', 'Minggu']))
+                                <div class="flex flex-col items-center justify-center py-8 px-4 text-center bg-white/60 rounded-2xl border border-blue-100 h-full backdrop-blur-sm">
+                                    <div class="w-14 h-14 md:w-16 md:h-16 mb-3 md:mb-4 flex items-center justify-center rounded-full bg-blue-50 shadow-inner border border-blue-100 text-[#0071BC]">
+                                        <i class="fas fa-umbrella-beach text-xl md:text-2xl"></i>
                                     </div>
-                                    <h3 class="text-lg font-extrabold text-[#0071BC] mb-2">Hore, hari ini Weekend! 🎉</h3>
-                                    <p class="text-blue-600/70 max-w-md font-medium text-xs">Tidak ada jadwal pelajaran untuk hari Sabtu dan Minggu. Selamat beristirahat dan jangan lupa kerjakan tugas!</p>
+                                    <h3 class="text-base md:text-lg font-extrabold text-[#0071BC] mb-1 md:mb-2">Hore, hari ini Weekend! 🎉</h3>
+                                    <p class="text-blue-600/70 max-w-sm font-medium text-[11px] md:text-xs">Tidak ada jadwal pelajaran untuk hari Sabtu dan Minggu. Selamat beristirahat!</p>
                                 </div>
                             @else
-                                @forelse($jadwalHariIni as $jadwal)
-                                    <div onclick="openMapelModal('{{ addslashes($jadwal['mapel']) }}', '{{ addslashes($jadwal['jam']) }}', '{{ addslashes($jadwal['guru'] ?? '-') }}', '{{ addslashes($jadwal['ruang'] ?? '-') }}', {{ $jadwal['is_break'] ? 'true' : 'false' }})" class="cursor-pointer flex flex-col md:flex-row md:items-center gap-3 p-3 md:py-2.5 md:px-4 rounded-xl border {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'bg-gradient-to-r from-orange-50 to-white border-orange-200' : 'bg-white border-blue-50 hover:border-blue-300 hover:shadow-md transition-all group' }}">
-                                        <div class="w-full md:w-28 shrink-0">
-                                            <span class="text-sm font-bold text-gray-800 {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'text-orange-600' : 'group-hover:text-[#0071BC] transition-colors' }}">
-                                                <i class="far fa-clock mr-1 text-gray-400 group-hover:text-blue-400 transition-colors"></i> {{ $jadwal['jam'] }}
+                                @forelse($jadwalHariIni ?? [] as $jadwal)
+                                    <div onclick="openMapelModal('{{ addslashes($jadwal['mapel']) }}', '{{ addslashes($jadwal['jam']) }}', '{{ addslashes($jadwal['guru'] ?? '-') }}', '{{ addslashes($jadwal['ruang'] ?? '-') }}', {{ $jadwal['is_break'] ? 'true' : 'false' }})" class="cursor-pointer flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 md:py-2.5 md:px-4 rounded-xl border {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'bg-gradient-to-r from-amber-50 to-white border-amber-200' : 'bg-white border-blue-50 hover:border-blue-300 hover:shadow-md transition-all group' }}">
+                                        <div class="w-full sm:w-28 shrink-0">
+                                            <span class="text-xs md:text-sm font-bold text-slate-700 {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'text-amber-600' : 'group-hover:text-[#0071BC] transition-colors' }} flex items-center">
+                                                <i class="far fa-clock mr-1.5 text-slate-400 group-hover:text-blue-400 transition-colors"></i> {{ $jadwal['jam'] }}
                                             </span>
                                         </div>
-                                        <div class="hidden md:block w-1 h-8 {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'bg-orange-300' : 'bg-blue-100 group-hover:bg-blue-400 transition-colors' }} rounded-full"></div>
+                                        <div class="hidden sm:block w-1 h-8 {{ $jadwal['mapel'] == 'ISTIRAHAT' || str_contains($jadwal['mapel'], 'ISTIRAHAT') ? 'bg-amber-300' : 'bg-blue-100 group-hover:bg-blue-400 transition-colors' }} rounded-full"></div>
                                         <div class="flex-1">
-                                            <h3 class="font-bold text-base {{ $jadwal['is_break'] ? 'text-orange-600' : 'text-gray-800 group-hover:text-[#0071BC] transition-colors' }}">
+                                            <h3 class="font-bold text-sm md:text-base {{ $jadwal['is_break'] ? 'text-amber-600' : 'text-slate-800 group-hover:text-[#0071BC] transition-colors' }} leading-tight">
                                                 {{ $jadwal['mapel'] }}
                                             </h3>
                                             @if(!$jadwal['is_break'])
-                                                <p class="text-xs text-gray-500 mt-0.5 flex items-center gap-4">
-                                                    <span><i class="fas fa-user-tie text-blue-400 mr-1"></i> {{ $jadwal['guru'] ?? '-' }}</span>
-                                                    <span><i class="fas fa-door-open text-blue-400 mr-1"></i> {{ $jadwal['ruang'] ?? '-' }}</span>
+                                                <p class="text-[10px] md:text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-3">
+                                                    <span class="flex items-center"><i class="fas fa-user-tie text-blue-400 mr-1.5"></i> {{ $jadwal['guru'] ?? '-' }}</span>
+                                                    <span class="flex items-center"><i class="fas fa-door-open text-blue-400 mr-1.5"></i> {{ $jadwal['ruang'] ?? '-' }}</span>
                                                 </p>
                                             @endif
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="flex flex-col items-center justify-center py-10 px-6 text-center border-2 border-dashed border-blue-200 bg-white/50 rounded-2xl h-full">
-                                        <div class="w-14 h-14 mb-3 flex items-center justify-center rounded-full bg-blue-50 shadow-inner border border-blue-100 text-blue-400">
-                                            <i class="fas fa-calendar-xmark text-xl"></i>
+                                    <div class="flex flex-col items-center justify-center py-8 px-4 text-center border-2 border-dashed border-blue-200 bg-white/50 rounded-2xl h-full">
+                                        <div class="w-12 h-12 md:w-14 md:h-14 mb-3 flex items-center justify-center rounded-full bg-blue-50 shadow-inner border border-blue-100 text-blue-400">
+                                            <i class="fas fa-calendar-xmark text-lg md:text-xl"></i>
                                         </div>
-                                        <h3 class="text-base font-bold text-blue-800 mb-1">Jadwal Belum Tersedia</h3>
-                                        <p class="text-blue-600/70 text-xs font-medium">Guru belum mempublikasikan jadwal pelajaran untuk kelasmu.</p>
+                                        <h3 class="text-sm md:text-base font-bold text-blue-800 mb-1">Jadwal Belum Tersedia</h3>
+                                        <p class="text-blue-600/70 text-[10px] md:text-xs font-medium">Guru belum mempublikasikan jadwal pelajaran.</p>
                                     </div>
                                 @endforelse
                             @endif
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-white to-purple-50/60 rounded-[2rem] shadow-sm border border-purple-100 p-6 md:p-8 flex flex-col">
-                        <div class="flex items-center justify-between mb-6 pb-4 border-b border-purple-100/50 shrink-0">
+                    {{-- B. MODUL BELUM DIBACA --}}
+                    <div class="bg-gradient-to-br from-white to-sky-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-sky-100 p-5 md:p-8 flex flex-col">
+                        <div class="flex items-center justify-between mb-5 pb-4 border-b border-sky-100/50 shrink-0">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-purple-200 font-bold text-lg">
+                                <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-sky-200 font-bold text-lg">
                                     <i class="fas fa-book-reader"></i>
                                 </div>
-                                <h3 class="font-bold text-purple-900 text-lg">Modul Belum Dibaca 📖</h3>
+                                <h3 class="font-bold text-sky-900 text-base md:text-lg">Modul Belum Dibaca 📖</h3>
                             </div>
                             
                             <div class="flex gap-2">
-                                <button onclick="prevModule()" id="btnPrevModule" class="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-purple-100 text-purple-600 hover:bg-purple-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
-                                    <i class="fas fa-chevron-left text-sm"></i>
+                                <button onclick="prevModule()" id="btnPrevModule" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-white border border-sky-200 text-sky-600 hover:bg-sky-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+                                    <i class="fas fa-chevron-left text-[10px] md:text-xs"></i>
                                 </button>
-                                <button onclick="nextModule()" id="btnNextModule" class="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-purple-100 text-purple-600 hover:bg-purple-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
-                                    <i class="fas fa-chevron-right text-sm"></i>
+                                <button onclick="nextModule()" id="btnNextModule" class="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-white border border-sky-200 text-sky-600 hover:bg-sky-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+                                    <i class="fas fa-chevron-right text-[10px] md:text-xs"></i>
                                 </button>
                             </div>
                         </div>
@@ -101,260 +122,331 @@
                             <div id="moduleSlider" class="flex transition-transform duration-500 ease-out w-full">
                                 @forelse($unreadModules ?? [] as $modul)
                                     <div class="w-full shrink-0 px-1">
-                                        <div class="bg-white border border-purple-100 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 group hover:border-purple-300 hover:shadow-md transition-all">
-                                            <div class="w-14 h-14 bg-purple-50 rounded-xl shadow-inner border border-purple-100 flex items-center justify-center text-purple-500 text-2xl shrink-0 group-hover:scale-105 transition-transform">
-                                                <i class="fas fa-file-pdf"></i>
+                                        <div onclick="window.location.href='/lms/student/materi/{{ $modul->id ?? 0 }}'" class="cursor-pointer relative bg-white rounded-2xl p-4 md:p-5 border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 hover:-translate-y-1 transition-all flex flex-col sm:flex-row gap-4 md:gap-5 items-start sm:items-center group">
+                                            <div class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-sky-50 to-white border border-sky-100 rounded-xl flex items-center justify-center text-sky-500 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+                                                <i class="fas fa-file-pdf text-xl md:text-2xl"></i>
                                             </div>
-                                            <div class="flex-1">
-                                                <p class="text-xs font-extrabold text-purple-600 mb-1 uppercase tracking-wider">{{ $modul->mapel ?? 'Mata Pelajaran' }}</p>
-                                                <h4 class="font-bold text-slate-800 text-lg mb-1 leading-tight">{{ $modul->judul ?? 'Judul Modul Materi' }}</h4>
-                                                <p class="text-sm text-slate-500 line-clamp-2">{{ $modul->deskripsi ?? 'Silakan baca modul ini untuk mempersiapkan materi pembelajaran selanjutnya.' }}</p>
+                                            <div class="flex-1 min-w-0 w-full">
+                                                <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                                    <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 uppercase tracking-wider">{{ $modul->mapel ?? 'Mata Pelajaran' }}</span>
+                                                </div>
+                                                <h4 class="font-bold text-slate-800 text-sm md:text-base leading-snug group-hover:text-sky-700 transition-colors line-clamp-1">{{ $modul->judul ?? 'Judul Modul Materi' }}</h4>
+                                                <p class="text-[11px] md:text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ $modul->deskripsi ?? 'Silakan baca modul ini untuk mempersiapkan materi pembelajaran selanjutnya.' }}</p>
                                             </div>
-                                            <a href="{{ isset($modul->id) ? route('student.module.read', $modul->id) : '#' }}" class="mt-2 sm:mt-0 w-full sm:w-auto text-center py-2.5 px-6 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm font-bold rounded-xl shadow-md shadow-purple-200 transition-all shrink-0">
-                                                Baca Sekarang
-                                            </a>
+                                            <button class="mt-2 sm:mt-0 w-full sm:w-auto text-center py-2 px-5 md:py-2.5 md:px-6 bg-gradient-to-r from-sky-500 to-sky-600 text-white text-xs md:text-sm font-bold rounded-xl shadow-md shadow-sky-200 transition-all shrink-0 pointer-events-none group-hover:from-sky-600 group-hover:to-sky-700">
+                                                Buka Materi <i class="fas fa-external-link-alt ml-1"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="w-full shrink-0 flex flex-col items-center justify-center py-8 text-center bg-white/50 rounded-2xl border-2 border-dashed border-purple-200">
-                                        <div class="w-14 h-14 bg-purple-50 shadow-inner border border-purple-100 rounded-full flex items-center justify-center mb-3 text-purple-400">
-                                            <i class="fas fa-check-circle text-2xl"></i>
+                                    <div class="w-full shrink-0 flex flex-col items-center justify-center py-6 md:py-8 text-center bg-white/50 rounded-2xl border-2 border-dashed border-sky-200">
+                                        <div class="w-12 h-12 md:w-14 md:h-14 bg-sky-50 shadow-inner border border-sky-100 rounded-full flex items-center justify-center mb-3 text-sky-500">
+                                            <i class="fas fa-check-circle text-xl md:text-2xl"></i>
                                         </div>
-                                        <h4 class="text-base font-bold text-purple-800 mb-1">Hebat!</h4>
-                                        <p class="text-sm text-purple-600/70 font-medium">Semua modul pembelajaran sudah kamu baca.</p>
+                                        <h4 class="text-sm md:text-base font-bold text-sky-800 mb-1">Hebat!</h4>
+                                        <p class="text-[11px] md:text-sm text-sky-600/70 font-medium">Semua modul pembelajaran sudah dibaca.</p>
                                     </div>
                                 @endforelse
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-white to-sky-50/60 rounded-[2rem] shadow-sm border border-sky-100 p-6 md:p-8 flex flex-col">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-sky-100/50 shrink-0">
-                            <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-sky-200 font-bold text-lg">
+                    {{-- C. PAPAN PENGUMUMAN --}}
+                    <div class="bg-gradient-to-br from-white to-cyan-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-cyan-100 p-5 md:p-8 flex flex-col">
+                        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-cyan-100/50 shrink-0">
+                            <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-cyan-200 font-bold text-lg">
                                 <i class="fas fa-bullhorn"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sky-900 text-lg leading-tight">Papan Pengumuman</h3>
-                                <p class="text-xs text-sky-600/70 font-medium">Informasi penting dari guru & sekolah</p>
+                                <h3 class="font-bold text-cyan-900 text-base md:text-lg leading-tight">Papan Pengumuman</h3>
+                                <p class="text-[10px] md:text-xs text-cyan-700/70 font-medium">Informasi penting dari guru & sekolah</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                             @forelse($pengumumanTerkini ?? [] as $info)
-                                <div class="border border-sky-100 rounded-2xl p-5 hover:shadow-lg hover:border-sky-300 transition-all bg-white flex flex-col group">
+                                <div class="border border-cyan-100 rounded-2xl p-4 md:p-5 hover:shadow-lg hover:border-cyan-300 transition-all bg-white flex flex-col group h-full">
                                     <div class="flex justify-between items-start mb-3">
                                         @if(($info->type ?? 'info') == 'penting')
-                                            <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200 uppercase tracking-wider shadow-sm">
-                                                Penting
-                                            </span>
+                                            <span class="text-[9px] md:text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200 uppercase tracking-wider shadow-sm">Penting</span>
                                         @else
-                                            <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-200 uppercase tracking-wider shadow-sm">
-                                                Info Kelas
-                                            </span>
+                                            <span class="text-[9px] md:text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-200 uppercase tracking-wider shadow-sm">Info Kelas</span>
                                         @endif
-                                        <span class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+                                        <span class="text-[9px] md:text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
                                             {{ isset($info->created_at) ? \Carbon\Carbon::parse($info->created_at)->diffForHumans() : 'Baru saja' }}
                                         </span>
                                     </div>
-                                    <h4 class="font-bold text-slate-800 text-sm mb-2 line-clamp-1 group-hover:text-sky-600 transition-colors">{{ $info->title ?? 'Judul Pengumuman' }}</h4>
-                                    <p class="text-xs text-slate-500 mb-5 line-clamp-2 h-8">{{ $info->content ?? 'Isi pengumuman tidak tersedia.' }}</p>
+                                    <h4 class="font-bold text-slate-800 text-xs md:text-sm mb-2 line-clamp-1 group-hover:text-cyan-600 transition-colors">{{ $info->title ?? 'Judul Pengumuman' }}</h4>
+                                    <p class="text-[11px] md:text-xs text-slate-500 mb-4 line-clamp-2 flex-1">{{ $info->content ?? 'Isi pengumuman tidak tersedia.' }}</p>
                                     
-                                    {{-- Tambahkan $info->id sebagai parameter PERTAMA --}}
-                                    <button onclick="bacaPengumuman('{{ $info->id }}', '{!! addslashes($info->title) !!}', '{!! addslashes($info->content) !!}', '{{ \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') }}', '{{ $info->type }}')" 
-                                            class="mt-auto w-full py-2.5 bg-sky-50 text-sky-700 text-xs font-bold rounded-xl border border-sky-100 hover:bg-sky-600 hover:text-white transition-all shadow-sm">
+                                    <button onclick="bacaPengumuman('{{ $info->id }}', '{!! addslashes($info->title) !!}', '{!! addslashes($info->content) !!}', '{{ \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') }}', '{{ $info->type }}')" class="mt-auto w-full py-2 bg-cyan-50 text-cyan-700 text-[11px] md:text-xs font-bold rounded-xl border border-cyan-100 hover:bg-cyan-600 hover:text-white transition-all shadow-sm">
                                         Baca Selengkapnya
                                     </button>
                                 </div>
                             @empty
-                                <div class="col-span-full flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-sky-200 rounded-2xl bg-white/50">
-                                    <i class="fas fa-box-open text-3xl mb-3 text-sky-300"></i>
-                                    <p class="text-sm font-bold text-sky-800 mb-1">Belum Ada Pengumuman</p>
-                                    <p class="text-xs font-medium text-sky-500">Tidak ada informasi terbaru untuk kelasmu.</p>
+                                <div class="col-span-full flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-cyan-200 rounded-2xl bg-white/50">
+                                    <i class="fas fa-box-open text-2xl md:text-3xl mb-2 md:mb-3 text-cyan-300"></i>
+                                    <p class="text-xs md:text-sm font-bold text-cyan-800 mb-1">Belum Ada Pengumuman</p>
+                                    <p class="text-[10px] md:text-xs font-medium text-cyan-600/70">Tidak ada informasi terbaru untuk kelasmu.</p>
                                 </div>
                             @endforelse
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[2rem] shadow-sm border border-indigo-100 p-6 md:p-8">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-indigo-100/50 shrink-0">
+                    {{-- D. POLLING BERLANGSUNG (DENGAN LABEL PEMBUAT YANG JELAS) --}}
+                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-8">
+                        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-indigo-100/50 shrink-0">
                             <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 font-bold text-lg">
                                 <i class="fas fa-person-circle-question"></i>
                             </div>
-                            <h3 class="font-bold text-indigo-900 text-lg">Polling Berlangsung 📢</h3>
+                            <h3 class="font-bold text-indigo-900 text-base md:text-lg">Polling Berlangsung 📢</h3>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            @forelse($activePolls as $poll)
-                                <div class="border border-indigo-100 rounded-2xl p-5 hover:border-indigo-300 hover:shadow-lg transition-all bg-white flex flex-col">
-                                    <h4 class="font-bold text-slate-800 mb-4 leading-snug">{{ $poll->question }}</h4>
-                                    <form class="mt-auto space-y-2.5" onsubmit="submitSiswaVote(event, {{ $poll->id }})">
-                                        @foreach($poll->options as $opt)
-                                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50 shadow-sm cursor-pointer transition-all group">
-                                                <input type="radio" name="option_{{ $poll->id }}" value="{{ $opt->id }}" required class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-600">
-                                                <span class="text-sm font-semibold text-slate-600 group-hover:text-indigo-700 transition-colors">{{ $opt->text }}</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
+                            @forelse($activePolls ?? [] as $poll)
+                                @php
+                                    $pembuat = $poll->pembuat ?? $poll->author_role ?? 'Sekolah';
+                                    
+                                    // LOGIKA WARNA BADGE BERDASARKAN PEMBUAT (Guru vs Kepsek/Wakasek)
+                                    if (str_contains(strtolower($pembuat), 'guru')) {
+                                        $bgPembuat = 'bg-blue-50 text-blue-600 border-blue-200';
+                                        $iconPembuat = 'fa-chalkboard-teacher';
+                                        $labelPembuat = 'Guru Mapel / Wali Kelas';
+                                        $garisAksen = 'bg-blue-400';
+                                    } elseif (str_contains(strtolower($pembuat), 'kepala sekolah') || str_contains(strtolower($pembuat), 'wakil')) {
+                                        $bgPembuat = 'bg-amber-50 text-amber-600 border-amber-200';
+                                        $iconPembuat = 'fa-building-columns';
+                                        $labelPembuat = 'Manajemen Sekolah (' . $pembuat . ')';
+                                        $garisAksen = 'bg-amber-400';
+                                    } else {
+                                        $bgPembuat = 'bg-indigo-50 text-indigo-600 border-indigo-200';
+                                        $iconPembuat = 'fa-user-tie';
+                                        $labelPembuat = $pembuat;
+                                        $garisAksen = 'bg-indigo-400';
+                                    }
+                                @endphp
+                                
+                                <div class="border border-slate-200 rounded-2xl p-4 md:p-5 hover:border-indigo-300 hover:shadow-md transition-all bg-white flex flex-col h-full relative overflow-hidden group">
+                                    {{-- Garis Aksen Sebelah Kiri --}}
+                                    <div class="absolute top-0 left-0 w-1.5 h-full {{ $garisAksen }}"></div>
+                                    
+                                    <div class="flex justify-between items-start mb-3 pl-2">
+                                        <span class="text-[9px] md:text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider {{ $bgPembuat }} border shadow-sm flex items-center gap-1.5">
+                                            <i class="fas {{ $iconPembuat }}"></i> {{ $labelPembuat }}
+                                        </span>
+                                        <span class="text-[10px] font-bold text-slate-400 shrink-0 ml-2">
+                                            {{ isset($poll->created_at) ? \Carbon\Carbon::parse($poll->created_at)->format('d M') : '' }}
+                                        </span>
+                                    </div>
+                                    
+                                    <h4 class="font-bold text-slate-800 text-sm mb-3 md:mb-4 leading-snug pl-2">{{ $poll->pertanyaan ?? $poll->question }}</h4>
+                                    
+                                    <form class="mt-auto space-y-2 pl-2" onsubmit="submitSiswaVote(event, {{ $poll->id }})">
+                                        @foreach($poll->options ?? $poll->opsi as $opt)
+                                            <label class="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-xl border border-slate-100 bg-slate-50 hover:border-indigo-300 hover:bg-indigo-50/50 shadow-sm cursor-pointer transition-all group/opt">
+                                                <input type="radio" name="option_{{ $poll->id }}" value="{{ $opt->id }}" required class="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-600 border-gray-300 focus:ring-indigo-600">
+                                                <span class="text-xs md:text-sm font-semibold text-slate-600 group-hover/opt:text-indigo-700 transition-colors leading-tight">{{ $opt->text ?? $opt->option_text }}</span>
                                             </label>
                                         @endforeach
-                                        <button type="submit" class="w-full mt-4 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 shadow-md shadow-indigo-200 font-bold text-white rounded-xl transition-all btn-submit-vote text-sm transform hover:-translate-y-0.5">
+                                        <button type="submit" class="w-full mt-3 md:mt-4 py-2 md:py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 shadow-md shadow-indigo-200 font-bold text-white rounded-xl transition-all btn-submit-vote text-[11px] md:text-sm transform hover:-translate-y-0.5">
                                             Kirim Suara
                                         </button>
                                     </form>
                                 </div>
                             @empty
-                                <div class="col-span-full flex flex-col items-center justify-center py-10 px-6 text-center border-2 border-dashed border-indigo-200 bg-white/50 rounded-2xl">
-                                    <div class="w-16 h-16 mb-3 flex items-center justify-center rounded-full bg-indigo-50 shadow-inner border border-indigo-100 text-indigo-400">
-                                        <i class="fas fa-box-open text-2xl"></i>
+                                <div class="col-span-full flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-indigo-200 bg-white/50 rounded-2xl">
+                                    <div class="w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 flex items-center justify-center rounded-full bg-indigo-50 shadow-inner border border-indigo-100 text-indigo-400">
+                                        <i class="fas fa-box-open text-xl md:text-2xl"></i>
                                     </div>
-                                    <h3 class="text-lg font-bold text-indigo-800 mb-1">Belum Ada Polling</h3>
-                                    <p class="text-indigo-600/70 text-sm font-medium">Saat ini belum ada jejak pendapat dari Guru yang perlu diisi.</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-
-                <div class="xl:col-span-1 flex flex-col gap-8">
-                    
-                    <div class="bg-gradient-to-br from-white to-rose-50/60 rounded-[2rem] shadow-sm border border-rose-100 p-6 flex flex-col max-h-[350px]">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-rose-100/50 shrink-0">
-                            <div class="w-10 h-10 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-rose-200 font-bold text-lg">
-                                <i class="fas fa-tasks"></i>
-                            </div>
-                            <h3 class="font-bold text-rose-900 text-lg leading-tight">Tugas & PR 📝</h3>
-                        </div>
-
-                        <div class="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                            @forelse($pendingTasks ?? [] as $task)
-                                <div class="flex items-start gap-3 p-4 rounded-2xl border border-rose-100 bg-white hover:border-rose-300 hover:shadow-md transition-all group">
-                                    <div class="mt-1">
-                                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-sm shadow-rose-300"></div>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-slate-800 text-sm group-hover:text-rose-600 transition-colors">{{ $task->judul_tugas ?? 'Tugas Belum Dinamai' }}</h4>
-                                        <p class="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 bg-rose-50 w-fit px-2 py-0.5 rounded-md">
-                                            <i class="far fa-clock"></i> Deadline: {{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->translatedFormat('d M, H:i') : 'Segera' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="text-center py-6 flex flex-col items-center justify-center h-full bg-white/50 rounded-2xl border-2 border-dashed border-rose-200">
-                                    <div class="w-14 h-14 bg-rose-50 shadow-inner border border-rose-100 rounded-full flex items-center justify-center mb-3 text-rose-400">
-                                        <i class="fas fa-check-double text-xl"></i>
-                                    </div>
-                                    <p class="text-sm text-rose-600/70 font-bold">Yeay! Tidak ada PR<br>yang belum dikerjakan.</p>
+                                    <h3 class="text-sm md:text-lg font-bold text-indigo-800 mb-1">Belum Ada Polling</h3>
+                                    <p class="text-indigo-600/70 text-[10px] md:text-sm font-medium">Saat ini belum ada jejak pendapat yang perlu diisi.</p>
                                 </div>
                             @endforelse
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-white to-orange-50/60 rounded-[2rem] shadow-sm border border-orange-100 p-6 flex flex-col max-h-[500px]">
-                        <div class="flex items-center justify-between mb-8 pb-4 border-b border-orange-100/50 shrink-0">
+                    {{-- E. STUDENT ASSESSMENT CHEATING HISTORY (PENGAWASAN) --}}
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-500 text-white rounded-xl flex items-center justify-center shadow-md shadow-orange-200 font-bold text-lg">
-                                    <i class="fas fa-calendar-alt"></i>
+                                <div class="w-10 h-10 bg-blue-950 text-white rounded-xl flex items-center justify-center shadow-md font-bold text-lg border border-blue-900">
+                                    <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-orange-900 text-lg leading-tight">Agenda Kegiatan</h3>
-                                    <p class="text-xs text-orange-700/70 font-medium">Bulan {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</p>
+                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Asesmen</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitasmu selama pengerjaan asesmen</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-5 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                            @forelse($monthlyEvents as $event)
-                                <div class="flex gap-4 items-start group">
-                                    <div class="flex flex-col items-center mt-1">
-                                        <div class="w-4 h-4 rounded-full shadow-md border-2 border-white z-10" style="background-color: {{ $event->color }}"></div>
-                                        @if(!$loop->last)
-                                            <div class="w-0.5 h-16 bg-orange-200 -mt-2 group-hover:bg-orange-400 transition-colors"></div>
-                                        @endif
+                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div id="grid-list-student-assessment-cheating-history" class="flex flex-col gap-4">
+                            </div>
+
+                            <div id="empty-message-student-assessment-cheating-history" class="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-white hidden">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-14 h-14 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center text-2xl mb-3 border border-blue-100 shadow-sm">
+                                        <i class="fas fa-shield-check"></i>
                                     </div>
-                                    <div class="flex-1 pb-2 bg-white p-3 rounded-xl border border-orange-50 shadow-sm hover:border-orange-200 transition-colors -mt-2">
-                                        <span class="font-bold text-slate-800 block text-sm mb-0.5">
+                                    <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
+                                    <p class="text-xs font-medium text-slate-500 mt-1">Kamu menyelesaikan asesmen dengan jujur dan tertib.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- ======================================= --}}
+                {{-- KOLOM KANAN (Lebar 1/3)                 --}}
+                {{-- ======================================= --}}
+                <div class="xl:col-span-1 flex flex-col gap-6 md:gap-8">
+                    
+                    {{-- A. TUGAS & PR --}}
+                    <div class="bg-gradient-to-br from-white to-blue-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-6 flex flex-col max-h-[350px]">
+                        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-blue-100/50 shrink-0">
+                            <div class="w-10 h-10 bg-gradient-to-br from-[#0071BC] to-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-200 font-bold text-lg">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <h3 class="font-bold text-blue-900 text-base md:text-lg leading-tight">Tugas & PR 📝</h3>
+                        </div>
+
+                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                            @forelse($pendingTasks ?? [] as $task)
+                                <div onclick="openTugasSiswaModal('{{ addslashes($task->judul_tugas) }}', '{{ addslashes($task->mapel) }}', '{{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->translatedFormat('l, d M Y - H:i') : 'Segera' }}', {{ $task->id }})" 
+                                     class="cursor-pointer flex items-center justify-between p-3 md:p-4 rounded-xl border border-blue-100 bg-white hover:border-blue-300 hover:shadow-md hover:-translate-x-1 transition-all group">
+                                    
+                                    <div class="flex-1 min-w-0 pr-3">
+                                        <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="text-[9px] md:text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200/60 truncate max-w-full">
+                                                {{ $task->mapel ?? 'Mata Pelajaran' }}
+                                            </span>
+                                        </div>
+                                        <h4 class="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#0071BC] transition-colors line-clamp-1 leading-tight mb-1">
+                                            {{ $task->judul_tugas ?? 'Tugas Belum Dinamai' }}
+                                        </h4>
+                                        <p class="text-[9px] md:text-[10px] font-bold text-slate-500 flex items-center gap-1.5">
+                                            <i class="far fa-clock text-amber-500"></i> Bts: <span class="text-rose-500">{{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->format('d M Y, H:i') : 'Segera' }}</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-[#0071BC] group-hover:text-white transition-colors shadow-sm">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </div>
+                                    
+                                </div>
+                            @empty
+                                <div class="text-center py-6 flex flex-col items-center justify-center h-full bg-white/50 rounded-2xl border-2 border-dashed border-blue-200">
+                                    <div class="w-12 h-12 md:w-14 md:h-14 bg-blue-50 shadow-inner border border-blue-100 rounded-full flex items-center justify-center mb-2 md:mb-3 text-blue-400">
+                                        <i class="fas fa-check-double text-lg md:text-xl"></i>
+                                    </div>
+                                    <p class="text-[11px] md:text-sm text-blue-600/70 font-bold leading-tight">Yeay! Tidak ada PR<br>yang belum dikerjakan.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    {{-- A.2. JADWAL UJIAN / QUESTION --}}
+                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col max-h-[350px]">
+                        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-indigo-100/50 shrink-0">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 font-bold text-lg">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <h3 class="font-bold text-indigo-900 text-base md:text-lg leading-tight">Jadwal Ujian ⏰</h3>
+                        </div>
+
+                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                            @forelse($jadwalUjian ?? [] as $ujian)
+                                <div onclick="openUjianSiswaModal('{{ addslashes($ujian->tipe) }}', '{{ addslashes($ujian->mapel) }}', '{{ $ujian->tanggal }}', '{{ $ujian->waktu }}', '{{ $ujian->h_min }}', {{ $ujian->id }})" class="cursor-pointer flex items-start gap-3 p-3 md:p-4 rounded-xl border border-indigo-100 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-x-1 transition-all group">
+                                    <div class="flex-1 w-full">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <h4 class="font-bold text-slate-800 text-xs md:text-sm group-hover:text-indigo-600 transition-colors line-clamp-1 leading-tight">{{ $ujian->tipe }} {{ $ujian->mapel }}</h4>
+                                            <span class="text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider {{ $ujian->h_min == 'Hari Ini' || $ujian->h_min == 'Berlangsung' ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' : 'bg-indigo-100 text-indigo-600 border border-indigo-200' }}">{{ $ujian->h_min }}</span>
+                                        </div>
+                                        <p class="text-[9px] md:text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mt-1">
+                                            <i class="far fa-calendar-alt text-indigo-400"></i> {{ $ujian->tanggal }} | {{ $ujian->waktu }} WIB
+                                        </p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-indigo-500 transition-colors mt-2"></i>
+                                </div>
+                            @empty
+                                <div class="text-center py-6 flex flex-col items-center justify-center h-full bg-white/50 rounded-2xl border-2 border-dashed border-indigo-200">
+                                    <div class="w-12 h-12 md:w-14 md:h-14 bg-indigo-50 shadow-inner border border-indigo-100 rounded-full flex items-center justify-center mb-2 md:mb-3 text-indigo-400">
+                                        <i class="fas fa-shield-alt text-lg md:text-xl"></i>
+                                    </div>
+                                    <p class="text-[11px] md:text-sm text-indigo-600/70 font-bold leading-tight">Aman!<br>Belum ada jadwal ujian.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    {{-- B. AGENDA MINGGUAN --}}
+                    <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200/60 p-5 md:p-6 flex flex-col max-h-[500px] md:max-h-[600px] h-full">
+                        <div class="flex items-center justify-between mb-4 md:mb-5 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <i class="far fa-calendar-alt text-[#0071BC] text-base md:text-lg"></i>
+                                <h3 class="font-bold text-[#0071BC] uppercase tracking-wider text-xs md:text-sm">Event & Agenda</h3>
+                            </div>
+                            <div class="flex gap-2 md:gap-3">
+                                @php
+                                    $selectedDate = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
+                                    $selectedCarbon = \Carbon\Carbon::parse($selectedDate);
+                                    $prevWeek = $selectedCarbon->copy()->subWeek()->format('Y-m-d');
+                                    $nextWeek = $selectedCarbon->copy()->addWeek()->format('Y-m-d');
+                                    $startOfWeek = $selectedCarbon->copy()->startOfWeek();
+                                    $hariLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['date' => $prevWeek]) }}" class="w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center border border-slate-200 bg-slate-50 text-gray-500 hover:bg-[#0071BC] hover:text-white hover:border-[#0071BC] transition-colors shadow-sm">
+                                    <i class="fas fa-chevron-left text-[10px] md:text-xs"></i>
+                                </a>
+                                <a href="{{ request()->fullUrlWithQuery(['date' => $nextWeek]) }}" class="w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center border border-slate-200 bg-slate-50 text-gray-500 hover:bg-[#0071BC] hover:text-white hover:border-[#0071BC] transition-colors shadow-sm">
+                                    <i class="fas fa-chevron-right text-[10px] md:text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Kalender Pemilih Hari --}}
+                        <div class="flex justify-between gap-1 shrink-0 mb-5">
+                            @for ($i = 0; $i < 7; $i++)
+                                @php
+                                    $loopDate = $startOfWeek->copy()->addDays($i);
+                                    $isSel = $loopDate->format('Y-m-d') === $selectedDate;
+                                @endphp
+                                <a href="{{ request()->fullUrlWithQuery(['date' => $loopDate->format('Y-m-d')]) }}" 
+                                   class="flex flex-col items-center justify-center w-full py-1.5 md:py-2 border rounded-lg transition-all cursor-pointer 
+                                   {{ $isSel ? 'bg-[#0071BC] border-[#0071BC] text-white shadow-md transform scale-105' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-blue-50 hover:border-blue-200 hover:text-[#0071BC]' }}">
+                                    <span class="text-xs md:text-sm font-bold">{{ $loopDate->format('d') }}</span>
+                                    <span class="text-[8px] md:text-[9px] font-bold mt-0.5 uppercase">{{ $hariLabels[$i] }}</span>
+                                </a>
+                            @endfor
+                        </div>
+
+                        <div class="w-full py-1.5 md:py-2 bg-[#0071BC] mb-3 md:mb-4 rounded-lg shrink-0 flex items-center justify-center shadow-inner">
+                            <span class="text-[9px] md:text-[10px] font-bold text-white uppercase tracking-widest">Detail Agenda 7 Hari</span>
+                        </div>
+
+                        {{-- List Agenda --}}
+                        <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar pr-1">
+                            @forelse($weeklyEvents ?? $agendaSekolah ?? [] as $event)
+                                <div class="mb-2.5 p-3 border-l-[3px] md:border-l-[4px] hover:bg-blue-50/30 transition-colors rounded-r-xl bg-white shadow-sm flex flex-col gap-1 border-y border-r border-slate-100 group {{ $event->date == date('Y-m-d') ? 'border-l-[#0071BC] bg-blue-50/20' : '' }}" style="border-left-color: {{ $event->color ?? '#0071BC' }}">
+                                    <div class="flex justify-between items-center mb-0.5 md:mb-1">
+                                        <span class="font-black text-slate-400 text-[9px] md:text-[10px] uppercase tracking-widest group-hover:text-slate-600 transition-colors truncate pr-2">
                                             {{ \Carbon\Carbon::parse($event->date)->translatedFormat('l, d F') }}
                                         </span>
-                                        <span class="text-xs text-slate-500 block leading-snug">
-                                            {{ $event->title }}
-                                        </span>
+                                        @if($event->date == date('Y-m-d'))
+                                            <span class="bg-[#0071BC] text-white text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-full uppercase animate-pulse shadow-sm shrink-0">Hari Ini</span>
+                                        @endif
                                     </div>
+                                    <span class="text-xs md:text-sm text-slate-800 block font-bold leading-snug">
+                                        {{ $event->title }}
+                                    </span>
                                 </div>
                             @empty
-                                <div class="text-center py-10 flex flex-col items-center justify-center h-full border-2 border-dashed border-orange-200 rounded-2xl bg-white/50">
-                                    <div class="w-16 h-16 bg-orange-50 shadow-inner border border-orange-100 rounded-full flex items-center justify-center mb-3 text-orange-400">
-                                        <i class="fas fa-calendar-check text-2xl"></i>
-                                    </div>
-                                    <p class="text-sm text-orange-700/70 font-bold">Belum ada agenda<br>di bulan ini.</p>
+                                <div class="flex-1 flex flex-col items-center justify-center py-8 opacity-50">
+                                    <i class="far fa-calendar-times text-3xl md:text-4xl text-slate-300 mb-2 md:mb-3"></i>
+                                    <p class="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-wider">Tidak ada agenda</p>
                                 </div>
                             @endforelse
-                        </div>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-white to-emerald-50/60 rounded-[2rem] shadow-sm border border-emerald-100 p-6 flex flex-col max-h-[500px]">
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-emerald-100/50 shrink-0">
-                            <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-emerald-200 font-bold text-lg">
-                                <i class="fas fa-chart-simple"></i>
-                            </div>
-                            <h3 class="font-bold text-emerald-900 text-lg leading-tight">Hasil Polling 📊</h3>
-                        </div>
-
-                        <div class="flex flex-col gap-6 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                            @forelse($votedPolls as $poll)
-                                <div class="border border-emerald-100 bg-white rounded-2xl p-5 hover:shadow-lg hover:border-emerald-300 transition-all">
-                                    <p class="text-sm font-bold text-slate-800 mb-4 leading-snug">{{ $poll->question }}</p>
-                                    <div class="space-y-3.5">
-                                        @foreach($poll->options as $opt)
-                                            <div class="relative w-full">
-                                                <div class="flex justify-between text-xs font-bold mb-1.5">
-                                                    <span class="text-slate-600 truncate pr-2">{{ $opt->text }}</span>
-                                                    <span class="text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md">{{ $opt->percentage }}%</span>
-                                                </div>
-                                                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-                                                    <div class="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2 rounded-full" style="width: {{ $opt->percentage }}%"></div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    <p class="text-[10px] text-emerald-600/70 font-bold mt-5 text-right bg-emerald-50 px-2 py-1 w-fit ml-auto rounded-md border border-emerald-100">
-                                        <i class="fas fa-users mr-1"></i> {{ $poll->total_votes }} Suara Masuk
-                                    </p>
-                                </div>
-                            @empty
-                                <div class="text-center py-8 flex flex-col items-center justify-center h-full border-2 border-dashed border-emerald-200 rounded-2xl bg-white/50">
-                                    <div class="w-14 h-14 bg-emerald-50 shadow-inner border border-emerald-100 rounded-full flex items-center justify-center mb-3 text-emerald-400">
-                                        <i class="fas fa-chart-pie text-xl"></i>
-                                    </div>
-                                    <p class="text-sm text-emerald-700/70 font-bold">Belum ada hasil polling<br>yang tersedia.</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-
-                    <!-- CHEATING HISTORY -->
-                    <div id="container-student-assessment-cheating-history" class="bg-linear-to-br from-white to-red-50/60 rounded-4xl shadow-sm border border-red-100 p-6 flex flex-col">
-
-                        <!-- HEADER -->
-                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-red-100/50">
-                            <div class="w-10 h-10 bg-linear-to-br from-red-500 to-red-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-red-200">
-                                <i class="fas fa-triangle-exclamation"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-red-900 text-lg leading-tight">Riwayat Pelanggaran</h3>
-                                <p class="text-xs text-red-600/70 font-medium">Catatan aktivitas selama pengerjaan asesmenmu</p>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-4 max-h-87.5 overflow-y-auto pr-2 custom-scrollbar">
-
-                            <div id="grid-list-student-assessment-cheating-history" class="flex flex-col gap-8">
-                                <!-- show data in ajax -->
-                            </div>
-
-                            <div id="empty-message-student-assessment-cheating-history" class="py-8 text-center border-2 border-dashed border-red-50 rounded-2xl bg-red-50/20 hidden">
-                                <div class="flex flex-col items-center justify-center ">
-                                    <i class="fas fa-check-circle text-3xl mb-3 text-green-400"></i>
-                                    <p class="text-sm font-bold text-green-800">Tidak Ada Pelanggaran</p>
-                                    <p class="text-xs font-bold text-green-800 mt-1">Kamu menyelesaikan asesmen dengan baik</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -363,116 +455,204 @@
             </div>
         </div>
 
-        <div id="announcementModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm cursor-pointer" onclick="closeModal()"></div>
-            <div class="relative bg-white rounded-3xl shadow-2xl w-[90%] max-w-md p-6 md:p-8 transform scale-95 transition-transform duration-300" id="modalContent">
-                <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
-                    <i class="fas fa-times"></i>
+        {{-- ======================================= --}}
+        {{-- MODALS SECTION                          --}}
+        {{-- ======================================= --}}
+        
+        {{-- 1. Modal Notifikasi Awal --}}
+        <div id="announcementModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeModal()"></div>
+            <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-8 transform scale-95 transition-all duration-300" id="modalContent">
+                <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-500 transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
-                <div class="w-16 h-16 bg-blue-50 text-[#0071BC] rounded-2xl flex items-center justify-center text-3xl mb-5 mx-auto shadow-inner border border-blue-100">
-                    <i class="fas fa-bell"></i>
+                <div class="w-16 h-16 bg-blue-50 text-[#0071BC] rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-5 mx-auto shadow-inner border border-blue-100">
+                    <i class="fas fa-bell animate-wiggle"></i>
                 </div>
-                <div class="text-center mb-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Pemberitahuan Baru!</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">
+                <div class="text-center mb-6 md:mb-8">
+                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-2">Pemberitahuan Baru!</h3>
+                    <p class="text-xs md:text-sm text-slate-500 leading-relaxed px-2">
                         Selamat datang di Dashboard Siswa. Pastikan untuk selalu memeriksa Jadwal Pelajaran, Modul, dan Tugas barumu hari ini!
                     </p>
                 </div>
-                <button onclick="closeModal()" class="w-full py-3 px-4 bg-gradient-to-r from-[#0071BC] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-200 transition-all transform hover:-translate-y-0.5">
+                <button onclick="closeModal()" class="w-full py-3 px-4 bg-gradient-to-r from-[#0071BC] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
                     Baik, Saya Mengerti
                 </button>
             </div>
         </div>
 
-        <div id="mapelDetailModal" class="fixed inset-0 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm cursor-pointer" onclick="closeMapelModal()"></div>
-            <div class="relative bg-white rounded-3xl shadow-2xl w-[90%] max-w-sm p-6 md:p-8 transform scale-95 transition-transform duration-300" id="mapelModalContent">
-                <button onclick="closeMapelModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
-                    <i class="fas fa-times"></i>
+        {{-- 2. Modal Detail Jadwal --}}
+        <div id="mapelDetailModal" class="fixed inset-0 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeMapelModal()"></div>
+            <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 md:p-8 transform scale-95 transition-all duration-300" id="mapelModalContent">
+                <button onclick="closeMapelModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-500 transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
-                <div id="mapelIconContainer" class="w-16 h-16 bg-blue-50 text-[#0071BC] rounded-2xl flex items-center justify-center text-3xl mb-5 mx-auto shadow-inner border border-blue-100">
+                <div id="mapelIconContainer" class="w-16 h-16 bg-blue-50 text-[#0071BC] rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-5 mx-auto shadow-inner border border-blue-100">
                     <i id="mapelIcon" class="fas fa-book-open"></i>
                 </div>
                 <div class="text-center mb-6">
-                    <h3 id="modalMapelTitle" class="text-xl font-bold text-gray-800 mb-2">Nama Mapel</h3>
-                    <div class="inline-flex items-center gap-2 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100">
-                        <i class="far fa-clock text-[#0071BC]"></i>
-                        <span id="modalMapelJam" class="text-sm font-bold text-[#0071BC]">00:00 - 00:00</span>
+                    <h3 id="modalMapelTitle" class="text-lg md:text-xl font-extrabold text-slate-800 mb-2 line-clamp-2 px-4">Nama Mapel</h3>
+                    <div class="inline-flex items-center gap-2 bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 shadow-sm">
+                        <i class="far fa-clock text-[#0071BC] text-sm"></i>
+                        <span id="modalMapelJam" class="text-xs md:text-sm font-bold text-[#0071BC]">00:00 - 00:00</span>
                     </div>
                 </div>
-                <div id="modalMapelInfo" class="space-y-4 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0 border border-gray-100">
-                            <i class="fas fa-user-tie text-sm"></i>
+                <div id="modalMapelInfo" class="space-y-3 md:space-y-4 mb-6 md:mb-8 bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-100">
+                    <div class="flex items-start gap-3 md:gap-4">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0 border border-slate-200">
+                            <i class="fas fa-user-tie text-xs md:text-sm"></i>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium mb-0.5">Guru Pengajar</p>
-                            <p id="modalMapelGuru" class="text-sm font-bold text-gray-800">Nama Guru</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[10px] md:text-xs text-slate-500 font-semibold mb-0.5">Guru Pengajar</p>
+                            <p id="modalMapelGuru" class="text-xs md:text-sm font-bold text-slate-800 truncate">Nama Guru</p>
                         </div>
                     </div>
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0 border border-gray-100">
-                            <i class="fas fa-door-open text-sm"></i>
+                    <div class="w-full h-px bg-slate-200/60 my-1"></div>
+                    <div class="flex items-start gap-3 md:gap-4">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0 border border-slate-200">
+                            <i class="fas fa-door-open text-xs md:text-sm"></i>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-medium mb-0.5">Ruang Kelas</p>
-                            <p id="modalMapelRuang" class="text-sm font-bold text-gray-800">Nama Ruangan</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[10px] md:text-xs text-slate-500 font-semibold mb-0.5">Ruang Kelas</p>
+                            <p id="modalMapelRuang" class="text-xs md:text-sm font-bold text-slate-800 truncate">Nama Ruangan</p>
                         </div>
                     </div>
                 </div>
-                <button onclick="closeMapelModal()" class="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all">
+                <button onclick="closeMapelModal()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-colors">
                     Tutup Detail
                 </button>
             </div>
         </div>
 
+        {{-- 3. Modal Baca Pengumuman --}}
         <div id="bacaPengumumanModal" class="fixed inset-0 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
-            <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm cursor-pointer" onclick="closeBacaPengumuman()"></div>
-            <div class="relative bg-white rounded-3xl shadow-2xl w-[90%] max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="bacaPengumumanContent">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeBacaPengumuman()"></div>
+            <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh] md:max-h-[80vh]" id="bacaPengumumanContent">
                 
-                <div id="headerPengumuman" class="px-6 py-5 bg-blue-600 flex justify-between items-center text-white shrink-0">
-                    <h3 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-bullhorn"></i> Detail Pengumuman</h3>
-                    <button onclick="closeBacaPengumuman()" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
+                <div id="headerPengumuman" class="px-5 py-4 md:px-6 md:py-5 bg-[#0071BC] flex justify-between items-center text-white shrink-0">
+                    <h3 class="font-bold text-base md:text-lg flex items-center gap-2.5"><i class="fas fa-bullhorn"></i> Detail Pengumuman</h3>
+                        <button onclick="bacaPengumuman('{{ $info->id ?? '' }}', '{!! addslashes($info->title ?? '') !!}', '{!! addslashes($info->content ?? '') !!}', '{{ isset($info->created_at) ? \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') : 'Baru saja' }}', '{{ $info->type ?? 'info' }}')" class="mt-auto w-full py-2 bg-cyan-50 text-cyan-700 text-[11px] md:text-xs font-bold rounded-xl border border-cyan-100 hover:bg-cyan-600 hover:text-white transition-all shadow-sm">
+                            Baca Selengkapnya
+                        </button>                
                 </div>
                 
-                <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar">
-                    <div class="flex justify-between items-center mb-4">
-                        <span id="badgePengumuman" class="text-[10px] font-bold px-3 py-1 rounded-md border uppercase tracking-wider"></span>
-                        <span id="tglPengumuman" class="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md"></span>
+                <div class="p-5 md:p-8 overflow-y-auto custom-scrollbar bg-white">
+                    <div class="flex justify-between items-center mb-4 md:mb-5">
+                        <span id="badgePengumuman" class="text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-md border uppercase tracking-wider shadow-sm"></span>
+                        <span id="tglPengumuman" class="text-[10px] md:text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 md:py-1.5 rounded-md"></span>
                     </div>
                     
-                    <h2 id="judulPengumuman" class="text-xl md:text-2xl font-extrabold text-slate-800 mb-4 leading-snug"></h2>
+                    <h2 id="judulPengumuman" class="text-lg md:text-2xl font-extrabold text-slate-800 mb-4 md:mb-6 leading-snug"></h2>
                     
-                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                        <p id="isiPengumuman" class="text-sm text-slate-600 leading-relaxed whitespace-pre-line"></p>
+                    <div class="bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200/60 shadow-inner">
+                        <p id="isiPengumuman" class="text-xs md:text-sm text-slate-600 leading-relaxed whitespace-pre-line"></p>
                     </div>
                 </div>
                 
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end shrink-0">
-                    <button onclick="closeBacaPengumuman()" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-colors shadow-sm">
+                <div class="px-5 py-4 md:px-6 md:py-5 bg-slate-50 border-t border-slate-200/60 flex justify-end shrink-0">
+                    <button onclick="closeBacaPengumuman()" class="w-full sm:w-auto px-8 py-2.5 md:py-3 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm">
                         Tutup
                     </button>
                 </div>
             </div>
         </div>
 
+        {{-- 4. MODAL DETAIL TUGAS SISWA (TEMA BIRU) --}}
+        <div id="modalSiswaTugas" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-300" id="modalSiswaTugasContent">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white flex justify-between items-start relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 text-blue-400/30 text-8xl"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="relative z-10">
+                        <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-2 inline-block shadow-sm" id="modalTugasMapel">Mata Pelajaran</span>
+                        <h3 class="font-bold text-xl leading-tight" id="modalTugasJudul">Judul Tugas</h3>
+                    </div>
+                    <button onclick="closeModalSiswa('modalSiswaTugas', 'modalSiswaTugasContent')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm shrink-0 border border-blue-200"><i class="far fa-clock text-lg"></i></div>
+                        <div>
+                            <p class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Batas Pengumpulan (Deadline)</p>
+                            <p class="text-sm font-bold text-blue-600" id="modalTugasDeadline">-</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="closeModalSiswa('modalSiswaTugas', 'modalSiswaTugasContent')" class="flex-1 py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Tutup</button>
+                        <a href="#" id="btnKerjakanTugas" class="flex-1 py-3 px-4 bg-blue-500 text-white text-center font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+                            Mulai Kerjakan <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 5. MODAL DETAIL UJIAN SISWA (TEMA INDIGO) --}}
+        <div id="modalSiswaUjian" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-300" id="modalSiswaUjianContent">
+                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 text-white flex justify-between items-start relative overflow-hidden">
+                    <div class="absolute -top-6 -right-6 text-indigo-400/30 text-8xl"><i class="fas fa-stopwatch"></i></div>
+                    <div class="relative z-10">
+                        <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-2 inline-block shadow-sm" id="modalUjianTipe">Tipe Ujian</span>
+                        <h3 class="font-bold text-xl leading-tight" id="modalUjianMapel">Mata Pelajaran</h3>
+                    </div>
+                    <button onclick="closeModalSiswa('modalSiswaUjian', 'modalSiswaUjianContent')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-inner">
+                            <i class="far fa-calendar-alt text-indigo-500 text-2xl mb-2"></i>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</p>
+                            <p class="text-sm font-bold text-slate-700 mt-0.5" id="modalUjianTanggal">-</p>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-inner">
+                            <i class="far fa-clock text-indigo-500 text-2xl mb-2"></i>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Waktu Mulai</p>
+                            <p class="text-sm font-bold text-slate-700 mt-0.5" id="modalUjianWaktu">-</p>
+                        </div>
+                    </div>
+                    
+                    <div id="ujianStatusContainer" class="text-center mb-6">
+                        </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="closeModalSiswa('modalSiswaUjian', 'modalSiswaUjianContent')" class="flex-1 py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Tutup</button>
+                        <a href="#" id="btnMulaiUjian" class="flex-1 py-3 px-4 bg-indigo-600 text-white text-center font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 pointer-events-none opacity-50">
+                            Masuk Ruang Ujian <i class="fas fa-sign-in-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 @else
-    <div class="flex flex-col min-h-screen items-center justify-center bg-gray-50">
-        <i class="fas fa-lock text-5xl text-red-400 mb-4"></i>
-        <p class="font-bold text-xl text-red-500">Akses Ditolak</p>
-        <p class="text-gray-500">Halaman ini khusus untuk Siswa.</p>
+    <div class="flex flex-col min-h-screen items-center justify-center bg-slate-50">
+        <div class="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-amber-100">
+            <i class="fas fa-lock text-4xl text-amber-400"></i>
+        </div>
+        <h1 class="font-extrabold text-2xl text-slate-800 mb-2">Akses Dibatasi</h1>
+        <p class="text-slate-500 font-medium">Halaman ini dirancang khusus untuk akun Siswa.</p>
+        <a href="/" class="mt-8 px-6 py-2.5 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition-colors shadow-md">Kembali ke Beranda</a>
     </div>
 @endif
 
+{{-- SCRIPT DEPENDENCIES --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
+
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    @keyframes wiggle {
+        0%, 100% { transform: rotate(-3deg); }
+        50% { transform: rotate(3deg); }
+    }
+    .animate-wiggle { animation: wiggle 1s ease-in-out infinite; }
 </style>
-
-<script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
 
 <script>
     // ================= FUNGSI SLIDER MODUL =================
@@ -495,8 +675,14 @@
 
         slider.style.transform = `translateX(-${currentModuleIndex * 100}%)`;
 
-        if(btnPrev) btnPrev.disabled = currentModuleIndex === 0;
-        if(btnNext) btnNext.disabled = currentModuleIndex === totalItems - 1;
+        if(btnPrev) {
+            btnPrev.disabled = currentModuleIndex === 0;
+            btnPrev.classList.toggle('opacity-50', currentModuleIndex === 0);
+        }
+        if(btnNext) {
+            btnNext.disabled = currentModuleIndex === totalItems - 1;
+            btnNext.classList.toggle('opacity-50', currentModuleIndex === totalItems - 1);
+        }
     }
 
     function nextModule() {
@@ -537,17 +723,27 @@
 
     // ================= FUNGSI BACA PENGUMUMAN =================
     async function bacaPengumuman(id, judul, isi, tanggal, tipe) {
-        // 1. Tampilkan modal seperti biasa
         document.getElementById('judulPengumuman').innerText = judul;
         document.getElementById('isiPengumuman').innerText = isi;
         document.getElementById('tglPengumuman').innerText = tanggal;
-        // ... (logika badge dan header tetap sama) ...
+
+        const badge = document.getElementById('badgePengumuman');
+        const header = document.getElementById('headerPengumuman');
+        
+        if(tipe === 'penting') {
+            badge.innerText = 'Penting';
+            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded border uppercase tracking-wider text-amber-600 bg-amber-50 border-amber-200 shadow-sm';
+            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-gradient-to-r from-amber-500 to-amber-600 flex justify-between items-center text-white shrink-0';
+        } else {
+            badge.innerText = 'Info Kelas';
+            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded border uppercase tracking-wider text-cyan-600 bg-cyan-50 border-cyan-200 shadow-sm';
+            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-gradient-to-r from-cyan-500 to-cyan-600 flex justify-between items-center text-white shrink-0';
+        }
 
         const modal = document.getElementById('bacaPengumumanModal');
         modal.classList.remove('hidden');
         setTimeout(() => { modal.classList.replace('opacity-0', 'opacity-100'); }, 10);
 
-        // 2. Kirim data ke server bahwa ini sudah "DIBACA"
         let token = document.querySelector('meta[name="csrf-token"]');
         let csrfToken = token ? token.getAttribute('content') : '{{ csrf_token() }}';
 
@@ -561,18 +757,8 @@
                 },
                 body: JSON.stringify({ id: id })
             });
-            
-            // PERUBAHAN DI SINI: Kita baca hasil dari server
             const result = await response.json();
-            
-            if (!result.success) {
-                // Jika gagal di database, munculkan pesan errornya
-                console.error("Error Database:", result.message);
-                alert("Gagal mencatat! Error: " + result.message); 
-            } else {
-                console.log("Berhasil tercatat dilihat!");
-            }
-            
+            if (!result.success) console.error("Error Database:", result.message);
         } catch (e) {
             console.log("Gagal melakukan request jaringan.", e);
         }
@@ -623,14 +809,14 @@
 
         if (isBreak) {
             infoSection.classList.add('hidden');
-            iconContainer.className = "w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 mx-auto shadow-md";
+            iconContainer.className = "w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 text-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-5 mx-auto shadow-md";
             icon.className = "fas fa-utensils";
-            title.className = "text-xl font-bold text-orange-600 mb-2";
+            title.className = "text-lg md:text-xl font-extrabold text-amber-600 mb-2 px-4";
         } else {
             infoSection.classList.remove('hidden');
-            iconContainer.className = "w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl mb-5 mx-auto shadow-md";
+            iconContainer.className = "w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-5 mx-auto shadow-md";
             icon.className = "fas fa-book-open";
-            title.className = "text-xl font-bold text-gray-800 mb-2";
+            title.className = "text-lg md:text-xl font-extrabold text-slate-800 mb-2 px-4";
         }
 
         const modal = document.getElementById('mapelDetailModal');
@@ -663,7 +849,60 @@
         }
     }
 
-    // ================= FUNGSI AJAX UNTUK POLLING SISWA =================
+    // ================= FUNGSI UNTUK MODAL SISWA (TUGAS & UJIAN) =================
+    function openTugasSiswaModal(judul, mapel, deadline, id) {
+        document.getElementById('modalTugasJudul').innerText = judul;
+        document.getElementById('modalTugasMapel').innerText = mapel;
+        document.getElementById('modalTugasDeadline').innerText = deadline;
+        
+        document.getElementById('btnKerjakanTugas').href = `/lms/student/assessment/${id}/kerjakan`;
+
+        const modal = document.getElementById('modalSiswaTugas');
+        const content = document.getElementById('modalSiswaTugasContent');
+        modal.classList.remove('hidden');
+        setTimeout(() => { 
+            modal.classList.replace('opacity-0', 'opacity-100'); 
+            content.classList.replace('scale-95', 'scale-100'); 
+        }, 10);
+    }
+
+    function openUjianSiswaModal(tipe, mapel, tanggal, waktu, h_min, id) {
+        document.getElementById('modalUjianTipe').innerText = tipe;
+        document.getElementById('modalUjianMapel').innerText = mapel;
+        document.getElementById('modalUjianTanggal').innerText = tanggal;
+        document.getElementById('modalUjianWaktu').innerText = waktu + ' WIB';
+
+        const btnMulai = document.getElementById('btnMulaiUjian');
+        const statusContainer = document.getElementById('ujianStatusContainer');
+
+        if (h_min === 'Hari Ini' || h_min === 'Berlangsung') {
+            statusContainer.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold animate-pulse shadow-sm"><i class="fas fa-circle text-[8px]"></i> Ujian Tersedia Sekarang</span>`;
+            btnMulai.classList.remove('pointer-events-none', 'opacity-50');
+            btnMulai.href = `/lms/student/assessment/${id}/kerjakan`; 
+        } else {
+            statusContainer.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-lock text-[10px]"></i> Ujian Belum Tersedia</span>`;
+            btnMulai.classList.add('pointer-events-none', 'opacity-50');
+            btnMulai.href = "#";
+        }
+
+        const modal = document.getElementById('modalSiswaUjian');
+        const content = document.getElementById('modalSiswaUjianContent');
+        modal.classList.remove('hidden');
+        setTimeout(() => { 
+            modal.classList.replace('opacity-0', 'opacity-100'); 
+            content.classList.replace('scale-95', 'scale-100'); 
+        }, 10);
+    }
+
+    function closeModalSiswa(modalId, contentId) {
+        const modal = document.getElementById(modalId);
+        const content = document.getElementById(contentId);
+        modal.classList.replace('opacity-100', 'opacity-0');
+        content.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    }
+
+    // ================= FUNGSI AJAX UNTUK POLLING SISWA (DENGAN SWEETALERT2) =================
     async function submitSiswaVote(event, pollId) {
         event.preventDefault();
         const form = event.target;
@@ -671,12 +910,17 @@
         const selectedOption = form.querySelector(`input[name="option_${pollId}"]:checked`);
 
         if(!selectedOption) {
-            alert("Silakan pilih salah satu jawaban terlebih dahulu!");
+            Swal.fire({
+                icon: 'warning', 
+                title: 'Pilih Jawaban', 
+                text: 'Silakan pilih salah satu jawaban terlebih dahulu!', 
+                confirmButtonColor: '#0071BC'
+            });
             return;
         }
 
         const originalText = btn.innerHTML;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...`;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...`;
         btn.disabled = true;
 
         try {
@@ -693,17 +937,32 @@
             const result = await response.json();
             
             if(result.success) {
-                window.location.reload(); 
+                Swal.fire({
+                    icon: 'success', 
+                    title: 'Berhasil!', 
+                    text: result.message, 
+                    showConfirmButton: false, 
+                    timer: 1500
+                }).then(() => window.location.reload());
             } else {
-                alert(result.message);
+                Swal.fire({
+                    icon: 'error', 
+                    title: 'Gagal', 
+                    text: result.message, 
+                    confirmButtonColor: '#0071BC'
+                });
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         } catch (error) {
-            alert("Terjadi kesalahan jaringan saat mengirim suara.");
+            Swal.fire({
+                icon: 'error', 
+                title: 'Error', 
+                text: "Terjadi kesalahan jaringan saat mengirim suara.", 
+                confirmButtonColor: '#0071BC'
+            });
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     }
-    
 </script>

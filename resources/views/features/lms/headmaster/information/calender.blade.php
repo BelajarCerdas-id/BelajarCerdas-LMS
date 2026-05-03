@@ -2,85 +2,88 @@
     'headerSideNav' => 'Kalender Akademik'
 ])
 
-@if (Auth::user()->role === 'Guru')
+@if (in_array(Auth::user()->role, ['Kepala Sekolah', 'Wakil Kepala Sekolah']))
     <div class="relative lg:left-72 w-full lg:w-[calc(100%-18rem)] transition-all duration-500 ease-in-out z-20 bg-slate-100 min-h-screen pb-12">
-        <div class="pt-8 mx-6 lg:mx-10">
+        <div class="pt-6 sm:pt-8 mx-4 sm:mx-6 lg:mx-10">
             
-            <div class="sticky top-[85px] lg:top-[100px] z-40 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-5 bg-white/95 backdrop-blur-xl p-5 lg:p-6 rounded-2xl shadow-sm border-t-4 border-t-[#0071BC] transition-all">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-[#005B94] tracking-tight flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-[#0071BC]">
+            {{-- HEADER SECTION --}}
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-5 bg-white p-4 sm:p-5 lg:p-6 rounded-2xl shadow-sm border-t-4 border-t-[#0071BC] transition-all">
+                <div class="w-full">
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-[#005B94] tracking-tight flex items-center gap-3">
+                        <div class="w-10 h-10 shrink-0 rounded-lg bg-blue-100 flex items-center justify-center text-[#0071BC]">
                             <i class="fas fa-calendar-check text-lg"></i>
                         </div>
                         Kalender Akademik 2026
                     </h1>
-                    <p class="text-slate-500 mt-2 text-sm font-medium ml-[52px]">Kelola agenda dan sinkronisasi libur nasional secara otomatis.</p>
+                    <p class="text-slate-500 mt-3 sm:mt-1 text-xs sm:text-sm font-medium sm:ml-[52px]">Kelola agenda dan sinkronisasi libur nasional secara otomatis.</p>
                 </div>
-                <div class="flex gap-3 w-full md:w-auto">
-                    <button id="btn-draft" onclick="saveCalendarData('draft')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-[#0071BC] transition-all text-sm font-bold shadow-sm cursor-pointer">
-                        <i class="fas fa-file-lines"></i> Simpan Draft
+                <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                    <button id="btn-draft" onclick="saveCalendarData('draft')" class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-[#0071BC] transition-all text-sm font-bold shadow-sm cursor-pointer">
+                        <i class="fas fa-file-lines"></i> Draft
                     </button>
-                    <button id="btn-upload" onclick="saveCalendarData('published')" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#0071BC] to-[#005B94] text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all text-sm font-bold cursor-pointer transform hover:-translate-y-0.5 border border-transparent">
-                        <i class="fas fa-cloud-arrow-up"></i> Upload & Publish
+                    <button id="btn-upload" onclick="saveCalendarData('published')" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#0071BC] to-[#005B94] text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all text-sm font-bold cursor-pointer transform hover:-translate-y-0.5 border border-transparent">
+                        <i class="fas fa-cloud-arrow-up"></i> Publish
                     </button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
                 
-                <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:p-8 relative overflow-hidden">
+                {{-- CALENDAR GRID --}}
+                <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -z-0 opacity-60 pointer-events-none"></div>
                     
-                    <div class="flex justify-between items-center mb-8 relative z-10">
-                        <h2 id="calendar-month-year" class="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight"></h2>
-                        <div class="flex gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                            <button id="prev-month" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-slate-500 hover:text-[#0071BC] focus:outline-none">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 relative z-10">
+                        <h2 id="calendar-month-year" class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight"></h2>
+                        <div class="flex gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200 self-end sm:self-auto">
+                            <button id="prev-month" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-slate-500 hover:text-[#0071BC] focus:outline-none">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
-                            <button id="next-month" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-slate-500 hover:text-[#0071BC] focus:outline-none">
+                            <button id="next-month" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-slate-500 hover:text-[#0071BC] focus:outline-none">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-7 gap-2 text-center text-xs lg:text-sm font-extrabold text-slate-500 mb-6 uppercase tracking-wider bg-slate-50 py-3 rounded-xl relative z-10 border border-slate-100">
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs lg:text-sm font-extrabold text-slate-500 mb-4 sm:mb-6 uppercase tracking-wider bg-slate-50 py-2 sm:py-3 rounded-xl relative z-10 border border-slate-100">
                         <div class="text-red-500">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div class="text-[#0071BC]">Sab</div>
                     </div>
                     
-                    <div id="calendar-days" class="grid grid-cols-7 gap-y-4 lg:gap-y-6 gap-x-2 text-center text-md font-bold relative z-10"></div>
+                    <div id="calendar-days" class="grid grid-cols-7 gap-y-2 sm:gap-y-4 lg:gap-y-6 gap-x-1 sm:gap-x-2 text-center relative z-10"></div>
                 </div>
 
+                {{-- SIDEBAR KANAN (Legend & List) --}}
                 <div class="flex flex-col gap-6">
                     
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:p-7">
-                        <h3 class="font-extrabold text-slate-800 mb-5 text-[17px] flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-6 lg:p-7">
+                        <h3 class="font-extrabold text-slate-800 mb-4 sm:mb-5 text-[16px] sm:text-[17px] flex items-center gap-2 pb-4 border-b border-slate-100">
                             <i class="fas fa-palette text-[#0071BC]"></i> Panduan Warna
                         </h3>
-                        <div class="flex flex-col gap-3.5 text-[13px] font-bold text-slate-600">
+                        <div class="flex flex-col gap-3.5 text-[12px] sm:text-[13px] font-bold text-slate-600">
                             <div class="flex items-center gap-3 hover:translate-x-1 transition-transform cursor-default">
-                                <div class="w-5 h-5 rounded-md bg-[#B91C1C] shadow-sm"></div> <span>Libur Nasional</span>
+                                <div class="w-5 h-5 rounded-md bg-[#B91C1C] shadow-sm shrink-0"></div> <span>Libur Nasional</span>
                             </div>
                             <div class="flex items-center gap-3 hover:translate-x-1 transition-transform cursor-default">
-                                <div class="w-5 h-5 rounded-md border-2 border-[#B91C1C] bg-red-50"></div> <span>Cuti / Libur Sekolah</span>
+                                <div class="w-5 h-5 rounded-md border-2 border-[#B91C1C] bg-red-50 shrink-0"></div> <span>Cuti / Libur Sekolah</span>
                             </div>
                             <div class="flex items-center gap-3 hover:translate-x-1 transition-transform cursor-default">
-                                <div class="w-5 h-5 rounded-md border-2 border-[#10B981] bg-emerald-50"></div> <span>Hari Ujian</span>
+                                <div class="w-5 h-5 rounded-md border-2 border-[#10B981] bg-emerald-50 shrink-0"></div> <span>Hari Ujian</span>
                             </div>
                             <div class="flex items-center gap-3 hover:translate-x-1 transition-transform cursor-default">
-                                <div class="w-5 h-5 rounded-md border-2 border-[#F59E0B] bg-amber-50"></div> <span>Kegiatan Sekolah</span>
+                                <div class="w-5 h-5 rounded-md border-2 border-[#F59E0B] bg-amber-50 shrink-0"></div> <span>Kegiatan Sekolah</span>
                             </div>
                             <div class="flex items-center gap-3 hover:translate-x-1 transition-transform cursor-default">
-                                <div class="w-5 h-5 rounded-md border-2 border-[#1E3A8A] bg-blue-50"></div> <span>Kegiatan WFA</span>
+                                <div class="w-5 h-5 rounded-md border-2 border-[#1E3A8A] bg-blue-50 shrink-0"></div> <span>Kegiatan WFA</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:p-7 flex flex-col max-h-[480px]">
-                        <h3 class="font-extrabold text-slate-800 mb-5 text-[17px] flex items-center gap-2 pb-4 border-b border-slate-100 shrink-0">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 sm:p-6 lg:p-7 flex flex-col max-h-[400px] sm:max-h-[480px]">
+                        <h3 class="font-extrabold text-slate-800 mb-4 sm:mb-5 text-[16px] sm:text-[17px] flex items-center gap-2 pb-4 border-b border-slate-100 shrink-0">
                             <i class="fas fa-list-check text-[#0071BC]"></i> Agenda Bulan Ini
                         </h3>
-                        <div id="event-list" class="flex flex-col gap-3 text-sm overflow-y-auto pr-3 custom-scrollbar flex-1 pb-2">
-                            </div>
+                        <div id="event-list" class="flex flex-col gap-3 text-sm overflow-y-auto pr-2 sm:pr-3 custom-scrollbar flex-1 pb-2">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,20 +91,21 @@
     </div>
 @endif
 
-<dialog id="modal_tambah_kegiatan" class="modal backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm transition-all">
-    <div class="modal-box bg-white w-11/12 max-w-md rounded-3xl p-8 shadow-2xl border border-slate-100">
-        <h3 class="font-extrabold text-xl text-slate-800 mb-6 flex items-center gap-3">
-            <div class="w-12 h-12 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center">
-                <i class="fas fa-calendar-plus text-xl"></i>
+{{-- MODAL --}}
+<dialog id="modal_tambah_kegiatan" class="modal backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm transition-all p-4">
+    <div class="modal-box bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 mx-auto">
+        <h3 class="font-extrabold text-lg sm:text-xl text-slate-800 mb-6 flex items-center gap-3">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-calendar-plus text-lg sm:text-xl"></i>
             </div>
-            Tambah Agenda Baru
+            Tambah Agenda
         </h3>
         <form id="form-tambah-kegiatan" class="space-y-5">
             <div>
                 <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Judul Kegiatan</label>
                 <input type="text" id="event-title" required placeholder="Contoh: Ujian Tengah Semester" class="w-full border-2 border-slate-200 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#0071BC] outline-none transition-all placeholder:font-medium placeholder:text-slate-400">
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Tanggal Mulai</label>
                     <input type="date" id="event-start-date" required class="w-full border-2 border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#0071BC] outline-none transition-all">
@@ -119,9 +123,9 @@
                     <option value="wfa">Kegiatan WFA (Biru)</option>
                 </select>
             </div>
-            <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
-                <button type="button" class="px-5 py-2.5 text-slate-500 font-bold bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer transition-colors" onclick="this.closest('dialog').close()">Batal</button>
-                <button type="submit" class="px-6 py-2.5 bg-[#0071BC] hover:bg-blue-700 font-bold text-white rounded-xl cursor-pointer transition-colors shadow-md shadow-[#0071BC]/20">Simpan Agenda</button>
+            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+                <button type="button" class="w-full sm:w-auto px-5 py-2.5 text-slate-500 font-bold bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer transition-colors" onclick="this.closest('dialog').close()">Batal</button>
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-[#0071BC] hover:bg-blue-700 font-bold text-white rounded-xl cursor-pointer transition-colors shadow-md shadow-[#0071BC]/20">Simpan</button>
             </div>
         </form>
     </div>
@@ -129,7 +133,7 @@
 
 <style>
     /* Styling Scrollbar Estetik */
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -178,28 +182,26 @@
             let isSunday = new Date(year, month, i).getDay() === 0;
             let css = "";
             
-            // Base Class diubah agar tidak terkesan dominan putih
-            let baseClasses = "w-11 h-11 lg:w-12 lg:h-12 mx-auto flex items-center justify-center rounded-xl cursor-pointer transition-all duration-200 font-extrabold text-[15px] border-2 border-transparent hover:-translate-y-1 hover:shadow-md ";
+            let baseClasses = "w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto flex items-center justify-center rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 font-extrabold text-[12px] sm:text-[14px] lg:text-[15px] border-2 border-transparent hover:-translate-y-1 hover:shadow-md ";
 
             if (nationalHolidays[dateStr]) {
                 css = "background-color: #B91C1C; color: white;"; 
                 baseClasses += " hover:bg-red-800 hover:shadow-red-500/30";
             } else if (cutiBersama[dateStr] || isSunday) {
-                css = "border-color: #B91C1C; color: #B91C1C; background-color: #FEF2F2;"; // red-50
+                css = "border-color: #B91C1C; color: #B91C1C; background-color: #FEF2F2;"; 
                 baseClasses += " hover:bg-red-100";
             } else {
                 let ev = userEvents.find(e => e.date === dateStr);
                 if(ev) {
-                    css = `border-color: ${ev.color}; color: ${ev.color}; background-color: ${ev.color}10;`; // Warna 10% opacity
+                    css = `border-color: ${ev.color}; color: ${ev.color}; background-color: ${ev.color}15;`; 
                     baseClasses += " hover:brightness-95";
                 } else {
-                    // Tanggal biasa
-                    css = "background-color: #F8FAFC; color: #475569;"; // slate-50 text-slate-600
+                    css = "background-color: #F8FAFC; color: #475569;"; 
                     baseClasses += " hover:bg-blue-50 hover:border-blue-200 hover:text-[#0071BC]";
                 }
             }
 
-            daysEl.innerHTML += `<div class="py-1"><div class="${baseClasses}" style="${css}" onclick="selectDate('${dateStr}')">${i}</div></div>`;
+            daysEl.innerHTML += `<div class="py-0.5 sm:py-1"><div class="${baseClasses}" style="${css}" onclick="selectDate('${dateStr}')">${i}</div></div>`;
         }
         renderSideList(year, month);
     }
@@ -214,13 +216,14 @@
         Object.entries(cutiBersama).forEach(([d, t]) => { if(d.startsWith(prefix)) all.push({d, t, c: '#B91C1C', isHol: true}); });
         userEvents.forEach(e => { if(e.date.startsWith(prefix)) all.push({d: e.date, t: e.title, c: e.color, isHol: false}); });
 
-        all.sort((a,b) => a.d.localeCompare(b.d));
+        // MENGUBAH SORTING MENJADI DESCENDING (Tanggal terbaru di atas)
+        all.sort((a,b) => b.d.localeCompare(a.d));
 
         if (all.length === 0) {
             listEl.innerHTML = `
-                <div class="text-center py-10 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <i class="fas fa-mug-hot text-3xl mb-3 text-slate-300"></i>
-                    <span class="text-sm font-bold text-slate-500">Tidak ada agenda.</span>
+                <div class="text-center py-8 sm:py-10 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mx-1">
+                    <i class="fas fa-mug-hot text-2xl sm:text-3xl mb-3 text-slate-300"></i>
+                    <span class="text-xs sm:text-sm font-bold text-slate-500">Tidak ada agenda.</span>
                 </div>`;
             return;
         }
@@ -228,11 +231,11 @@
         all.forEach(item => {
             let bgClass = item.isHol ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-200";
             listEl.innerHTML += `
-                <div class="group border ${bgClass} hover:bg-white hover:border-blue-200 hover:shadow-md transition-all rounded-xl p-3.5 flex items-start gap-3 cursor-default">
-                    <div class="w-3 h-3 rounded-full mt-1.5 shrink-0" style="background-color: ${item.c}; box-shadow: 0 0 0 3px ${item.c}20;"></div>
+                <div class="group border ${bgClass} hover:bg-white hover:border-blue-200 hover:shadow-md transition-all rounded-xl p-3 sm:p-3.5 flex items-start gap-2.5 sm:gap-3 cursor-default mb-1">
+                    <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mt-1 sm:mt-1.5 shrink-0" style="background-color: ${item.c}; box-shadow: 0 0 0 3px ${item.c}20;"></div>
                     <div class="flex flex-col">
-                        <span class="font-bold text-slate-800 text-[13px] group-hover:text-[#0071BC] transition-colors">${item.d.split('-')[2]} ${monthNames[month]} ${year}</span>
-                        <span class="text-slate-500 font-medium text-[12px] mt-0.5 leading-snug">${item.t}</span>
+                        <span class="font-bold text-slate-800 text-[12px] sm:text-[13px] group-hover:text-[#0071BC] transition-colors">${item.d.split('-')[2]} ${monthNames[month]} ${year}</span>
+                        <span class="text-slate-500 font-medium text-[11px] sm:text-[12px] mt-0.5 leading-snug">${item.t}</span>
                     </div>
                 </div>`;
         });
@@ -244,7 +247,8 @@
                 icon: 'info',
                 title: 'Hari Libur',
                 text: `Tanggal ${dateStr} adalah hari libur, tidak dapat ditambahkan agenda.`,
-                confirmButtonColor: '#0071BC'
+                confirmButtonColor: '#0071BC',
+                customClass: { popup: 'rounded-3xl' }
             });
             return;
         }
@@ -273,8 +277,6 @@
         
         document.getElementById('modal_tambah_kegiatan').close();
         renderCalendar(currentDate);
-        
-        // Auto Save ke database diam-diam
         saveCalendarData('published', true);
     };
 
@@ -285,13 +287,14 @@
         if (!isAutoSave) {
             const confirmResult = await Swal.fire({
                 title: statusType === 'draft' ? "Simpan Draft?" : "Publish Agenda?",
-                text: statusType === 'draft' ? "Data akan disimpan secara internal." : "Agenda akan di-publish ke seluruh pengguna yang relevan.",
+                text: statusType === 'draft' ? "Data akan disimpan secara internal." : "Agenda akan di-publish ke seluruh pengguna.",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#0071BC",
                 cancelButtonColor: "#cbd5e1",
                 confirmButtonText: "Ya, Lanjutkan",
-                cancelButtonText: "Batal"
+                cancelButtonText: "Batal",
+                customClass: { popup: 'rounded-3xl' }
             });
             if (!confirmResult.isConfirmed) return;
         }
@@ -307,8 +310,7 @@
         }
 
         try {
-            const url = `{{ route('lms.teacherCalendar.save', ['role' => $role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}`;
-            
+            const url = `{{ route('lms.kepsek.calendar.save', ['role' => $role ?? Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 0]) }}`;            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 
@@ -320,20 +322,18 @@
             });
 
             if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-
             const result = await response.json();
             
             if (!isAutoSave) {
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: result.message || "Data berhasil disimpan.", timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: result.message || "Data berhasil disimpan.", timer: 1500, showConfirmButton: false, customClass: { popup: 'rounded-3xl' } });
             } else {
-                // Notifikasi kecil di pojok untuk autosave
                 Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Tersimpan otomatis', showConfirmButton: false, timer: 2000 });
             }
             
         } catch (error) {
             console.error("Fetch Error Details:", error);
             if (!isAutoSave) {
-                Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Terjadi kesalahan sistem, pastikan koneksi internet stabil.', confirmButtonColor: '#0071BC' });
+                Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Terjadi kesalahan sistem, pastikan koneksi stabil.', confirmButtonColor: '#0071BC', customClass: { popup: 'rounded-3xl' } });
             }
         } finally {
             if (btn) {
