@@ -14,8 +14,21 @@
                             <li class="text-[#0071BC]">Dashboard</li>
                         </ol>
                     </nav>
+                    @php
+                        $user = Auth::user();
+                        $profile = $user->SchoolStaffProfile;
+                        
+                        // 1. Cek Sapaan berdasarkan jenis kelamin (sesuaikan dengan database)
+                        $jk = $profile?->jenis_kelamin; 
+                        $sapaan = $jk == 'L' ? 'Bapak ' : ($jk == 'P' ? 'Ibu ' : '');
+                        
+                        // 2. Ambil Nama Lengkap
+                        $namaLengkap = $profile?->nama_lengkap ?? 'Kepala';
+
+                    @endphp
+
                     <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                        Halo, {{ Str::before(Auth::user()->SchoolStaffProfile->nama_lengkap ?? 'Kepala', ' ') }}!
+                        Halo, {{ $sapaan }}{{ $namaLengkap }}!
                     </h1>
                     <p class="text-slate-500 mt-2 font-medium">Ringkasan operasional sekolah untuk <span class="text-slate-800 font-bold">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</span></p>
                 </div>
@@ -24,13 +37,14 @@
                     <button class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2">
                         <i class="fas fa-download"></i> Unduh Laporan
                     </button>
-                    <button class="px-5 py-2.5 bg-[#0071BC] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2">
+                    {{-- TOMBOL TRIGGER MODAL PENGUMUMAN --}}
+                    <button onclick="openModalPengumuman()" class="px-5 py-2.5 bg-[#0071BC] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2">
                         <i class="fas fa-plus"></i> Buat Pengumuman
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6">
                 <div class="bg-white rounded-[2rem] p-7 border border-white shadow-sm hover:shadow-xl transition-all duration-500 group">
                     <div class="flex items-center justify-between mb-6">
                         <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#0071BC] flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -73,20 +87,6 @@
                     <div class="flex items-baseline gap-2 mt-1">
                         <span class="text-3xl font-black text-slate-800">{{ $stats->total_kelas ?? 0 }}</span>
                         <span class="text-xs font-bold text-slate-400">Rombel</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#0071BC] rounded-[2rem] p-7 shadow-lg shadow-blue-200 group relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-                    <div class="flex items-center justify-between mb-6 relative z-10">
-                        <div class="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center text-xl">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                    <h4 class="text-blue-100 text-xs font-bold uppercase tracking-wider relative z-10">Rata-rata Hadir</h4>
-                    <div class="flex items-baseline gap-1 mt-1 relative z-10">
-                        <span class="text-3xl font-black text-white">{{ $stats->rata_kehadiran ?? 0 }}</span>
-                        <span class="text-lg font-bold text-blue-200">%</span>
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full min-h-[500px]">
                         <div class="p-8 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
                             <h3 class="font-black text-slate-800 tracking-tight flex items-center gap-2">
-                                <i class="fas fa-bolt text-amber-500"></i> Informasi Terbaru
+                                <i class="fas fa-bullhorn text-amber-500"></i> Pengumuman ke Guru
                             </h3>
                             <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
                         </div>
@@ -165,6 +165,47 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL PENGUMUMAN --}}
+    <div id="pengumumanModal" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300">
+            <div class="bg-[#0071BC] p-6 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i> Buat Pengumuman ke Guru</h3>
+                <button onclick="closeModalPengumuman()" class="hover:rotate-90 transition-transform"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="formPengumumanKepsek" onsubmit="submitPengumumanKepsek(event)" class="p-6 space-y-4">
+                <input type="hidden" name="school_id" value="{{ $schoolId ?? '' }}">
+                <input type="hidden" name="target" value="Guru">
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Penerima Pengumuman</label>
+                    <div class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 text-sm font-bold flex items-center gap-3 cursor-not-allowed shadow-inner">
+                        <div class="w-6 h-6 rounded-full bg-blue-100 text-[#0071BC] flex items-center justify-center">
+                            <i class="fas fa-user-tie text-[10px]"></i>
+                        </div>
+                        Khusus Seluruh Jajaran Guru
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Judul Pengumuman</label>
+                    <input type="text" name="title" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none" placeholder="Contoh: Rapat Evaluasi Mingguan">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Jenis Pengumuman</label>
+                    <select name="type" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none bg-white text-sm text-slate-700">
+                        <option value="info">Info Biasa</option>
+                        <option value="penting">Penting / Urgent</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Isi Pengumuman</label>
+                    <textarea name="content" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none custom-scrollbar text-sm" rows="4" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 bg-[#0071BC] text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all btn-submit-pengumuman">Kirim Pengumuman</button>
+            </form>
+        </div>
+    </div>
 @endif
 
 <style>
@@ -177,3 +218,60 @@
     /* Smooth transitions for scale and shadow */
     .group:hover .group-hover\:rotate-6 { transform: rotate(6deg); }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function openModalPengumuman() {
+        const modal = document.getElementById('pengumumanModal');
+        const content = modal.querySelector('div');
+        modal.classList.remove('hidden');
+        setTimeout(() => { 
+            modal.classList.replace('opacity-0', 'opacity-100'); 
+            content.classList.replace('scale-95', 'scale-100'); 
+        }, 10);
+    }
+
+    function closeModalPengumuman() {
+        const modal = document.getElementById('pengumumanModal');
+        const content = modal.querySelector('div');
+        modal.classList.replace('opacity-100', 'opacity-0');
+        content.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => { 
+            modal.classList.add('hidden'); 
+            document.getElementById('formPengumumanKepsek').reset();
+        }, 300);
+    }
+
+    async function submitPengumumanKepsek(event) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = form.querySelector('.btn-submit-pengumuman');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...`; 
+        btn.disabled = true;
+
+        let csrfToken = document.querySelector('meta[name="csrf-token"]');
+        let token = csrfToken ? csrfToken.getAttribute('content') : '';
+
+        try {
+            // Pastikan kamu punya route ini di web.php untuk HeadmasterController
+            const response = await fetch("{{ route('lms.kepsek.pengumuman.store', ['role' => Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '0']) }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: new FormData(form) 
+            });
+            const result = await response.json();
+            
+            if(result.success || response.ok) {
+                closeModalPengumuman();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message || 'Pengumuman ke Guru berhasil dikirim.', timer: 1500, showConfirmButton: false }).then(() => { window.location.reload(); });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: result.message || 'Terjadi kesalahan' });
+                btn.innerHTML = originalText; btn.disabled = false;
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: "Terjadi kesalahan jaringan." });
+            btn.innerHTML = originalText; btn.disabled = false;
+        }
+    }
+</script>

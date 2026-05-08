@@ -9,7 +9,7 @@
             <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div class="flex-1">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                        Halo, Bapak/Ibu {{ Auth::user()->name ?? 'Guru' }} 👋
+                        Halo, Bapak/Ibu <span class="text-indigo-600">{{ Auth::user()->SchoolStaffProfile->nama_lengkap ?? Auth::user()->name ?? 'Guru' }}</span> 👋
                     </h1>
                     <p class="text-gray-500 mt-1 text-sm">Selamat datang di ruang kendali kelas Anda hari ini.</p>
                 </div>
@@ -55,7 +55,7 @@
                 {{-- KOLOM KIRI (Jadwal, Polling, Pengawasan) --}}
                 <div class="xl:col-span-2 flex flex-col gap-8">
                     
-                    {{-- 1. JADWAL MENGAJAR --}}
+                    {{-- 1. JADWAL MENGAJAR DENGAN NAVIGASI NEXT/PREV --}}
                     <div class="bg-white rounded-3xl shadow-sm border border-indigo-50 p-6 md:p-8 flex flex-col max-h-[600px]">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
@@ -67,9 +67,37 @@
                                     <p class="text-xs text-indigo-600/70 font-medium">Sesuai Kalender</p>
                                 </div>
                             </div>
-                            <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100">
-                                Hari {{ $hariIni }}
-                            </span>
+
+                            {{-- NAVIGASI NEXT PREV HARI --}}
+                            @php
+                                $currentDateObj = \Carbon\Carbon::parse($tanggalDipilih ?? request('date', date('Y-m-d')));
+                                $prevDay = $currentDateObj->copy()->subDay()->format('Y-m-d');
+                                $nextDay = $currentDateObj->copy()->addDay()->format('Y-m-d');
+                                
+                                // Cek apakah tanggal yang dipilih adalah hari ini
+                                $isToday = $currentDateObj->isToday();
+                                // Format tanggal jadi dd/mm (contoh: 08/05)
+                                $tanggalFormat = $currentDateObj->format('d/m');
+                            @endphp
+
+                            <div class="flex items-center gap-2">
+                                <div class="flex bg-slate-100 p-1 rounded-xl mr-2">
+                                    <a href="{{ route('lms.teacher.view', ['role' => $role ?? 'guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'date' => $prevDay]) }}" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm rounded-lg transition-all" title="Hari Sebelumnya">
+                                        <i class="fas fa-chevron-left text-xs"></i>
+                                    </a>
+                                    <a href="{{ route('lms.teacher.view', ['role' => $role ?? 'guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'date' => date('Y-m-d')]) }}" class="px-3 flex items-center justify-center text-[10px] font-bold text-slate-500 hover:text-indigo-600 transition-all uppercase" title="Kembali ke Hari Ini">
+                                        Hari Ini
+                                    </a>
+                                    <a href="{{ route('lms.teacher.view', ['role' => $role ?? 'guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'date' => $nextDay]) }}" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm rounded-lg transition-all" title="Hari Berikutnya">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </a>
+                                </div>
+                                
+                                {{-- LOGIKA TEKS HARI DINAMIS --}}
+                                <span class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full border border-indigo-100 shadow-sm">
+                                    {{ $isToday ? 'Hari Ini' : $hariIni . ', ' . $tanggalFormat }}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
@@ -112,7 +140,7 @@
                                         <i class="fas fa-mug-hot text-2xl"></i>
                                     </div>
                                     <h3 class="text-lg font-bold text-indigo-800 mb-1">Waktunya Bersantai</h3>
-                                    <p class="text-indigo-600/70 text-sm font-medium">Bapak/Ibu tidak memiliki jadwal mengajar di hari ini.</p>
+                                    <p class="text-indigo-600/70 text-sm font-medium">Bapak/Ibu tidak memiliki jadwal mengajar di hari {{ $hariIni }}.</p>
                                 </div>
                             @endforelse
                         </div>
@@ -154,7 +182,6 @@
                                 @php
                                     $targetAudiens = $poll->target ?? 'Semua Warga Sekolah';
                                     
-                                    // PENCARIAN NAMA KELAS DINAMIS
                                     $namaKelas = 'Semua Kelas (Global)';
                                     if (!empty($poll->nama_kelas) && $poll->nama_kelas !== 'Semua Kelas (Global)') {
                                         $namaKelas = $poll->nama_kelas;
@@ -163,7 +190,6 @@
                                         $namaKelas = $kelasObj ? 'Kelas ' . $kelasObj->class_name : 'Semua Kelas (Global)';
                                     }
                                     
-                                    // LOGIKA WARNA BADGE TARGET
                                     if (str_contains(strtolower($targetAudiens), 'siswa')) {
                                         $bgTarget = 'bg-blue-50 text-blue-600 border-blue-200';
                                         $iconTarget = 'fa-user-graduate';
@@ -217,7 +243,6 @@
                                     $optionsSekolah = \App\Models\PollOption::where('poll_id', $pollSekolah->id)->get();
                                     $targetSekolah = $pollSekolah->target ?? 'Semua Warga Sekolah';
 
-                                    // PENCARIAN NAMA KELAS DINAMIS
                                     $namaKelasSekolah = 'Semua Kelas (Global)';
                                     if (!empty($pollSekolah->nama_kelas) && $pollSekolah->nama_kelas !== 'Semua Kelas (Global)') {
                                         $namaKelasSekolah = $pollSekolah->nama_kelas;
@@ -226,7 +251,6 @@
                                         $namaKelasSekolah = $kelasObj ? 'Kelas ' . $kelasObj->class_name : 'Semua Kelas (Global)';
                                     }
 
-                                    // LOGIKA WARNA BADGE TARGET SEKOLAH
                                     if (str_contains(strtolower($targetSekolah), 'siswa')) {
                                         $bgTargetSekolah = 'bg-blue-50 text-blue-600 border-blue-200';
                                         $iconTargetSekolah = 'fa-user-graduate';
@@ -256,11 +280,6 @@
                                                     <span class="text-[9px] font-bold {{ $bgTargetSekolah }} px-2 py-0.5 rounded-md flex items-center gap-1.5 w-fit border shadow-sm">
                                                         <i class="fas {{ $iconTargetSekolah }}"></i> Untuk: {{ $targetSekolah }}
                                                     </span>
-                                                    @if($namaKelasSekolah !== 'Semua Kelas (Global)')
-                                                        <span class="text-[9px] font-bold text-[#0071BC] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1.5 w-fit shadow-sm">
-                                                            <i class="fas fa-chalkboard"></i> {{ $namaKelasSekolah }}
-                                                        </span>
-                                                    @endif
                                                 </div>
                                             </div>
                                             <span class="text-[11px] font-bold text-gray-400 shrink-0">
@@ -308,7 +327,7 @@
                             </div>
                         </div>
 
-                        <div id="container-teacher-assessment-cheating-history" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="flex flex-col gap-5">
+                        <div id="container-teacher-assessment-cheating-history" data-school-name="{{ $schoolName ?? 'sekolah' }}" data-school-id="{{ $schoolId ?? '1' }}" class="flex flex-col gap-5">
                             <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
                                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
                                     <div class="flex items-center gap-2">
@@ -341,8 +360,10 @@
                     </div>
                 </div>
                 
-                {{-- KOLOM KANAN (Agenda & Kalender) --}}
+                {{-- KOLOM KANAN (Agenda & Pengumuman) --}}
                 <div class="xl:col-span-1 flex flex-col gap-8">
+                    
+                    {{-- AGENDA KALENDER --}}
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col max-h-[600px] h-full">
                         @php
                             $selectedDate = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
@@ -420,6 +441,84 @@
                             @endforelse
                         </div>
                     </div>
+
+                    {{-- PAPAN PENGUMUMAN --}}
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col max-h-[600px]">
+                        <div class="flex items-center justify-between mb-5 border-b border-gray-100 pb-4 shrink-0">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shadow-inner font-bold text-lg border border-amber-100">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-amber-900 text-lg leading-tight">Pengumuman</h3>
+                                    <p class="text-xs text-amber-600/70 font-medium">Informasi masuk & keluar</p>
+                                </div>
+                            </div>
+                            <button onclick="openPengumumanGlobalModal()" class="bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white px-3 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm flex items-center gap-2">
+                                <i class="fas fa-plus"></i> Buat Info
+                            </button>
+                        </div>
+
+                        {{-- TABS PENGUMUMAN --}}
+                        <div class="flex space-x-2 border-b border-slate-200 mb-4 shrink-0">
+                            <button onclick="switchPengumumanTab('masuk')" id="tab-pengumuman-masuk" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-amber-500 text-amber-600 transition-colors relative">
+                                Kotak Masuk
+                                @if(count($pengumumanDariSekolah ?? []) > 0)
+                                    <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                @endif
+                            </button>
+                            <button onclick="switchPengumumanTab('keluar')" id="tab-pengumuman-keluar" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">
+                                Terkirim
+                            </button>
+                        </div>
+
+                        {{-- CONTENT TAB: KOTAK MASUK --}}
+                        <div id="content-pengumuman-masuk" class="flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                            @forelse($pengumumanDariSekolah ?? [] as $info)
+                                <div class="p-4 border border-slate-100 rounded-xl hover:border-amber-200 hover:bg-amber-50/30 transition-colors group cursor-pointer">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100"><i class="fas fa-building mr-1"></i> Sekolah</span>
+                                        <span class="text-[10px] font-medium text-slate-400">{{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}</span>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition-colors">{{ $info->title ?? $info->judul }}</h4>
+                                </div>
+                            @empty
+                                <div class="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50">
+                                    <i class="fas fa-envelope-open text-3xl text-slate-300 mb-2"></i>
+                                    <p class="text-slate-400 text-sm font-medium">Belum ada pengumuman masuk</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        {{-- CONTENT TAB: TERKIRIM --}}
+                        <div id="content-pengumuman-keluar" class="hidden flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                            @forelse($pengumumanKeSiswa ?? [] as $info)
+                                @php
+                                    $namaKelasTujuan = 'Semua Kelas (Global)';
+                                    if (!empty($info->target_class_id)) {
+                                        $kelasObj = \Illuminate\Support\Facades\DB::table('school_classes')->where('id', $info->target_class_id)->first();
+                                        $namaKelasTujuan = $kelasObj ? 'Kelas ' . $kelasObj->class_name : 'Kelas Dihapus';
+                                    }
+                                @endphp
+                                <div class="p-4 border border-slate-100 rounded-xl hover:border-[#0071BC]/30 hover:bg-blue-50/30 transition-colors group cursor-pointer flex flex-col">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex gap-1.5 flex-wrap">
+                                            <span class="text-[9px] font-bold text-white bg-[#0071BC] px-2 py-0.5 rounded uppercase tracking-wider shadow-sm"><i class="fas fa-paper-plane mr-1"></i> Terkirim</span>
+                                            <span class="text-[9px] font-bold text-[#0071BC] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider"><i class="fas fa-chalkboard-user mr-1"></i> {{ $namaKelasTujuan }}</span>
+                                        </div>
+                                        <span class="text-[10px] font-medium text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}</span>
+                                    </div>
+                                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-[#0071BC] transition-colors mt-1 line-clamp-2 leading-snug">{{ $info->title ?? $info->judul }}</h4>
+                                </div>
+                            @empty
+                                <div class="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50">
+                                    <i class="fas fa-paper-plane text-3xl text-slate-300 mb-2"></i>
+                                    <p class="text-slate-400 text-sm font-medium">Belum ada pengumuman yang dikirim</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -490,7 +589,7 @@
             <form id="form-submit-vote">
                 <input type="hidden" id="vote-poll-id">
                 <div id="vote-options-container" class="space-y-3 mb-8 max-h-64 overflow-y-auto custom-scrollbar pr-2">
-                    </div>
+                </div>
                 
                 <div class="flex gap-3">
                     <button type="button" onclick="closeVoteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 hover:bg-slate-200 text-sm font-bold rounded-xl transition-all">
@@ -505,6 +604,72 @@
     </div>
 </div>
 
+{{-- MODAL PENGUMUMAN (DARI BERANDA) --}}
+<div id="pengumumanGlobalModal" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]" id="pengumumanGlobalContent">
+        <div class="bg-amber-500 p-6 text-white flex justify-between items-center shrink-0">
+            <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i> Buat Pengumuman</h3>
+            <button type="button" onclick="closePengumumanGlobalModal()" class="hover:rotate-90 transition-transform"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <form id="formPengumumanGlobal" onsubmit="submitPengumumanGlobal(event)" class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+            <input type="hidden" name="school_id" value="{{ $schoolId ?? '' }}">
+
+            <div class="w-full px-4 py-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-700 text-xs font-bold flex items-center gap-2 mb-2">
+                <i class="fas fa-info-circle text-amber-500"></i> Pilih kelas tujuan. Centang 'Semua Kelas' untuk mengirim info global.
+            </div>
+
+            {{-- OPSI PILIH KELAS DENGAN CHECKBOX --}}
+            <div class="mb-2">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Target Kelas</label>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar space-y-1">
+                    
+                    <label class="flex items-center gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+                        <input type="checkbox" id="checkAllClasses" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500" checked>
+                        <span class="text-sm font-extrabold text-slate-800">Semua Kelas (Global)</span>
+                    </label>
+                    
+                    <hr class="border-slate-200 my-1">
+                    
+                    <div id="class-checkbox-container" class="space-y-1">
+                        {{-- 
+                            Pastikan variabel $daftarKelas dikirim dari Controller TeacherInformationController/LmsController 
+                            yang berisi daftar kelas yang diajar oleh guru ini.
+                        --}}
+                        @forelse($daftarKelas ?? [] as $kelas)
+                            <label class="flex items-center gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
+                                <input type="checkbox" name="class_id[]" value="{{ $kelas->id }}" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500 class-checkbox" checked>
+                                <span class="text-sm font-semibold text-slate-700">Kelas {{ $kelas->class_name ?? $kelas->nama_kelas }}</span>
+                            </label>
+                        @empty
+                            <p class="text-xs text-slate-500 italic p-2">Data kelas belum tersedia.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Judul Pengumuman</label>
+                <input type="text" name="title" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Contoh: Info Tugas Kelompok">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Jenis Pengumuman</label>
+                <select name="type" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm text-slate-700 cursor-pointer">
+                    <option value="info">Info Biasa</option>
+                    <option value="penting">Penting / Urgent</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Isi Pengumuman</label>
+                <textarea name="content" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none custom-scrollbar text-sm" rows="3" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
+            </div>
+            
+            <div class="pt-2 shrink-0">
+                <button type="submit" class="w-full py-3 bg-amber-500 text-white font-bold rounded-xl shadow-md shadow-amber-200 hover:bg-amber-600 transition-all btn-submit-pengumuman">Kirim Pengumuman</button>
+            </div>
+        </form>
+    </div>
+</div>
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -517,6 +682,30 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
 
 <script>
+    // JS UNTUK SWITCH TAB PENGUMUMAN
+    function switchPengumumanTab(tab) {
+        const btnMasuk = document.getElementById('tab-pengumuman-masuk');
+        const btnKeluar = document.getElementById('tab-pengumuman-keluar');
+        const contentMasuk = document.getElementById('content-pengumuman-masuk');
+        const contentKeluar = document.getElementById('content-pengumuman-keluar');
+
+        if (tab === 'masuk') {
+            btnMasuk.className = "pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-amber-500 text-amber-600 transition-colors relative";
+            btnKeluar.className = "pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors";
+            contentMasuk.classList.remove('hidden');
+            contentMasuk.classList.add('flex');
+            contentKeluar.classList.add('hidden');
+            contentKeluar.classList.remove('flex');
+        } else {
+            btnKeluar.className = "pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-[#0071BC] text-[#0071BC] transition-colors";
+            btnMasuk.className = "pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors relative";
+            contentKeluar.classList.remove('hidden');
+            contentKeluar.classList.add('flex');
+            contentMasuk.classList.add('hidden');
+            contentMasuk.classList.remove('flex');
+        }
+    }
+
     // JS UNTUK SWITCH TAB POLLING DI DASHBOARD
     function switchDashboardPollTab(tab) {
         const btnDibuat = document.getElementById('dash-tab-btn-dibuat');
@@ -654,12 +843,11 @@
         document.getElementById('vote-question-text').textContent = question;
         
         const container = document.getElementById('vote-options-container');
-        container.innerHTML = ''; // Bersihkan kontainer
+        container.innerHTML = ''; 
         
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const submitBtn = document.getElementById('btn-submit-vote');
         
-        // JIKA SUDAH VOTE: Tampilkan HANYA jawaban yang dipilih
         if (hasVoted) {
             const selectedOpt = options.find(opt => opt.id == votedOptionId);
             
@@ -678,12 +866,8 @@
                 `;
                 container.appendChild(div);
             }
-            
-            // Sembunyikan tombol Kirim Suara karena sudah tidak dibutuhkan
             submitBtn.style.display = 'none';
-        } 
-        // JIKA BELUM VOTE: Render semua radio button seperti biasa
-        else {
+        } else {
             if (options && options.length > 0) {
                 options.forEach((opt, index) => {
                     const text = opt.option_text || opt.text || opt.name || opt;
@@ -702,8 +886,6 @@
             } else {
                 container.innerHTML = '<p class="text-sm text-slate-500 italic px-2">Tidak ada opsi jawaban tersedia.</p>';
             }
-            
-            // Pastikan tombol Kirim Suara muncul
             submitBtn.style.display = 'flex';
         }
         
@@ -778,4 +960,79 @@
             btn.disabled = false;
         }
     };
+
+    // ================= FUNGSI PENGUMUMAN GLOBAL (BERANDA) =================
+    function openPengumumanGlobalModal() {
+        const modal = document.getElementById('pengumumanGlobalModal');
+        const content = document.getElementById('pengumumanGlobalContent');
+        modal.classList.remove('hidden');
+        void modal.offsetWidth;
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+    }
+
+    function closePengumumanGlobalModal() {
+        const modal = document.getElementById('pengumumanGlobalModal');
+        const content = document.getElementById('pengumumanGlobalContent');
+        modal.classList.add('opacity-0');
+        content.classList.add('scale-95');
+        setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    }
+
+    async function submitPengumumanGlobal(event) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = form.querySelector('.btn-submit-pengumuman');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...`; 
+        btn.disabled = true;
+
+        let csrfToken = document.querySelector('meta[name="csrf-token"]');
+        let token = csrfToken ? csrfToken.getAttribute('content') : '';
+
+        try {
+            // Sesuaikan URL ini dengan routing yang sudah dibuat di web.php (TeacherInformationController@storePengumuman)
+            const response = await fetch("{{ route('lms.teacher.pengumuman.store', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: new FormData(form) 
+            });
+            
+            const result = await response.json();
+            
+            if(result.success || response.ok) {
+                closePengumumanGlobalModal();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message || 'Pengumuman ke semua siswa terkirim!', timer: 2000, showConfirmButton: false }).then(() => { window.location.reload(); });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: result.message || 'Terjadi kesalahan' });
+                btn.innerHTML = originalText; btn.disabled = false;
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: "Terjadi kesalahan jaringan." });
+            btn.innerHTML = originalText; btn.disabled = false;
+        }
+    }
+
+    // ================= LOGIKA CHECKBOX KELAS =================
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkAll = document.getElementById('checkAllClasses');
+        const classCheckboxes = document.querySelectorAll('.class-checkbox');
+
+        if(checkAll) {
+            // Jika "Semua Kelas" dicentang/dihapus centangnya
+            checkAll.addEventListener('change', function() {
+                classCheckboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+            });
+
+            // Jika salah satu kelas dihapus centangnya, hapus juga centang "Semua Kelas"
+            classCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const allChecked = Array.from(classCheckboxes).every(c => c.checked);
+                    checkAll.checked = allChecked;
+                });
+            });
+        }
+    });
 </script>

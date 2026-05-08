@@ -27,7 +27,7 @@ class StudentDashboardController extends Controller
         $schoolId = $studentProfile->school_partner_id;
         $studentUserId = $user->id;
 
-        // Ambil Nama Sekolah (Sudah dibersihkan dari duplikasi)
+        // Ambil Nama Sekolah
         $schoolName = 'Belum Ada Sekolah';
         if ($schoolId) {
             $schoolRecord = DB::table('school_partners')->where('id', $schoolId)->first();
@@ -40,7 +40,7 @@ class StudentDashboardController extends Controller
         $studentClassId = null;
         $statusHadir = 'Belum Ada Data';
 
-        // Ambil Kelas Siswa (Sudah dibersihkan dari duplikasi where)
+        // Ambil Kelas Siswa
         $classRecord = DB::table('student_school_classes')
             ->join('school_classes', 'student_school_classes.school_class_id', '=', 'school_classes.id')
             ->where('student_school_classes.student_id', $studentUserId)
@@ -71,7 +71,7 @@ class StudentDashboardController extends Controller
         ];
 
         // =========================================================
-        // 3. JADWAL PELAJARAN (Dinamis dengan Navigasi STRICT)
+        // 3. JADWAL PELAJARAN
         // =========================================================
         $selectedJadwalDate = $request->query('jadwal_date', now()->format('Y-m-d'));
         $carbonJadwal = Carbon::parse($selectedJadwalDate);
@@ -268,7 +268,7 @@ class StudentDashboardController extends Controller
         ]);
 
         // =========================================================
-        // 8. POLLING (DIFILTER BERDASARKAN KELAS & TARGET SISWA)
+        // 8. POLLING
         // =========================================================
         $activePolls = [];
         $votedPolls = [];
@@ -276,7 +276,6 @@ class StudentDashboardController extends Controller
         if ($schoolId) {
             $pollsDb = \App\Models\Poll::where('school_partner_id', $schoolId)
                 ->where('status', 'active')
-                // 👇 FILTER TARGET: Siswa hanya bisa melihat polling yang ditujukan untuk Warga Sekolah atau khusus Siswa
                 ->whereIn('target', ['Semua Warga Sekolah', 'Semua Siswa', 'Semua'])
                 ->where(function ($query) use ($studentClassId) {
                     $query->where('class_id', $studentClassId)
@@ -286,14 +285,12 @@ class StudentDashboardController extends Controller
                 ->get();
 
             foreach ($pollsDb as $poll) {
-                // Ambil Nama Kelas secara Dinamis
                 $namaKelas = 'Semua Kelas (Global)';
                 if ($poll->class_id) {
                     $kelasInfo = DB::table('school_classes')->where('id', $poll->class_id)->first();
                     $namaKelas = $kelasInfo ? $kelasInfo->class_name : 'Kelas Dihapus';
                 }
 
-                // Cek Status Vote (Memastikan menggunakan user_id, bukan student_id)
                 $userVote = \App\Models\PollVote::where('poll_id', $poll->id)
                     ->where('user_id', $studentUserId) 
                     ->first();
@@ -318,7 +315,6 @@ class StudentDashboardController extends Controller
                     ];
                 }
 
-                // Menyuntikkan seluruh variabel yang dibutuhkan frontend
                 $pollData = (object)[
                     'id'              => $poll->id,
                     'pertanyaan'      => $poll->question,
@@ -340,22 +336,25 @@ class StudentDashboardController extends Controller
             }
         }
 
-        // =========================================================
-        // 9. PENGUMUMAN TERKINI
-        // =========================================================
-        $pengumumanTerkini = [];
-        if ($schoolId) {
-            $pengumumanTerkini = DB::table('announcements')
-                ->where('school_partner_id', $schoolId)
-                ->where(function ($query) use ($studentClassId) {
-                    $query->where('target_class_id', $studentClassId)
-                          ->orWhereNull('target_class_id'); 
-                })
-                ->orderBy('created_at', 'desc')
-                ->take(3)
-                ->get();
-        }
-
+        // Bagian 9 di StudentDashboardController
+    $pengumumanTerkini = [];
+    if ($schoolId) {
+        $pengumumanTerkini = DB::table('announcements')
+            ->leftJoin('users', 'announcements.author_id', '=', 'users.id')
+            ->where('announcements.school_partner_id', $schoolId)
+            ->where('announcements.target', 'Siswa') // Wajib target Siswa
+            ->where('announcements.author_role', 'Guru') // Hierarki: Murid hanya terima dari Guru
+            ->where(function ($query) use ($studentClassId) {
+                $query->where('announcements.target_class_id', $studentClassId)
+                    ->orWhereNull('announcements.target_class_id');
+            })
+            ->select('announcements.*', 'users.name as nama_pengirim')
+            // Cek status baca
+            ->selectRaw('(EXISTS (SELECT 1 FROM announcement_views WHERE announcement_views.announcement_id = announcements.id AND announcement_views.user_id = ?)) as is_read', [$studentUserId])
+            ->orderBy('announcements.created_at', 'desc')
+            ->take(4)
+            ->get();
+    }
         return view('features.lms.students.dashboard', compact(
             'dataSiswa', 'schoolName', 'agendaSekolah', 'selectedDate', 
             'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',
@@ -419,5 +418,30 @@ class StudentDashboardController extends Controller
         return response()->json([
             'data' => $data,
         ]);
+    }
+    // Tambahkan di dalam class StudentDashboardController, misalnya di bawah fungsi submitVote
+    
+    public function markAnnouncementAsRead(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $announcementId = $request->announcement_id;
+
+            // Pastikan data tidak kosong
+            if (!$announcementId) {
+                return response()->json(['success' => false, 'message' => 'ID Pengumuman tidak valid.']);
+            }
+
+            // Catat ke database jika belum ada (mencegah duplikasi data jika siswa klik berkali-kali)
+            DB::table('announcement_views')->updateOrInsert(
+                ['announcement_id' => $announcementId, 'user_id' => $userId],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+
+            return response()->json(['success' => true]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }

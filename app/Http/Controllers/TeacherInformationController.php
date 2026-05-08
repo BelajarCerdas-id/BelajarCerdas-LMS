@@ -10,45 +10,82 @@ use App\Models\PollOption;
 
 class TeacherInformationController extends Controller
 {
-    public function teacherPollingView($role, $schoolName, $schoolId)
+    // 👇 PERBAIKAN: Tambahkan Request $request di parameter pertama
+    public function teacherPollingView(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
         $userId = $user->id;
 
-        // 1. AMBIL SEMUA DAFTAR KELAS DI SEKOLAH INI
-        $classes = DB::table('school_classes')
-            ->where('school_partner_id', $schoolId)
-            ->select('id as class_id', 'class_name')
-            ->orderBy('class_name', 'asc')
+        // 1. TANGKAP FILTER TAHUN AJARAN DARI URL
+        $filterTahun = $request->query('tahun_ajaran');
+
+        // 2. QUERY KELAS YANG DIAJAR GURU BERDASARKAN JADWAL (lesson_schedule_items)
+        $kelasQuery = DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->join('school_classes', 'lesson_schedules.class_id', '=', 'school_classes.id')
+            ->where('lesson_schedule_items.teacher_id', $userId)
+            ->where('school_classes.school_partner_id', $schoolId)
+            ->where('school_classes.status_class', 'active');
+
+        // Ambil daftar Tahun Ajaran unik dari kelas yang ada di jadwal guru ini
+        $tahunAjaranList = (clone $kelasQuery)
+            ->whereNotNull('school_classes.tahun_ajaran')
+            ->select('school_classes.tahun_ajaran')
+            ->distinct()
+            ->orderBy('school_classes.tahun_ajaran', 'desc')
+            ->pluck('tahun_ajaran');
+
+        // Jika tidak ada filter yang dipilih, gunakan tahun ajaran terbaru
+        if (empty($filterTahun) && $tahunAjaranList->count() > 0) {
+            $filterTahun = $tahunAjaranList->first();
+        }
+
+        // Terapkan filter tahun ajaran ke query kelas
+        if ($filterTahun) {
+            $kelasQuery->where('school_classes.tahun_ajaran', $filterTahun);
+        }
+
+        // Eksekusi pencarian kelas (Pastikan distinct agar nama kelas tidak ganda)
+        $classes = $kelasQuery->select('school_classes.id as class_id', 'school_classes.class_name')
+            ->distinct()
+            ->orderBy('school_classes.class_name', 'asc')
             ->get();
 
-        // 2. Ambil Polling Buatan Guru Sendiri
+        $classIds = $classes->pluck('class_id')->toArray();
+
+        // 3. Ambil Polling Buatan Guru Sendiri (Berdasarkan Tahun Ajaran/Kelas yang diajar)
         $polls = \App\Models\Poll::with('PollOptions')
             ->where('school_partner_id', $schoolId)
             ->where('author_id', $userId)
+            ->when($filterTahun, function($q) use ($classIds) {
+                // Tampilkan polling yang mengarah ke kelas di tahun ajaran ini, ATAU polling global (semua kelas)
+                $q->where(function($subQuery) use ($classIds) {
+                    $subQuery->whereIn('class_id', $classIds)
+                             ->orWhereNull('class_id');
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($poll) {
-                // 👇 Menambahkan Nama Kelas Secara Dinamis (karena kolom class_name sudah dihapus)
+                // Menambahkan Nama Kelas Secara Dinamis
                 if ($poll->class_id) {
                     $kelas = DB::table('school_classes')->where('id', $poll->class_id)->first();
                     $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
                 } else {
-                    $poll->nama_kelas = 'Semua Kelas (Global)';
+                    $poll->nama_kelas = 'Semua Kelas (Yang Saya Ajar)';
                 }
                 return $poll;
             });
 
-        // 3. Ambil Polling Buatan Kepsek & Wakasek (Untuk Tab "Dari Sekolah")
+        // 4. Ambil Polling Buatan Kepsek & Wakasek (Untuk Tab "Dari Sekolah")
         $pollingDariSekolah = \App\Models\Poll::with('PollOptions')
             ->where('school_partner_id', $schoolId)
             ->whereIn('author_role', ['Kepala Sekolah', 'Wakil Kepala Sekolah'])
-            // 👇 PERBAIKAN: Mengubah target_role menjadi target
             ->whereIn('target', ['Semua Guru', 'Semua Warga Sekolah', 'Semua'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($poll) use ($userId) {
-                // Ambil record vote-nya langsung (Aman karena poll_votes sekarang pakai user_id)
+                // Ambil record vote-nya langsung
                 $voteRecord = DB::table('poll_votes')
                     ->where('poll_id', $poll->id)
                     ->where('user_id', $userId)
@@ -65,7 +102,10 @@ class TeacherInformationController extends Controller
                 return $poll;
             });
 
-        return view('features.lms.teacher.information.polling', compact('role', 'schoolName', 'schoolId', 'polls', 'pollingDariSekolah', 'classes'));
+        return view('features.lms.teacher.information.polling', compact(
+            'role', 'schoolName', 'schoolId', 'polls', 'pollingDariSekolah', 
+            'classes', 'tahunAjaranList', 'filterTahun'
+        ));
     }
 
     public function submitVote(Request $request, $role, $schoolName, $schoolId)
@@ -116,7 +156,6 @@ class TeacherInformationController extends Controller
 
         // 1. Validasi data yang masuk dari AJAX
         $request->validate([
-            // Target dan Target Role divalidasi dua-duanya untuk berjaga-jaga dari HTML lama
             'question'    => 'required|string',
             'options'     => 'required|array|min:2',
         ]);
@@ -124,20 +163,17 @@ class TeacherInformationController extends Controller
         try {
             DB::beginTransaction();
 
-            // 👇 PEMBERSIHAN CLASS_ID: Mencegah Error Integrity constraint violation 19
             $kelasId = $request->class_id;
             if (empty($kelasId) || $kelasId === '0' || $kelasId === 'null') {
                 $kelasId = null;
             }
 
-            // 👇 TANGKAP NILAI TARGET DARI HTML (Mengakomodir 'target' atau 'target_role')
             $targetAudiens = $request->target ?? $request->target_role ?? 'Semua Warga Sekolah';
 
             // 2. Simpan pertanyaan utama beserta Target & Author
             $pollId = DB::table('polls')->insertGetId([
                 'school_partner_id' => $schoolId,
                 'class_id'          => $kelasId,
-                // class_name DIHAPUS agar sesuai tabel baru
                 'question'          => $request->question,
                 'target'            => $targetAudiens, 
                 'author_id'         => $user->id,            
@@ -182,15 +218,19 @@ class TeacherInformationController extends Controller
         if (!$user || $user->role !== 'Guru') abort(403);
 
         try {
-            $pollExists = \Illuminate\Support\Facades\DB::table('polls')->where('id', $id)->exists();
+            $pollExists = \Illuminate\Support\Facades\DB::table('polls')
+                ->where('id', $id)
+                ->where('author_id', $user->id) // PASTIKAN GURU HANYA BISA MENGHAPUS POLLING MILIKNYA
+                ->exists();
+                
             if (!$pollExists) {
                 return response()->json([
                     'success' => false, 
-                    'message' => 'Polling tidak ditemukan di database.'
+                    'message' => 'Polling tidak ditemukan atau Anda tidak memiliki akses menghapusnya.'
                 ], 404);
             }
 
-            // 1. Hapus data yang berelasi terlebih dahulu (Aman untuk backward compatibility)
+            // 1. Hapus data yang berelasi
             \Illuminate\Support\Facades\DB::table('poll_votes')->where('poll_id', $id)->delete();
             \Illuminate\Support\Facades\DB::table('poll_options')->where('poll_id', $id)->delete();
             
@@ -208,4 +248,47 @@ class TeacherInformationController extends Controller
             ], 500);
         }
     }
+    /**
+     * Mendapatkan detail polling beserta breakdown responden untuk grafik
+     */
+    public function getPollingBreakdown($role, $schoolName, $schoolId, $id)
+    {
+        try {
+            $options = \App\Models\PollOption::where('poll_id', $id)->get();
+            $votes = \Illuminate\Support\Facades\DB::table('poll_votes')
+                ->join('user_accounts', 'poll_votes.user_id', '=', 'user_accounts.id')
+                ->where('poll_votes.poll_id', $id)
+                ->select('poll_votes.poll_option_id', 'user_accounts.role')
+                ->get();
+
+            $labels = [];
+            $dataSiswa = [];
+            $dataOrtu = [];
+            $dataGuru = [];
+
+            foreach ($options as $opt) {
+                $labels[] = $opt->option_text;
+                
+                // Hitung berdasarkan Role
+                $dataSiswa[] = $votes->where('poll_option_id', $opt->id)->where('role', 'Siswa')->count();
+                $dataOrtu[] = $votes->where('poll_option_id', $opt->id)->where('role', 'Orang Tua')->count();
+                // Guru/Manajemen
+                $dataGuru[] = $votes->where('poll_option_id', $opt->id)->whereIn('role', ['Guru', 'Kepala Sekolah', 'Wakil Kepala Sekolah', 'Admin'])->count();
+            }
+
+            return response()->json([
+                'success' => true,
+                'labels' => $labels,
+                'datasets' => [
+                    'Siswa' => $dataSiswa,
+                    'Orang Tua' => $dataOrtu,
+                    'Guru/Manajemen' => $dataGuru
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
 }

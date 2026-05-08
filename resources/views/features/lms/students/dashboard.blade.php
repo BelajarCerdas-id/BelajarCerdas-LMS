@@ -164,31 +164,46 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-                            @forelse($pengumumanTerkini ?? [] as $info)
-                                <div class="border border-cyan-100 rounded-2xl p-4 md:p-5 hover:shadow-lg hover:border-cyan-300 transition-all bg-white flex flex-col group h-full">
+                           @forelse($pengumumanTerkini ?? [] as $info)
+                                <div class="relative border {{ !$info->is_read ? 'border-blue-400 shadow-md shadow-blue-100' : 'border-cyan-100' }} rounded-2xl p-4 md:p-5 hover:shadow-lg transition-all bg-white flex flex-col group h-full">
+                                    
+                                    {{-- Indikator Titik Biru jika Belum Dibaca --}}
+                                    @if(!$info->is_read)
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white animate-pulse z-10"></div>
+                                    @endif
+
                                     <div class="flex justify-between items-start mb-3">
-                                        @if(($info->type ?? 'info') == 'penting')
-                                            <span class="text-[9px] md:text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200 uppercase tracking-wider shadow-sm">Penting</span>
-                                        @else
-                                            <span class="text-[9px] md:text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-200 uppercase tracking-wider shadow-sm">Info Kelas</span>
-                                        @endif
-                                        <span class="text-[9px] md:text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
+                                        <div class="flex gap-2 items-center">
+                                            @if(($info->type ?? 'info') == 'penting')
+                                                <span class="text-[9px] md:text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200 uppercase tracking-wider">Penting</span>
+                                            @else
+                                                <span class="text-[9px] md:text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-200 uppercase tracking-wider">Info Kelas</span>
+                                            @endif
+                                            
+                                            {{-- Badge Baru --}}
+                                            @if(!$info->is_read)
+                                                <span class="text-[8px] font-black text-white bg-blue-600 px-1.5 py-0.5 rounded uppercase">Baru</span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[9px] md:text-[10px] font-bold text-slate-400">
                                             {{ isset($info->created_at) ? \Carbon\Carbon::parse($info->created_at)->diffForHumans() : 'Baru saja' }}
                                         </span>
                                     </div>
-                                    <h4 class="font-bold text-slate-800 text-xs md:text-sm mb-2 line-clamp-1 group-hover:text-cyan-600 transition-colors">{{ $info->title ?? 'Judul Pengumuman' }}</h4>
+                                    <h4 class="font-bold text-slate-800 text-xs md:text-sm mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ $info->title ?? 'Judul Pengumuman' }}</h4>
+                                    
+                                    {{-- Menampilkan Nama Guru Pengirim --}}
+                                    <p class="text-[9px] text-blue-500 font-bold mb-2 flex items-center gap-1">
+                                        <i class="fas fa-user-chalkboard"></i> {{ $info->nama_pengirim ?? 'Guru' }}
+                                    </p>
+
                                     <p class="text-[11px] md:text-xs text-slate-500 mb-4 line-clamp-2 flex-1">{{ $info->content ?? 'Isi pengumuman tidak tersedia.' }}</p>
                                     
-                                    <button onclick="bacaPengumuman('{{ $info->id }}', '{!! addslashes($info->title) !!}', '{!! addslashes($info->content) !!}', '{{ \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') }}', '{{ $info->type }}')" class="mt-auto w-full py-2 bg-cyan-50 text-cyan-700 text-[11px] md:text-xs font-bold rounded-xl border border-cyan-100 hover:bg-cyan-600 hover:text-white transition-all shadow-sm">
+                                    <button onclick="bacaPengumuman('{{ $info->id }}', '{!! addslashes($info->title) !!}', '{!! addslashes($info->content) !!}', '{{ \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') }}', '{{ $info->type }}')" class="mt-auto w-full py-2 {{ !$info->is_read ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white' }} text-[11px] md:text-xs font-bold rounded-xl border border-transparent transition-all shadow-sm">
                                         Baca Selengkapnya
                                     </button>
                                 </div>
                             @empty
-                                <div class="col-span-full flex flex-col items-center justify-center py-6 text-center border-2 border-dashed border-cyan-200 rounded-2xl bg-white/50">
-                                    <i class="fas fa-box-open text-2xl md:text-3xl mb-2 md:mb-3 text-cyan-300"></i>
-                                    <p class="text-xs md:text-sm font-bold text-cyan-800 mb-1">Belum Ada Pengumuman</p>
-                                    <p class="text-[10px] md:text-xs font-medium text-cyan-600/70">Tidak ada informasi terbaru untuk kelasmu.</p>
-                                </div>
+                                {{-- Empty state tetap sama --}}
                             @endforelse
                         </div>
                     </div>
@@ -530,11 +545,11 @@
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeBacaPengumuman()"></div>
             <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300 flex flex-col max-h-[85vh] md:max-h-[80vh]" id="bacaPengumumanContent">
                 
-                <div id="headerPengumuman" class="px-5 py-4 md:px-6 md:py-5 bg-[#0071BC] flex justify-between items-center text-white shrink-0">
+                <div id="headerPengumuman" class="px-5 py-4 md:px-6 md:py-5 bg-[#0071BC] flex justify-between items-center text-white shrink-0 transition-colors">
                     <h3 class="font-bold text-base md:text-lg flex items-center gap-2.5"><i class="fas fa-bullhorn"></i> Detail Pengumuman</h3>
-                        <button onclick="bacaPengumuman('{{ $info->id ?? '' }}', '{!! addslashes($info->title ?? '') !!}', '{!! addslashes($info->content ?? '') !!}', '{{ isset($info->created_at) ? \Carbon\Carbon::parse($info->created_at)->format('d M Y, H:i') : 'Baru saja' }}', '{{ $info->type ?? 'info' }}')" class="mt-auto w-full py-2 bg-cyan-50 text-cyan-700 text-[11px] md:text-xs font-bold rounded-xl border border-cyan-100 hover:bg-cyan-600 hover:text-white transition-all shadow-sm">
-                            Baca Selengkapnya
-                        </button>                
+                    <button onclick="closeBacaPengumuman()" class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>                
                 </div>
                 
                 <div class="p-5 md:p-8 overflow-y-auto custom-scrollbar bg-white">
@@ -704,78 +719,84 @@
     document.addEventListener("DOMContentLoaded", function() {
         updateModuleSlider();
 
-        // Munculkan Modal Notifikasi Awal
-        setTimeout(function() {
-            const modal = document.getElementById('announcementModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            if(modal && modalContent) {
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    modal.classList.add('opacity-100');
-                    modalContent.classList.remove('scale-95');
-                    modalContent.classList.add('scale-100');
-                }, 10);
-            }
-        }, 500); 
+        // Munculkan Modal Notifikasi Awal HANYA SEKALI per sesi login
+        const userId = "{{ Auth::id() }}";
+        const sessionKey = 'welcome_modal_shown_' + userId;
+
+        // Cek apakah key sessionKey belum ada di sessionStorage
+        if (!sessionStorage.getItem(sessionKey)) {
+            setTimeout(function() {
+                const modal = document.getElementById('announcementModal');
+                const modalContent = document.getElementById('modalContent');
+                
+                if(modal && modalContent) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        modal.classList.remove('opacity-0');
+                        modal.classList.add('opacity-100');
+                        modalContent.classList.remove('scale-95');
+                        modalContent.classList.add('scale-100');
+                        
+                        // Tandai bahwa modal sudah ditampilkan agar tidak muncul lagi saat di-refresh
+                        sessionStorage.setItem(sessionKey, 'true');
+                    }, 10);
+                }
+            }, 500); 
+        }
     });
 
-    // ================= FUNGSI BACA PENGUMUMAN =================
-    async function bacaPengumuman(id, judul, isi, tanggal, tipe) {
-        document.getElementById('judulPengumuman').innerText = judul;
-        document.getElementById('isiPengumuman').innerText = isi;
-        document.getElementById('tglPengumuman').innerText = tanggal;
+    function bacaPengumuman(id, title, content, date, type) {
+        document.getElementById('judulPengumuman').innerText = title;
+        document.getElementById('isiPengumuman').innerText = content;
+        document.getElementById('tglPengumuman').innerText = date;
 
         const badge = document.getElementById('badgePengumuman');
         const header = document.getElementById('headerPengumuman');
-        
-        if(tipe === 'penting') {
-            badge.innerText = 'Penting';
-            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded border uppercase tracking-wider text-amber-600 bg-amber-50 border-amber-200 shadow-sm';
-            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-gradient-to-r from-amber-500 to-amber-600 flex justify-between items-center text-white shrink-0';
+
+        if (type === 'penting') {
+            badge.innerText = 'PENTING';
+            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-md border uppercase tracking-wider shadow-sm text-red-600 bg-red-50 border-red-100';
+            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-red-600 flex justify-between items-center text-white shrink-0 transition-colors';
         } else {
-            badge.innerText = 'Info Kelas';
-            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded border uppercase tracking-wider text-cyan-600 bg-cyan-50 border-cyan-200 shadow-sm';
-            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-gradient-to-r from-cyan-500 to-cyan-600 flex justify-between items-center text-white shrink-0';
+            badge.innerText = 'INFO KELAS';
+            badge.className = 'text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-md border uppercase tracking-wider shadow-sm text-blue-600 bg-blue-50 border-blue-100';
+            header.className = 'px-5 py-4 md:px-6 md:py-5 bg-[#0071BC] flex justify-between items-center text-white shrink-0 transition-colors';
         }
+
+        // KIRIM STATUS SUDAH DIBACA KE SERVER
+        fetch("{{ route('lms.studentAnnouncement.markRead') }}", {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ announcement_id: id })
+        });
 
         const modal = document.getElementById('bacaPengumumanModal');
+        const contentModal = document.getElementById('bacaPengumumanContent');
+        
         modal.classList.remove('hidden');
-        setTimeout(() => { modal.classList.replace('opacity-0', 'opacity-100'); }, 10);
-
-        let token = document.querySelector('meta[name="csrf-token"]');
-        let csrfToken = token ? token.getAttribute('content') : '{{ csrf_token() }}';
-
-        try {
-            const response = await fetch("{{ route('lms.student.announcement.read') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ id: id })
-            });
-            const result = await response.json();
-            if (!result.success) console.error("Error Database:", result.message);
-        } catch (e) {
-            console.log("Gagal melakukan request jaringan.", e);
-        }
+        setTimeout(() => {
+            modal.classList.replace('opacity-0', 'opacity-100');
+            contentModal.classList.replace('scale-95', 'scale-100');
+        }, 10);
     }
 
+    // Fungsi untuk menutup modal
     function closeBacaPengumuman() {
         const modal = document.getElementById('bacaPengumumanModal');
-        const modalContent = document.getElementById('bacaPengumumanContent');
+        const contentModal = document.getElementById('bacaPengumumanContent');
         
-        modal.classList.remove('opacity-100');
-        modal.classList.add('opacity-0');
-        modalContent.classList.remove('scale-100');
-        modalContent.classList.add('scale-95');
+        modal.classList.replace('opacity-100', 'opacity-0');
+        contentModal.classList.replace('scale-100', 'scale-95');
         
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 300); 
+            // Refresh otomatis agar status "Baru" ter-update di dashboard
+            window.location.reload(); 
+        }, 300);
     }
 
     // ================= FUNGSI UNTUK MODAL NOTIFIKASI AWAL =================

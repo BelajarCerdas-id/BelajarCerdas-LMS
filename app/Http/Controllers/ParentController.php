@@ -251,28 +251,21 @@ class ParentController extends Controller
         }
 
         // =========================================================
-        // 7. POLLING ORANG TUA (LOGIKA KEPSEK & GURU)
+        // 7. POLLING ORANG TUA (DIFILTER BERDASARKAN KELAS & TARGET)
         // =========================================================
         $pollsDb = Poll::where('school_partner_id', $schoolId)
             ->where('status', 'active')
+            // 1. Pastikan targetnya memang untuk Orang Tua atau Warga Sekolah
+            ->where(function($query) {
+                $query->whereIn('target', ['Orang Tua', 'Semua Orang Tua', 'Semua Warga Sekolah', 'Semua'])
+                      ->orWhere('target', 'like', '%Orang Tua%');
+            })
+            // 2. Filter Kelas: Tampilkan jika Global (Null) ATAU khusus kelas anak ini
             ->where(function ($query) use ($studentClassId) {
-                
-                // SKENARIO 1: Polling Global dari Kepala Sekolah / Manajemen
-                $query->where(function ($q) {
-                    $q->whereIn('author_role', ['Kepala Sekolah', 'Wakil Kepala Sekolah', 'Admin'])
-                      // 👇 PERBAIKAN: Menggunakan target murni
-                      ->whereIn('target', ['Orang Tua', 'Semua Orang Tua', 'Semua Warga Sekolah', 'Semua']);
-                });
-
-                // SKENARIO 2: Polling Spesifik dari Guru untuk Kelas Anak
+                $query->whereNull('class_id');
                 if ($studentClassId) {
-                    $query->orWhere(function ($q) use ($studentClassId) {
-                        $q->where('author_role', 'Guru')
-                          ->where('target', 'like', '%Orang Tua%') // 👇 Hanya cek 'target'
-                          ->where('class_id', $studentClassId);
-                    });
+                    $query->orWhere('class_id', $studentClassId);
                 }
-                
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -283,14 +276,14 @@ class ParentController extends Controller
             $pengirim = $poll->author_role ?? 'Manajemen Sekolah';
             $target = $poll->target ?? 'Orang Tua'; 
 
-            // 👇 NAMA KELAS DINAMIS (Agar bisa ditampilkan di UI Orang Tua)
+            // NAMA KELAS DINAMIS (Agar bisa ditampilkan di UI Orang Tua)
             $namaKelas = 'Semua Kelas (Global)';
             if ($poll->class_id) {
                 $kelasInfo = DB::table('school_classes')->where('id', $poll->class_id)->first();
                 $namaKelas = $kelasInfo ? $kelasInfo->class_name : 'Kelas Dihapus';
             }
 
-            // Cek apakah Orang Tua sudah vote (Aman karena sudah pakai user_id)
+            // Cek apakah Orang Tua sudah vote
             $parentVote = DB::table('poll_votes')
                 ->where('poll_id', $poll->id)
                 ->where('user_id', $user->id) 
@@ -323,14 +316,14 @@ class ParentController extends Controller
                 'pertanyaan'      => $poll->question,
                 'target'          => $target,
                 'pengirim'        => $pengirim, 
-                'nama_kelas'      => $namaKelas, // Tambahan
+                'nama_kelas'      => $namaKelas,
                 'total_votes'     => $totalVotes,
                 'opsi'            => $formattedOptions,
                 'options'         => $formattedOptions,
                 'sudah_vote'      => $hasVoted,
                 'voted_option_id' => $votedOptionId,
                 'jawaban_anak'    => null,
-                'created_at'      => $poll->created_at // Tambahan
+                'created_at'      => $poll->created_at 
             ];
         }
 

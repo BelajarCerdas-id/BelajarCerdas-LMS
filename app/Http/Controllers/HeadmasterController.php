@@ -14,6 +14,11 @@ use App\Models\LmsMeetingContent;
 use App\Models\LmsQuestionBank;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\SchoolClass;
+use App\Models\StudentSchoolClass;
+use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentProjectSubmission;
+use App\Models\StudentProfile;
 
 class HeadmasterController extends Controller
 {
@@ -77,11 +82,13 @@ class HeadmasterController extends Controller
                 'rata_kehadiran' => $persentaseHadir,
             ];
 
-            // --- PENGUMUMAN REAL-TIME ---
+            // --- PENGUMUMAN REAL-TIME (HANYA BUATAN KEPSEK/WAKASEK UNTUK GURU) ---
             $pengumuman = [];
             try {
                 $pengumuman = DB::table('announcements')
                     ->where('school_partner_id', $schoolId)
+                    // 👇 Ganti filter role menjadi filter ID agar spesifik milik user yang login
+                    ->where('author_id', $user->id) 
                     ->select('id', 'title as judul', 'created_at') 
                     ->orderBy('created_at', 'desc')
                     ->limit(5)
@@ -89,7 +96,6 @@ class HeadmasterController extends Controller
             } catch (\Exception $e) {
                 $pengumuman = [];
             }
-
             return view('features.lms.headmaster.dashboard', compact('stats', 'pengumuman', 'schoolName', 'schoolId', 'role'));            
         } else {
             abort(403, 'Profil Kepala Sekolah Anda belum terdaftar.');
@@ -99,7 +105,7 @@ class HeadmasterController extends Controller
     public function aktivitasGuru(Request $request)
     {
         $user = Auth::user();
-        $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
+        $staffProfile = \App\Models\SchoolStaffProfile::where('user_id', $user->id)->first();
 
         if (!$staffProfile) {
             abort(403, 'Profil Kepala Sekolah Anda belum terdaftar.');
@@ -108,7 +114,7 @@ class HeadmasterController extends Controller
         $schoolId = $staffProfile->school_partner_id;
 
         // 1. Ambil daftar guru ASLI di sekolah ini untuk opsi Dropdown Filter
-        $daftarGuru = SchoolStaffProfile::with('UserAccount')
+        $daftarGuru = \App\Models\SchoolStaffProfile::with('UserAccount')
             ->where('school_partner_id', $schoolId)
             ->get()
             ->filter(function ($staff) {
@@ -131,17 +137,17 @@ class HeadmasterController extends Controller
         // AMBIL DATA REAL DARI DATABASE MENGGUNAKAN ELOQUENT ORM
         // =================================================================
         
-        $qAssessment = SchoolAssessment::with(['UserAccount.SchoolStaffProfile', 'SchoolAssessmentType', 'Mapel'])
+        $qAssessment = \App\Models\SchoolAssessment::with(['UserAccount.SchoolStaffProfile', 'SchoolAssessmentType', 'Mapel'])
             ->whereHas('SchoolClass', function($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
 
-        $qContent = LmsMeetingContent::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'LmsContent.LmsContentItem'])
+        $qContent = \App\Models\LmsMeetingContent::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'LmsContent.LmsContentItem'])
             ->whereHas('SchoolClass', function($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
 
-        $qQuestion = LmsQuestionBank::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'Bab', 'SubBab'])
+        $qQuestion = \App\Models\LmsQuestionBank::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'Bab', 'SubBab'])
             ->where('school_partner_id', $schoolId);
 
         // Jika filter guru diterapkan
@@ -155,6 +161,83 @@ class HeadmasterController extends Controller
         $rawContents = $qContent->orderBy('created_at', 'desc')->get();
         $rawQuestions = $qQuestion->orderBy('created_at', 'desc')->get();
 
+        // =================================================================
+        // KALKULASI RINCIAN JENIS (UNTUK POP-UP)
+        // =================================================================
+        $breakdownAss = [];
+        foreach($rawAssessments as $a) {
+            $tipe = $a->SchoolAssessmentType->name ?? 'Lainnya';
+            $breakdownAss[$tipe] = ($breakdownAss[$tipe] ?? 0) + 1;
+        }
+
+        $breakdownCont = [];
+        foreach($rawContents as $c) {
+            $format = 'Teks/Modul';
+            if ($c->LmsContent && $c->LmsContent->LmsContentItem->count() > 0) {
+                $file = $c->LmsContent->LmsContentItem->first()->value_file;
+                if($file) {
+                    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    if(in_array($ext, ['mp4', 'mkv', 'youtube'])) $format = 'Video';
+                    elseif(in_array($ext, ['doc', 'docx', 'pdf', 'ppt', 'pptx'])) $format = 'Dokumen/PDF';
+                    else $format = strtoupper($ext);
+                }
+            }
+            $breakdownCont[$format] = ($breakdownCont[$format] ?? 0) + 1;
+        }
+
+        // Soal Dihitung Per-Bank (Grup Upload), BUKAN per butir soal
+        $groupedQuestions = $rawQuestions->groupBy(function($item) {
+            return $item->user_id . '-' . $item->sub_bab_id; 
+        });
+        $totalQuestionBanks = $groupedQuestions->count();
+
+        // =================================================================
+        // KALKULASI TOTAL JATAH / TARGET GLOBAL
+        // =================================================================
+        if ($targetUserId) {
+            // Target untuk 1 Guru
+            $totalMapelCount = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+                ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+                ->where('lesson_schedules.school_partner_id', $schoolId)
+                ->where('lesson_schedule_items.teacher_id', $targetUserId)
+                ->distinct('lesson_schedule_items.mapel_id')
+                ->count('lesson_schedule_items.mapel_id');
+        } else {
+            // Target Global Seluruh Sekolah (Total kombinasi Guru & Mapel)
+            $totalMapelCount = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+                ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+                ->where('lesson_schedules.school_partner_id', $schoolId)
+                ->select('lesson_schedule_items.teacher_id', 'lesson_schedule_items.mapel_id')
+                ->distinct()
+                ->get()
+                ->count();
+        }
+
+        $aktifAssessments = $rawAssessments->where('created_at', '>=', \Carbon\Carbon::now()->startOfMonth())->pluck('user_id');
+        $aktifContents = $rawContents->where('created_at', '>=', \Carbon\Carbon::now()->startOfMonth())->pluck('teacher_id');
+        $aktifQuestions = $rawQuestions->where('created_at', '>=', \Carbon\Carbon::now()->startOfMonth())->pluck('user_id');
+        $guruAktifBulanIni = collect([])->merge($aktifAssessments)->merge($aktifContents)->merge($aktifQuestions)->unique()->count();
+
+        $stats = (object) [
+            // Pencapaian vs Target
+            'total_assessment'     => $rawAssessments->count(),
+            'target_assessment'    => $totalMapelCount * 6, // 6 Tugas/Ujian per Mapel
+            'breakdown_assessment' => $breakdownAss,
+            
+            'total_content'        => $rawContents->count(),
+            'target_content'       => $totalMapelCount * 12, // 12 Materi per Mapel
+            'breakdown_content'    => $breakdownCont,
+            
+            'total_question_banks' => $totalQuestionBanks, // Hitung per file/bank
+            'target_question'      => $totalMapelCount * 4,  // 4 Bank soal per Mapel
+            
+            'guru_aktif'           => $targetUserId ? 1 : $guruAktifBulanIni 
+        ];
+
+        // =================================================================
+        // MAPPING DATA UNTUK DAFTAR TERKINI (RECENT)
+        // =================================================================
+        
         // Mapping Data Assessment
         $recentAssessments = $rawAssessments->take(20)->map(function($a) {
             return (object)[
@@ -162,7 +245,7 @@ class HeadmasterController extends Controller
                 'status' => $a->status ?? 'Draft',
                 'tipe'   => $a->SchoolAssessmentType->name ?? 'Tugas / Ujian',
                 'mapel'  => $a->Mapel->mata_pelajaran ?? 'Umum',
-                'waktu'  => Carbon::parse($a->created_at)->diffForHumans(),
+                'waktu'  => \Carbon\Carbon::parse($a->created_at)->diffForHumans(),
             ];
         });
 
@@ -176,8 +259,10 @@ class HeadmasterController extends Controller
                 $judul = $item->original_filename ?? substr(strip_tags($item->value_text), 0, 50) ?? 'Materi Pembelajaran';
                 
                 if(!empty($item->value_file)) {
-                    $ext = pathinfo($item->value_file, PATHINFO_EXTENSION);
-                    $formatType = strtoupper($ext); 
+                    $ext = strtolower(pathinfo($item->value_file, PATHINFO_EXTENSION));
+                    if(in_array($ext, ['mp4', 'mkv', 'youtube'])) $formatType = 'Video';
+                    elseif(in_array($ext, ['doc', 'docx', 'pdf', 'ppt', 'pptx'])) $formatType = 'Dokumen/PDF';
+                    else $formatType = strtoupper($ext);
                 }
             }
 
@@ -186,147 +271,233 @@ class HeadmasterController extends Controller
                 'format' => $formatType,
                 'judul'  => $judul,
                 'mapel'  => $c->Mapel->mata_pelajaran ?? 'Umum',
-                'waktu'  => Carbon::parse($c->created_at)->diffForHumans(),
+                'waktu'  => \Carbon\Carbon::parse($c->created_at)->diffForHumans(),
             ];
         });
 
-        // Mapping Data Question Bank (Dikelompokkan)
+        // Mapping Data Question Bank
         $recentQuestions = collect();
-        $groupedQuestions = $rawQuestions->groupBy(function($item) {
+        $groupedQuestionsToMap = $rawQuestions->groupBy(function($item) {
             return $item->user_id . '-' . $item->sub_bab_id; 
         })->take(20);
 
-        foreach ($groupedQuestions as $group) {
+        foreach ($groupedQuestionsToMap as $group) {
             $firstItem = $group->first();
             $recentQuestions->push((object)[
                 'guru'        => $firstItem->UserAccount->SchoolStaffProfile->nama_lengkap ?? 'Guru Tidak Diketahui',
                 'jumlah_soal' => $group->count(),
                 'topik'       => $firstItem->SubBab->nama_sub_bab ?? ($firstItem->Bab->nama_bab ?? 'Topik Umum'),
                 'mapel'       => $firstItem->Mapel->mata_pelajaran ?? 'Umum',
-                'waktu'       => Carbon::parse($firstItem->created_at)->diffForHumans(),
+                'waktu'       => \Carbon\Carbon::parse($firstItem->created_at)->diffForHumans(),
             ]);
         }
 
         // =================================================================
-        // KALKULASI STATISTIK
+        // MENGHITUNG TARGET JATAH UPLOAD PER MAPEL (JIKA ADA GURU YANG DIPILIH)
         // =================================================================
+        $targetUploadGuru = [];
         
-        $aktifAssessments = $rawAssessments->where('created_at', '>=', Carbon::now()->startOfMonth())->pluck('user_id');
-        $aktifContents = $rawContents->where('created_at', '>=', Carbon::now()->startOfMonth())->pluck('teacher_id');
-        $aktifQuestions = $rawQuestions->where('created_at', '>=', Carbon::now()->startOfMonth())->pluck('user_id');
-        
-        $guruAktifBulanIni = collect([])->merge($aktifAssessments)->merge($aktifContents)->merge($aktifQuestions)->unique()->count();
+        if ($targetUserId) {
+            $TARGET_MATERI_PER_MAPEL = 12;
+            $TARGET_ASSESSMENT_PER_MAPEL = 6;
 
-        $stats = (object) [
-            'total_assessment' => $rawAssessments->count(),
-            'total_content'    => $rawContents->count(),
-            'total_question'   => $rawQuestions->count(), 
-            'guru_aktif'       => $targetUserId ? 1 : $guruAktifBulanIni 
-        ];
+            $mapelDiajar = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+                ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+                ->where('lesson_schedules.school_partner_id', $schoolId)
+                ->where('lesson_schedule_items.teacher_id', $targetUserId)
+                ->select('lesson_schedule_items.mapel_id', 'lesson_schedule_items.subject_name')
+                ->distinct('lesson_schedule_items.mapel_id')
+                ->get();
+
+            foreach ($mapelDiajar as $mapel) {
+                
+                // --- PROSES MENGHITUNG MATERI (CONTENT) ---
+                $contents = \App\Models\LmsMeetingContent::with('LmsContent.LmsContentItem')
+                    ->where('teacher_id', $targetUserId)
+                    ->where('subject_id', $mapel->mapel_id)
+                    ->get();
+                    
+                $tercapaiMateri = $contents->count();
+                $detailMateri = [];
+                
+                foreach($contents as $c) {
+                    $format = 'Teks/Modul';
+                    if ($c->LmsContent && $c->LmsContent->LmsContentItem->count() > 0) {
+                        $file = $c->LmsContent->LmsContentItem->first()->value_file;
+                        if($file) {
+                            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                            if(in_array($ext, ['mp4', 'mkv', 'youtube'])) $format = 'Video';
+                            elseif(in_array($ext, ['doc', 'docx', 'pdf', 'ppt', 'pptx'])) $format = 'Dokumen/PDF';
+                            else $format = strtoupper($ext);
+                        }
+                    }
+                    if(!isset($detailMateri[$format])) $detailMateri[$format] = 0;
+                    $detailMateri[$format]++;
+                }
+
+                // --- PROSES MENGHITUNG ASSESSMENT ---
+                $assessments = \App\Models\SchoolAssessment::with('SchoolAssessmentType')
+                    ->where('user_id', $targetUserId)
+                    ->where('subject_id', $mapel->mapel_id)
+                    ->get();
+                    
+                $tercapaiAss = $assessments->count();
+                $detailAss = [];
+                
+                foreach($assessments as $a) {
+                    $tipe = $a->SchoolAssessmentType->name ?? 'Lainnya';
+                    if(!isset($detailAss[$tipe])) $detailAss[$tipe] = 0;
+                    $detailAss[$tipe]++;
+                }
+
+                $targetUploadGuru[] = (object)[
+                    'mapel' => $mapel->subject_name,
+                    'content' => (object)[
+                        'target' => $TARGET_MATERI_PER_MAPEL,
+                        'tercapai' => $tercapaiMateri,
+                        'detail' => $detailMateri
+                    ],
+                    'assessment' => (object)[
+                        'target' => $TARGET_ASSESSMENT_PER_MAPEL,
+                        'tercapai' => $tercapaiAss,
+                        'detail' => $detailAss
+                    ]
+                ];
+            }
+        }
 
         return view('features.lms.headmaster.monitoring.aktivitas_guru', compact(
             'stats', 'recentAssessments', 'recentContents', 'recentQuestions', 
-            'daftarGuru', 'filterGuruId', 'guruTerpilih'
+            'daftarGuru', 'filterGuruId', 'guruTerpilih', 'targetUploadGuru'
         ));
     }
 
-   public function laporanAkademik(\Illuminate\Http\Request $request)
+   public function laporanAkademik(Request $request)
     {
         $user = Auth::user();
-        $staffProfile = \App\Models\SchoolStaffProfile::where('user_id', $user->id)->first();
+        $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
 
         if (!$staffProfile) {
-            abort(403, 'Profil Kepala Sekolah Anda belum terdaftar.');
+            abort(403, 'Profil Kepala/Wakil Sekolah tidak terdaftar.');
         }
 
         $schoolId = $staffProfile->school_partner_id;
 
-        // 1. AMBIL DAFTAR TAHUN AJARAN UNTUK FILTER
-        $tahunAjaranList = DB::table('school_classes')
-            ->where('school_partner_id', $schoolId)
+        // 1. FILTER TAHUN AJARAN
+        $tahunAjaranList = SchoolClass::where('school_partner_id', $schoolId)
             ->whereNotNull('tahun_ajaran')
             ->distinct()
             ->orderBy('tahun_ajaran', 'desc')
             ->pluck('tahun_ajaran');
             
-        $filterTahun = $request->query('tahun_ajaran', $tahunAjaranList->first() ?? null);
+        $defaultTahun = $tahunAjaranList->last(); // Ambil yang terbaru sebagai default
+        $filterTahun = $request->query('tahun_ajaran', $defaultTahun);
 
-        // Inisialisasi Data Chart
+        // 2. INISIALISASI
         $chartLabelKelas = [];
-        $chartDataContent = []; // Persentase Materi Dibaca
-        $chartDataAssessment = []; // Persentase Tugas Selesai
+        $chartDataContent = []; 
+        $chartDataAssessment = []; 
+        $listSiswaPasif = collect(); // Koleksi untuk menyimpan detail nama & kelas
+
+        $totalMateriGlobal = 0;
+        $totalTugasGlobal = 0;
+        $totalSiswaPasif = 0;
 
         try {
-            // Ambil semua kelas di sekolah tersebut
-            $kelasQuery = DB::table('school_classes')
-                ->where('school_partner_id', $schoolId)
+            $kelasQuery = SchoolClass::where('school_partner_id', $schoolId)
                 ->where('status_class', 'active');
             
             if ($filterTahun) {
                 $kelasQuery->where('tahun_ajaran', $filterTahun);
             }
             
-            $kelasRecords = $kelasQuery->orderBy('class_name', 'asc')->get();
+            $daftarKelas = $kelasQuery->orderBy('kelas_id', 'asc')->orderBy('class_name', 'asc')->get();
 
-            foreach ($kelasRecords as $kelas) {
-                // A. HITUNG JUMLAH SISWA AKTIF DI KELAS INI
-                $totalSiswa = DB::table('student_school_classes')
-                    ->where('school_class_id', $kelas->id)
+            foreach ($daftarKelas as $kelas) {
+                // A. Ambil Siswa Aktif di Kelas
+                $siswaIds = StudentSchoolClass::where('school_class_id', $kelas->id)
                     ->where('student_class_status', 'active')
-                    ->count();
+                    ->where(function ($q) {
+                        $q->whereNull('academic_action')->orWhere('academic_action', '');
+                    })
+                    ->pluck('student_id');
 
-                if ($totalSiswa == 0) {
-                    $chartLabelKelas[] = 'Kelas ' . $kelas->class_name;
+                $jumlahSiswa = $siswaIds->count();
+
+                if ($jumlahSiswa == 0) {
+                    $chartLabelKelas[] = $kelas->class_name;
                     $chartDataContent[] = 0;
                     $chartDataAssessment[] = 0;
                     continue;
                 }
 
-                // B. ANALISIS AKTIVITAS KONTEN (MATERI LMS)
-                // Total materi yang dipublish untuk kelas ini
-                $totalMateri = DB::table('lms_meeting_contents')
-                    ->where('school_class_id', $kelas->id)
-                    ->where('is_active', 1)
-                    ->count();
+                // B. LOGIKA ASESMEN
+                $assessments = SchoolAssessment::where('school_class_id', $kelas->id)->get();
+                $jumlahTugas = $assessments->count();
+                $totalTugasGlobal += $jumlahTugas;
 
-                $ekspektasiBaca = $totalSiswa * $totalMateri;
-                
-                // Aktual materi yang dibaca (asumsi ada tabel lms_content_reads)
-                // Jika kamu belum punya tabel log baca, kita gunakan dummy logic atau hitung manual
-                $aktualBaca = DB::table('lms_content_reads') // Pastikan nama tabel log baca materi ini sesuai
-                    ->join('lms_meeting_contents', 'lms_content_reads.content_id', '=', 'lms_meeting_contents.id')
-                    ->where('lms_meeting_contents.school_class_id', $kelas->id)
-                    ->count();
+                $targetTugas = $jumlahSiswa * $jumlahTugas;
+                $aktualTugas = 0;
+                $siswaAktifTugasIds = collect();
 
-                // C. ANALISIS AKTIVITAS ASESMEN (TUGAS/UJIAN)
-                $totalAsesmen = DB::table('school_assessments')
-                    ->where('school_class_id', $kelas->id)
-                    ->count();
+                foreach ($assessments as $assessment) {
+                    $examStudents = StudentAssessmentAnswer::where('school_assessment_id', $assessment->id)
+                        ->where('status_answer', 'submitted')
+                        ->distinct()->pluck('student_id');
 
-                $ekspektasiSelesai = $totalSiswa * $totalAsesmen;
+                    $projectStudents = StudentProjectSubmission::where('school_assessment_id', $assessment->id)
+                        ->distinct()->pluck('student_id');
 
-                // Aktual tugas yang dikumpulkan (submission)
-                $aktualSelesai = DB::table('class_task_submissions')
-                    ->whereIn('task_id', function($query) use ($kelas) {
-                        $query->select('id')->from('school_assessments')->where('school_class_id', $kelas->id);
-                    })
-                    ->count();
+                    $submissionStudents = $examStudents->merge($projectStudents)->unique();
+                    $aktualTugas += $submissionStudents->count();
+                    $siswaAktifTugasIds = $siswaAktifTugasIds->merge($submissionStudents)->unique();
+                }
 
-                // D. KALKULASI PERSENTASE
-                $persenContent = $ekspektasiBaca > 0 ? round(($aktualBaca / $ekspektasiBaca) * 100) : 0;
-                $persenAssessment = $ekspektasiSelesai > 0 ? round(($aktualSelesai / $ekspektasiSelesai) * 100) : 0;
+                $persenTugas = $targetTugas > 0 ? round(($aktualTugas / $targetTugas) * 100) : 0;
 
-                $chartLabelKelas[] = 'Kelas ' . $kelas->class_name;
-                $chartDataContent[] = $persenContent;
-                $chartDataAssessment[] = $persenAssessment;
+                // C. LOGIKA MATERI
+                $materiIds = LmsMeetingContent::where('school_class_id', $kelas->id)->where('is_active', 1)->pluck('id');
+                $totalMateriGlobal += $materiIds->count();
+                $targetBaca = $jumlahSiswa * $materiIds->count();
+                $aktualBaca = 0;
+
+                if ($materiIds->isNotEmpty() && class_exists('\App\Models\LmsContentRead')) {
+                    $aktualBaca = \App\Models\LmsContentRead::whereIn('content_id', $materiIds)->whereIn('student_id', $siswaIds)->count();
+                }
+                $persenMateri = $targetBaca > 0 ? round(($aktualBaca / $targetBaca) * 100) : 0;
+
+                // D. LOGIKA SISWA PASIF (FIXED: Tidak Double Hitung)
+                $pasifIds = $siswaIds->diff($siswaAktifTugasIds);
+                $totalSiswaPasif += $pasifIds->count(); // Tambah sekali saja di sini
+
+                if ($pasifIds->isNotEmpty()) {
+                    $detailPasif = StudentProfile::whereIn('user_id', $pasifIds)
+                        ->select('nama_lengkap')
+                        ->get()
+                        ->map(function($s) use ($kelas) {
+                            return [
+                                'nama' => $s->nama_lengkap,
+                                'kelas' => $kelas->class_name
+                            ];
+                        });
+                    $listSiswaPasif = $listSiswaPasif->concat($detailPasif);
+                }
+
+                // Data untuk Chart
+                $chartLabelKelas[] = $kelas->class_name;
+                $chartDataContent[] = min($persenMateri, 100);
+                $chartDataAssessment[] = min($persenTugas, 100);
             }
 
-            // HITUNG KPI RINGKASAN UNTUK KOTAK ATAS
+            // Hitung Avg Keaktifan Global
+            $jumlahData = count($chartDataContent) * 2;
+            $avgKeaktifan = $jumlahData > 0 ? round((array_sum($chartDataContent) + array_sum($chartDataAssessment)) / $jumlahData) : 0;
+
             $stats = (object) [
-                'total_materi' => DB::table('lms_meeting_contents')->whereIn('school_class_id', $kelasRecords->pluck('id'))->count(),
-                'total_tugas'  => DB::table('school_assessments')->whereIn('school_class_id', $kelasRecords->pluck('id'))->count(),
-                'avg_keaktifan' => count($chartDataContent) > 0 ? round(array_sum($chartDataContent) / count($chartDataContent)) : 0,
-                'siswa_pasif'   => 0 // Bisa dihitung berdasarkan siswa yang 0 submission
+                'total_materi'  => $totalMateriGlobal,
+                'total_tugas'   => $totalTugasGlobal,
+                'avg_keaktifan' => $avgKeaktifan,
+                'siswa_pasif'   => $totalSiswaPasif
             ];
 
         } catch (\Exception $e) {
@@ -334,15 +505,18 @@ class HeadmasterController extends Controller
         }
 
         return view('features.lms.headmaster.monitoring.laporan_akademik', compact(
-            'stats', 'tahunAjaranList', 'filterTahun', 
-            'chartLabelKelas', 'chartDataContent', 'chartDataAssessment'
+            'stats', 'tahunAjaranList', 'filterTahun', 'chartLabelKelas', 
+            'chartDataContent', 'chartDataAssessment', 'listSiswaPasif'
         ));
     }
 
     public function CalendarView($role, $schoolName, $schoolId)
     {
-        $eventsFromDb = AcademicCalendar::where('school_partner_id', $schoolId)->get();
+        $eventsFromDb = AcademicCalendar::where('school_partner_id', $schoolId)
+            ->orderBy('date', 'asc')
+            ->get();
         
+        // 1. Data Kalender untuk FullCalendar (Visual Kalender Bulan)
         $savedEvents = [];
         foreach($eventsFromDb as $ev) {
             $savedEvents[] = [
@@ -354,7 +528,84 @@ class HeadmasterController extends Controller
             ];
         }
 
-        return view('features.lms.headmaster.information.calender', compact('role', 'schoolName', 'schoolId', 'savedEvents'));
+        // =========================================================================
+        // FITUR A: MENGHITUNG TOTAL KEGIATAN PER HARI (Untuk notifikasi/badge)
+        // =========================================================================
+        $kegiatanPerHari = $eventsFromDb->groupBy(function($date) {
+            return Carbon::parse($date->date)->format('Y-m-d');
+        })->map(function ($items) {
+            return $items->count(); 
+        })->toArray();
+
+        // =========================================================================
+        // FITUR B: MENGGABUNGKAN KEGIATAN YANG SAMA DI HARI BERURUTAN (Bulk 1-5)
+        // =========================================================================
+        $groupedAgenda = [];
+        foreach ($eventsFromDb as $event) {
+            $date = Carbon::parse($event->date)->startOfDay();
+            $title = trim($event->title); 
+            
+            $found = false;
+            
+            // Cek apakah kegiatan ini adalah kelanjutan dari kegiatan sebelumnya
+            if (count($groupedAgenda) > 0) {
+                // Iterasi dari belakang untuk mencari kegiatan yang sama persis
+                for ($i = count($groupedAgenda) - 1; $i >= 0; $i--) {
+                    if ($groupedAgenda[$i]['title'] === $title) {
+                        $lastDateInGroup = Carbon::parse($groupedAgenda[$i]['end_date'])->startOfDay();
+                        
+                        // Jika selisih harinya TEPAT 1 hari (berurutan)
+                        if ($lastDateInGroup->diffInDays($date) == 1 && $lastDateInGroup->lt($date)) {
+                            // Perpanjang tanggal akhirnya saja
+                            $groupedAgenda[$i]['end_date'] = $event->date;
+                            $found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Jika ini kegiatan baru (atau tidak berurutan), buat grup baru
+            if (!$found) {
+                $groupedAgenda[] = [
+                    'id'         => $event->id,
+                    'title'      => $title,
+                    'start_date' => $event->date,
+                    'end_date'   => $event->date,
+                    'color'      => $event->color ?? '#0071BC'
+                ];
+            }
+        }
+
+        // Format teks tanggalnya agar cantik dibaca di Blade
+        $agendaSekolah = collect($groupedAgenda)->map(function($item) {
+            $start = Carbon::parse($item['start_date']);
+            $end = Carbon::parse($item['end_date']);
+            
+            if ($start->isSameDay($end)) {
+                // Tepat 1 hari (Misal: 10 Mei 2026)
+                $tanggalTeks = $start->translatedFormat('d M Y');
+            } elseif ($start->isSameMonth($end)) {
+                // Beda hari tapi 1 bulan (Misal: 1 - 5 Mei 2026)
+                $tanggalTeks = $start->format('d') . ' - ' . $end->translatedFormat('d M Y');
+            } else {
+                // Lintas bulan (Misal: 28 Apr - 2 Mei 2026)
+                $tanggalTeks = $start->translatedFormat('d M') . ' - ' . $end->translatedFormat('d M Y');
+            }
+
+            return (object)[
+                'id'           => $item['id'],
+                'kegiatan'     => $item['title'],
+                'tanggal_teks' => $tanggalTeks,
+                'color'        => $item['color'],
+                // Hitung total hari (Jika butuh ditampilkan "Selama 5 Hari")
+                'durasi_hari'  => $start->diffInDays($end) + 1 
+            ];
+        });
+
+        return view('features.lms.headmaster.information.calender', compact(
+            'role', 'schoolName', 'schoolId', 'savedEvents', 'agendaSekolah', 'kegiatanPerHari'
+        ));
     }
 
     public function saveCalendarData(Request $request, $role, $schoolName, $schoolId)
@@ -400,20 +651,7 @@ class HeadmasterController extends Controller
     // =========================================================
     public function scheduleView($role, $schoolName, $schoolId)
     {
-        $timeSlots = [
-            ['start' => '07:00', 'end' => '07:45', 'is_break' => false],
-            ['start' => '07:45', 'end' => '08:30', 'is_break' => false],
-            ['start' => '08:30', 'end' => '09:15', 'is_break' => false],
-            ['start' => '09:15', 'end' => '10:00', 'is_break' => false],
-            ['start' => '10:00', 'end' => '10:45', 'is_break' => true],
-            ['start' => '10:45', 'end' => '11:30', 'is_break' => false],
-            ['start' => '11:30', 'end' => '12:15', 'is_break' => false],
-            ['start' => '12:15', 'end' => '13:00', 'is_break' => true],
-            ['start' => '13:00', 'end' => '13:45', 'is_break' => false],
-            ['start' => '13:45', 'end' => '14:30', 'is_break' => false],
-            ['start' => '14:30', 'end' => '15:15', 'is_break' => false],
-        ];
-
+        // 1. Ambil daftar kelas
         $classes = DB::table('school_classes')
             ->where('school_partner_id', $schoolId)
             ->where('status_class', 'active')
@@ -422,7 +660,7 @@ class HeadmasterController extends Controller
             ->orderBy('class_name', 'asc')
             ->get();
 
-        // MENGAMBIL SELURUH JADWAL DARI SEMUA KELAS DI SEKOLAH INI
+        // 2. MENGAMBIL SELURUH JADWAL DARI SEMUA KELAS DI SEKOLAH INI
         // UNTUK VALIDASI DRAG & DROP GURU BENTROK DI JAVASCRIPT
         $allSchedules = DB::table('lesson_schedule_items')
             ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
@@ -436,8 +674,9 @@ class HeadmasterController extends Controller
             )
             ->get();
 
+        // Variabel $timeSlots SUDAH DIHAPUS karena digenerate otomatis oleh Javascript
         return view('features.lms.headmaster.information.schedule', compact(
-            'role', 'schoolName', 'schoolId', 'timeSlots', 'classes', 'allSchedules'
+            'role', 'schoolName', 'schoolId', 'classes', 'allSchedules'
         ));
     }
 
@@ -834,6 +1073,53 @@ class HeadmasterController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+    
+    public function storePengumuman(Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        $staffProfile = \App\Models\SchoolStaffProfile::where('user_id', $user->id)->first();
+
+        if (!$staffProfile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profil staff tidak ditemukan'
+            ], 403);
+        }
+
+        $request->validate([
+            'title'   => 'required|string|max:255',
+            'type'    => 'required|in:info,penting',
+            'content' => 'required|string',
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\DB::table('announcements')->insert([
+                // ✅ FIX DI SINI
+                'school_partner_id' => $staffProfile->school_partner_id,
+
+                'author_id'   => $user->id,
+                'author_role' => $user->role,
+                'target'      => 'Guru',
+                'title'       => $request->title,
+                'type'        => $request->type,
+                'content'     => $request->content,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengumuman berhasil dikirim ke seluruh Guru!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

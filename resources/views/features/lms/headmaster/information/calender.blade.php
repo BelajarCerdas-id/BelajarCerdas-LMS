@@ -13,7 +13,7 @@
                         <div class="w-10 h-10 shrink-0 rounded-lg bg-blue-100 flex items-center justify-center text-[#0071BC]">
                             <i class="fas fa-calendar-check text-lg"></i>
                         </div>
-                        Kalender Akademik 2026
+                        Kalender Akademik
                     </h1>
                     <p class="text-slate-500 mt-3 sm:mt-1 text-xs sm:text-sm font-medium sm:ml-[52px]">Kelola agenda dan sinkronisasi libur nasional secara otomatis.</p>
                 </div>
@@ -34,7 +34,9 @@
                     <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -z-0 opacity-60 pointer-events-none"></div>
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 relative z-10">
-                        <h2 id="calendar-month-year" class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight"></h2>
+                        <h2 id="calendar-month-year" class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                            <span id="loading-api" class="hidden"><i class="fas fa-circle-notch fa-spin text-lg text-blue-500"></i></span>
+                        </h2>
                         <div class="flex gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200 self-end sm:self-auto">
                             <button id="prev-month" class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer text-slate-500 hover:text-[#0071BC] focus:outline-none">
                                 <i class="fas fa-chevron-left"></i>
@@ -82,7 +84,7 @@
                         <h3 class="font-extrabold text-slate-800 mb-4 sm:mb-5 text-[16px] sm:text-[17px] flex items-center gap-2 pb-4 border-b border-slate-100 shrink-0">
                             <i class="fas fa-list-check text-[#0071BC]"></i> Agenda Bulan Ini
                         </h3>
-                        <div id="event-list" class="flex flex-col gap-3 text-sm overflow-y-auto pr-2 sm:pr-3 custom-scrollbar flex-1 pb-2">
+                        <div id="event-list" class="flex flex-col gap-4 text-sm overflow-y-auto pr-2 sm:pr-3 custom-scrollbar flex-1 pb-2">
                         </div>
                     </div>
                 </div>
@@ -91,7 +93,7 @@
     </div>
 @endif
 
-{{-- MODAL --}}
+{{-- MODAL TAMBAH AGENDA --}}
 <dialog id="modal_tambah_kegiatan" class="modal backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm transition-all p-4">
     <div class="modal-box bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 mx-auto">
         <h3 class="font-extrabold text-lg sm:text-xl text-slate-800 mb-6 flex items-center gap-3">
@@ -132,7 +134,6 @@
 </dialog>
 
 <style>
-    /* Styling Scrollbar Estetik */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -146,34 +147,63 @@
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     let currentDate = new Date(); 
 
-    const nationalHolidays = {
-        "2026-01-01": "Tahun Baru 2026", "2026-01-16": "Isra Mikraj",
-        "2026-02-17": "Tahun Baru Imlek", "2026-03-19": "Hari Raya Nyepi",
-        "2026-03-21": "Idul Fitri", "2026-03-22": "Idul Fitri",
-        "2026-04-03": "Wafat Yesus Kristus", "2026-04-05": "Hari Paskah",
-        "2026-05-01": "Hari Buruh", "2026-05-14": "Kenaikan Yesus Kristus",
-        "2026-05-27": "Idul Adha", "2026-05-31": "Hari Raya Waisak",
-        "2026-06-01": "Hari Lahir Pancasila", "2026-06-16": "Tahun Baru Islam",
-        "2026-08-17": "Kemerdekaan RI", "2026-08-25": "Maulid Nabi",
-        "2026-12-25": "Hari Raya Natal"
-    };
+    // Variabel Penampung Data API
+    let nationalHolidays = {};
+    let cutiBersama = {};
+    let loadedYears = [];
 
-    const cutiBersama = {
-        "2026-02-16": "Cuti Bersama Imlek", "2026-03-18": "Cuti Bersama Nyepi",
-        "2026-03-20": "Cuti Bersama Idul Fitri", "2026-03-23": "Cuti Bersama Idul Fitri",
-        "2026-03-24": "Cuti Bersama Idul Fitri", "2026-05-15": "Cuti Bersama Kenaikan YK",
-        "2026-05-28": "Cuti Bersama Idul Adha", "2026-12-24": "Cuti Bersama Natal"
-    };
+    // FUNGSI MENGAMBIL API LIBUR NASIONAL
+    async function loadHolidaysAPI(year) {
+        if (loadedYears.includes(year)) return;
+        
+        document.getElementById('loading-api').classList.remove('hidden');
+        try {
+            // Menggunakan API DayOff (Gratis & Stabil untuk Indonesia)
+            const response = await fetch(`https://dayoffapi.vercel.app/api?year=${year}`);
+            if (!response.ok) throw new Error('API Timeout');
+            
+            const data = await response.json();
+            data.forEach(holiday => {
+                if (holiday.is_cuti) {
+                    cutiBersama[holiday.tanggal] = holiday.keterangan;
+                } else {
+                    nationalHolidays[holiday.tanggal] = holiday.keterangan;
+                }
+            });
+            loadedYears.push(year);
+        } catch (error) {
+            console.warn("Gagal terhubung ke API Libur Nasional. Menggunakan data cadangan lokal (Fallback 2026).");
+            
+            // Fallback Cadangan jika API down
+            if (year === 2026 && !loadedYears.includes(2026)) {
+                nationalHolidays = { ...nationalHolidays, "2026-01-01": "Tahun Baru 2026", "2026-01-16": "Isra Mikraj", "2026-02-17": "Tahun Baru Imlek", "2026-03-19": "Hari Raya Nyepi", "2026-03-21": "Idul Fitri", "2026-03-22": "Idul Fitri", "2026-04-03": "Wafat Yesus Kristus", "2026-04-05": "Hari Paskah", "2026-05-01": "Hari Buruh", "2026-05-14": "Kenaikan Yesus Kristus", "2026-05-27": "Idul Adha", "2026-05-31": "Hari Raya Waisak", "2026-06-01": "Hari Lahir Pancasila", "2026-06-16": "Tahun Baru Islam", "2026-08-17": "Kemerdekaan RI", "2026-08-25": "Maulid Nabi", "2026-12-25": "Hari Raya Natal" };
+                cutiBersama = { ...cutiBersama, "2026-02-16": "Cuti Bersama Imlek", "2026-03-18": "Cuti Bersama Nyepi", "2026-03-20": "Cuti Bersama Idul Fitri", "2026-03-23": "Cuti Bersama Idul Fitri", "2026-03-24": "Cuti Bersama Idul Fitri", "2026-05-15": "Cuti Bersama Kenaikan YK", "2026-05-28": "Cuti Bersama Idul Adha", "2026-12-24": "Cuti Bersama Natal" };
+                loadedYears.push(2026);
+            }
+        } finally {
+            document.getElementById('loading-api').classList.add('hidden');
+            renderCalendarUI(currentDate); 
+        }
+    }
 
-    function renderCalendar(date) {
+    // Inisialisasi awal (Load data lalu Render)
+    async function initCalendar() {
+        await loadHolidaysAPI(currentDate.getFullYear());
+    }
+
+    function renderCalendarUI(date) {
         const daysEl = document.getElementById('calendar-days');
         const year = date.getFullYear();
         const month = date.getMonth();
-        document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+        document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year} `;
         daysEl.innerHTML = "";
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Hitung event di setiap tanggal
+        let eventCounts = {};
+        userEvents.forEach(e => { eventCounts[e.date] = (eventCounts[e.date] || 0) + 1; });
 
         for (let i = 0; i < firstDay; i++) daysEl.innerHTML += `<div></div>`;
 
@@ -181,8 +211,9 @@
             let dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             let isSunday = new Date(year, month, i).getDay() === 0;
             let css = "";
+            let htmlInner = i;
             
-            let baseClasses = "w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto flex items-center justify-center rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 font-extrabold text-[12px] sm:text-[14px] lg:text-[15px] border-2 border-transparent hover:-translate-y-1 hover:shadow-md ";
+            let baseClasses = "w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mx-auto flex flex-col items-center justify-center rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 font-extrabold text-[12px] sm:text-[14px] lg:text-[15px] border-2 border-transparent hover:-translate-y-1 hover:shadow-md relative overflow-hidden";
 
             if (nationalHolidays[dateStr]) {
                 css = "background-color: #B91C1C; color: white;"; 
@@ -191,17 +222,28 @@
                 css = "border-color: #B91C1C; color: #B91C1C; background-color: #FEF2F2;"; 
                 baseClasses += " hover:bg-red-100";
             } else {
-                let ev = userEvents.find(e => e.date === dateStr);
-                if(ev) {
-                    css = `border-color: ${ev.color}; color: ${ev.color}; background-color: ${ev.color}15;`; 
+                let evCount = eventCounts[dateStr] || 0;
+                if(evCount > 0) {
+                    let firstEv = userEvents.find(e => e.date === dateStr);
+                    css = `border-color: ${firstEv.color}; color: ${firstEv.color}; background-color: ${firstEv.color}15;`; 
                     baseClasses += " hover:brightness-95";
+                    
+                    // Indikator 2 Agenda atau lebih di tanggal yang sama (Dot bawah)
+                    if(evCount > 1) {
+                        htmlInner += `<span class="absolute bottom-1 flex gap-0.5 items-center justify-center">`;
+                        for(let j=0; j<Math.min(evCount, 3); j++) {
+                            htmlInner += `<span class="w-1.5 h-1.5 rounded-full" style="background-color: ${firstEv.color}"></span>`;
+                        }
+                        if(evCount > 3) htmlInner += `<span class="text-[8px] leading-none ml-0.5 font-bold" style="color: ${firstEv.color}">+</span>`;
+                        htmlInner += `</span>`;
+                    }
                 } else {
                     css = "background-color: #F8FAFC; color: #475569;"; 
                     baseClasses += " hover:bg-blue-50 hover:border-blue-200 hover:text-[#0071BC]";
                 }
             }
 
-            daysEl.innerHTML += `<div class="py-0.5 sm:py-1"><div class="${baseClasses}" style="${css}" onclick="selectDate('${dateStr}')">${i}</div></div>`;
+            daysEl.innerHTML += `<div class="py-0.5 sm:py-1"><div class="${baseClasses}" style="${css}" onclick="selectDate('${dateStr}')">${htmlInner}</div></div>`;
         }
         renderSideList(year, month);
     }
@@ -210,16 +252,78 @@
         const listEl = document.getElementById('event-list');
         listEl.innerHTML = "";
         let prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-        let all = [];
 
-        Object.entries(nationalHolidays).forEach(([d, t]) => { if(d.startsWith(prefix)) all.push({d, t, c: '#B91C1C', isHol: true}); });
-        Object.entries(cutiBersama).forEach(([d, t]) => { if(d.startsWith(prefix)) all.push({d, t, c: '#B91C1C', isHol: true}); });
-        userEvents.forEach(e => { if(e.date.startsWith(prefix)) all.push({d: e.date, t: e.title, c: e.color, isHol: false}); });
+        // 1. Kumpulkan Event User untuk mencari Bulk (Rentang Tanggal)
+        let bulkEvents = [];
+        let dailyEvents = {}; // Menyimpan event harian per tanggal
+        
+        // Group by title dulu untuk mencari tanggal berturut-turut
+        let userEventsByTitle = {};
+        userEvents.forEach(e => {
+            if(e.date.startsWith(prefix)) {
+                if(!userEventsByTitle[e.title]) userEventsByTitle[e.title] = [];
+                userEventsByTitle[e.title].push(e);
+            }
+        });
 
-        // MENGUBAH SORTING MENJADI DESCENDING (Tanggal terbaru di atas)
-        all.sort((a,b) => b.d.localeCompare(a.d));
+        for(let title in userEventsByTitle) {
+            let evs = userEventsByTitle[title].sort((a,b) => a.date.localeCompare(b.date));
+            let currentBulk = { start: evs[0].date, end: evs[0].date, c: evs[0].color, t: title };
+            
+            for(let i=1; i<evs.length; i++) {
+                let prevD = new Date(currentBulk.end);
+                let currD = new Date(evs[i].date);
+                let diffDays = Math.round((currD - prevD)/(1000*60*60*24));
+                
+                if(diffDays === 1) {
+                    currentBulk.end = evs[i].date; // Perpanjang tanggal end
+                } else {
+                    if(currentBulk.start !== currentBulk.end) {
+                        bulkEvents.push(currentBulk);
+                    } else {
+                        if(!dailyEvents[currentBulk.start]) dailyEvents[currentBulk.start] = [];
+                        dailyEvents[currentBulk.start].push({t: currentBulk.t, c: currentBulk.c});
+                    }
+                    currentBulk = { start: evs[i].date, end: evs[i].date, c: evs[i].color, t: title };
+                }
+            }
+            if(currentBulk.start !== currentBulk.end) {
+                bulkEvents.push(currentBulk);
+            } else {
+                if(!dailyEvents[currentBulk.start]) dailyEvents[currentBulk.start] = [];
+                dailyEvents[currentBulk.start].push({t: currentBulk.t, c: currentBulk.c});
+            }
+        }
 
-        if (all.length === 0) {
+        // 2. Tambahkan Libur Nasional ke dailyEvents
+        Object.entries(nationalHolidays).forEach(([d, t]) => { 
+            if(d.startsWith(prefix)) {
+                if(!dailyEvents[d]) dailyEvents[d] = [];
+                dailyEvents[d].push({t, c: '#B91C1C', isHol: true});
+            }
+        });
+        Object.entries(cutiBersama).forEach(([d, t]) => { 
+            if(d.startsWith(prefix)) {
+                if(!dailyEvents[d]) dailyEvents[d] = [];
+                dailyEvents[d].push({t, c: '#B91C1C', isHol: true});
+            }
+        });
+
+        // 3. Gabungkan Bulk dan Daily menjadi satu array tampilan
+        let finalDisplay = [];
+        
+        bulkEvents.forEach(b => {
+            finalDisplay.push({ type: 'bulk', sortDate: b.end, start: b.start, end: b.end, t: b.t, c: b.c });
+        });
+
+        for(let d in dailyEvents) {
+            finalDisplay.push({ type: 'daily', sortDate: d, date: d, items: dailyEvents[d] });
+        }
+
+        // Urutkan berdasarkan tanggal terbaru di atas
+        finalDisplay.sort((a,b) => b.sortDate.localeCompare(a.sortDate));
+
+        if (finalDisplay.length === 0) {
             listEl.innerHTML = `
                 <div class="text-center py-8 sm:py-10 flex flex-col items-center justify-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mx-1">
                     <i class="fas fa-mug-hot text-2xl sm:text-3xl mb-3 text-slate-300"></i>
@@ -228,31 +332,56 @@
             return;
         }
 
-        all.forEach(item => {
-            let bgClass = item.isHol ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-200";
-            listEl.innerHTML += `
-                <div class="group border ${bgClass} hover:bg-white hover:border-blue-200 hover:shadow-md transition-all rounded-xl p-3 sm:p-3.5 flex items-start gap-2.5 sm:gap-3 cursor-default mb-1">
-                    <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mt-1 sm:mt-1.5 shrink-0" style="background-color: ${item.c}; box-shadow: 0 0 0 3px ${item.c}20;"></div>
-                    <div class="flex flex-col">
-                        <span class="font-bold text-slate-800 text-[12px] sm:text-[13px] group-hover:text-[#0071BC] transition-colors">${item.d.split('-')[2]} ${monthNames[month]} ${year}</span>
-                        <span class="text-slate-500 font-medium text-[11px] sm:text-[12px] mt-0.5 leading-snug">${item.t}</span>
-                    </div>
-                </div>`;
+        // 4. Render HTML
+        finalDisplay.forEach(block => {
+            if(block.type === 'bulk') {
+                let startD = parseInt(block.start.split('-')[2]);
+                let endD = parseInt(block.end.split('-')[2]);
+                let dateText = `${startD} - ${endD} ${monthNames[month]} ${year}`;
+                
+                listEl.innerHTML += `
+                    <div class="border bg-slate-50 border-slate-200 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all rounded-xl p-3.5 sm:p-4 flex flex-col gap-2 cursor-default">
+                        <span class="font-extrabold text-slate-800 text-[12px] sm:text-[13px] border-b border-slate-200 pb-1.5">${dateText}</span>
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style="background-color: ${block.c}; box-shadow: 0 0 0 3px ${block.c}20;"></div>
+                            <span class="text-slate-600 font-bold text-[11px] sm:text-[12px] leading-snug">${block.t}</span>
+                        </div>
+                    </div>`;
+            } else {
+                let dNum = parseInt(block.date.split('-')[2]);
+                let dateText = `${dNum} ${monthNames[month]} ${year}`;
+                let isHolGroup = block.items.some(x => x.isHol);
+                let bgClass = isHolGroup ? "bg-red-50/50 border-red-100" : "bg-slate-50 border-slate-200";
+
+                let itemsHtml = "";
+                block.items.forEach(it => {
+                    itemsHtml += `
+                        <div class="flex items-start gap-2.5 mb-1.5 last:mb-0">
+                            <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style="background-color: ${it.c}; box-shadow: 0 0 0 3px ${it.c}20;"></div>
+                            <span class="text-slate-600 font-bold text-[11px] sm:text-[12px] leading-snug">${it.t}</span>
+                        </div>`;
+                });
+
+                listEl.innerHTML += `
+                    <div class="border ${bgClass} hover:bg-white hover:shadow-md transition-all rounded-xl p-3.5 sm:p-4 flex flex-col gap-2.5 cursor-default">
+                        <span class="font-extrabold text-slate-800 text-[12px] sm:text-[13px] border-b border-slate-200/70 pb-1.5">${dateText}</span>
+                        <div class="flex flex-col">${itemsHtml}</div>
+                    </div>`;
+            }
         });
     }
 
     window.selectDate = function(dateStr) {
         if (nationalHolidays[dateStr] || cutiBersama[dateStr] || new Date(dateStr).getDay() === 0) {
             Swal.fire({
-                icon: 'info',
-                title: 'Hari Libur',
-                text: `Tanggal ${dateStr} adalah hari libur, tidak dapat ditambahkan agenda.`,
-                confirmButtonColor: '#0071BC',
-                customClass: { popup: 'rounded-3xl' }
+                icon: 'info', title: 'Hari Libur', text: `Tanggal ${dateStr} adalah hari libur.`,
+                confirmButtonColor: '#0071BC', customClass: { popup: 'rounded-3xl' }
             });
             return;
         }
         document.getElementById('event-start-date').value = dateStr;
+        document.getElementById('event-end-date').value = ""; 
+        document.getElementById('event-title').value = ""; 
         document.getElementById('modal_tambah_kegiatan').showModal();
     };
 
@@ -262,39 +391,36 @@
         const end = document.getElementById('event-end-date').value ? new Date(document.getElementById('event-end-date').value) : start;
         const type = document.getElementById('event-type').value;
         const colors = { exam: '#10B981', school_event: '#F59E0B', wfa: '#1E3A8A' };
+        const title = document.getElementById('event-title').value;
 
         for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-            let localYear = d.getFullYear();
-            let localMonth = String(d.getMonth() + 1).padStart(2, '0');
-            let localDay = String(d.getDate()).padStart(2, '0');
-            let s = `${localYear}-${localMonth}-${localDay}`;
-            
+            let s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             if (!nationalHolidays[s] && !cutiBersama[s] && d.getDay() !== 0) {
-                userEvents = userEvents.filter(x => x.date !== s);
-                userEvents.push({ date: s, title: document.getElementById('event-title').value, type: type, color: colors[type] });
+                userEvents.push({ date: s, title: title, type: type, color: colors[type] });
             }
         }
         
         document.getElementById('modal_tambah_kegiatan').close();
-        renderCalendar(currentDate);
+        renderCalendarUI(currentDate);
         saveCalendarData('published', true);
     };
 
-    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(currentDate); };
-    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(currentDate); };
+    document.getElementById('prev-month').onclick = async () => { 
+        currentDate.setMonth(currentDate.getMonth()-1); 
+        await loadHolidaysAPI(currentDate.getFullYear()); 
+    };
+    
+    document.getElementById('next-month').onclick = async () => { 
+        currentDate.setMonth(currentDate.getMonth()+1); 
+        await loadHolidaysAPI(currentDate.getFullYear()); 
+    };
 
     async function saveCalendarData(statusType, isAutoSave = false) {
         if (!isAutoSave) {
             const confirmResult = await Swal.fire({
                 title: statusType === 'draft' ? "Simpan Draft?" : "Publish Agenda?",
                 text: statusType === 'draft' ? "Data akan disimpan secara internal." : "Agenda akan di-publish ke seluruh pengguna.",
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonColor: "#0071BC",
-                cancelButtonColor: "#cbd5e1",
-                confirmButtonText: "Ya, Lanjutkan",
-                cancelButtonText: "Batal",
-                customClass: { popup: 'rounded-3xl' }
+                icon: "question", showCancelButton: true, confirmButtonColor: "#0071BC", cancelButtonColor: "#cbd5e1", confirmButtonText: "Ya, Lanjutkan", cancelButtonText: "Batal", customClass: { popup: 'rounded-3xl' }
             });
             if (!confirmResult.isConfirmed) return;
         }
@@ -305,43 +431,32 @@
         
         if (btn) {
             originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Menyimpan...`;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i>`;
             btn.disabled = true;
         }
 
         try {
             const url = `{{ route('lms.kepsek.calendar.save', ['role' => $role ?? Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 0]) }}`;            
             const response = await fetch(url, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json' 
-                },
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                 body: JSON.stringify({ status: statusType, events: userEvents })
             });
 
-            if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+            if (!response.ok) throw new Error();
             const result = await response.json();
             
             if (!isAutoSave) {
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: result.message || "Data berhasil disimpan.", timer: 1500, showConfirmButton: false, customClass: { popup: 'rounded-3xl' } });
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: result.message, timer: 1500, showConfirmButton: false, customClass: { popup: 'rounded-3xl' } });
             } else {
                 Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: 'Tersimpan otomatis', showConfirmButton: false, timer: 2000 });
             }
-            
         } catch (error) {
-            console.error("Fetch Error Details:", error);
-            if (!isAutoSave) {
-                Swal.fire({ icon: 'error', title: 'Gagal Menyimpan', text: 'Terjadi kesalahan sistem, pastikan koneksi stabil.', confirmButtonColor: '#0071BC', customClass: { popup: 'rounded-3xl' } });
-            }
+            if (!isAutoSave) Swal.fire({ icon: 'error', title: 'Gagal', text: 'Koneksi bermasalah.', customClass: { popup: 'rounded-3xl' } });
         } finally {
-            if (btn) {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
         }
     }
 
-    document.addEventListener("DOMContentLoaded", () => renderCalendar(currentDate));
+    // Eksekusi Inisialisasi
+    document.addEventListener("DOMContentLoaded", initCalendar);
 </script>

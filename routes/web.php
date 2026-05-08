@@ -564,6 +564,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/save', [App\Http\Controllers\TeacherInformationController::class, 'savePollingData'])->name('lms.teacherPolling.save');
     Route::delete('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}', [App\Http\Controllers\TeacherInformationController::class, 'deletePoll'])->name('lms.teacherPolling.destroy');
     Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher/polling/vote', [App\Http\Controllers\TeacherInformationController::class, 'submitVote'])->name('lms.teacherPolling.submitVote');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}/breakdown', [App\Http\Controllers\TeacherInformationController::class, 'getPollingBreakdown'])->name('lms.teacherPolling.breakdown');
 
     // Rute detail kelas
     Route::get('/lms/guru/api/get-students/{classId}', [\App\Http\Controllers\LmsController::class, 'getStudentsForAttendance'])
@@ -579,6 +580,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
    // 👇 RUTE JADWAL HEADMASTER
     Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [App\Http\Controllers\HeadmasterController::class, 'getScheduleDataAjax']);
     Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule/save', [App\Http\Controllers\HeadmasterController::class, 'saveSchedule']);
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/pengumuman/store', [App\Http\Controllers\HeadmasterController::class, 'storePengumuman'])->name('lms.kepsek.pengumuman.store');
+
     
     // --------------------------------------------------------------------
     // ROUTES STUDENT DASHBOARD
@@ -586,6 +589,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/student/dashboard', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
     Route::get('/lms/student/view', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.view');
     Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
+    Route::post('/student/announcement/mark-read', [StudentDashboardController::class, 'markAnnouncementAsRead'])->name('lms.studentAnnouncement.markRead');
 
     // BLOK KEPALA SEKOLAH
     Route::prefix('lms/headmaster')->name('lms.kepsek.')->group(function () {
@@ -595,7 +599,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/laporan-akademik', [HeadmasterController::class, 'laporanAkademik'])->name('laporan.akademik');
         Route::get('/aktivitas-guru', [HeadmasterController::class, 'aktivitasGuru'])->name('aktivitas.guru');
 
-        Route::get('/schedule/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'scheduleView'])->name('schedule.view'); 
+        Route::get('/schedule/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'scheduleView'])->name('schedule.view');
+        Route::get('/schedule/get-data/{schoolId}/{classId}', [HeadmasterController::class, 'getScheduleDataAjax'])->name('schedule.data');
+        Route::post('/schedule/save/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'saveSchedule'])->name('schedule.save'); 
 
         Route::get('/calendar/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'CalendarView'])->name('calendar.view'); 
         Route::post('/calendar/save/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'saveCalendarData'])->name('calendar.save');

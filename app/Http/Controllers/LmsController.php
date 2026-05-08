@@ -293,6 +293,19 @@ class LmsController extends Controller
         $teacherId = $user->teacher_id ?? $user->id; 
         $userId = $user->id; 
 
+        // ========================================================
+        // 0. AMBIL DAFTAR KELAS YANG DIAJAR GURU INI
+        // (Hanya dari tabel teacher_mapels sesuai user yang login)
+        // ========================================================
+        $daftarKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->join('school_classes', 'lesson_schedules.class_id', '=', 'school_classes.id')
+            ->where('lesson_schedules.school_partner_id', $schoolId)
+            ->where('lesson_schedule_items.teacher_id', $teacherId)
+            ->select('school_classes.id', 'school_classes.class_name')
+            ->distinct() // Mencegah duplikasi nama kelas jika diajar 2 sesi
+            ->orderBy('school_classes.class_name', 'asc')
+            ->get();
         // -- JADWAL & KELAS --
         $totalKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
             ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
@@ -301,7 +314,7 @@ class LmsController extends Controller
             ->distinct('lesson_schedules.class_id')
             ->count('lesson_schedules.class_id');
 
-        $englishDaySekarang = date('l'); 
+        $englishDaySekarang = \Carbon\Carbon::parse($tanggalDipilih)->format('l');
         $mapHari = [
             'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 
             'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu', 'Sunday' => 'Minggu'
@@ -369,7 +382,32 @@ class LmsController extends Controller
             ->get();
 
         // ========================================================
-        // 1. POLLING DARI GURU ITU SENDIRI (TAB: Polling Kelas Saya)
+        // 1. PENGUMUMAN (HIERARKI KOMUNIKASI)
+        // ========================================================
+        
+        $pengumumanDariSekolah = \Illuminate\Support\Facades\DB::table('announcements')
+            ->leftJoin('users', 'announcements.author_id', '=', 'users.id') // Join untuk dapat nama Kepsek
+            ->where('announcements.school_partner_id', $schoolId)
+            ->whereIn('announcements.author_role', ['Kepala Sekolah', 'Wakil Kepala Sekolah'])
+            ->where('announcements.target', 'Guru') 
+            ->select('announcements.*', 'users.name as nama_pengirim')
+            // 👇 Tambahkan pengecekan apakah Guru ini sudah membacanya
+            ->selectRaw('(EXISTS (SELECT 1 FROM announcement_views WHERE announcement_views.announcement_id = announcements.id AND announcement_views.user_id = ?)) as is_read', [$userId])
+            ->orderBy('announcements.created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // B. Pengumuman Keluar: Dari Guru Ini -> Target: Siswa
+        $pengumumanKeSiswa = \Illuminate\Support\Facades\DB::table('announcements')
+            ->where('school_partner_id', $schoolId)
+            ->where('author_id', $userId)
+            ->where('target', 'Siswa') 
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // ========================================================
+        // 2. POLLING DARI GURU ITU SENDIRI (TAB: Polling Kelas Saya)
         // ========================================================
         $recentPolls = \App\Models\Poll::where('school_partner_id', $schoolId)
             ->where('author_id', $userId) 
@@ -377,7 +415,6 @@ class LmsController extends Controller
             ->take(4) 
             ->get()
             ->map(function($poll) {
-                // 👇 PERBAIKAN: Menambahkan Nama Kelas Secara Dinamis
                 if ($poll->class_id) {
                     $kelas = \Illuminate\Support\Facades\DB::table('school_classes')->where('id', $poll->class_id)->first();
                     $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
@@ -406,18 +443,31 @@ class LmsController extends Controller
         }
 
         // ========================================================
-        // 2. POLLING DARI KEPALA SEKOLAH / WAKIL (TAB: Dari Sekolah)
+        // 3. POLLING DARI KEPALA SEKOLAH / WAKIL (TAB: Dari Sekolah)
         // ========================================================
+        
+        // 👇 A. Ambil dulu daftar ID kelas yang diajar oleh guru ini (dari Jadwal)
+        $classIdsYangDiajarGuru = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->where('lesson_schedules.school_partner_id', $schoolId)
+            ->where('lesson_schedule_items.teacher_id', $teacherId)
+            ->pluck('lesson_schedules.class_id')
+            ->unique()
+            ->toArray();
+
+        // 👇 B. Query Polling difilter berdasarkan kelas yang diajar
         $pollingDariSekolah = \App\Models\Poll::with('PollOptions')
             ->where('school_partner_id', $schoolId)
             ->whereIn('author_role', ['Kepala Sekolah', 'Wakil Kepala Sekolah'])
-            // 👇 PERBAIKAN: Ubah target_role menjadi target
             ->whereIn('target', ['Semua Guru', 'Semua Warga Sekolah', 'Semua'])
+            ->where(function($query) use ($classIdsYangDiajarGuru) {
+                // Tampilkan jika targetnya Global (Null) ATAU khusus kelas yang diajar guru ini
+                $query->whereNull('class_id') 
+                      ->orWhereIn('class_id', $classIdsYangDiajarGuru); 
+            })
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($poll) use ($userId) {
-                
-                // 👇 PERBAIKAN: Menambahkan Nama Kelas Secara Dinamis
                 if ($poll->class_id) {
                     $kelas = \Illuminate\Support\Facades\DB::table('school_classes')->where('id', $poll->class_id)->first();
                     $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
@@ -450,8 +500,11 @@ class LmsController extends Controller
             'monthlyEvents',
             'recentPolls',
             'pollingDariSekolah',
+            'pengumumanDariSekolah', 
+            'pengumumanKeSiswa',     
             'hariIni',
-            'tanggalDipilih'
+            'tanggalDipilih',
+            'daftarKelas'
         ));
     }
     public function classDetailView($schoolName, $schoolId, $scheduleId)
@@ -468,12 +521,14 @@ class LmsController extends Controller
             ->where('student_class_status', 'active')
             ->count();
 
-        // 2. Pengumuman Terkini
+        // 2. Pengumuman Terkini (DARI GURU INI -> UNTUK SISWA DI KELAS INI)
         $pengumumanTerkini = \Illuminate\Support\Facades\DB::table('announcements')
             ->where('school_partner_id', $schoolId)
+            ->where('author_id', $user->id) // Hanya pengumuman buatan Guru ini
+            ->where('target', 'Siswa')    // Targetnya ke Siswa
             ->where(function($query) use ($classId) {
-                $query->where('target_class_id', $classId)
-                      ->orWhereNull('target_class_id'); 
+                $query->where('target_class_id', $classId) // Khusus kelas ini
+                      ->orWhereNull('target_class_id');    // Atau global untuk semua kelasnya
             })
             ->orderBy('created_at', 'desc')
             ->take(4) 
@@ -498,14 +553,12 @@ class LmsController extends Controller
         $materiKelas = collect();
         foreach ($materiKelasRaw as $materi) {
             $judul = 'Materi Pembelajaran';
-            $fileUrl = null; // Siapkan variabel penampung URL file
+            $fileUrl = null; 
 
             if ($materi->LmsContent && $materi->LmsContent->LmsContentItem && $materi->LmsContent->LmsContentItem->count() > 0) {
                 $item = $materi->LmsContent->LmsContentItem->first();
-                // Jika ada file pakai nama file, kalau tidak pakai potongan teks aslinya
                 $judul = $item->original_filename ?? substr(strip_tags($item->value_text), 0, 50) ?? 'Materi Pembelajaran';
                 
-                // JIKA ADA FILE PDF / VIDEO, BUAT URL-NYA
                 if (!empty($item->value_file)) {
                     $fileUrl = asset('lms-contents/' . $item->value_file);
                 }
@@ -517,12 +570,12 @@ class LmsController extends Controller
                 'tanggal_rilis' => $materi->meeting_date,
                 'pertemuan'     => $materi->meeting_number,
                 'is_active'     => $materi->is_active,
-                'file_url'      => $fileUrl // Masukkan URL file ke dalam koleksi data
+                'file_url'      => $fileUrl
             ]);
         }
 
         // =========================================================
-        // 5 & 6. DATA TUGAS & UJIAN (Menggunakan Eloquent ORM)
+        // 5 & 6. DATA TUGAS & UJIAN
         // =========================================================
         $semuaAsesmen = \App\Models\SchoolAssessment::with(['SchoolAssessmentType.AssessmentMode', 'Mapel'])
             ->where('school_class_id', $classId)
@@ -538,13 +591,11 @@ class LmsController extends Controller
 
         $tugasKelas = collect();
         foreach ($tugasKelasRaw as $tugas) {
-            // PERBAIKAN: Hitung jumlah siswa yang sudah dinilai di kelas INI
             $terkumpul = \Illuminate\Support\Facades\DB::table('class_task_submissions')
                 ->where('task_id', $tugas->id)
                 ->whereNotNull('score')
                 ->count(); 
             
-            // PERBAIKAN: Cek File Fisik agar tidak Redirect 404
             $fileName = $tugas->assessment_value_file;
             $filePath = public_path('assessment/assessment-file/' . $fileName);
             
@@ -564,6 +615,7 @@ class LmsController extends Controller
                 'file_url'  => $fileUrl
             ]);
         }
+
         $ujianKelasRaw = $semuaAsesmen->filter(function($item) {
             return $item->SchoolAssessmentType 
                 && $item->SchoolAssessmentType->AssessmentMode 
@@ -684,55 +736,65 @@ class LmsController extends Controller
             'hariIni'
         ));
     }
-    public function storePengumuman(Request $request)
+    // Tambahkan di bagian bawah, sebelum penutup class
+    public function storePengumuman(\Illuminate\Http\Request $request)
     {
-        try {
-            $user = \Illuminate\Support\Facades\Auth::user();
-            
-            $schoolId = $request->school_id ?? $user->school_partner_id ?? 1; 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Validasi
+        $request->validate([
+            'title'     => 'required|string|max:255',
+            'type'      => 'required|in:info,penting',
+            'content'   => 'required|string',
+            'school_id' => 'required',
+            'class_id'  => 'nullable' // 👈 Tangkap class_id dari form
+        ]);
 
+        try {
             \Illuminate\Support\Facades\DB::table('announcements')->insert([
-                'school_partner_id' => $schoolId,
-                'teacher_id'        => $user->id,
-                'target_class_id'   => $request->class_id, // Bisa null jika global, atau ID kelas jika spesifik
+                'school_partner_id' => $request->school_id,
+                'target_class_id'   => $request->class_id ?? null, // 👈 Simpan ke database
+                'author_id'         => $user->id,
+                'author_role'       => 'Guru',
+                'target'            => 'Siswa', // Selalu ke Siswa
                 'title'             => $request->title,
-                'content'           => $request->content,
                 'type'              => $request->type,
+                'content'           => $request->content,
                 'created_at'        => now(),
                 'updated_at'        => now(),
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Pengumuman berhasil disiarkan!']);
+            return response()->json([
+                'success' => true, 
+                'message' => 'Pengumuman berhasil disebarkan ke kelas ini!'
+            ]);
+
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], 500);
         }
     }
 
-    public function markAsRead(Request $request)
+    public function markAnnouncementAsRead(Request $request)
     {
         try {
-            $announcementId = $request->id;
-            $studentId = \Illuminate\Support\Facades\Auth::id();
-            $alreadyRead = \Illuminate\Support\Facades\DB::table('announcement_views')
-                ->where('announcement_id', $announcementId)
-                ->where('student_id', $studentId)
-                ->exists();
+            $userId = \Illuminate\Support\Facades\Auth::id();
+            $announcementId = $request->announcement_id;
 
-            if (!$alreadyRead) {
-                \Illuminate\Support\Facades\DB::table('announcement_views')->insert([
-                    'announcement_id' => $announcementId,
-                    'student_id'      => $studentId,
-                    'created_at'      => now(),
-                    'updated_at'      => now()
-                ]);
-                \Illuminate\Support\Facades\DB::table('announcements')
-                    ->where('id', $announcementId)
-                    ->increment('views_count');
+            if (!$announcementId) {
+                return response()->json(['success' => false, 'message' => 'ID tidak valid.']);
             }
 
-            return response()->json(['success' => true, 'message' => 'Tracking berhasil']);
+            \Illuminate\Support\Facades\DB::table('announcement_views')->updateOrInsert(
+                ['announcement_id' => $announcementId, 'user_id' => $userId],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+
+            return response()->json(['success' => true]);
+
         } catch (\Exception $e) {
-            // PERUBAHAN DI SINI: Kita tangkap pesan error aslinya!
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     }
