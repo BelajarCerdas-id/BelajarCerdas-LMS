@@ -20,7 +20,7 @@ function managementRoleAccountSchoolSubscription() {
                 function roleBadge(role) {
                     const map = {
                         'Kepala Sekolah': 'bg-purple-100 text-purple-700',
-                        'Wakil Kepala Sekolah': 'bg-indigo-100 text-indigo-700',
+                        'Kepala Sekolah': 'bg-indigo-100 text-indigo-700',
                         'Admin Sekolah': 'bg-blue-100 text-blue-700',
                         'Guru': 'bg-green-100 text-green-700',
                         'Siswa': 'bg-orange-100 text-orange-700',
@@ -31,7 +31,7 @@ function managementRoleAccountSchoolSubscription() {
                 function roleIcon(role) {
                     const map = {
                         'Kepala Sekolah': 'fa-solid fa-user-tie',
-                        'Wakil Kepala Sekolah': 'fa-solid fa-user-gear',
+                        'Kepala Sekolah': 'fa-solid fa-user-gear',
                         'Admin Sekolah': 'fa-solid fa-user-shield',
                         'Guru': 'fa-solid fa-chalkboard-user',
                         'Siswa': 'fa-solid fa-user-graduate',

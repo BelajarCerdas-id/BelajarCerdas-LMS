@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Models\ParentProfile; 
+use App\Models\SchoolStaffProfile;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -13,47 +17,93 @@ class DashboardController extends Controller
 
         // 1. Jika yang masuk adalah Siswa
         if ($user->role === 'Siswa') {
-            // Berdasarkan web.php kamu, rute ini memang tidak butuh parameter
-            return redirect()->route('lms.student.dashboard');
+            // Pastikan rute 'lms.student.dashboard' ada di web.php kamu
+            return redirect()->route('lms.student.dashboard'); 
         }
 
-            // 1. Ambil profil guru dari tabel school_staff
-            $staffProfile = \App\Models\SchoolStaffProfile::where('user_id', $user->id)->first();
-            
-            // Atau kalau belum ada modelnya, pakai DB facade:
-            // $staffProfile = \DB::table('school_staff')->where('user_id', $user->id)->first();
-
-        if ($staffProfile) {
-            $schoolId = $staffProfile->school_partner_id;
-                
-            // (Opsional) Ambil nama sekolah biar URL-nya cakep, ngga cuma tulisan 'sekolah'
-            $school = DB::table('school_partners')->where('id', $schoolId)->first();
-            $schoolName = $school->nama_sekolah;
-        }
-
-        // 2. Jika yang masuk adalah Guru (Perhatikan 'G' besar)
+        // 2. Jika yang masuk adalah Guru
         if ($user->role === 'Guru') {
-
-            // 2. Lempar ke rute Guru dengan parameter yang sudah valid dari database
-            return redirect()->route('lms.teacher.view', [
-                'role'       => $user->role,
-                'schoolName' => $schoolName,
-                'schoolId'   => $schoolId
-            ]);
-        }
-
-        // 3. Jika yang masuk adalah Admin Sekolah
-        if ($user->role === 'Admin Sekolah') {
-
-            // Berdasarkan web.php kamu, rute ini memang tidak butuh parameter
-            return redirect()->route('lms.schoolAdmin.dashboard.view', [
-                'role'       => $user->role,
-                'schoolName' => $schoolName,
-                'schoolId'   => $schoolId
-            ]);
+            $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
+            
+            if ($staffProfile) {
+                $schoolId = $staffProfile->school_partner_id;
+                $school = DB::table('school_partners')->where('id', $schoolId)->first();
+                $schoolName = $school ? Str::slug($school->nama_sekolah) : 'sekolah';
+                
+                return redirect()->route('lms.teacher.view', [
+                    'role'       => 'Guru',
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId
+                ]);
+            } else {
+                abort(403, 'Profil staff Anda belum lengkap. Silakan hubungi admin.');
+            }
         }
         
-        // 3. Jika yang masuk adalah Lainnya
+        // 3. Jika yang masuk adalah Kepala Sekolah
+        if (in_array($user->role, ['Kepala Sekolah', 'Wakil Kepala Sekolah'])) {
+            $profilKepsek = SchoolStaffProfile::where('user_id', $user->id)->first();
+            
+            if (!$profilKepsek) {
+                abort(403, 'Profil Kepala Sekolah belum lengkap. Silakan hubungi admin.');
+            }
+
+            $schoolId = $profilKepsek->school_partner_id;
+            $school = DB::table('school_partners')->where('id', $schoolId)->first();
+            $schoolName = $school ? Str::slug($school->nama_sekolah) : 'sekolah';
+
+            // Redirect ke rute Kepsek membawa parameter lengkap
+            return redirect()->route('lms.kepsek.dashboard', [
+                'role'       => 'Kepala Sekolah',
+                'schoolName' => $schoolName,
+                'schoolId'   => $schoolId
+            ]);
+        }
+
+        // 4. Jika yang masuk adalah Orang Tua
+        if ($user->role === 'Orang Tua') {
+            $profilOrangTua = ParentProfile::where('user_id', $user->id)->first();
+            
+            if (!$profilOrangTua) {
+                abort(403, 'Profil Orang Tua Anda belum terdaftar di sistem.');
+            }
+
+            $schoolId = $profilOrangTua->school_partner_id;
+            $school = DB::table('school_partners')->where('id', $schoolId)->first();
+            $schoolName = $school ? Str::slug($school->nama_sekolah) : 'sekolah';
+
+            // Redirect otomatis ke rute Orang Tua
+            return redirect()->route('lms.parent.dashboard', [
+                'role'       => 'Orang Tua', 
+                'schoolName' => $schoolName,
+                'schoolId'   => $schoolId
+            ]);
+        }
+        if ($user->role === 'Admin Sekolah') {
+
+            $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
+            
+            if ($staffProfile) {
+                $schoolId = $staffProfile->school_partner_id;
+                $school = DB::table('school_partners')->where('id', $schoolId)->first();
+                $schoolName = $school ? $school->nama_sekolah : 'sekolah';
+                
+                return redirect()->route('lms.schoolAdmin.dashboard.view', [
+                    'role'       => $user->role,
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId
+                ]);
+            } else {
+                abort(403, 'Profil staff Anda belum lengkap. Silakan hubungi admin.');
+            }
+        }
+
+        // 5. Jika yang masuk adalah Administrator atau Role Lainnya
+        if ($user->role === 'Administrator') {
+            return view('beranda'); // Atau arahkan ke dashboard admin
+        }
+
+        // Default Fallback jika role tidak dikenali
         return view('beranda');
     }
 }

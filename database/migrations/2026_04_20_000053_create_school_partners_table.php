@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('school_partners', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_sekolah');
-            $table->string('npsn');
-            $table->foreignId('kepsek_id')->constrained('user_accounts');
-            $table->string('jenjang_sekolah');
-            $table->string('logo')->nullable();
-            $table->timestamps();
-        });
+        // PERISAI: Pastikan data sekolah tidak terhapus jika tabel sudah ada
+        if (!Schema::hasTable('school_partners')) {
+            Schema::create('school_partners', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama_sekolah');
+                $table->string('npsn');
+                $table->foreignId('kepsek_id')->constrained('user_accounts');
+                $table->string('jenjang_sekolah');
+                $table->string('logo')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

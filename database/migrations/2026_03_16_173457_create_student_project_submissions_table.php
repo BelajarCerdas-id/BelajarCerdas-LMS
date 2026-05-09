@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('student_project_submissions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('student_id')->constrained('user_accounts');
-            $table->foreignId('school_assessment_id')->constrained('school_assessments');
-            $table->enum('submission_type', ['file','text']);
-            $table->string('file_path')->nullable();
-            $table->string('original_filename')->nullable();
-            $table->longText('text_answer')->nullable();
-            $table->integer('score')->nullable();
-            $table->text('teacher_feedback')->nullable();
-            $table->enum('grading_status',['pending','graded'])->default('pending');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('student_project_submissions')) {
+            Schema::create('student_project_submissions', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('student_id')->constrained('user_accounts');
+                $table->foreignId('school_assessment_id')->constrained('school_assessments');
+                $table->enum('submission_type', ['file','text']);
+                $table->string('file_path')->nullable();
+                $table->string('original_filename')->nullable();
+                $table->longText('text_answer')->nullable();
+                $table->integer('score')->nullable();
+                $table->text('teacher_feedback')->nullable();
+                $table->enum('grading_status',['pending','graded'])->default('pending');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

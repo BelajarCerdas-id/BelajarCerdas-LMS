@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('school_assessment_type_weights', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('user_accounts');
-            $table->foreignId('school_partner_id')->constrained('school_partners');
-            $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
-            $table->string('school_year');
-            $table->integer('weight');
-            $table->timestamps();
-        });
+        // Pengecekan agar data bobot nilai tidak error/hilang
+        if (!Schema::hasTable('school_assessment_type_weights')) {
+            Schema::create('school_assessment_type_weights', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('user_accounts');
+                $table->foreignId('school_partner_id')->constrained('school_partners');
+                $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
+                $table->string('school_year');
+                $table->integer('weight');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

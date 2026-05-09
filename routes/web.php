@@ -37,11 +37,12 @@ use App\Http\Controllers\SchoolAdminDashboardController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\TeacherAcademicTranscriptController;
 use App\Http\Controllers\TeacherGradeLedgerController;
-use App\Http\Controllers\TeacherInformationController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HeadmasterController;
+use App\Http\Controllers\ParentController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -206,7 +207,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // crud bab
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/store', [SchoolSyllabusController::class, 'babStore'])->name('schoolBabManagement.store');
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/{babId}/edit', [SchoolSyllabusController::class, 'babEdit'])->name('schoolBabManagement.edit');
-    Route::put('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/{babId}/activate', [SchoolSyllabusController::class, 'babActivate'])->name('schoolBabManagement.activate');
+    Route::put('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/{babId}/activate', [SchoolSyllabusController::class, 'schoolBabManagement.activate']);
 
     // crud sub bab
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/store', [SchoolSyllabusController::class, 'subBabStore'])->name('schoolSubBabManagement.store');
@@ -487,7 +488,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/student/dashboard', [StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
     Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
     Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [\App\Http\Controllers\TeacherInformationController::class, 'getScheduleDataAjax']);
-    // polling
+    
+    // polling siswa
     Route::post('/lms/student/polling/vote', [StudentDashboardController::class, 'submitVote'])->name('lms.studentPolling.vote');
 
     // =========================================================
@@ -598,51 +600,90 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // academic transcript export
     Route::get('/lms/{role}/{schoolName}/{schoolId}/academic-transcript/classes/subject-teacher/{subjectTeacherId}/export', [TeacherAcademicTranscriptController::class, 'exportAcademicTranscript']);
 
-    // Information
-    // Calender
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-academic-calendar', [TeacherInformationController::class, 'teacherCalendarView'])->name('lms.teacherCalendar.view');
-    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-academic-calendar/save', [TeacherInformationController::class, 'saveCalendarData'])->name('lms.teacherCalendar.save');
-
-    // Jadwal
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule', [TeacherInformationController::class, 'scheduleView'])->name('lms.teacherSchedule.view');
-    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule/save', [TeacherInformationController::class, 'saveSchedule'])->name('lms.teacherSchedule.save');
-    Route::get('/lms/{schoolId}/teacher-schedule/get-data/{className}', [TeacherInformationController::class, 'getScheduleData'])->name('lms.teacherSchedule.get');
-
-    // Polling
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling', [TeacherInformationController::class, 'teacherPollingView'])->name('lms.teacherPolling.view');
-    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/save', [TeacherInformationController::class, 'savePollingData'])->name('lms.teacherPolling.save');
+    // Polling Teacher
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling', [App\Http\Controllers\TeacherInformationController::class, 'teacherPollingView'])->name('lms.teacherPolling.view');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/save', [App\Http\Controllers\TeacherInformationController::class, 'savePollingData'])->name('lms.teacherPolling.save');
+    Route::delete('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}', [App\Http\Controllers\TeacherInformationController::class, 'deletePoll'])->name('lms.teacherPolling.destroy');
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher/polling/vote', [App\Http\Controllers\TeacherInformationController::class, 'submitVote'])->name('lms.teacherPolling.submitVote');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}/breakdown', [App\Http\Controllers\TeacherInformationController::class, 'getPollingBreakdown'])->name('lms.teacherPolling.breakdown');
 
     // Rute detail kelas
-    Route::get('/lms/guru/api/get-students/{classId}', [LmsController::class, 'getStudentsForAttendance'])->name('lms.guru.get_students');
-    Route::post('/lms/teacher/pengumuman/store', [LmsController::class, 'storePengumuman'])->name('lms.teacher.pengumuman.store');
-    Route::post('/lms/student/announcement/mark-as-read', [LmsController::class, 'markAsRead'])->name('lms.student.announcement.read');
-    Route::get('/lms/guru/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [LmsController::class, 'classDetailView'])->name('lms.teacher.class.detail');
-    Route::post('/lms/teacher/attendance/store', [LmsController::class, 'saveAttendance'])->name('lms.teacher.attendance.store');
-    Route::get('/lms/teacher/tugas/{taskId}/submissions', [LmsController::class, 'getTaskSubmissions'])->name('lms.teacher.tugas.submissions');
-    Route::post('/lms/teacher/tugas/grades', [LmsController::class, 'saveTaskGrades'])->name('lms.teacher.tugas.grades');
-    Route::post('/lms/teacher/tugas/store', [LmsController::class, 'storeTugas'])->name('lms.teacher.tugas.store');
+    Route::get('/lms/guru/api/get-students/{classId}', [\App\Http\Controllers\LmsController::class, 'getStudentsForAttendance'])
+        ->name('lms.guru.get_students');
+    Route::post('/lms/teacher/pengumuman/store', [App\Http\Controllers\LmsController::class, 'storePengumuman'])->name('lms.teacher.pengumuman.store');
+    Route::post('/lms/student/announcement/mark-as-read', [App\Http\Controllers\LmsController::class, 'markAsRead'])->name('lms.student.announcement.read');
+    Route::get('/lms/guru/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [\App\Http\Controllers\LmsController::class, 'classDetailView'])
+        ->name('lms.teacher.class.detail');
+    Route::post('/lms/teacher/attendance/store', [App\Http\Controllers\LmsController::class, 'saveAttendance'])->name('lms.teacher.attendance.store');
+    Route::get('/lms/teacher/tugas/{taskId}/submissions', [App\Http\Controllers\LmsController::class, 'getTaskSubmissions'])->name('lms.teacher.tugas.submissions');
+    Route::post('/lms/teacher/tugas/grades', [App\Http\Controllers\LmsController::class, 'saveTaskGrades'])->name('lms.teacher.tugas.grades');
 
-    // ROUTES LIBRARY FEATURE
+   // 👇 RUTE JADWAL HEADMASTER
+    Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [App\Http\Controllers\HeadmasterController::class, 'getScheduleDataAjax']);
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule/save', [App\Http\Controllers\HeadmasterController::class, 'saveSchedule']);
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/pengumuman/store', [App\Http\Controllers\HeadmasterController::class, 'storePengumuman'])->name('lms.kepsek.pengumuman.store');
+
+    
+    // --------------------------------------------------------------------
+    // ROUTES STUDENT DASHBOARD
+    // --------------------------------------------------------------------
+    Route::get('/lms/student/dashboard', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
+    Route::get('/lms/student/view', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.view');
+    Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
+    Route::post('/student/announcement/mark-read', [StudentDashboardController::class, 'markAnnouncementAsRead'])->name('lms.studentAnnouncement.markRead');
+
+    // BLOK KEPALA SEKOLAH
+    Route::prefix('lms/headmaster')->name('lms.kepsek.')->group(function () {
+        Route::get('/{role}/{schoolName}/{schoolId}/dashboard', [HeadmasterController::class, 'index'])->name('dashboard');
+        
+        // Monitoring Laporan Akademik & Aktivitas
+        Route::get('/laporan-akademik', [HeadmasterController::class, 'laporanAkademik'])->name('laporan.akademik');
+        Route::get('/aktivitas-guru', [HeadmasterController::class, 'aktivitasGuru'])->name('aktivitas.guru');
+
+        Route::get('/schedule/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'scheduleView'])->name('schedule.view');
+        Route::get('/schedule/get-data/{schoolId}/{classId}', [HeadmasterController::class, 'getScheduleDataAjax'])->name('schedule.data');
+        Route::post('/schedule/save/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'saveSchedule'])->name('schedule.save'); 
+
+        Route::get('/calendar/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'CalendarView'])->name('calendar.view'); 
+        Route::post('/calendar/save/{role}/{schoolName}/{schoolId}', [HeadmasterController::class, 'saveCalendarData'])->name('calendar.save');
+    });
+
+    // =========================================================
+    // POLLING MANAGEMENT (KEPALA SEKOLAH)
+    // =========================================================
+    Route::get('/lms/kepsek/polling', [HeadmasterController::class, 'pollingIndex'])->name('kepsek.polling.index');
+    Route::post('/lms/kepsek/polling/store', [HeadmasterController::class, 'pollingStore'])->name('kepsek.polling.store');
+    Route::delete('/lms/kepsek/polling/destroy/{id}', [HeadmasterController::class, 'pollingDestroy'])->name('kepsek.polling.destroy');
+    Route::get('/lms/kepsek/polling/{id}/breakdown', [HeadmasterController::class, 'getPollingBreakdown']);
+
+    // =========================================================
+    // ROUTES ORANG TUA
+    // =========================================================
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/dashboard', [\App\Http\Controllers\ParentController::class, 'index'])->name('lms.parent.dashboard');
+    Route::post('/lms/parent/polling/{id}/vote', [\App\Http\Controllers\ParentController::class, 'submitPoll'])->name('lms.parent.poll.vote');
+    Route::get('/ortu/laporan-nilai', [ParentController::class, 'laporanNilai'])->name('ortu.laporan-nilai');
+    Route::get('/ortu/kehadiran', [ParentController::class, 'kehadiran'])->name('ortu.kehadiran');
+    Route::get('/ortu/jadwal-pelajaran', [ParentController::class, 'jadwalPelajaran'])->name('ortu.jadwal-pelajaran');
+    Route::get('/ortu/kalender-akademik', [ParentController::class, 'kalenderAkademik'])->name('ortu.kalender-akademik');
+     
+    
+    // ROUTES SCHOOL PARTNER
+    Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
+    Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
+    Route::post('/lms/teacher/tugas/store', [App\Http\Controllers\LmsController::class, 'storeTugas'])->name('lms.teacher.tugas.store');
+
+     // ROUTES LIBRARY FEATURE
     Route::get('/administrator/library', [LibraryController::class, 'index'])->name('library.index');
-
     Route::post('/administrator/library/store', [LibraryController::class, 'store'])->name('library.store');
-
     Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
-
     Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
     Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
     Route::get('/administrator/library', [LibraryController::class, 'administrator'])->name('library.administrator');
-
     Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])->name('student.library');
-
     Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])->name('student.library.read');
-
     Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])->name('student.library.submit');
-
     Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
-
     Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])->name('student.library.mapel');
-
     Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 
     // ROUTES SCHOOL ADMIN
@@ -652,7 +693,4 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // edit school logo
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/edit-school-logo', [LmsController::class, 'editSchoolLogo'])->name('lms.editLogo');
 
-    // ROUTES SCHOOL PARTNER
-    Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
-    Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
-});
+}); // END OF AUTH MIDDLEWARE GROUP

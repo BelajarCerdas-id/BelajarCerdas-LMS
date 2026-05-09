@@ -11,4 +11,10 @@ class Poll extends Model
     
     // Tambahkan baris ini agar Laravel mengizinkan data disimpan
     protected $guarded = ['id']; 
+
+    // 👇 INI YANG WAJIB DITAMBAHKAN UNTUK MENGATASI ERROR TADI 👇
+    public function PollOptions()
+    {
+        return $this->hasMany(PollOption::class, 'poll_id', 'id');
+    }
 }

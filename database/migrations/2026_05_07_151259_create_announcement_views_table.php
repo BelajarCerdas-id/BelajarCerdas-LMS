@@ -9,21 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('announcement_views', function (Blueprint $table) {
             $table->id();
             
-            // Relasi ke tabel pengumuman (kalau pengumuman dihapus, riwayat bacanya ikut terhapus)
-            $table->foreignId('announcement_id')->constrained('announcements')->onDelete('cascade');
-            
-            // ID Siswa yang membaca
-            $table->unsignedBigInteger('student_id');
+            // Menggunakan foreignId() dan constrained() untuk relasi yang lebih rapi
+            $table->foreignId('announcement_id')->constrained('announcements')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             
             $table->timestamps();
 
-            // KUNCI PENTING: Mencegah 1 siswa dihitung 2 kali di pengumuman yang sama
-            $table->unique(['announcement_id', 'student_id']);
+            // Mencegah 1 user tercatat melihat pengumuman yang sama berkali-kali 
+            $table->unique(['announcement_id', 'user_id']);
         });
     }
 

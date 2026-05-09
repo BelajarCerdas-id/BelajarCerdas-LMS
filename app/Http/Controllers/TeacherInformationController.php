@@ -5,371 +5,290 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\AcademicCalendar;
-use App\Models\LessonSchedule;
-use App\Models\LessonScheduleItem;
 use App\Models\Poll;
 use App\Models\PollOption;
 
 class TeacherInformationController extends Controller
 {
-    /**
-     * Menampilkan Halaman Kalender Akademik Guru
-     */
-    public function teacherCalendarView($role, $schoolName, $schoolId)
+    // 👇 PERBAIKAN: Tambahkan Request $request di parameter pertama
+    public function teacherPollingView(Request $request, $role, $schoolName, $schoolId)
     {
-        $eventsFromDb = AcademicCalendar::where('school_partner_id', $schoolId)->get();
-        
-        $savedEvents = [];
-        foreach($eventsFromDb as $ev) {
-            $savedEvents[] = [
-                'date'   => date('Y-m-d', strtotime($ev->date)), 
-                'title'  => $ev->title,
-                'type'   => $ev->type,
-                'color'  => $ev->color,
-                'status' => $ev->status
-            ];
+        $user = Auth::user();
+        $userId = $user->id;
+
+        // 1. TANGKAP FILTER TAHUN AJARAN DARI URL
+        $filterTahun = $request->query('tahun_ajaran');
+
+        // 2. QUERY KELAS YANG DIAJAR GURU BERDASARKAN JADWAL (lesson_schedule_items)
+        $kelasQuery = DB::table('lesson_schedule_items')
+            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+            ->join('school_classes', 'lesson_schedules.class_id', '=', 'school_classes.id')
+            ->where('lesson_schedule_items.teacher_id', $userId)
+            ->where('school_classes.school_partner_id', $schoolId)
+            ->where('school_classes.status_class', 'active');
+
+        // Ambil daftar Tahun Ajaran unik dari kelas yang ada di jadwal guru ini
+        $tahunAjaranList = (clone $kelasQuery)
+            ->whereNotNull('school_classes.tahun_ajaran')
+            ->select('school_classes.tahun_ajaran')
+            ->distinct()
+            ->orderBy('school_classes.tahun_ajaran', 'desc')
+            ->pluck('tahun_ajaran');
+
+        // Jika tidak ada filter yang dipilih, gunakan tahun ajaran terbaru
+        if (empty($filterTahun) && $tahunAjaranList->count() > 0) {
+            $filterTahun = $tahunAjaranList->first();
         }
 
-        return view('features.lms.teacher.information.calender', compact('role', 'schoolName', 'schoolId', 'savedEvents'));
-    }
-
-    /**
-     * Menyimpan Data Kalender Akademik Guru
-     */
-    public function saveCalendarData(Request $request, $role, $schoolName, $schoolId)
-    {
-        try {
-            $status = $request->status; 
-            $events = $request->events;
-
-            AcademicCalendar::where('school_partner_id', $schoolId)->delete();
-
-            if (!empty($events)) {
-                $insertData = [];
-                foreach ($events as $event) {
-                    $insertData[] = [
-                        'school_partner_id' => $schoolId,
-                        'date'              => $event['date'],
-                        'title'             => $event['title'],
-                        'type'              => $event['type'] ?? 'school_event',
-                        'color'             => $event['color'] ?? '#F59E0B',
-                        'status'            => $status,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                    ];
-                }
-                AcademicCalendar::insert($insertData);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Kalender berhasil disimpan permanen ke database!'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'GAGAL DATABASE: ' . $e->getMessage()
-            ], 500);
+        // Terapkan filter tahun ajaran ke query kelas
+        if ($filterTahun) {
+            $kelasQuery->where('school_classes.tahun_ajaran', $filterTahun);
         }
-    }
 
-    /**
-     * Menampilkan Halaman Jadwal Pelajaran
-     */
-    public function scheduleView($role, $schoolName, $schoolId)
-    {
-        $timeSlots = [
-            ['start' => '07:00', 'end' => '07:45', 'is_break' => false],
-            ['start' => '07:45', 'end' => '08:30', 'is_break' => false],
-            ['start' => '08:30', 'end' => '09:15', 'is_break' => false],
-            ['start' => '09:15', 'end' => '10:00', 'is_break' => false],
-            ['start' => '10:00', 'end' => '10:45', 'is_break' => true],
-            ['start' => '10:45', 'end' => '11:30', 'is_break' => false],
-            ['start' => '11:30', 'end' => '12:15', 'is_break' => false],
-            ['start' => '12:15', 'end' => '13:00', 'is_break' => true],
-            ['start' => '13:00', 'end' => '13:45', 'is_break' => false],
-            ['start' => '13:45', 'end' => '14:30', 'is_break' => false],
-            ['start' => '14:30', 'end' => '15:15', 'is_break' => false],
-        ];
-
-        $classes = DB::table('school_classes')
-            ->where('school_partner_id', $schoolId)
-            ->where('status_class', 'active')
-            ->select('id', 'class_name', 'kelas_id') 
-            ->orderBy('kelas_id', 'asc')
-            ->orderBy('class_name', 'asc')
+        // Eksekusi pencarian kelas (Pastikan distinct agar nama kelas tidak ganda)
+        $classes = $kelasQuery->select('school_classes.id as class_id', 'school_classes.class_name')
+            ->distinct()
+            ->orderBy('school_classes.class_name', 'asc')
             ->get();
 
-        return view('features.lms.teacher.information.schedule', compact(
-            'role', 'schoolName', 'schoolId', 'timeSlots', 'classes'
+        $classIds = $classes->pluck('class_id')->toArray();
+
+        // 3. Ambil Polling Buatan Guru Sendiri (Berdasarkan Tahun Ajaran/Kelas yang diajar)
+        $polls = \App\Models\Poll::with('PollOptions')
+            ->where('school_partner_id', $schoolId)
+            ->where('author_id', $userId)
+            ->when($filterTahun, function($q) use ($classIds) {
+                // Tampilkan polling yang mengarah ke kelas di tahun ajaran ini, ATAU polling global (semua kelas)
+                $q->where(function($subQuery) use ($classIds) {
+                    $subQuery->whereIn('class_id', $classIds)
+                             ->orWhereNull('class_id');
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($poll) {
+                // Menambahkan Nama Kelas Secara Dinamis
+                if ($poll->class_id) {
+                    $kelas = DB::table('school_classes')->where('id', $poll->class_id)->first();
+                    $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
+                } else {
+                    $poll->nama_kelas = 'Semua Kelas (Yang Saya Ajar)';
+                }
+                return $poll;
+            });
+
+        // 4. Ambil Polling Buatan Kepsek & Wakasek (Untuk Tab "Dari Sekolah")
+        $pollingDariSekolah = \App\Models\Poll::with('PollOptions')
+            ->where('school_partner_id', $schoolId)
+            ->whereIn('author_role', ['Kepala Sekolah', 'Wakil Kepala Sekolah'])
+            ->whereIn('target', ['Semua Guru', 'Semua Warga Sekolah', 'Semua'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($poll) use ($userId) {
+                // Ambil record vote-nya langsung
+                $voteRecord = DB::table('poll_votes')
+                    ->where('poll_id', $poll->id)
+                    ->where('user_id', $userId)
+                    ->first();
+                
+                if ($voteRecord) {
+                    $poll->has_voted = true;
+                    $poll->voted_option_id = $voteRecord->poll_option_id; 
+                } else {
+                    $poll->has_voted = false;
+                    $poll->voted_option_id = null;
+                }
+                
+                return $poll;
+            });
+
+        return view('features.lms.teacher.information.polling', compact(
+            'role', 'schoolName', 'schoolId', 'polls', 'pollingDariSekolah', 
+            'classes', 'tahunAjaranList', 'filterTahun'
         ));
     }
 
-    /**
-     * Menarik Data Guru/Mapel dan Jadwal Tersimpan via AJAX
-     */
-    public function getScheduleDataAjax($schoolId, $classId)
+    public function submitVote(Request $request, $role, $schoolName, $schoolId)
     {
-        try {
-            $classInfo = DB::table('school_classes')
-                ->where('id', $classId)
-                ->where('school_partner_id', $schoolId)
-                ->first();
+        $userId = Auth::id();
+        
+        $request->validate([
+            'poll_id' => 'required|exists:polls,id',
+            'option_id' => 'required|exists:poll_options,id',
+        ]);
 
-            if (!$classInfo) {
-                return response()->json(['success' => false, 'message' => 'Kelas tidak ditemukan.']);
-            }
+        // Cek apakah sudah pernah vote
+        $alreadyVoted = DB::table('poll_votes')
+            ->where('poll_id', $request->poll_id)
+            ->where('user_id', $userId)
+            ->exists();
 
-            $teachersData = DB::table('teacher_mapels')
-                ->join('school_staff_profiles', 'teacher_mapels.user_id', '=', 'school_staff_profiles.user_id')
-                ->join('mapels', 'teacher_mapels.mapel_id', '=', 'mapels.id')
-                ->join('school_classes', 'teacher_mapels.school_class_id', '=', 'school_classes.id')
-                ->where('school_staff_profiles.school_partner_id', $schoolId)
-                ->where('school_classes.kelas_id', $classInfo->kelas_id)
-                ->where(function($query) use ($classInfo) {
-                    if ($classInfo->major_id) {
-                        $query->where('school_classes.major_id', $classInfo->major_id)
-                              ->orWhereNull('school_classes.major_id');
-                    } else {
-                        $query->whereNull('school_classes.major_id');
-                    }
-                })
-                ->select(
-                    'teacher_mapels.user_id', 
-                    'teacher_mapels.mapel_id',
-                    'school_staff_profiles.nama_lengkap',
-                    'mapels.mata_pelajaran'
-                )
-                ->distinct() 
-                ->get();
-
-            $available_mapels = [];
-            $colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#EAB308'];
-            
-            foreach ($teachersData as $index => $t) {
-                $available_mapels[] = [
-                    'id'         => $t->user_id,
-                    'name'       => $t->nama_lengkap ?? "Guru " . $t->user_id,
-                    'subject_id' => $t->mapel_id,
-                    'subject'    => $t->mata_pelajaran, 
-                    'color'      => $colors[$index % count($colors)]
-                ];
-            }
-
-            $parent = LessonSchedule::where('school_partner_id', $schoolId)
-                ->where('class_id', $classId)
-                ->first();
-                
-            $formattedSchedules = [];
-            if ($parent) {
-                $items = LessonScheduleItem::where('lesson_schedule_id', $parent->id)->get();
-                foreach ($items as $item) {
-                    $formattedSchedules[] = [
-                        'day_of_week'  => $item->day_of_week,
-                        'start_time'   => substr($item->start_time, 0, 5), 
-                        'teacher_id'   => $item->teacher_id,
-                        'teacher_name' => $item->teacher_name,
-                        'subject_id'   => $item->mapel_id,
-                        'subject_name' => $item->subject_name,
-                        'color'        => $item->color
-                    ];
-                }
-            }
-
-            return response()->json([
-                'success'          => true,
-                'available_mapels' => $available_mapels,
-                'data'             => $formattedSchedules
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Menyimpan Jadwal
-     */
-    public function saveSchedule(Request $request, $role, $schoolName, $schoolId)
-    {
-        $classId = $request->class_id;
-        $className = $request->class_name;
-        $status = $request->status ?? 'draft';
-        $schedules = $request->schedules;
-
-        if (!$classId) {
-            return response()->json(['success' => false, 'message' => 'ID Kelas tidak valid.']);
+        if ($alreadyVoted) {
+            return response()->json(['success' => false, 'message' => 'Anda sudah memberikan suara.']);
         }
 
         DB::beginTransaction();
         try {
-            // 1. Cek Bentrok
-            if (!empty($schedules)) {
-                foreach ($schedules as $s) {
-                    $clash = DB::table('lesson_schedule_items')
-                        ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
-                        ->where('lesson_schedules.school_partner_id', $schoolId)
-                        ->where('lesson_schedules.class_id', '!=', $classId)
-                        ->where('lesson_schedule_items.day_of_week', $s['day'])
-                        ->where('lesson_schedule_items.start_time', $s['start_time'])
-                        ->where('lesson_schedule_items.teacher_id', $s['teacher_id'])
-                        ->select('lesson_schedules.class_name')
-                        ->first();
+            // 1. Simpan ke riwayat suara
+            DB::table('poll_votes')->insert([
+                'poll_id' => $request->poll_id,
+                'poll_option_id' => $request->option_id,
+                'user_id' => $userId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-                    if ($clash) {
-                        DB::rollBack();
-                        return response()->json([
-                            'success' => false, 
-                            'message' => "BENTROK JADWAL: {$s['teacher_name']} sudah mengajar di kelas {$clash->class_name} pada hari {$s['day']} jam {$s['start_time']}."
-                        ]);
-                    }
-                }
-            }
-
-            // 2. Hapus Data Lama
-            $existingParent = LessonSchedule::where('school_partner_id', $schoolId)
-                ->where('class_id', $classId)
-                ->first();
-
-            if ($existingParent) {
-                LessonScheduleItem::where('lesson_schedule_id', $existingParent->id)->delete();
-                $existingParent->delete();
-            }
-
-            // 3. Simpan Parent
-            // 3. Simpan Parent (Menggunakan DB::table untuk mengakali database)
-            // 3. Simpan Parent (Smart Insert - Anti Error)
-            $parentData = [
-                'school_partner_id' => $schoolId,
-                'class_id'          => $classId,
-                'class_name'        => $className,
-                'status'            => $status,
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ];
-
-            // Daftar kolom masa lalu yang mungkin masih nyasar di database
-            $legacyColumns = [
-                'day_of_week'  => '-',
-                'start_time'   => '00:00',
-                'end_time'     => '00:00',
-                'teacher_id'   => '0',
-                'teacher_name' => '-',
-                'subject_name' => '-',
-                'mapel_id'     => '0',
-                'color'        => '-',
-            ];
-
-            // Mengecek ke database: Jika kolomnya masih ada, masukkan data dummy. Jika tidak ada, biarkan.
-            foreach ($legacyColumns as $col => $dummyValue) {
-                if (\Illuminate\Support\Facades\Schema::hasColumn('lesson_schedules', $col)) {
-                    $parentData[$col] = $dummyValue;
-                }
-            }
-
-            $newParentId = DB::table('lesson_schedules')->insertGetId($parentData);
-
-            // 4. Simpan Detail Jadwal (Children)
-            if (!empty($schedules)) {
-                $items = [];
-                $now = now();
-                
-                foreach ($schedules as $s) {
-                    $endTime = date('H:i', strtotime('+45 minutes', strtotime($s['start_time'])));
-                    $items[] = [
-                        'lesson_schedule_id' => $newParentId, // Menggunakan ID dari trik di atas
-                        'teacher_id'         => $s['teacher_id'],
-                        'mapel_id'           => $s['subject_id'],
-                        'teacher_name'       => $s['teacher_name'],
-                        'subject_name'       => $s['subject_name'],
-                        'day_of_week'        => $s['day'],
-                        'start_time'         => $s['start_time'],
-                        'end_time'           => $endTime,
-                        'color'              => $s['color'] ?? '#0071BC',
-                        'created_at'         => $now,
-                        'updated_at'         => $now,
-                    ];
-                }
-                LessonScheduleItem::insert($items);
-            }
+            // 2. Update counter di tabel options
+            DB::table('poll_options')->where('id', $request->option_id)->increment('votes_count');
 
             DB::commit();
-            
-            $msgStatus = $status === 'published' ? 'dipublikasikan' : 'disimpan sebagai draft';
+            return response()->json(['success' => true, 'message' => 'Terima kasih, suara Anda telah direkam!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal menyimpan suara.']);
+        }
+    }
+
+    public function savePollingData(Request $request, $role, $schoolName, $schoolId)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user || $user->role !== 'Guru') abort(403);
+
+        // 1. Validasi data yang masuk dari AJAX
+        $request->validate([
+            'question'    => 'required|string',
+            'options'     => 'required|array|min:2',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $kelasId = $request->class_id;
+            if (empty($kelasId) || $kelasId === '0' || $kelasId === 'null') {
+                $kelasId = null;
+            }
+
+            $targetAudiens = $request->target ?? $request->target_role ?? 'Semua Warga Sekolah';
+
+            // 2. Simpan pertanyaan utama beserta Target & Author
+            $pollId = DB::table('polls')->insertGetId([
+                'school_partner_id' => $schoolId,
+                'class_id'          => $kelasId,
+                'question'          => $request->question,
+                'target'            => $targetAudiens, 
+                'author_id'         => $user->id,            
+                'author_role'       => 'Guru',               
+                'status'            => 'active',
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+
+            // 3. Simpan pilihan jawabannya
+            $optionsData = [];
+            foreach ($request->options as $opt) {
+                $optionsData[] = [
+                    'poll_id'     => $pollId,
+                    'option_text' => $opt,
+                    'votes_count' => 0,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            }
+            DB::table('poll_options')->insert($optionsData);
+
+            DB::commit();
+
             return response()->json([
-                'success' => true, 
-                'message' => "Jadwal kelas {$className} berhasil {$msgStatus}!"
+                'success' => true,
+                'message' => 'Polling berhasil dibuat dan dikirim ke ' . $targetAudiens
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'success' => false, 
-                'message' => 'Gagal menyimpan: ' . $e->getMessage()
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Menampilkan Halaman Polling
-     */
-    public function teacherPollingView($role, $schoolName, $schoolId)
+    public function deletePoll($role, $schoolName, $schoolId, $id) 
     {
-        $userId = Auth::id();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user || $user->role !== 'Guru') abort(403);
 
-        // 1. Ambil daftar kelas yang DIAJAR oleh guru ini saja (Dropdown)
-        $classes = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
-            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
-            ->where('lesson_schedules.school_partner_id', $schoolId)
-            ->where('lesson_schedule_items.teacher_id', $userId)
-            ->select('lesson_schedules.class_id', 'lesson_schedules.class_name')
-            ->distinct()
-            ->get();
-
-        // 2. Ambil riwayat polling yang pernah dibuat guru ini
-        // PERBAIKAN: Tambahkan awalan \ pada App\Models\Poll
-        $polls = \App\Models\Poll::where('school_partner_id', $schoolId)
-            ->where('teacher_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('features.lms.teacher.information.polling', compact('role', 'schoolName', 'schoolId', 'polls', 'classes'));
-    }
-
-    public function savePollingData(Request $request, $role, $schoolName, $schoolId)
-    {
         try {
-            // PERBAIKAN: Tambahkan awalan \ pada App\Models\Poll
-            $poll = \App\Models\Poll::create([
-                'school_partner_id' => $schoolId,
-                'teacher_id'        => Auth::id(),
-                'class_id'          => $request->class_id,   
-                'class_name'        => $request->class_name, 
-                'question'          => $request->question,
-                'status'            => 'active',
-            ]);
-
-            $optionsData = [];
-            foreach ($request->options as $opt) {
-                if (!empty($opt)) {
-                    $optionsData[] = [
-                        'poll_id'     => $poll->id,
-                        'option_text' => $opt,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
-                    ];
-                }
+            $pollExists = \Illuminate\Support\Facades\DB::table('polls')
+                ->where('id', $id)
+                ->where('author_id', $user->id) // PASTIKAN GURU HANYA BISA MENGHAPUS POLLING MILIKNYA
+                ->exists();
+                
+            if (!$pollExists) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Polling tidak ditemukan atau Anda tidak memiliki akses menghapusnya.'
+                ], 404);
             }
+
+            // 1. Hapus data yang berelasi
+            \Illuminate\Support\Facades\DB::table('poll_votes')->where('poll_id', $id)->delete();
+            \Illuminate\Support\Facades\DB::table('poll_options')->where('poll_id', $id)->delete();
             
-            // PERBAIKAN: Tambahkan awalan \ pada App\Models\PollOption
-            \App\Models\PollOption::insert($optionsData);
+            // 2. Hapus polling utama
+            \Illuminate\Support\Facades\DB::table('polls')->where('id', $id)->delete();
 
-            return response()->json(['success' => true, 'message' => 'Polling berhasil dipublikasikan ke kelas ' . $request->class_name]);
-
+            return response()->json([
+                'success' => true, 
+                'message' => 'Polling berhasil dihapus secara permanen!'
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], 500);
         }
     }
+    /**
+     * Mendapatkan detail polling beserta breakdown responden untuk grafik
+     */
+    public function getPollingBreakdown($role, $schoolName, $schoolId, $id)
+    {
+        try {
+            $options = \App\Models\PollOption::where('poll_id', $id)->get();
+            $votes = \Illuminate\Support\Facades\DB::table('poll_votes')
+                ->join('user_accounts', 'poll_votes.user_id', '=', 'user_accounts.id')
+                ->where('poll_votes.poll_id', $id)
+                ->select('poll_votes.poll_option_id', 'user_accounts.role')
+                ->get();
+
+            $labels = [];
+            $dataSiswa = [];
+            $dataOrtu = [];
+            $dataGuru = [];
+
+            foreach ($options as $opt) {
+                $labels[] = $opt->option_text;
+                
+                // Hitung berdasarkan Role
+                $dataSiswa[] = $votes->where('poll_option_id', $opt->id)->where('role', 'Siswa')->count();
+                $dataOrtu[] = $votes->where('poll_option_id', $opt->id)->where('role', 'Orang Tua')->count();
+                // Guru/Manajemen
+                $dataGuru[] = $votes->where('poll_option_id', $opt->id)->whereIn('role', ['Guru', 'Kepala Sekolah', 'Wakil Kepala Sekolah', 'Admin'])->count();
+            }
+
+            return response()->json([
+                'success' => true,
+                'labels' => $labels,
+                'datasets' => [
+                    'Siswa' => $dataSiswa,
+                    'Orang Tua' => $dataOrtu,
+                    'Guru/Manajemen' => $dataGuru
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
 }

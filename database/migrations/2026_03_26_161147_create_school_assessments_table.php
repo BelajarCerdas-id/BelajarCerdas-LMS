@@ -11,30 +11,33 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('school_assessments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('user_accounts');
-            $table->foreignId('school_partner_id')->constrained('school_partners');
-            $table->foreignId('school_class_id')->constrained('school_classes');
-            $table->foreignId('mapel_id')->constrained('mapels');
-            $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
-            $table->string('assessment_category')->default('main'); // Kategori main / remedial / susulan / pengayaan / dll
-            $table->foreignId('parent_assessment_id')->nullable()->constrained('school_assessments'); // Untuk parent assessment (misal remedial atau susulan dari main)
-            $table->string('title');
-            $table->text('assessment_instruction')->nullable();
-            $table->integer('duration')->nullable();
-            $table->unsignedTinyInteger('semester');
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->string('assessment_value_file')->nullable();
-            $table->string('assessment_original_filename')->nullable();
-            $table->boolean('shuffle_questions')->default(false);
-            $table->boolean('shuffle_options')->default(false);
-            $table->boolean('show_score')->default(false);
-            $table->boolean('show_answer')->default(false);
-            $table->enum('status', ['draft', 'published'])->default('draft');
-            $table->timestamps();
-        });
+        // PERISAI: Cek apakah tabel school_assessments sudah ada di SQLite
+        if (!Schema::hasTable('school_assessments')) {
+            Schema::create('school_assessments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('user_accounts');
+                $table->foreignId('school_partner_id')->constrained('school_partners');
+                $table->foreignId('school_class_id')->constrained('school_classes');
+                $table->foreignId('mapel_id')->constrained('mapels');
+                $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
+                $table->string('assessment_category')->default('main'); 
+                $table->foreignId('parent_assessment_id')->nullable()->constrained('school_assessments'); 
+                $table->string('title');
+                $table->text('assessment_instruction')->nullable();
+                $table->integer('duration')->nullable();
+                $table->unsignedTinyInteger('semester');
+                $table->dateTime('start_date');
+                $table->dateTime('end_date');
+                $table->string('assessment_value_file')->nullable();
+                $table->string('assessment_original_filename')->nullable();
+                $table->boolean('shuffle_questions')->default(false);
+                $table->boolean('shuffle_options')->default(false);
+                $table->boolean('show_score')->default(false);
+                $table->boolean('show_answer')->default(false);
+                $table->enum('status', ['draft', 'published'])->default('draft');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
