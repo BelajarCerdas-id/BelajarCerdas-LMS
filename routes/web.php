@@ -29,6 +29,7 @@ use App\Http\Controllers\Lms\Academic\StudentSchoolClassController;
 use App\Http\Controllers\Lms\AssessmentManagement\AssessmentTypeController;
 use App\Http\Controllers\Lms\ContentBank\ContentBankController;
 use App\Http\Controllers\Lms\AssessmentManagement\AssessmentWeightController;
+use App\Http\Controllers\Lms\Attendances\Student\SubjectAttendanceController;
 use App\Http\Controllers\Lms\SubjectPassingGradeCriteria\SubjectPassingGradeCriteriaController;
 use App\Http\Controllers\Lms\TeacherSubject\TeacherSubjectController;
 use App\Http\Controllers\Lms\UserManagement\AccountController;
@@ -555,6 +556,31 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/mode/{mode}/student-list/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentList'])->name('lms.assessmentGradingStudentList.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/mode/{mode}/student-list/{studentId}/scoring/paginate', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentAnswer'])->name('lms.assessmentGradingStudentAnswer.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/student-list/{studentId}/scoring/project', [TeacherAssessmentGradingController::class, 'paginateAssessmentGradingStudentProject'])->name('lms.assessmentGradingStudentProject');
+
+    // TEACHER SUBJECT ATTENDANCE MANAGEMENT
+    // views
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes', [SubjectAttendanceController::class, 'teacherClassList'])->name('lms.teacherClassListSubjectAttendance.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list', [SubjectAttendanceController::class, 'subjectAttendanceMeetingList'])->name('lms.teacherSubjectAttendanceMeetingList.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management', [SubjectAttendanceController::class, 'subjectAttendanceMeetingManagement'])->name('lms.teacherSubjectAttendanceMeetingManagement.view');
+
+    // subject attendance data
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/data', [SubjectAttendanceController::class, 'getSubjectAttendanceData'])->name('lms.teacherSubjectAttendance.data');
+
+    // crud
+    // announcement
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/announcement-store', [SubjectAttendanceController::class, 'announcementStore'])->name('lms.teacherSubjectAttendanceMeetingManagement.announcement.store');
+
+    // submit attendance student
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/student-attendance/store', [SubjectAttendanceController::class, 'storeStudentAttendance'])->name('lms.studentAttendance.store');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/paginate', [SubjectAttendanceController::class, 'paginateTeacherClassList'])->name('lms.teacherClassListSubjectAttendance.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/semester/{semester}/paginate', [SubjectAttendanceController::class, 'paginateSubjectAttendanceMeetingList'])->name('lms.teacherSubjectAttendanceMeetingList.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/announcement/paginate', [SubjectAttendanceController::class, 'paginateAnnouncementList'])->name('lms.teacherSubjectAttendanceMeetingManagement.announcement.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/material/paginate', [SubjectAttendanceController::class, 'paginateMaterialList'])->name('lms.teacherSubjectAttendanceMeetingManagement.material.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/assessment/paginate', [SubjectAttendanceController::class, 'paginateAssessmentList'])->name('lms.teacherSubjectAttendanceMeetingManagement.assessment.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/student-attendance/paginate', [SubjectAttendanceController::class, 'paginateStudentAttendance'])->name('lms.studentAttendance.paginate');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/chart', [SubjectAttendanceController::class, 'getAttendanceChart']);
 
     // TEACHER GRADEBOOK MANAGEMENT
     // views

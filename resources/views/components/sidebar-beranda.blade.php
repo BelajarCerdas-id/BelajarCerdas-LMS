@@ -813,6 +813,13 @@
 
                         <div class="content-dropdown pl-6 pr-3.5 w-full">
                             <div class="flex flex-col">
+                                <a href="{{ route('lms.teacherClassListSubjectAttendance.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    Presensi Mata Pelajaran
+                                </a>
                                 <a href="{{ route('lms.teacherClassList.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
@@ -1179,6 +1186,14 @@
 
                             <div class="content-dropdown pl-6 pr-3.5 w-full">
                                 <div class="flex flex-col">
+                                    <a href="{{ route('lms.teacherClassListSubjectAttendance.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Presensi Mata Pelajaran
+                                    </a>
+
                                     <a href="{{ route('lms.teacherClassList.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
