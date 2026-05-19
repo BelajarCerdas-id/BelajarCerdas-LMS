@@ -78,12 +78,12 @@ function paginateContentManagemet(page = 1) {
                     $('#tbody-content-management-list').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kurikulum?.nama_kurikulum}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.service?.name}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kelas?.kelas}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.mapel?.mata_pelajaran}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.bab?.nama_bab}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.sub_bab?.sub_bab}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kurikulum?.nama_kurikulum ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.service?.name ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kelas?.kelas ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.mapel?.mata_pelajaran ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.bab?.nama_bab ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.sub_bab?.sub_bab ?? '-'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">${item.school_partner_id ? item.school_partner?.nama_sekolah : 'belajarcerdas.id'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">
                                 ${toggleActivateContent}

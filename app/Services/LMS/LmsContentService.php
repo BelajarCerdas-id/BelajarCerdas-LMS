@@ -25,7 +25,7 @@ class LmsContentService {
                 'kelas_id'     => $data['kelas_id'],
                 'mapel_id'     => $data['mapel_id'],
                 'bab_id'       => $data['bab_id'],
-                'sub_bab_id'   => $data['sub_bab_id'],
+                'sub_bab_id'   => $data['sub_bab_id'] ?? null,
             ]);
 
             $this->syncItems($content, $data);
@@ -47,7 +47,7 @@ class LmsContentService {
                 'kelas_id'     => $data['kelas_id'],
                 'mapel_id'     => $data['mapel_id'],
                 'bab_id'       => $data['bab_id'],
-                'sub_bab_id'   => $data['sub_bab_id'],
+                'sub_bab_id'   => $data['sub_bab_id'] ?? null,
                 'service_id'   => $data['service_id'],
             ]);
 

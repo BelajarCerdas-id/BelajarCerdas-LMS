@@ -92,7 +92,6 @@ class ContentBankController extends Controller
             'kelas_id'     => 'required',
             'mapel_id'     => 'required',
             'bab_id'       => 'required',
-            'sub_bab_id'   => 'required',
         ];
 
         $messages = [
@@ -100,7 +99,6 @@ class ContentBankController extends Controller
             'kelas_id.required'     => 'Harap pilih kelas.',
             'mapel_id.required'     => 'Harap pilih mapel.',
             'bab_id.required'       => 'Harap pilih bab.',
-            'sub_bab_id.required'   => 'Harap pilih sub bab.',
             'service_id.required'   => 'Harap pilih service.',
         ];
 
@@ -249,7 +247,6 @@ class ContentBankController extends Controller
             'kelas_id'     => 'required',
             'mapel_id'     => 'required',
             'bab_id'       => 'required',
-            'sub_bab_id'   => 'required',
             'service_id'   => 'required',
         ];
 
@@ -258,7 +255,6 @@ class ContentBankController extends Controller
             'kelas_id.required'     => 'Harap pilih kelas.',
             'mapel_id.required'     => 'Harap pilih mapel.',
             'bab_id.required'       => 'Harap pilih bab.',
-            'sub_bab_id.required'   => 'Harap pilih sub bab.',
             'service_id.required'   => 'Harap pilih service.',
         ];
 

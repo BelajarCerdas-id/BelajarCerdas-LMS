@@ -92,7 +92,6 @@
                             <div class="flex flex-col order-5 xl:order-0">
                                 <label class="mb-2 text-sm">
                                     Sub Bab
-                                    <sup class="text-red-500">&#42;</sup>
                                 </label>
                                 <select name="sub_bab_id" id="id_sub_bab"
                                     class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
