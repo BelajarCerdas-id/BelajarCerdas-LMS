@@ -34,6 +34,8 @@ class ContentBankController extends Controller
     // function paginate lms content
     public function paginateLmsContentManagement($schoolName = null, $schoolId = null)
     {
+        $user = Auth::user();
+
         // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
         if ($schoolId) {
             $schoolPartner = SchoolPartner::findOrFail($schoolId);
@@ -72,6 +74,7 @@ class ContentBankController extends Controller
 
         return response()->json([
             'data'   => $getContent->items(),
+            'user'   => $user,
             'links'  => (string) $getContent->links(),
             'current_page' => $getContent->currentPage(),
             'per_page' => $getContent->perPage(),
@@ -218,7 +221,13 @@ class ContentBankController extends Controller
     // function edit content default view (function untuk edit content milik sekolah)
     public function lmsSchoolContentManagementEditView($schoolName, $schoolId, $contentId)
     {
+        $user = Auth::user();
+                
         $content = LmsContent::with(['Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service'])->findOrFail($contentId);
+
+        if ($user->role === 'Admin Sekolah' && !$content->school_partner_id) {
+            return redirect()->route('lms.contentManagement.view.schoolPartner', [$schoolName, $schoolId]);    
+        }
 
         $getCurriculum = Kurikulum::all();
 

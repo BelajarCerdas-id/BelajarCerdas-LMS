@@ -15,6 +15,7 @@ function paginateContentManagemet(page = 1) {
             page: page
         },
         success: function (response) {
+            const user = response.user;
             $('#tbody-content-management-list').empty();
             $('.pagination-container-content-management-list').empty();
 
@@ -45,6 +46,30 @@ function paginateContentManagemet(page = 1) {
                     } else {
                         editContent = response.editContent.replace(':contentId', item.id);
                         reviewContent = response.reviewContent.replace(':contentId', item.id)
+                    }
+
+                    let editContent_display = '';
+
+                    if (user.role === 'Administrator') {
+                        editContent_display = `
+                            <li class="text-md">
+                                <a href="${editContent}" class="btn-edit-content">
+                                    <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                    Edit Content
+                                </a>
+                            </li>
+                        `;
+                    } else if (user.role === 'Admin Sekolah') {
+                        if (item.school_partner_id) {
+                            editContent_display = `
+                                <li class="text-md">
+                                    <a href="${editContent}" class="btn-edit-content">
+                                        <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                        Edit Content
+                                    </a>
+                                </li>
+                            `;
+                        }
                     }
 
                     const isGlobalActive = item.is_active;
@@ -117,12 +142,7 @@ function paginateContentManagemet(page = 1) {
                                                 History Content
                                             </span>
                                         </li>
-                                        <li class="text-md">
-                                            <a href="${editContent}" class="btn-edit-content">
-                                                <i class="fa-solid fa-pen text-[#0071BC]"></i>
-                                                Edit Content
-                                            </a>
-                                        </li>
+                                        ${editContent_display}
                                     </ul>
                                 </div>
                             </td>
