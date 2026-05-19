@@ -248,6 +248,7 @@
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Soal</th>
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Difficulty</th>
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Soal</th>
+                                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Kategori</th>
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Bobot</th>
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Sumber Soal</th>
                                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Preview</th>

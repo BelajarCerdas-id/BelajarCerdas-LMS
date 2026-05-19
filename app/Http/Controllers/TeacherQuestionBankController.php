@@ -151,25 +151,25 @@ class TeacherQuestionBankController extends Controller
             'selectedYear'  => $searchYear,
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
-            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
+            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory',
         ]);
     }
 
     // function teacher question bank management detail
-    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $source, $questionType, $subBabId)
+    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId = null)
     {
         return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-detail', compact('role', 'schoolName', 'schoolId', 
-            'source', 'questionType', 'subBabId'));
+            'source', 'questionType', 'questionCategory', 'subBabId'));
     }
 
     // function teacher question bank management edit
-    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $source, $questionType, $subBabId, $questionId)
+    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $questionId, $subBabId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion || !$editQuestion->school_partner_id) {
-            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $subBabId]);
+            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId]);
         }
 
         // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
@@ -179,6 +179,6 @@ class TeacherQuestionBankController extends Controller
         $groupedSoal = $dataSoal;
 
         return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-edit', compact('role', 'schoolId', 'schoolName', 
-        'source', 'subBabId', 'questionId', 'questionType'));
+        'source', 'subBabId', 'questionId', 'questionType', 'questionCategory'));
     }
 }

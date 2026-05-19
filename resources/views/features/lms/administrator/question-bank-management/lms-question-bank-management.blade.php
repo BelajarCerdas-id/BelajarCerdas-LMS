@@ -62,7 +62,6 @@
                             <div class="flex flex-col order-5 xl:order-0">
                                 <label class="mb-2 text-sm">
                                     Sub Bab
-                                    <sup class="text-red-500">&#42;</sup>
                                 </label>
                                 <select name="sub_bab_id" id="id_sub_bab"
                                     class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
@@ -97,8 +96,23 @@
                                 <span id="error-bab_id" class="text-red-500 font-bold text-xs pt-2"></span>
                             </div>
 
-                            <!--- button bulkupload lms --->
+                            <!--- Kategori Soal --->
                             <div class="flex flex-col order-6 xl:order-0">
+                                <label class="mb-2 text-sm">
+                                    Kategori Soal
+                                    <sup class="text-red-500">&#42;</sup>
+                                </label>
+                                <select name="question_category" id="question_category"
+                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 focus:border cursor-pointer">
+                                    <option value="" class="hidden">Pilih Kategori Soal</option>
+                                    <option value="TKA">TKA</option>
+                                    <option value="Umum">Umum</option>
+                                </select>
+                                <span id="error-question_category" class="text-red-500 font-bold text-xs pt-2"></span>
+                            </div>
+
+                            <!--- button bulkupload lms --->
+                            <div class="flex flex-col order-7 xl:order-0">
                                 <label class="mb-2 text-sm">
                                     Soal
                                     <sup class="text-red-500">&#42;</sup>
@@ -197,6 +211,7 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Bab</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Sub Bab</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Soal</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Kategori Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Bank Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Sumber Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">

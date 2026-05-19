@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Edit Question',
-    'linkBackButton' => route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $subBabId]),
+    'linkBackButton' => route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 

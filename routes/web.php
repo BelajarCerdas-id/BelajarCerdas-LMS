@@ -314,16 +314,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.schoolPartner');
 
     // review question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
 
     // edit question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
+    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
 
     // form question bank edit no school partner & school partner
-    Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
-    Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/{schoolName}/{schoolId}/edit', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
+    Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
+    Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{questionId}/{schoolName}/{schoolId}/edit/{subBabId?}', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
 
     // crud bank soal
     // upload bank soal no school partner & school partner
@@ -334,9 +334,13 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/bank-soal/edit-image', [QuestionBankController::class, 'editImageBankSoal'])->name('lms.editImage');
     Route::post('/lms/bank-soal/delete-image/endpoint', [QuestionBankController::class, 'deleteImageBankSoal'])->name('lms.deleteImage');
 
-    // activate question bank no school partner & school partner
-    Route::put('/lms/question-bank-management/{subBabId}/source/{source}/question-type/{questionType}/activate', [QuestionBankController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.noSchoolPartner');
-    Route::put('/lms/school-subscription/question-bank-management/{subBabId}/source/{source}/question-type/{questionType}/{schoolName}/{schoolId}/activate', [QuestionBankController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.schoolPartner');
+    // activate question bank no school partner with sub bab & without sub bab
+    Route::put('/lms/question-bank-management/source/{source}/question-type/{questionType}/question-category/{questionCategory}/{subBabId}/activate', [QuestionBankController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.global.withSubBab');
+    Route::put('/lms/question-bank-management/source/{source}/question-type/{questionType}/question-category/{questionCategory}/activate', [QuestionBankController::class, 'lmsActivateQuestionBankNoSubBab'])->name('lms.questionBank.activate.global.noSubBab');
+
+    // activate question bank school partner with sub bab & without sub bab
+    Route::put('/lms/school-subscription/question-bank-management/source/{source}/question-type/{questionType}/question-category/{questionCategory}/{subBabId}/{schoolName}/{schoolId}/activate', [QuestionBankController::class, 'lmsActivateQuestionBank'])->name('lms.questionBank.activate.school.withSubBab');
+    Route::put('/lms/school-subscription/question-bank-management/source/{source}/question-type/{questionType}/question-category/{questionCategory}/{schoolName}/{schoolId}/activate',[QuestionBankController::class, 'lmsActivateQuestionBankNoSubBab'])->name('lms.questionBank.activate.school.noSubBab');
 
     // edit bank soal no school partner & school partner submit form
     Route::post('/lms/question-bank-management/{questionId}/edit', [QuestionBankController::class, 'lmsQuestionBankManagementEdit'])->name('lms.questionBankManagement.edit');
@@ -347,8 +351,17 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/paginate', [QuestionBankController::class, 'paginateLmsQuestionBankManagement'])->name('lms.questionBankManagement.paginate.schoolPartner');
 
     // paginate review question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/paginate', [QuestionBankController::class, 'paginateReviewQuestionBank'])->name('lms.questionBankManagementDetail.paginate.noSchoolPartner');
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/school-subscription/{schoolName}/{schoolId}/paginate', [QuestionBankController::class, 'paginateReviewQuestionBank'])->name('lms.reviewQuestionBank.paginate.schoolPartner');
+    // no school no sub bab
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/without-subbab', [QuestionBankController::class, 'paginateReviewQuestionBank']);
+
+    // no school with sub bab
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/{subBabId}', [QuestionBankController::class, 'paginateReviewQuestionBank']);
+
+    // school no sub bab
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/without-subbab', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
+
+    // school with sub bab
+    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/{subBabId}', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
 
     // =========================================================
     // ROUTES CONTENT MANAGEMENT
@@ -532,8 +545,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // question bank management
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management', [TeacherQuestionBankController::class, 'teacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.view');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementDetail'])->name('lms.teacherQuestionBankManagement.detail.view');
-    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/{subBabId}/{questionId}/edit', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementEdit'])->name('lms.teacherQuestionBankManagement.edit.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementDetail'])->name('lms.teacherQuestionBankManagement.detail.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementEdit'])->name('lms.teacherQuestionBankManagement.edit.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/paginate', [TeacherQuestionBankController::class, 'paginateTeacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.paginate');
 
     // question bank for release

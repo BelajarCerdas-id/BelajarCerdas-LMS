@@ -69,7 +69,11 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                         let lmsReviewQuestion = '';
 
                         lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
-                            .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
+                            .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
+                        
+                        if (first.sub_bab_id) {
+                            lmsReviewQuestion += `/${first.sub_bab_id}`;
+                        }
 
                         const isGlobalActive = first.status_bank_soal === 'Publish';
                         const hasSchoolOverride = first.school_question_bank?.length > 0;
@@ -91,6 +95,7 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                                 data-question-id="${first.id}"
                                 data-source="${first.question_source}"
                                 data-question-type="${first.tipe_soal}"
+                                data-question-category="${first.question_category}"
                                 data-global-active="${isGlobalActive ? 1 : 0}"
                                 ${isChecked ? 'checked' : ''}
                             />
@@ -102,12 +107,13 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                         $('#tbody-bank-soal-list').append(`
                             <tr>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kurikulum?.nama_kurikulum}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kelas?.kelas}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.mapel?.mata_pelajaran}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.bab?.nama_bab}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.sub_bab?.sub_bab}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.tipe_soal}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kurikulum?.nama_kurikulum ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kelas?.kelas ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.mapel?.mata_pelajaran ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.bab?.nama_bab ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.sub_bab?.sub_bab ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.tipe_soal ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.question_category ?? '-'}</td>
                                 <td class="border text-center border-gray-300">
                                     ${toggleActivateQuestionBank}
                                 </td>

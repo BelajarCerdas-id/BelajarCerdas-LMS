@@ -5,7 +5,6 @@ namespace App\Services\LMS;
 use App\Events\BankSoalLmsUploaded;
 use App\Models\LmsQuestionBank;
 use App\Models\LmsQuestionOption;
-use App\Models\SchoolQuestionBank;
 use App\Services\DocxExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +29,7 @@ class BankSoalWordImportService
             'kelas_id' => 'required',
             'mapel_id' => 'required',
             'bab_id' => 'required',
-            'sub_bab_id' => 'required',
+            'question_category' => 'required',
         ], [
             // Pesan error custom
             'bulkUpload-lms.required' => 'Harap upload soal.',
@@ -39,7 +38,7 @@ class BankSoalWordImportService
             'kelas_id.required' => 'Harap pilih kelas.',
             'mapel_id.required' => 'Harap pilih mapel.',
             'bab_id.required' => 'Harap pilih bab.',
-            'sub_bab_id.required' => 'Harap pilih sub bab.',
+            'question_category.required' => 'Harap pilih kategori soal.',
         ]);
 
         // Simpan error validasi form (tidak langsung return, biar bisa digabung dengan error validasi isi file Word)
@@ -449,9 +448,15 @@ class BankSoalWordImportService
                 : LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->exists();
 
             // Tentukan status bank soal (Publish kalau sudah ada soal publish sebelumnya di sub_bab_id yang sama)
-            $statusBankSoal = LmsQuestionBank::where('sub_bab_id', $request->sub_bab_id)->where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))
-                ->where('status_bank_soal', 'Unpublish')
-                ->exists() ? 'Unpublish' : 'Publish';
+            $queryStatus = LmsQuestionBank::where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))->where('status_bank_soal', 'Unpublish');
+
+            if ($request->sub_bab_id) {
+                $queryStatus->where('sub_bab_id', $request->sub_bab_id);
+            } else {
+                $queryStatus->whereNull('sub_bab_id');
+            }
+
+            $statusBankSoal = $queryStatus->exists() ? 'Unpublish' : 'Publish';
 
             // Simpan setiap opsi jawaban ke DB
             if (!$allWordValidationErrors) {
@@ -472,6 +477,7 @@ class BankSoalWordImportService
                         'tipe_soal' => trim(strip_tags($dataSoal['TYPE'] ?? '')),
                         'status_bank_soal' => $statusBankSoal,
                         'question_source' => $schoolPartnerId ? 'school' : 'default',
+                        'question_category' => $request->question_category,
                     ]);
 
                     if (in_array($type, ['mcq', 'mcma'])) {

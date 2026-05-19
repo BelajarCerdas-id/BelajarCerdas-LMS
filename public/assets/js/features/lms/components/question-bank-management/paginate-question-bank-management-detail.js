@@ -6,20 +6,34 @@ function paginateBankSoalDetail() {
     const subBabId = container.dataset.subBabId;
     const source = container.dataset.source;
     const questionType = container.dataset.questionType;
+    const questionCategory = container.dataset.questionCategory;
 
     if (!container) return;
     if (!role) return;
-    if (!subBabId) return;
     if (!source) return;
     if (!questionType) return;
+    if (!questionCategory) return;
 
-    fetchBankSoalDetail(schoolName, schoolId, subBabId, questionType);
+    fetchBankSoalDetail(schoolName, schoolId, subBabId, questionType, questionCategory);
 
     function fetchBankSoalDetail() {
+        let url = '';
+
+        if (schoolId) {
+
+            url = subBabId
+                ? `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/${subBabId}`
+                : `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/without-subbab`;
+
+        } else {
+
+            url = subBabId
+                ? `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/${subBabId}`
+                : `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/without-subbab`;
+        }
+
         $.ajax({
-            url: schoolId
-                ? `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/${subBabId}/school-subscription/${schoolName}/${schoolId}/paginate`
-                : `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/${subBabId}/paginate`,
+            url: url,
 
             method: 'GET',
             success: function (response) {
@@ -152,7 +166,11 @@ function paginateBankSoalDetail() {
                         }
 
                         lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
-                            .replace(':questionType', questionType).replace(':subBabId', subBabId).replace(':questionId', question.id);
+                            .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
+                        
+                        if (subBabId) {
+                            lmsEditQuestion += `/${subBabId}`;
+                        }
 
                         buttonEditQuestion = `
                             <div class="w-full flex justify-end gap-2 items-center">

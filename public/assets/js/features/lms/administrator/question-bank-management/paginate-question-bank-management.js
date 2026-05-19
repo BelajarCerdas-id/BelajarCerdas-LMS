@@ -91,9 +91,18 @@ function paginateBankSoal(page = 1) {
 
                         if (schoolId) {
                             lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':source', first.question_source)
-                                .replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
+                                .replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
+                            
+                            if (first.sub_bab_id) {
+                                lmsReviewQuestion += `/${first.sub_bab_id}`;
+                            }
                         } else {
-                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':subBabId', first.sub_bab_id);
+                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
+                                .replace(':questionCategory', first.question_category);
+
+                            if (first.sub_bab_id) {
+                                lmsReviewQuestion += `/${first.sub_bab_id}`;
+                            }
                         }
 
                         const isGlobalActive = first.status_bank_soal === 'Publish';
@@ -116,6 +125,7 @@ function paginateBankSoal(page = 1) {
                                 data-question-id="${first.id}"
                                 data-source="${first.question_source}"
                                 data-question-type="${first.tipe_soal}"
+                                data-question-category="${first.question_category}"
                                 data-global-active="${isGlobalActive ? 1 : 0}"
                                 ${isChecked ? 'checked' : ''}
                             />
@@ -127,12 +137,13 @@ function paginateBankSoal(page = 1) {
                         $('#tbody-bank-soal-list').append(`
                             <tr>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1 }</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kurikulum?.nama_kurikulum}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kelas?.kelas}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.mapel?.mata_pelajaran}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.bab?.nama_bab}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.sub_bab?.sub_bab}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${first.tipe_soal}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kurikulum?.nama_kurikulum ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.kelas?.kelas ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.mapel?.mata_pelajaran ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.bab?.nama_bab ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.sub_bab?.sub_bab ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.tipe_soal ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${first.question_category ?? '-'}</td>
                                 <td class="border text-center border-gray-300">
                                     ${toggleActivateQuestionBank}
                                 </td>
@@ -307,23 +318,43 @@ $(document).on('change', '.toggle-activate-bank-soal', function () {
     const subBabId = checkbox.data('sub-bab-id');
     const source = checkbox.data('source');
     const questionType = checkbox.data('question-type');
-    const isGlobalActive = Number(checkbox.data('global-active')) === 1;
+    const questionCategory = checkbox.data('question-category');
 
     const action = checkbox.is(':checked') ? 'enable' : 'disable';
 
+    let baseUrl;
+
+    const hasSchool = !!schoolId;
+    const hasSubBab = subBabId !== undefined && subBabId !== null && subBabId !== '';
+
+    if (hasSchool && hasSubBab) {
+        baseUrl = `/lms/school-subscription/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${subBabId}/${schoolName}/${schoolId}/activate`;
+    }
+
+    else if (hasSchool && !hasSubBab) {
+        baseUrl = `/lms/school-subscription/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${schoolName}/${schoolId}/activate`;
+    }
+
+    else if (!hasSchool && hasSubBab) {
+        baseUrl = `/lms/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${subBabId}/activate`;
+    }
+
+    else {
+        baseUrl = `/lms/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/activate`;
+    }
+
     $.ajax({
-        url: schoolId
-            ? `/lms/school-subscription/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/${schoolName}/${schoolId}/activate`
-            : `/lms/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/activate`,
+        url: baseUrl,
         method: 'PUT',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
         data: { action },
-        success: function () {
-            // REFRESH DATA LIST
+
+        success: function (response) {
             paginateQuestionBank(response.current_page);
         },
+
         error: function () {
             checkbox.prop('checked', !checkbox.is(':checked'));
             alert('Gagal mengubah status');
