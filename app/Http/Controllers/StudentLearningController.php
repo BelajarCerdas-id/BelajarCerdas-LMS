@@ -130,7 +130,7 @@ class StudentLearningController extends Controller
                     });
                 });
             });
-        })->where('service_id', $serviceId)->where('semester', $semester)->get();
+        })->where('service_id', $serviceId)->where('semester', $semester)->where('mapel_id', $mapelId)->get();
 
         return response()->json([
             'data' => $getMeeting,
