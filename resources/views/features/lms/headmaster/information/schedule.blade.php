@@ -49,8 +49,39 @@
             <div id="workspace-jadwal" class="hidden flex-col xl:flex-row gap-6 lg:gap-8 items-start">
                 
                 {{-- KIRI: PENGATURAN JAM & DAFTAR MAPEL --}}
-                <div class="w-full xl:w-[320px] shrink-0 flex flex-col gap-6">
+                <div class="w-full xl:w-[320px] shrink-0 flex flex-col gap-6 order-2 xl:order-1">
                     
+                    {{-- PANEL DAFTAR MAPEL --}}
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 h-fit flex flex-col">
+
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 shrink-0">
+                            <h3 class="font-extrabold text-slate-800 text-[15px] flex items-center gap-2">
+                                <i class="fas fa-layer-group text-[#0071BC]"></i> Tarik Mapel
+
+                                <span id="mapel-count"
+                                    class="bg-blue-100 text-[#0071BC] text-[10px] font-bold px-2 py-1 rounded-md hidden">
+                                    0 Guru
+                                </span>
+                            </h3>
+
+                            <span class="bg-red-50 text-red-500 text-[9px] font-bold px-2 py-1 rounded-md border border-red-100 uppercase tracking-wider">
+                                Max 3 Sesi/Hari
+                            </span>
+                        </div>
+                        
+                        <div id="loading-guru" class="text-center py-6 text-slate-400 hidden">
+                            <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>
+                            <span class="text-xs font-bold">Memuat Guru...</span>
+                        </div>
+
+                        <div id="sidebar-mapel"
+                            class="flex flex-col gap-2.5 overflow-y-auto pr-2 custom-scrollbar pb-2 max-h-[240px] xl:max-h-[500px]">
+
+                            {{-- Daftar mapel akan dimuat via AJAX --}}
+
+                        </div>
+                    </div>
+
                     {{-- PANEL GENERATOR WAKTU --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 h-fit">
                         <h3 class="font-extrabold text-slate-800 text-[15px] flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
@@ -68,18 +99,23 @@
                                     <input type="number" id="set_durasi_sesi" value="45" min="30" max="90" class="w-full px-3 py-2 text-sm font-bold border-2 border-slate-200 rounded-lg outline-none focus:border-orange-500 bg-slate-50 focus:bg-white transition-colors">
                                 </div>
                             </div>
+
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Sesi Mapel Sehari</label>
                                 <input type="number" id="set_total_sesi" value="10" min="5" max="15" class="w-full px-3 py-2 text-sm font-bold border-2 border-slate-200 rounded-lg outline-none focus:border-orange-500 bg-slate-50 focus:bg-white transition-colors">
                             </div>
                             
                             <div class="bg-orange-50/50 p-3 rounded-xl border border-orange-100">
-                                <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">Istirahat 1</label>
+                                <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">
+                                    Istirahat 1
+                                </label>
+
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Setelah Sesi Ke-</span>
                                         <input type="number" id="set_ist1_setelah" value="4" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
                                     </div>
+
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Durasi (Menit)</span>
                                         <input type="number" id="set_ist1_durasi" value="15" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
@@ -88,12 +124,16 @@
                             </div>
 
                             <div class="bg-orange-50/50 p-3 rounded-xl border border-orange-100">
-                                <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">Istirahat 2 (Opsional)</label>
+                                <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">
+                                    Istirahat 2 (Opsional)
+                                </label>
+
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Setelah Sesi Ke-</span>
                                         <input type="number" id="set_ist2_setelah" value="8" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
                                     </div>
+
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Durasi (Menit)</span>
                                         <input type="number" id="set_ist2_durasi" value="15" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
@@ -106,34 +146,19 @@
                             </button>
                         </div>
                     </div>
-
-                    {{-- PANEL DAFTAR MAPEL --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 h-fit flex-1 flex flex-col max-h-[500px]">
-                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 shrink-0">
-                            <h3 class="font-extrabold text-slate-800 text-[15px] flex items-center gap-2">
-                                <i class="fas fa-layer-group text-[#0071BC]"></i> Tarik Mapel
-                                <span id="mapel-count" class="bg-blue-100 text-[#0071BC] text-[10px] font-bold px-2 py-1 rounded-md hidden">0 Guru</span>
-                            </h3>
-                            <span class="bg-red-50 text-red-500 text-[9px] font-bold px-2 py-1 rounded-md border border-red-100 uppercase tracking-wider">Max 3 Sesi/Hari</span>
-                        </div>
-                        
-                        <div id="loading-guru" class="text-center py-6 text-slate-400 hidden">
-                            <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br><span class="text-xs font-bold">Memuat Guru...</span>
-                        </div>
-
-                        <div id="sidebar-mapel" class="flex flex-col gap-2.5 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-2">
-                            {{-- Daftar mapel akan dimuat via AJAX --}}
-                        </div>
-                    </div>
                 </div>
 
                 {{-- KANAN: TABEL JADWAL --}}
-                <div class="flex-1 w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 lg:p-8 relative">
+                <div class="flex-1 w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 lg:p-8 relative max-h-[360px] xl:max-h-[800px] overflow-y-auto order-1 xl:order-2">
+                    
                     <div class="flex justify-between items-center mb-5 shrink-0 border-b border-slate-100 pb-4">
                         <div>
                             <h2 class="font-extrabold text-lg text-slate-800">Papan Jadwal Kelas</h2>
-                            <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider" id="info-status-jadwal">Area Drag & Drop</p>
+                            <p class="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider" id="info-status-jadwal">
+                                Area Drag & Drop
+                            </p>
                         </div>
+
                         <button onclick="clearSchedule()" class="px-4 py-2 bg-red-50 text-red-500 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm">
                             <i class="fas fa-trash-alt mr-1"></i> Kosongkan Papan
                         </button>
@@ -141,16 +166,21 @@
 
                     <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-inner custom-scrollbar pb-2 relative">
                         <table class="w-full min-w-[800px] lg:min-w-full border-collapse bg-white text-left">
+                            
                             <thead id="thead-jadwal" class="bg-gradient-to-r from-[#005B94] to-[#0071BC]">
                                 {{-- Header Kolom Hari akan digenerate otomatis --}}
                             </thead>
+
                             <tbody id="tbody-jadwal" class="divide-y divide-slate-100 text-sm">
                                 {{-- Baris Waktu akan digenerate otomatis --}}
                             </tbody>
+
                         </table>
                     </div>
+
                     <p class="text-[10px] text-slate-400 mt-3 text-center lg:hidden animate-pulse font-bold">
-                        <i class="fas fa-arrows-alt-h mr-1"></i> Geser tabel ke kanan/kiri untuk melihat hari lainnya
+                        <i class="fas fa-arrows-alt-h mr-1"></i>
+                        Geser tabel ke kanan/kiri untuk melihat hari lainnya
                     </p>
                 </div>
             </div>
@@ -282,7 +312,7 @@
         let tbHtml = '';
         timeConfig.forEach(slot => {
             if (slot.type === 'break') {
-                tbHtml += `<tr class="bg-[#FFF8ED] border-b border-amber-200">
+                tbHtml += `<tr class="bg-[#FFF8ED] border-b border-amber-200 z">
                     <td class="p-2 sm:p-3 border-r border-amber-200 text-center text-[10px] sm:text-[11px] font-bold text-amber-700 bg-[#FFF3D6] sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                         <span class="block text-[8px] uppercase tracking-widest opacity-50 mb-0.5"><i class="fas fa-mug-hot"></i></span>
                         ${slot.start} <br> <span class="opacity-50 text-[9px] mt-0.5">${slot.end}</span>
@@ -341,8 +371,8 @@
                 res.available_mapels.forEach(m => {
                     sidebar.innerHTML += `
                         <div draggable="true" ondragstart="dragStart(event)" 
-                             data-tid="${m.id}" data-tname="${m.name}" data-sid="${m.subject_id}" data-sname="${m.subject}" data-color="${m.color}"
-                             class="mapel-pill p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 gap-1.5 group">
+                            data-tid="${m.id}" data-tname="${m.name}" data-sid="${m.subject_id}" data-sname="${m.subject}" data-color="${m.color}"
+                            class="mapel-pill relative overflow-hidden min-h-[60px] p-3 sm:p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 gap-1.5 group">
                             <div class="absolute top-0 left-0 w-1.5 h-full" style="background:${m.color}"></div>
                             <div class="flex justify-between items-start pl-2">
                                 <div class="flex-1 pr-2">
@@ -470,7 +500,7 @@
                     <i class="fas fa-user-circle opacity-50"></i> ${data.teacher_name}
                 </p>
             </div>
-            <button onclick="clearSlot(this, event)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[9px] sm:text-[11px] opacity-0 group-hover:opacity-100 transition-all shadow-md transform scale-75 group-hover:scale-100 flex items-center justify-center hover:bg-red-600 z-10 focus:outline-none">
+            <button onclick="clearSlot(this, event)" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[9px] sm:text-[11px] transition-all shadow-md transform scale-75 group-hover:scale-100 flex items-center justify-center hover:bg-red-600 z-10 focus:outline-none">
                 <i class="fas fa-times"></i>
             </button>
         `;
