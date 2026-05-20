@@ -1681,35 +1681,36 @@
                     </div>
                 </li>
 
-                <li class="list-item mt-1">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-                        
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Informasi</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('lms.kepsek.calendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Kalender Akademik
-                                </a>
-                                
-                                <a href="{{ route('lms.kepsek.schedule.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Jadwal Pelajaran
-                                </a>
-
-                                {{-- TAMBAHAN MENU POLLING DI DESKTOP --}}
-                                <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Manajemen Polling
-                                </a>
+                @if (Auth::user()->role == 'Wakil Kepala Sekolah')
+                    <li class="list-item mt-1">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+                            
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Informasi</span>
+                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
                             </div>
-                        </div>
-                        
-                    </div>
-                </li>
 
+                            <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                <div class="flex flex-col py-2 mt-1">
+                                    <a href="{{ route('lms.kepsek.calendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                        Kalender Akademik
+                                    </a>
+                                    
+                                    <a href="{{ route('lms.kepsek.schedule.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                        Jadwal Pelajaran
+                                    </a>
+
+                                    {{-- TAMBAHAN MENU POLLING DI DESKTOP --}}
+                                    <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                        Manajemen Polling
+                                    </a>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </li>
+                @endif
             </ul>
 
             <div class="mt-auto">
@@ -1935,35 +1936,36 @@
                         </div>
                     </li>
 
-                    <li class="list-item mt-1">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-                            
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                                <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                                <span class="text-[14px]">Informasi</span>
-                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                            </div>
-
-                            <div class="content-dropdown pl-6 pr-3.5 w-full">
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.kepsek.calendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Kalender Akademik
-                                    </a>
-                                    
-                                    <a href="{{ route('lms.kepsek.schedule.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Jadwal Pelajaran
-                                    </a>
-
-                                    {{-- TAMBAHAN MENU POLLING DI MOBILE --}}
-                                    <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Manajemen Polling
-                                    </a>
+                    @if (Auth::user()->role == 'Wakil Kepala Sekolah')
+                        <li class="list-item mt-1">
+                            <div class="dropdown-menu w-full flex flex-col items-start">
+                                
+                                <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                    <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
+                                    <span class="text-[14px]">Informasi</span>
+                                    <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
                                 </div>
-                            </div>
-                            
-                        </div>
-                    </li>
 
+                                <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                    <div class="flex flex-col py-2 mt-1">
+                                        <a href="{{ route('lms.kepsek.calendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                            Kalender Akademik
+                                        </a>
+                                        
+                                        <a href="{{ route('lms.kepsek.schedule.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah', 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                            Jadwal Pelajaran
+                                        </a>
+
+                                        {{-- TAMBAHAN MENU POLLING DI MOBILE --}}
+                                        <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                            Manajemen Polling
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </li>
+                    @endif
                 </ul>
 
                 <div class="p-4 border-t border-gray-300">
