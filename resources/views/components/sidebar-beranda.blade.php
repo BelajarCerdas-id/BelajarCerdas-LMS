@@ -1642,9 +1642,25 @@
 @elseif (in_array(Auth::user()->role, ['Kepala Sekolah', 'Wakil Kepala Sekolah']))
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
-            <i class="fa-solid fa-school text-4xl mb-2"></i>
-            <span class="text-sm font-medium">Logo sekolah tidak tersedia.</span>
+        <!-- HEADER PUTIH (MAIN LOGO) -->
+        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+
+            <!-- LOGO WRAPPER -->
+            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
+
+                @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                @else
+                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                @endif
+            </div>
+
+            <!-- TEXT -->
+            @if(empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                <span class="text-center text-sm">
+                    Logo sekolah tidak tersedia.
+                </span>
+            @endif
         </div>
 
         <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
@@ -1876,16 +1892,24 @@
                     </label>
                 </header>
 
-                <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                <div class="relative flex flex-col items-center">
 
-                    @if(!empty($school?->logo))
-                        <img src="{{ asset($school->logo) }}" class="w-20 h-20 rounded-full object-contain border bg-white" alt="Logo Sekolah">
-                    @else
-                        <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                            <i class="fa-solid fa-school text-3xl text-gray-400"></i>
-                        </div>
-                        <span class="text-sm font-bold opacity-70">Logo sekolah tidak terdaftar.</span>
-                    @endif
+                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                        <!-- LOGO -->
+                        @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
+                            <img src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}"
+                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Sekolah">
+                        @else
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 mb-2">
+                                <i class="fa-solid fa-school text-3xl text-gray-400"></i>
+                            </div>
+
+                            <span class="text-center text-sm">
+                                Logo sekolah tidak tersedia.
+                            </span>
+                        @endif
+                    </div>
+
                 </div>
 
                 <div class="border border-gray-200"></div>
