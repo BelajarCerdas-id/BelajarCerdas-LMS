@@ -6,10 +6,10 @@
         {{-- HEADER SECTION --}}
         <div class="bg-white border-b border-slate-200 px-6 py-6 md:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sticky top-0 z-30">
             <div>
-                <a href="{{ route('lms.kepsek.dashboard', [
-                    'role'       => Auth::user()->role,
-                    'schoolName' => \Illuminate\Support\Str::slug(Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah'),
-                    'schoolId'   => Auth::user()->SchoolStaffProfile->school_partner_id ?? 0
+                <a href="{{ route('lms.headmaster.dashboard.view', [
+                    'role' => Auth::user()->role,
+                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                    'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                 ]) }}" class="text-sm font-bold text-[#0071BC] hover:text-blue-800 flex items-center gap-2 mb-2 transition-colors">
                     <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
                 </a>

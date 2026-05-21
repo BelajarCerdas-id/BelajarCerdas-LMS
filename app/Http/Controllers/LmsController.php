@@ -281,7 +281,7 @@ class LmsController extends Controller
             'schoolAssessmentType' => $schoolAssessmentType,
         ]);
     }
-   public function lmsTeacherView($schoolName, $schoolId)
+   public function lmsTeacherView($role,$schoolName, $schoolId)
     {
         $tanggalDipilih = request('date', date('Y-m-d'));
         $user = \Illuminate\Support\Facades\Auth::user();
@@ -492,6 +492,7 @@ class LmsController extends Controller
             });
 
         return view('features.lms.teacher.dashboard', compact(
+            'role',
             'schoolName', 
             'schoolId', 
             'totalKelas', 

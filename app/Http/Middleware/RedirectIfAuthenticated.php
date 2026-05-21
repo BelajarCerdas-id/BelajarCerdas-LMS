@@ -18,7 +18,9 @@ class RedirectIfAuthenticated
     {
         // Cek apakah user sudah login, jika suda maka redirect ke halaman beranda
         if (Auth::check()) {
-            return redirect()->route('beranda');
+            return redirect()->route('beranda', [
+                'role' => Auth::user()->role
+            ]);
         }
 
         $response = $next($request);

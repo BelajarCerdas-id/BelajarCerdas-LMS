@@ -126,4 +126,9 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(SubjectAttendance::class, 'student_id');
     }
+
+    public function ParentProfile()
+    {
+        return $this->hasOne(parentProfile::class, 'user_id');
+    }
 }

@@ -68,9 +68,8 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         // 8. SUCCESS
-        return response()->json([
-            'status' => true,
-            'redirect' => url('/beranda')
+        return redirect()->route('beranda', [
+            'role' => $user->role,
         ]);
     }
 
