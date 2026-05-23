@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class StudentDashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
 

@@ -45,7 +45,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\ParentController;
-use App\Http\Controllers\StudentVicePrincipalController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -511,7 +510,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // results
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/result-test', [StudentAssessmentExamController::class, 'studentResultAssessment'])->name('lms.studentAssessment.result');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/project-result', [StudentAssessmentExamController::class, 'studentProjectResult'])->name('lms.studentProjectAssessment.result');
-    Route::get('/lms/student/dashboard', [StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
     Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
     Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [\App\Http\Controllers\TeacherInformationController::class, 'getScheduleDataAjax']);
     
@@ -678,8 +676,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // --------------------------------------------------------------------
     // ROUTES STUDENT DASHBOARD
     // --------------------------------------------------------------------
-    Route::get('/lms/student/dashboard', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
-    Route::get('/lms/student/view', [\App\Http\Controllers\StudentDashboardController::class, 'index'])->name('lms.student.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/student/dashboard', [StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
     Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
     Route::post('/student/announcement/mark-read', [StudentDashboardController::class, 'markAnnouncementAsRead'])->name('lms.studentAnnouncement.markRead');
 
@@ -704,10 +701,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/kepsek/polling/store', [HeadmasterController::class, 'pollingStore'])->name('kepsek.polling.store');
     Route::delete('/lms/kepsek/polling/destroy/{id}', [HeadmasterController::class, 'pollingDestroy'])->name('kepsek.polling.destroy');
     Route::get('/lms/kepsek/polling/{id}/breakdown', [HeadmasterController::class, 'getPollingBreakdown']);
-
-    // STUDENT VICE PRINCIPAL ROUTES
-    // views
-    Route::get('lms/{role}/{schoolName}/{schoolId}/dashboard', [StudentVicePrincipalController::class, 'index'])->name('lms.student-vice-principal.dashboard.view');
 
     // =========================================================
     // ROUTES ORANG TUA
