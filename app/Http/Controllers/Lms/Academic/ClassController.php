@@ -54,7 +54,7 @@ class ClassController extends Controller
     }
     
     // function lms management class view
-    public function lmsManagementClassView($schoolName, $schoolId, $role, $majorId = null)
+    public function lmsManagementClassView($role, $schoolName, $schoolId, $managedRole, $majorId = null)
     {
         $getSchool = SchoolPartner::where('id', $schoolId)->first();
 
@@ -73,11 +73,11 @@ class ClassController extends Controller
 
         $phases = Fase::whereIn(DB::raw('LOWER(kode)'), $allowedPhases)->get();
 
-        return view('features.lms.administrator.lms-school-subscription-management-class', compact('schoolName', 'schoolId', 'role', 'majorId', 'phases'));
+        return view('features.lms.administrator.lms-school-subscription-management-class', compact('role', 'schoolName', 'schoolId', 'managedRole', 'majorId', 'phases'));
     }
 
     // function paginate lms management class
-    public function paginateLmsSchoolSubscriptionClass(Request $request, $schoolName, $schoolId, $role, $majorId = null) 
+    public function paginateLmsSchoolSubscriptionClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $majorId = null) 
     {
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 
@@ -140,13 +140,13 @@ class ClassController extends Controller
             'tahunAjaran' => $tahunAjaran,
             'selectedYear' => $selectedYear,
             'selectedClass' => $selectedClass,
-            'lmsManagementStudentsWithMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-majors/:majorId/management-students',
-            'lmsManagementStudentsNoMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-students',
+            'lmsManagementStudentsWithMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-majors/:majorId/management-students',
+            'lmsManagementStudentsNoMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-students',
         ]);
     }
 
     // function lms management create class
-    public function lmsManagementCreateClass(Request $request, $schoolName, $schoolId, $role, $majorId = null)
+    public function lmsManagementCreateClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $majorId = null)
     {
         // Rule dasar yang selalu berlaku
         $rules = [
@@ -224,7 +224,7 @@ class ClassController extends Controller
     }
 
     // function lms management edit class
-    public function lmsManagementEditClass(Request $request, $schoolName, $schoolId, $role, $classId, $majorId = null)
+    public function lmsManagementEditClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
         // Rule dasar yang selalu berlaku
         $rules = [

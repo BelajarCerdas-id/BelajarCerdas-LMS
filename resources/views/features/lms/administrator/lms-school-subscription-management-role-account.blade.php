@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'LMS Management Role',
-    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ])
 
@@ -27,7 +27,7 @@
 
                 <!---- table list school partner lms subscription ---->
                 <section class="relative">
-                    <div id="container-role-account-list" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
+                    <div id="container-role-account-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
                         <!-- DETAIL SEKOLAH -->
                         <div id="school-detail-card"
                             class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden">

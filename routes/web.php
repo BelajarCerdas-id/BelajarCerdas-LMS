@@ -45,6 +45,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\StudentVicePrincipalController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -204,12 +205,12 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES SCHOOL CURRICULUM MANAGEMENT HIERARCHY
     // views
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/kurikulum', [SchoolSyllabusController::class, 'curriculumView'])->name('schoolCurriculumManagement.view');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/fase', [SchoolSyllabusController::class, 'faseView'])->name('schoolFaseManagement.view');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/kelas', [SchoolSyllabusController::class, 'kelasView'])->name('schoolKelasManagement.view');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/mapel', [SchoolSyllabusController::class, 'mapelView'])->name('schoolMapelManagement.view');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab', [SchoolSyllabusController::class, 'babView'])->name('schoolBabManagement.view');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab', [SchoolSyllabusController::class, 'subBabView'])->name('schoolSubBabManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/kurikulum', [SchoolSyllabusController::class, 'curriculumView'])->name('schoolCurriculumManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/fase', [SchoolSyllabusController::class, 'faseView'])->name('schoolFaseManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/kelas', [SchoolSyllabusController::class, 'kelasView'])->name('schoolKelasManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/mapel', [SchoolSyllabusController::class, 'mapelView'])->name('schoolMapelManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab', [SchoolSyllabusController::class, 'babView'])->name('schoolBabManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab', [SchoolSyllabusController::class, 'subBabView'])->name('schoolSubBabManagement.view');
 
     // crud mapel
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/mapel/store', [SchoolSyllabusController::class, 'mapelStore'])->name('schoolMapelManagement.store');
@@ -237,41 +238,41 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES LMS FEATURE (administrator)
     // =========================================================
-    Route::get('/lms/school-subscription', [LmsController::class, 'lmsSchoolSubscriptionView'])->name('lms.schoolSubscription.view');
+    Route::get('/lms/{role}/school-subscription', [LmsController::class, 'lmsSchoolSubscriptionView'])->name('lms.schoolSubscription.view');
 
     // routes academic management
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management', [AcademicDashboardController::class, 'lmsAcademicManagementView'])->name('lms.academicManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management', [AcademicDashboardController::class, 'lmsAcademicManagementView'])->name('lms.academicManagement.view');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/paginate', [AcademicDashboardController::class, 'paginateLmsAcademicManagement'])->name('lms.academicManagement.paginate');
 
     // route management role account
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account', [RoleController::class, 'lmsManagementRolesView'])->name('lms.managementRoles.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account', [RoleController::class, 'lmsManagementRolesView'])->name('lms.managementRoles.view');
 
     // route management account
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-accounts', [AccountController::class, 'lmsManagementAccountView'])->name('lms.managementAccount.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-accounts', [AccountController::class, 'lmsManagementAccountView'])->name('lms.managementAccount.view');
 
     // route management majors
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-majors', [MajorController::class, 'lmsManagementMajorsView'])->name('lms.managementMajors.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-majors', [MajorController::class, 'lmsManagementMajorsView'])->name('lms.managementMajors.view');
 
     // routes views class by major and no major
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-majors/{majorId}/management-class', [ClassController::class, 'lmsManagementClassView'])->name('lms.managementClass.view.major');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-class', [ClassController::class, 'lmsManagementClassView'])->name('lms.managementClass.view.noMajor');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-majors/{majorId}/management-class', [ClassController::class, 'lmsManagementClassView'])->name('lms.managementClass.view.major');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-class', [ClassController::class, 'lmsManagementClassView'])->name('lms.managementClass.view.noMajor');
 
     // routes views students in class by major and no major
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-class/{classId}/management-majors/{majorId}/management-students', [StudentSchoolClassController::class, 'lmsManagementStudentsView'])->name('lms.managementStudents.view.major');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{role}/management-class/{classId}/management-students', [StudentSchoolClassController::class, 'lmsManagementStudentsView'])->name('lms.managementStudents.view.noMajor');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-class/{classId}/management-majors/{majorId}/management-students', [StudentSchoolClassController::class, 'lmsManagementStudentsView'])->name('lms.managementStudents.view.major');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-class/{classId}/management-students', [StudentSchoolClassController::class, 'lmsManagementStudentsView'])->name('lms.managementStudents.view.noMajor');
 
     // CRUD
     // routes crud majors
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-majors/create', [MajorController::class, 'lmsManagementCreateMajor'])->name('lms.managementCreateMajor.store');
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-majors/{majorId}/edit', [MajorController::class, 'lmsManagementEditMajor'])->name('lms.managementEditMajor.store');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-majors/create', [MajorController::class, 'lmsManagementCreateMajor'])->name('lms.managementCreateMajor.store');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-majors/{majorId}/edit', [MajorController::class, 'lmsManagementEditMajor'])->name('lms.managementEditMajor.store');
 
     // routes create management class by major and no major
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-majors/{majorId}/management-class/create', [ClassController::class, 'lmsManagementCreateClass'])->name('lms.managementCreateClass.store.major');
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/create', [ClassController::class, 'lmsManagementCreateClass'])->name('lms.managementCreateClass.store.noMajor');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-majors/{majorId}/management-class/create', [ClassController::class, 'lmsManagementCreateClass'])->name('lms.managementCreateClass.store.major');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-class/create', [ClassController::class, 'lmsManagementCreateClass'])->name('lms.managementCreateClass.store.noMajor');
 
     // routes edit management class by major and no major
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/management-majors/{majorId}/edit', [ClassController::class, 'lmsManagementEditClass'])->name('lms.managementClassWithMajor.edit');
-    Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/edit', [ClassController::class, 'lmsManagementEditClass'])->name('lms.managementClassNoMajor.edit');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-class/{classId}/management-majors/{majorId}/edit', [ClassController::class, 'lmsManagementEditClass'])->name('lms.managementClassWithMajor.edit');
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-class/{classId}/edit', [ClassController::class, 'lmsManagementEditClass'])->name('lms.managementClassNoMajor.edit');
 
     // activate
     Route::put('/lms/school-subscription/{subscriptionId}/activate', [LmsController::class, 'lmsSchoolSubscriptionActivate'])->name('lms.schoolSubscription.activate');
@@ -306,31 +307,31 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // paginate
     Route::get('/lms/school-subscription/paginate', [LmsController::class, 'paginateLmsSchoolSubscription'])->name('lms.schoolSubscription.paginate');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/paginate', [RoleController::class, 'paginateLmsSchoolSubscriptionRoleAccount'])->name('lms.SchoolSubscriptionRoleAccount.paginate');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-accounts/paginate', [AccountController::class, 'paginateLmsSchoolAccount'])->name('lms.SchoolSubscriptionAccount.paginate');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-majors/paginate', [MajorController::class, 'paginateLmsSchoolSubscriptionMajors'])->name('lms.SchoolSubscriptionMajors.paginate');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-role-account/{managedRole}/management-accounts/paginate', [AccountController::class, 'paginateLmsSchoolAccount'])->name('lms.SchoolSubscriptionAccount.paginate');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-majors/paginate', [MajorController::class, 'paginateLmsSchoolSubscriptionMajors'])->name('lms.SchoolSubscriptionMajors.paginate');
 
     // paginate class by major and no major
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-majors/{majorId}/management-class/paginate', [ClassController::class, 'paginateLmsSchoolSubscriptionClass'])->name('lms.SchoolSubscriptionClass.paginate.major');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-class/paginate', [ClassController::class, 'paginateLmsSchoolSubscriptionClass'])->name('lms.SchoolSubscriptionClass.paginate.noMajor');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-majors/{majorId}/management-class/paginate', [ClassController::class, 'paginateLmsSchoolSubscriptionClass'])->name('lms.SchoolSubscriptionClass.paginate.major');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-class/paginate', [ClassController::class, 'paginateLmsSchoolSubscriptionClass'])->name('lms.SchoolSubscriptionClass.paginate.noMajor');
 
     // paginate users by major and no major
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-class/{classId}/management-majors/{majorId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.major');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/role-account/{role}/management-class/{classId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.noMajor');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-class/{classId}/management-majors/{majorId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.major');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-class/{classId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.noMajor');
 
     // =========================================================
     // ROUTES QUESTION BANK MANAGEMENT
     // view
     // question bank management no school partner & school partner
-    Route::get('/lms/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.schoolPartner');
+    Route::get('/lms/{role}/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.schoolPartner');
 
     // review question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
+    Route::get('/lms/{role}/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
 
     // edit question bank no school partner & school partner
-    Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
+    Route::get('/lms/{role}/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
 
     // form question bank edit no school partner & school partner
     Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
@@ -377,16 +378,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES CONTENT MANAGEMENT
     // view content management no school partner & school partner
-    Route::get('/lms/content-management', [ContentBankController::class, 'lmsContentManagementView'])->name('lms.contentManagement.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/content-management', [ContentBankController::class, 'lmsContentManagementView'])->name('lms.contentManagement.view.schoolPartner');
+    Route::get('/lms/{role}/content-management', [ContentBankController::class, 'lmsContentManagementView'])->name('lms.contentManagement.view.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/content-management', [ContentBankController::class, 'lmsContentManagementView'])->name('lms.contentManagement.view.schoolPartner');
 
     // view content management edit no school partner & school partner
-    Route::get('/lms/content-management/{contentId}/edit', [ContentBankController::class, 'lmsDefaultContentManagementEditView'])->name('lms.contentManagement.edit.view.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/content-management/{contentId}/edit', [ContentBankController::class, 'lmsSchoolContentManagementEditView'])->name('lms.contentManagement.edit.view.schoolPartner');
+    Route::get('/lms/{role}/content-management/{contentId}/edit', [ContentBankController::class, 'lmsDefaultContentManagementEditView'])->name('lms.contentManagement.edit.view.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/content-management/{contentId}/edit', [ContentBankController::class, 'lmsSchoolContentManagementEditView'])->name('lms.contentManagement.edit.view.schoolPartner');
 
     // view content management review no school partner & school partner
-    Route::get('/lms/content-management/{contentId}/review', [ContentBankController::class, 'lmsReviewContentDefault'])->name('lms.contentManagement.review.noSchoolPartner');
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/content-management/{contentId}/review', [ContentBankController::class, 'lmsReviewContentSchool'])->name('lms.contentManagement.review.schoolPartner');
+    Route::get('/lms/{role}/content-management/{contentId}/review', [ContentBankController::class, 'lmsReviewContentDefault'])->name('lms.contentManagement.review.noSchoolPartner');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/content-management/{contentId}/review', [ContentBankController::class, 'lmsReviewContentSchool'])->name('lms.contentManagement.review.schoolPartner');
 
     // form edit content
     Route::get('/lms/content-management/{contentId}/form/edit', [ContentBankController::class, 'lmsContentManagementFormEdit'])->name('lms.contentManagementForm.edit');
@@ -409,7 +410,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES ASSESSMENT TYPE MANAGEMENT
     // views
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/assessment-type-management', [AssessmentTypeController::class, 'lmsAssessmentTypeManagementView'])->name('lms.assessmentTypeManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/assessment-type-management', [AssessmentTypeController::class, 'lmsAssessmentTypeManagementView'])->name('lms.assessmentTypeManagement.view');
 
     // crud
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/assessment-type-management/store', [AssessmentTypeController::class, 'lmsAssessmentTypeManagementStore'])->name('lms.assessmentTypeManagement.store');
@@ -422,7 +423,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES TEACHER SUBJECT MANAGEMENT
     // views
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/subject-teacher-management', [TeacherSubjectController::class, 'lmsTeacherSubjectManagement'])->name('lmsTeacherSubjectManagement.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/subject-teacher-management', [TeacherSubjectController::class, 'lmsTeacherSubjectManagement'])->name('lmsTeacherSubjectManagement.view');
 
     // crud
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/subject-teacher-management/store', [TeacherSubjectController::class, 'lmsTeacherSubjectManagementStore'])->name('lmsTeacherSubjectManagement.store');
@@ -435,7 +436,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES ASSESSMENT WEIGHT MANAGEMENT
     // views
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/assessment-weight-management', [AssessmentWeightController::class, 'assessmentWeight'])->name('lms.assessmentWeight.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/assessment-weight-management', [AssessmentWeightController::class, 'assessmentWeight'])->name('lms.assessmentWeight.view');
 
     // crud
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/assessment-weight-management/store', [AssessmentWeightController::class, 'assessmentWeightStore'])->name('lms.assessmentWeight.store');
@@ -447,7 +448,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // =========================================================
     // ROUTES SUBJECT PASSING GRADE CRITERIA MANAGEMENT
     // views
-    Route::get('/lms/school-subscription/{schoolName}/{schoolId}/academic-management/subject-passing-grade-criteria-management', [SubjectPassingGradeCriteriaController::class, 'subjectPassingGradeCriteria'])->name('lms.subjectPassingGradeCriteria.view');
+    Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/subject-passing-grade-criteria-management', [SubjectPassingGradeCriteriaController::class, 'subjectPassingGradeCriteria'])->name('lms.subjectPassingGradeCriteria.view');
 
     // crud
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/subject-passing-grade-criteria-management/store', [SubjectPassingGradeCriteriaController::class, 'subjectPassingGradeCriteriaStore'])->name('lms.subjectPassingGradeCriteria.store');
@@ -701,6 +702,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/kepsek/polling/store', [HeadmasterController::class, 'pollingStore'])->name('kepsek.polling.store');
     Route::delete('/lms/kepsek/polling/destroy/{id}', [HeadmasterController::class, 'pollingDestroy'])->name('kepsek.polling.destroy');
     Route::get('/lms/kepsek/polling/{id}/breakdown', [HeadmasterController::class, 'getPollingBreakdown']);
+
+    // STUDENT VICE PRINCIPAL ROUTES    
+    // dashboard
+    Route::get('lms/{role}/{schoolName}/{schoolId}/dashboard', [StudentVicePrincipalController::class, 'index'])->name('lms.student-vice-principal.dashboard.view');
 
     // =========================================================
     // ROUTES ORANG TUA

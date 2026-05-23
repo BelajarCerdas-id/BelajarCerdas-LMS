@@ -3,10 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\LmsSchoolSubscription;
-use App\Models\AcademicCalendar;
-use App\Models\LessonSchedule;
-use App\Models\Poll;
-use App\Models\PollOption;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolPartner;
@@ -15,7 +11,6 @@ use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class LmsController extends Controller
@@ -28,9 +23,9 @@ class LmsController extends Controller
     }
     
     // function lms school subscription view
-    public function lmsSchoolSubscriptionView()
+    public function lmsSchoolSubscriptionView($role)
     {
-        return view('features.lms.administrator.lms-school-subscription');
+        return view('features.lms.administrator.lms-school-subscription', compact('role'));
     }
 
     // function pagiante lms school subscription
@@ -71,7 +66,7 @@ class LmsController extends Controller
             'links' => (string) $paginated->links(),
             'current_page' => $paginated->currentPage(),
             'per_page' => $paginated->perPage(),
-            'lmsAcademicManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management',
+            'lmsAcademicManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management',
         ]);
     }
 

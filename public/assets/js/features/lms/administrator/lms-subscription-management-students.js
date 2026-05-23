@@ -4,6 +4,7 @@ function managementStudentSchoolSubscription() {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
     const majorId = container.dataset.majorId;
     const classId = container.dataset.classId;
 
@@ -11,15 +12,16 @@ function managementStudentSchoolSubscription() {
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
     if (!classId) return;
 
-    fetchUsers(schoolName, schoolId, role, majorId, classId);
+    fetchUsers(role, schoolName, schoolId, managedRole, majorId, classId);
 
     function fetchUsers() {
         $.ajax({
             url: majorId
-                ? `/lms/school-subscription/${schoolName}/${schoolId}/role-account/${role}/management-class/${classId}/management-majors/${majorId}/management-students/paginate`
-                : `/lms/school-subscription/${schoolName}/${schoolId}/role-account/${role}/management-class/${classId}/management-students/paginate`,
+                ? `/lms/${role}/school-subscription/${schoolName}/${schoolId}/role-account/${managedRole}/management-class/${classId}/management-majors/${majorId}/management-students/paginate`
+                : `/lms/${role}/school-subscription/${schoolName}/${schoolId}/role-account/${managedRole}/management-class/${classId}/management-students/paginate`,
             method: 'GET',
             success: function (response) {
                 const selectedIds = getSelectedStudentIds();

@@ -3,17 +3,19 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
 
-    fetchAccountUsers(schoolName, schoolId, role);
+    fetchAccountUsers(schoolName, schoolId, role, managedRole);
 
     function fetchAccountUsers() {
         $.ajax({
-            url: `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-accounts/paginate`,
+            url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-accounts/paginate`,
             method: 'GET',
             data: {
                 search_user: search_user,

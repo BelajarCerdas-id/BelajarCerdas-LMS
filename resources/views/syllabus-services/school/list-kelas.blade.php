@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('schoolFaseManagement.view', [$schoolName, $schoolId, $curriculumName, $curriculumId]),
+    'linkBackButton' => route('schoolFaseManagement.view', [$role, $schoolName, $schoolId, $curriculumName, $curriculumId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Kelas',
 ]);
@@ -13,7 +13,7 @@
             </div>
 
             <!---- Table list data kelas  ---->
-            <div id="container-kelas-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
+            <div id="container-kelas-management" class="overflow-x-auto mt-8 pb-24" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
                     data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" data-fase-id="{{ $faseId }}">
                 <table id="table-kelas-management" class="min-w-full text-sm border-collapse">
                     <thead class="thead-table-kelas-management hidden bg-gray-50 shadow-inner">

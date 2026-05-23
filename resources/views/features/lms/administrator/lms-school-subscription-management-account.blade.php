@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'LMS Management Account',
-    'linkBackButton' => route('lms.managementRoles.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.managementRoles.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -30,7 +30,7 @@
                 <!---- table list school staff ---->
                 <section class="relative">
                     <div id="container-management-staff-list" class="overflow-x-auto pb-6"
-                        data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}">
+                        data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}" data-managed-role="{{ $managedRole }}">
 
                         <table id="table-management-staff-list" class="min-w-full text-sm border-collapse">
                             <thead class="thead-table-management-staff-list hidden bg-gray-50 shadow-inner">

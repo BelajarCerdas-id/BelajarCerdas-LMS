@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'KKM',
-    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -18,7 +18,9 @@
                     <div id="school-detail-card" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden"></div>
                 </section>
 
-                <section id="container" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="bg-white shadow-lg p-6 rounded-lg border-gray-200 border">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
+                    class="bg-white shadow-lg p-6 rounded-lg border-gray-200 border">
+                    
                     <!---- Form input subject passing grade criteria ---->
                     <form id="create-subject-passing-grade-criteria-form" autocomplete="off">
                         <div class="py-6 space-y-8">

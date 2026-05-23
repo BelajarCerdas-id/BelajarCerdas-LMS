@@ -1,5 +1,6 @@
 function paginateSubBabManagement(page = 1) {
     const container = document.getElementById('container-sub-bab-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
@@ -10,6 +11,7 @@ function paginateSubBabManagement(page = 1) {
     const babId = container.dataset.babId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!curriculumName) return;
@@ -19,7 +21,7 @@ function paginateSubBabManagement(page = 1) {
     if (!mapelId) return;
     if (!babId) return;
 
-    fetchDataSubBab(schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId, mapelId, babId);
+    fetchDataSubBab(role, schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId, mapelId, babId);
 
     function fetchDataSubBab() {
         $.ajax({

@@ -55,11 +55,11 @@ class TeacherSubjectController extends Controller
 
     // TEACHER SUBJECT MANAGEMENT
     // function teacher suject management view
-    public function lmsTeacherSubjectManagement($schoolName, $schoolId)
+    public function lmsTeacherSubjectManagement($role, $schoolName, $schoolId)
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.administrator.subject-teacher-management.lms-subject-teacher-management', compact('schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.administrator.subject-teacher-management.lms-subject-teacher-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate teacher subject management

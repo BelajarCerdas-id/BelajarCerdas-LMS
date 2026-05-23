@@ -2,11 +2,12 @@ function paginateBankSoal(page = 1) {
     const container = document.getElementById('container');
     if (!container) return;
 
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const isSchoolMode = !!schoolId;
 
-    fetchBankSoal(schoolName, schoolId);
+    fetchBankSoal(role, schoolName, schoolId);
 
     function fetchBankSoal() {
         $.ajax({
@@ -90,14 +91,14 @@ function paginateBankSoal(page = 1) {
                         let lmsReviewQuestion = '';
 
                         if (schoolId) {
-                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':source', first.question_source)
-                                .replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
+                            lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                                .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
                             
                             if (first.sub_bab_id) {
                                 lmsReviewQuestion += `/${first.sub_bab_id}`;
                             }
                         } else {
-                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
+                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
                                 .replace(':questionCategory', first.question_category);
 
                             if (first.sub_bab_id) {

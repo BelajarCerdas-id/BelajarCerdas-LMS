@@ -1,5 +1,6 @@
 function paginateMapelManagement(page = 1) {
     const container = document.getElementById('container-mapel-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
@@ -9,6 +10,7 @@ function paginateMapelManagement(page = 1) {
     const isSchoolMode = !!schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!curriculumName) return;
@@ -16,7 +18,7 @@ function paginateMapelManagement(page = 1) {
     if (!faseId) return;
     if (!kelasId) return;
 
-    fetchDataMapel(schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId);
+    fetchDataMapel(role, schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId);
 
     function fetchDataMapel() {
         $.ajax({
@@ -88,8 +90,9 @@ function paginateMapelManagement(page = 1) {
 
                         const updatedAt = item.updated_at ? `${formatDate(item.updated_at)}` : '-';
 
-                        const babDetail = response.babDetail.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumName', curriculumName)
-                            .replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', kelasId).replace(':mapelId', item.id);
+                        const babDetail = response.babDetail.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':curriculumName', curriculumName).replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', kelasId)
+                            .replace(':mapelId', item.id);
                         
                         let buttonEditMapel = '';
 

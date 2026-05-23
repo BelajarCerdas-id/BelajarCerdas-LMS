@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('schoolKelasManagement.view', [$schoolName, $schoolId, $curriculumName, $curriculumId, $faseId]),
+    'linkBackButton' => route('schoolKelasManagement.view', [$role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Mata Pelajaran',
 ]);
@@ -45,8 +45,9 @@
                     <div class="border-b-2 border-gray-200 mt-4"></div>
 
                     <!---- Table list data mapel  ---->
-                    <div id="container-mapel-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                            data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}">
+                    <div id="container-mapel-management" class="overflow-x-auto mt-8 pb-24" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" 
+                            data-school-id="{{ $schoolId }}" data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" 
+                            data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}">
                         <table id="table-mapel-management" class="min-w-full text-sm border-collapse">
                             <thead class="thead-table-mapel-management hidden bg-gray-50 shadow-inner">
                                 <tr>

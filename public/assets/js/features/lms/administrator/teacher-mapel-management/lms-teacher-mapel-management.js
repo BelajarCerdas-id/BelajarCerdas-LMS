@@ -1,9 +1,11 @@
 function paginateLmsTeacherSubject(search_class = null, search_year = null, search_teacher = null, page = 1) {
     const container = document.getElementById('container');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
 

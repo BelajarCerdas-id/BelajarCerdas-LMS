@@ -72,7 +72,26 @@ class DashboardController extends Controller
             ]);
         }
 
-        // 4. Jika yang masuk adalah Orang Tua
+        // 4. Jika yang masuk adalah Wakil Kesiswaan
+        if ($user->role === 'Wakil Kesiswaan') {
+            $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
+            
+            if ($staffProfile) {
+                $schoolId = $staffProfile->school_partner_id;
+                $school = DB::table('school_partners')->where('id', $schoolId)->first();
+                $schoolName = $school ? $school->nama_sekolah : 'sekolah';
+                
+                return redirect()->route('lms.student-vice-principal.dashboard.view', [
+                    'role'       => $user->role,
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId
+                ]);
+            } else {
+                abort(403, 'Profil staff Anda belum lengkap. Silakan hubungi admin.');
+            }
+        }
+
+        // 5. Jika yang masuk adalah Orang Tua
         if ($user->role === 'Orang Tua') {
             $profilOrangTua = ParentProfile::where('user_id', $user->id)->first();
             
@@ -91,6 +110,7 @@ class DashboardController extends Controller
                 'schoolId'   => $schoolId
             ]);
         }
+        
         if ($user->role === 'Admin Sekolah') {
 
             $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
@@ -110,7 +130,7 @@ class DashboardController extends Controller
             }
         }
 
-        // 5. Jika yang masuk adalah Administrator atau Role Lainnya
+        // 6. Jika yang masuk adalah Administrator atau Role Lainnya
         if ($user->role === 'Administrator') {
             return redirect()->route('lms.administrator.dashboard.view', [
                 'role' => $user->role,

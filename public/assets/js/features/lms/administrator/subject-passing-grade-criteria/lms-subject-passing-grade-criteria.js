@@ -8,10 +8,12 @@ function paginateSubjectPassingGradeCriteria(search_year = null, search_class = 
     currentPage = page;
 
     const container = document.getElementById('container');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
 

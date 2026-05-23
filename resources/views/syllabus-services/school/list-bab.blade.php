@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('schoolMapelManagement.view', [$schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId]),
+    'linkBackButton' => route('schoolMapelManagement.view', [$role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Bab',
 ]);
@@ -65,9 +65,9 @@
                     
                     <section>
                         <!---- Table list data bab  ---->
-                        <div id="container-bab-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                                data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}" 
-                                data-mapel-id="{{ $mapelId }}">
+                        <div id="container-bab-management" class="overflow-x-auto mt-8 pb-24" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" 
+                                data-school-id="{{ $schoolId }}" data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" 
+                                data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}" data-mapel-id="{{ $mapelId }}">
                             <table id="table-bab-management" class="min-w-full text-sm border-collapse">
                                 <thead class="thead-table-bab-management hidden bg-gray-50 shadow-inner">
                                     <tr>

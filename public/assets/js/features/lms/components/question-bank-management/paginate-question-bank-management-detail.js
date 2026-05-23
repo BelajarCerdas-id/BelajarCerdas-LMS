@@ -154,24 +154,33 @@ function paginateBankSoalDetail() {
 
                     let buttonEditQuestion = '';
                     let lmsEditQuestion = '';
+                    
+                    let urlTemplate;
 
-                    if (canEdit) {
+                    if (schoolId && response.lmsEditQuestionBySchool) {
+                        urlTemplate = response.lmsEditQuestionBySchool;
+                    } else {
+                        urlTemplate = response.lmsEditQuestion;
+                    }
 
-                        let urlTemplate;
+                    lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
+                        .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
 
-                        if (schoolId && response.lmsEditQuestionBySchool) {
-                            urlTemplate = response.lmsEditQuestionBySchool;
-                        } else {
-                            urlTemplate = response.lmsEditQuestion;
-                        }
-
-                        lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
-                            .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
-                        
-                        if (subBabId) {
-                            lmsEditQuestion += `/${subBabId}`;
-                        }
-
+                    if (subBabId) {
+                        lmsEditQuestion += `/${subBabId}`;
+                    }
+                    
+                    // jika role administrator, dapat akses edit soal global dan soal milik sekolah
+                    if (role === 'Administrator') {
+                        buttonEditQuestion = `
+                            <div class="w-full flex justify-end gap-2 items-center">
+                                <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
+                                    <span>Edit</span>
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        `;
+                    } else if (canEdit) {
                         buttonEditQuestion = `
                             <div class="w-full flex justify-end gap-2 items-center">
                                 <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">

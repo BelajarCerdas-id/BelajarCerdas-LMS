@@ -8,9 +8,9 @@ use App\Models\UserAccount;
 class AcademicDashboardController extends Controller
 {
     // function lms academic management
-    public function lmsAcademicManagementView($schoolName, $schoolId)
+    public function lmsAcademicManagementView($role, $schoolName, $schoolId)
     {
-        return view('features.lms.administrator.academic-management.lms-academic-management', compact('schoolName', 'schoolId'));
+        return view('features.lms.administrator.academic-management.lms-academic-management', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms academic management
@@ -34,14 +34,14 @@ class AcademicDashboardController extends Controller
             'data' => $groupedRoles->values(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'lmsRoleManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account',
-            'lmsQuestionBankManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management',
-            'lmsCurriculumManagementBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/kurikulum',
-            'lmsContentManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/content-management',
-            'lmsAssessmentTypeManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/assessment-type-management',
-            'lmsTeacherSubjectManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/subject-teacher-management',
-            'lmsAssessmentWeightManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/assessment-weight-management',
-            'lmsSubjectPassingGradeCriteria' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/subject-passing-grade-criteria-management',
+            'lmsRoleManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account',
+            'lmsQuestionBankManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management',
+            'lmsCurriculumManagementBySchool' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/kurikulum',
+            'lmsContentManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/content-management',
+            'lmsAssessmentTypeManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/assessment-type-management',
+            'lmsTeacherSubjectManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/subject-teacher-management',
+            'lmsAssessmentWeightManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/assessment-weight-management',
+            'lmsSubjectPassingGradeCriteria' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/subject-passing-grade-criteria-management',
         ]);
     }
 }

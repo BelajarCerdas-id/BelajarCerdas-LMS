@@ -1,10 +1,12 @@
 function paginateContentManagemet(page = 1) {
     const container = document.getElementById('container');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const isSchoolMode = !!schoolId;
 
     if (!container) return;
+    if (!role) return;
 
     $.ajax({
         url: schoolId
@@ -41,11 +43,14 @@ function paginateContentManagemet(page = 1) {
                     let reviewContent = '';
 
                     if (schoolId) {
-                        editContent = response.editContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id);
-                        reviewContent = response.reviewContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id)
+                        editContent = response.editContentBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':contentId', item.id);
+                        
+                        reviewContent = response.reviewContentBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':contentId', item.id)
                     } else {
-                        editContent = response.editContent.replace(':contentId', item.id);
-                        reviewContent = response.reviewContent.replace(':contentId', item.id)
+                        editContent = response.editContent.replace(':role', role).replace(':contentId', item.id);
+                        reviewContent = response.reviewContent.replace(':role', role).replace(':contentId', item.id)
                     }
 
                     let editContent_display = '';

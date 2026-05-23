@@ -4,7 +4,7 @@
     ],
     $schoolId
         ? [
-            'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+            'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
             'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
         ]
         : []
@@ -23,7 +23,7 @@
             </div>
 
             <main class="bg-white shadow-lg h-max rounded-lg border border-gray-200">
-                <section id="container" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200">
                     <form id="bank-soal-form">
 
                         <input type="hidden" name="school_partner_id" value="{{ $schoolId }}">

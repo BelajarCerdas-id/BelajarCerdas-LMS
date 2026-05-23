@@ -32,7 +32,7 @@
                 </div>
 
                 <!---- table list school partner lms subscription ---->
-                <section class="relative pb-6 mt-6">
+                <section id="container-school-partner-list" data-role="{{ $role }}" class="relative pb-6 mt-6">
                     <div class="overflow-x-auto">
                         <table id="table-school-partner-list" class="min-w-full text-sm border-collapse">
                             <thead class="thead-table-school-partner-list hidden bg-gray-50 shadow-inner">

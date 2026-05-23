@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Review Question',
     'linkBackButton' => $schoolId
-        ? route('lms.questionBankManagement.view.schoolPartner', [$schoolName, $schoolId])
-        : route('lms.questionBankManagement.view.noSchoolPartner'),
+        ? route('lms.questionBankManagement.view.schoolPartner', [$role, $schoolName, $schoolId])
+        : route('lms.questionBankManagement.view.noSchoolPartner', [$role]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 

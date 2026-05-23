@@ -58,12 +58,13 @@ class SubjectPassingGradeCriteriaController extends Controller
     }
 
     // function subject passing grade criteria management
-    public function subjectPassingGradeCriteria($schoolName, $schoolId) {
+    public function subjectPassingGradeCriteria($role, $schoolName, $schoolId) {
         $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->pluck('tahun_ajaran')->unique()->sortDesc()->values();
 
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.administrator.subject-passing-grade-criteria.lms-subject-passing-grade-criteria', compact('schoolName', 'schoolId', 'tahunAjaran', 'getCurriculum'));
+        return view('features.lms.administrator.subject-passing-grade-criteria.lms-subject-passing-grade-criteria', compact('role', 'schoolName', 'schoolId', 'tahunAjaran', 
+            'getCurriculum'));
     }
 
     public function paginateSubjectPassingGradeCriteria(Request $request, $schoolName, $schoolId)
