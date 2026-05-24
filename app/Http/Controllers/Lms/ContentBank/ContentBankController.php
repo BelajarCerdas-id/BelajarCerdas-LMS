@@ -95,6 +95,7 @@ class ContentBankController extends Controller
             'kelas_id'     => 'required',
             'mapel_id'     => 'required',
             'bab_id'       => 'required',
+            'sub_bab_id' => 'nullable|exists:sub_babs,id',
         ];
 
         $messages = [
@@ -103,6 +104,7 @@ class ContentBankController extends Controller
             'mapel_id.required'     => 'Harap pilih mapel.',
             'bab_id.required'       => 'Harap pilih bab.',
             'service_id.required'   => 'Harap pilih service.',
+            'sub_bab_id.exists' => 'Sub bab tidak valid.',
         ];
 
         // DYNAMIC VALIDATION (BERDASARKAN SERVICE RULE)
