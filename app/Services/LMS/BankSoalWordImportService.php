@@ -352,21 +352,6 @@ class BankSoalWordImportService
                                     continue;
                                 }
 
-                                // LEFT tidak boleh duplicate (semua mode)
-                                if (isset($pairMap[$l])) {
-                                    $validationErrors[] =
-                                        "Soal ke-$soalNumber: ITEM/LEFT '$l' dipakai lebih dari sekali.";
-                                    continue;
-                                }
-
-                                // matching = tidak boleh duplicate RIGHT
-                                // pg_kompleks = boleh duplicate RIGHT
-                                if (!$isMatrix && in_array($r, $rightUsed)) {
-                                    $validationErrors[] =
-                                        "Soal ke-$soalNumber: RIGHT '$r' dipakai lebih dari sekali.";
-                                    continue;
-                                }
-
                                 $pairMap[$l] = $r;
                                 $rightUsed[] = $r;
                             }
