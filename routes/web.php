@@ -662,7 +662,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         ->name('lms.guru.get_students');
     Route::post('/lms/teacher/pengumuman/store', [App\Http\Controllers\LmsController::class, 'storePengumuman'])->name('lms.teacher.pengumuman.store');
     Route::post('/lms/student/announcement/mark-as-read', [App\Http\Controllers\LmsController::class, 'markAsRead'])->name('lms.student.announcement.read');
-    Route::get('/lms/guru/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [\App\Http\Controllers\LmsController::class, 'classDetailView'])
+    Route::get('/lms/{role}/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [\App\Http\Controllers\LmsController::class, 'classDetailView'])
         ->name('lms.teacher.class.detail');
     Route::post('/lms/teacher/attendance/store', [App\Http\Controllers\LmsController::class, 'saveAttendance'])->name('lms.teacher.attendance.store');
     Route::get('/lms/teacher/tugas/{taskId}/submissions', [App\Http\Controllers\LmsController::class, 'getTaskSubmissions'])->name('lms.teacher.tugas.submissions');

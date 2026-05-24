@@ -7,7 +7,7 @@
             <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-slate-50 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 opacity-80 pointer-events-none"></div>
 
             <div class="relative z-10">
-                <a href="{{ route('lms.teacher.view', ['schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 mb-5 text-sm font-bold transition-colors group">
+                <a href="{{ route('lms.teacher.view', ['role' => $role ?? 'guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 mb-5 text-sm font-bold transition-colors group">
                     <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Kembali ke Dashboard
                 </a>
 

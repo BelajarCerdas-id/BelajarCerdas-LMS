@@ -503,7 +503,7 @@ class LmsController extends Controller
             'daftarKelas'
         ));
     }
-    public function classDetailView($schoolName, $schoolId, $scheduleId)
+    public function classDetailView($role, $schoolName, $schoolId, $scheduleId)
     {
         $user = \Illuminate\Support\Facades\Auth::user();
         if (!$user || $user->role !== 'Guru') abort(403, 'Akses Ditolak.');
@@ -644,6 +644,7 @@ class LmsController extends Controller
         ];
 
         return view('features.lms.teacher.class_detail', compact(
+            'role',
             'schoolName', 
             'schoolId', 
             'jadwal',    

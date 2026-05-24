@@ -129,7 +129,7 @@
                                     </div>
 
                                     <div class="relative w-full md:w-auto">
-                                        <a href="{{ route('lms.teacher.class.detail', ['schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'scheduleId' => explode(',', $group->ids)[0]]) }}" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-bold rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                                        <a href="{{ route('lms.teacher.class.detail', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'scheduleId' => explode(',', $group->ids)[0]]) }}" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-bold rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
                                             <i class="fas fa-sign-in-alt"></i> Buka Kelas
                                         </a>
                                     </div>
