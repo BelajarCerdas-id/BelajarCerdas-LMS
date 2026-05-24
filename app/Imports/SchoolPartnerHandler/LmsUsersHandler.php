@@ -156,24 +156,17 @@ class LmsUsersHandler
 
                 $emailsInFile[] = $emailAkun;
 
-                // VALIDASI EMAIL ACCOUNT DATABASE
-                $existingUserByEmail = UserAccount::where(
-                    'email',
-                    $row['email_akun']
-                )->first();
+                // cari berdasarkan email akun
+                $existingUserByEmail = UserAccount::where('email', $row['email_akun'])->first();
 
-                // email account wajib unique
-                if ($existingUserByEmail) {
-                    throw new \Exception(
-                        "Email akun {$row['email_akun']} sudah digunakan."
-                    );
+                // jika email sudah ada tapi no hp beda -> error
+                if ($existingUserByEmail && $existingUserByEmail->no_hp !== $row['no_hp']) 
+                {
+                    throw new \Exception("Email akun {$row['email_akun']} sudah digunakan oleh nomor HP berbeda.");
                 }
 
                 // SCHOOL PARTNER
-                $schoolPartner = SchoolPartner::where(
-                    'npsn',
-                    $row['npsn']
-                )->first();
+                $schoolPartner = SchoolPartner::where('npsn', $row['npsn'])->first();
 
                 if (!$schoolPartner) {
                     throw new \Exception(
@@ -182,13 +175,17 @@ class LmsUsersHandler
                 }
 
                 // USER ACCOUNT
-                $user = UserAccount::create([
-                    'email' => $row['email_akun'],
-                    'password' => bcrypt($row['password_akun']),
-                    'no_hp' => $row['no_hp'],
-                    'role' => $row['role_account'],
-                    'status_akun' => 'aktif',
-                ]);
+                $user = UserAccount::updateOrCreate(
+                    [
+                        'email' => $row['email_akun'],
+                    ],
+                    [
+                        'password' => bcrypt($row['password_akun']),
+                        'no_hp' => $row['no_hp'],
+                        'role' => $row['role_account'],
+                        'status_akun' => 'aktif',
+                    ]
+                );
 
                 // ROLE SISWA
                 if ($row['role_account'] === 'Siswa') {
