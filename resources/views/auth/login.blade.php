@@ -47,7 +47,7 @@
                         <sup class="text-red-500">&#42;</sup>
                     </label>
                     <input id="passwordInput" type="password" name="password" placeholder="Masukkan paswword" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none text-sm" 
-                        maxlength="16" autocomplete="OFF">
+                        autocomplete="OFF">
                         <span id="error-password" class="error-text text-red-500 text-xs mt-1 font-bold"></span>
                     <button type="button" onclick="togglePassword('passwordInput', this)"
                         class="absolute right-3 top-14 transform -translate-y-1/2 text-gray-600 focus:outline-none">
