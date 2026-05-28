@@ -384,6 +384,26 @@
                     <div class="dropdown-menu w-full flex flex-col items-start">
 
                         <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                            <i class="fa-solid fa-building-user text-[14px]"></i>
+                            <span class="text-[14px] relative -left-1">Office Management</span>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6">
+                            <a href="{{ route('lms.officeManagement.manage-user.view', [
+                                'role' => Auth::user()->role
+                            ]) }}"
+                                class="link-href flex py-2 text-[14px]">
+                                Manage User
+                            </a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4 px-4">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
                             <i class="fa-solid fa-book-bookmark text-[14px]"></i>
                             <span class="text-[14px]">Belajar Cerdas LMS</span>
                             <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
@@ -629,6 +649,26 @@
                                     <i class="fa-solid fa-layer-group"></i>
                                 </div>
                                 <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item pb-4 px-2">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-building-user text-[14px]"></i>
+                                <span class="text-[14px] relative -left-1">Office Management</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-2">
+                                <a href="{{ route('lms.officeManagement.manage-user.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}"
+                                    class="link-href flex py-2 text-[14px]">
+                                    Manage User
+                                </a>
                             </div>
                         </div>
                     </li>

@@ -44,6 +44,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
+use App\Http\Controllers\OfficeManagementController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\StudentVicePrincipalController;
 
@@ -457,6 +458,17 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // paginate
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/subject-passing-grade-criteria-management/paginate', [SubjectPassingGradeCriteriaController::class, 'paginateSubjectPassingGradeCriteria'])->name('lms.subjectPassingGradeCriteria.paginate');
+
+    // ROUTES OFFICE MANAGEMENT
+    Route::get('/lms/{role}/office-management/manage-user', [OfficeManagementController::class, 'manageUserView'])->name('lms.officeManagement.manage-user.view');
+
+    // crud
+    Route::post('/lms/{role}/office-management/manage-user/store', [OfficeManagementController::class, 'manageUserStore'])->name('lms.officeManagement.manage-user.store');
+    Route::post('/lms/{role}/office-management/manage-user/edit/{userAccountId}', [OfficeManagementController::class, 'manageUserEdit'])->name('lms.officeManagement.manage-user.edit');
+    Route::put('/lms/{role}/office-management/manage-user/activate-account/{userAccountId}', [OfficeManagementController::class, 'manageUserActivate'])->name('lms.officeManagement.manage-user.activate');
+
+    // paginate
+    Route::get('/lms/{role}/office-management/manage-user/paginate', [OfficeManagementController::class, 'paginateManageUser'])->name('lms.officeManagement.manage-user.paginate');
 
     // =========================================================
     // ROUTES STUDENT LMS (wildcard — harus PALING BAWAH di grup /lms/{role}/...)
