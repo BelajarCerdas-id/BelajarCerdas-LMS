@@ -288,8 +288,10 @@ function historyQuestion(element) {
 
 // function activate bank soal
 $(document).on('change', '.toggle-activate-bank-soal', function () {
+
     const checkbox = $(this);
     const container = document.getElementById('container');
+
     if (!container) return;
 
     const schoolId = container.dataset.schoolId;
@@ -298,27 +300,57 @@ $(document).on('change', '.toggle-activate-bank-soal', function () {
     const subBabId = checkbox.data('sub-bab-id');
     const source = checkbox.data('source');
     const questionType = checkbox.data('question-type');
-    const isGlobalActive = Number(checkbox.data('global-active')) === 1;
+    const questionCategory = checkbox.data('question-category');
 
     const action = checkbox.is(':checked') ? 'enable' : 'disable';
 
+    let url = '';
+
+    // SCHOOL PARTNER
+    if (schoolId) {
+
+        // WITH SUB BAB
+        if (subBabId) {
+            url = `/lms/school-subscription/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${subBabId}/${schoolName}/${schoolId}/activate`;
+        }
+
+        // WITHOUT SUB BAB
+        else {
+            url = `/lms/school-subscription/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${schoolName}/${schoolId}/activate`;
+        }
+
+    }
+    // GLOBAL
+    else {
+
+        // WITH SUB BAB
+        if (subBabId) {
+            url = `/lms/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/${subBabId}/activate`;
+        }
+
+        // WITHOUT SUB BAB
+        else {
+            url = `/lms/question-bank-management/source/${source}/question-type/${questionType}/question-category/${questionCategory}/activate`;
+        }
+    }
+
     $.ajax({
-        url: schoolId
-            ? `/lms/school-subscription/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/${schoolName}/${schoolId}/activate`
-            : `/lms/question-bank-management/${subBabId}/source/${source}/question-type/${questionType}/activate`,
+        url: url,
         method: 'PUT',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
-        data: { action },
-        success: function () {
-            // REFRESH DATA LIST
-            paginateQuestionBank(response.current_page);
+        data: {
+            action: action
         },
-        error: function () {
+        success: function (response) {
+            paginateBankSoal(null, $('#dropdown-filter-tahun-ajaran').val(), 1);
+        },
+        error: function (xhr) {
             checkbox.prop('checked', !checkbox.is(':checked'));
             alert('Gagal mengubah status');
         }
     });
+
 });
 
