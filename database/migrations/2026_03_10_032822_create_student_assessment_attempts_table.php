@@ -21,7 +21,8 @@ return new class extends Migration
             $table->enum('status', ['in_progress', 'submitted', 'cheating', 'timeout'])->default('in_progress');
             $table->timestamps();
 
-            $table->unique(['student_id', 'school_assessment_id']);
+            $table->unique(['student_id']);
+            $table->unique(['school_assessment_id']);
         });
     }
 
