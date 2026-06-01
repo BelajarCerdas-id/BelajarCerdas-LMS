@@ -20,6 +20,12 @@ class TeacherQuestionBankController extends Controller
         $classNameService = new ClassNameService();
         return $classNameService->extractClassLevel($className);
     }
+
+    private function resolveClassLevel($class): ?int
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->resolveClassLevel($class);
+    }
     
     // function teacher question bank management view
     public function teacherQuestionBankManagement($role, $schoolName, $schoolId)
@@ -80,7 +86,7 @@ class TeacherQuestionBankController extends Controller
         // LEVEL KELAS UNIK
         $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
         $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
@@ -111,11 +117,11 @@ class TeacherQuestionBankController extends Controller
         if ($selectedClass) {
             $questionCollection = $questionCollection->filter(function ($item) use ($selectedClass) {
 
-                if (!$item || !$item->kelas_id) {
+                if (!$item || !$item->Kelas?->kelas) {
                     return false;
                 }
 
-                return $this->extractClassLevel($item->kelas_id) == $selectedClass;
+                return $this->extractClassLevel($item->Kelas->kelas) == $selectedClass;
             });
         }
 

@@ -22,6 +22,11 @@ class LmsController extends Controller
         $classNameService = new ClassNameService();
         return $classNameService->extractClassLevel($className);
     }
+    private function resolveClassLevel($class): ?int
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->resolveClassLevel($class);
+    }
     
     // function lms school subscription view
     public function lmsSchoolSubscriptionView($role)
@@ -208,7 +213,7 @@ class LmsController extends Controller
         // KELAS LEVEL
         $classLevels = $dataByYear->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->search_class ?? $classLevels->first() ?? $defaultLevel;
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         $dataByClass = $dataByYear->filter(function ($item) use ($selectedClass) {
             return (int)$this->extractClassLevel($item->SchoolClass->class_name) === (int)$selectedClass;
