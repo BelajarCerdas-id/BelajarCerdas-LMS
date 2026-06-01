@@ -20,11 +20,11 @@ $('#submit-btn-create-announcement').on('click', function (e) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const subjectTeacherId = container.dataset.subjectTeacherId;
-    const meetingId = container.dataset.meetingId;
+    const meetingNumber = container.dataset.meetingNumber;
     const semester = container.dataset.semester;
 
     if (!container) return;
-    if (!role || !schoolName || !schoolId || !subjectTeacherId || !meetingId || !semester) return;
+    if (!role || !schoolName || !schoolId || !subjectTeacherId || !meetingNumber || !semester) return;
 
     if (isProcessing) return;
     isProcessing = true;
@@ -33,7 +33,7 @@ $('#submit-btn-create-announcement').on('click', function (e) {
     btn.prop('disabled', true);
 
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/subject-attendance/classes/subject-teacher/${subjectTeacherId}/meeting-list/${meetingId}/semester/${semester}/meeting-management/announcement-store`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/subject-attendance/classes/subject-teacher/${subjectTeacherId}/meeting-list/${meetingNumber}/semester/${semester}/meeting-management/announcement-store`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
