@@ -11,6 +11,7 @@ use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class LmsController extends Controller
@@ -749,43 +750,20 @@ class LmsController extends Controller
 
         try {
 
-            $classIds = $request->class_id;
+            $classId = $request->class_id;
 
-            // Jika semua kelas dicentang / global
-            if (empty($classIds)) {
-
-                \Illuminate\Support\Facades\DB::table('announcements')->insert([
-                    'school_partner_id' => $request->school_id,
-                    'target_class_id'   => null,
-                    'author_id'         => $user->id,
-                    'author_role'       => 'Guru',
-                    'target'            => 'Siswa',
-                    'title'             => $request->title,
-                    'type'              => $request->type,
-                    'content'           => $request->input('content'),
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
-                ]);
-
-            } else {
-
-                foreach ($classIds as $classId) {
-
-                    \Illuminate\Support\Facades\DB::table('announcements')->insert([
-                        'school_partner_id' => $request->school_id,
-                        'target_class_id'   => $classId,
-                        'author_id'         => $user->id,
-                        'author_role'       => 'Guru',
-                        'target'            => 'Siswa',
-                        'title'             => $request->title,
-                        'type'              => $request->type,
-                        'content'           => $request->input('content'),
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                    ]);
-
-                }
-            }
+            DB::table('announcements')->insert([
+                'school_partner_id' => $request->school_id,
+                'target_class_id'   => $classId,
+                'author_id'         => $user->id,
+                'author_role'       => 'Guru',
+                'target'            => 'Siswa',
+                'title'             => $request->title,
+                'type'              => $request->type,
+                'content'           => $request->input('content'),
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
 
             return response()->json([
                 'success' => true,
