@@ -22,6 +22,11 @@ class StudentSchoolClassController extends Controller
             return (int) $match[0];
         }
 
+        // 1b. Coba label kelas baku seperti "Kelas 10"
+        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
+            return (int) $match[1];
+        }
+
         // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
         if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
             return $this->romanToInt($match[0]);

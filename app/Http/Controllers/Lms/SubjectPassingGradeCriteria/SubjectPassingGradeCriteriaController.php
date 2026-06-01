@@ -29,6 +29,11 @@ class SubjectPassingGradeCriteriaController extends Controller
             return (int) $match[0];
         }
 
+        // 1b. Coba label kelas baku seperti "Kelas 10"
+        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
+            return (int) $match[1];
+        }
+
         // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
         if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
             return $this->romanToInt($match[0]);
@@ -55,6 +60,15 @@ class SubjectPassingGradeCriteriaController extends Controller
         ];
 
         return $map[$roman] ?? 0;
+    }
+
+    private function resolveClassLevel($class): ?int
+    {
+        if ($class === null || $class === '') {
+            return null;
+        }
+
+        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
     }
 
     // function subject passing grade criteria management
@@ -106,7 +120,7 @@ class SubjectPassingGradeCriteriaController extends Controller
         $classLevels = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $searchYear)->pluck('class_name')->map(fn($c) => (int) $this->extractClassLevel($c))
         ->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // QUERY DATA KKM
         $query = SubjectPassingGradeCriteria::with(['SchoolPartner', 'Kelas', 'Mapel', 'UserAccount.SchoolStaffProfile', 'UserAccount.OfficeProfile'])
