@@ -122,4 +122,9 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(parentProfile::class, 'school_partner_id');
     }
+
+    public function SchReflQuestion()
+    {
+        return $this->hasMany(SchReflQuestion::class, 'school_partner_id');
+    }
 }

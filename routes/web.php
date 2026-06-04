@@ -693,6 +693,12 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
     Route::post('/student/announcement/mark-read', [StudentDashboardController::class, 'markAnnouncementAsRead'])->name('lms.studentAnnouncement.markRead');
 
+    // daily reflection
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/student/daily-reflection/paginate', [StudentDashboardController::class, 'getDailyReflection'])->name('lms.student.daily-reflection.paginate');
+
+    // submit form daily reflection
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/student/daily-reflection/store', [StudentDashboardController::class, 'dailyReflectionStore'])->name('lms.student.daily-reflection.store');
+
     // BLOK KEPALA SEKOLAH
     Route::get('/lms/{role}/{schoolName}/{schoolId}/headmaster/dashboard', [HeadmasterController::class, 'index'])->name('lms.headmaster.dashboard.view');
     
@@ -718,6 +724,29 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // STUDENT VICE PRINCIPAL ROUTES    
     // dashboard
     Route::get('lms/{role}/{schoolName}/{schoolId}/dashboard', [StudentVicePrincipalController::class, 'index'])->name('lms.student-vice-principal.dashboard.view');
+
+    // REFLECTION MANAGEMENT
+    // view
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management', [StudentVicePrincipalController::class, 'reflectionMaangement'])->name('lms.student-vice-principal.reflection-management.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/create', [StudentVicePrincipalController::class, 'createReflectionView'])->name('lms.student-vice-principal.create.reflection.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history', [StudentVicePrincipalController::class, 'reflectionManagementHistoryView'])->name('lms.student-vice-principal.reflection-management-history.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}', [StudentVicePrincipalController::class, 'reflectionManagementHistoryDetailView'])->name('lms.student-vice-principal.reflection-management-history-detail.view');
+
+    // form submit
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/form-submit', [StudentVicePrincipalController::class, 'reflectionManagementForm'])->name('lms.student-vice-principal.reflection.form');
+
+    // crud
+    Route::post('/lms/{role}/{schoolName}/{schoolId}/reflection-management/store', [StudentVicePrincipalController::class, 'reflectionManagementStore'])->name('lms.student-vice-principal.reflection.store');
+
+    // paginate
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/dashboard/load-student-reflection-chart', [StudentVicePrincipalController::class, 'loadStudentReflectionChart'])->name('lms.student-vice-principal.dashboard.load-student-reflection-chart');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-recent', [StudentVicePrincipalController::class, 'paginateReflectionHistoryRecent'])->name('lms.student-vice-principal.reflection-management.history-recent');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/daily-reflection-live-preview', [StudentVicePrincipalController::class, 'paginateDailyReflectionLivePreview'])->name('lms.student-vice-principal.reflection-management.daily-reflection-live-preview');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history/paginate', [StudentVicePrincipalController::class, 'paginateReflectionHistory'])->name('lms.student-vice-principal.reflection-management.history');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-header', [StudentVicePrincipalController::class, 'loadReflectionDetailHeader'])->name('lms.student-vice-principal.reflection-management-history-detail.load-header');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-summary', [StudentVicePrincipalController::class, 'loadReflectionDetailSummary'])->name('lms.student-vice-principal.reflection-management-history-detail.load-summary');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-chart', [StudentVicePrincipalController::class, 'loadReflectionDetailChart'])->name('lms.student-vice-principal.reflection-management-history-detail.load-chart');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/student-answer/paginate', [StudentVicePrincipalController::class, 'paginateReflectionStudentAnswer'])->name('lms.student-vice-principal.reflection-management-history-detail.student-answer.paginate');
 
     // =========================================================
     // ROUTES ORANG TUA

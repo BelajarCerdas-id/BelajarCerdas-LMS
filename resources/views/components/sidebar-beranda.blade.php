@@ -2208,15 +2208,6 @@
                                 ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Refleksi Harian
                                 </a>
-                                <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Konseling BK
-                                </a>
-                                <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Pelanggaran Siswa
-                                </a>
-                                <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Aspirasi Siswa
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -2469,15 +2460,6 @@
                                         'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                     ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Refleksi Harian
-                                    </a>
-                                    <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Konseling BK
-                                    </a>
-                                    <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Pelanggaran Siswa
-                                    </a>
-                                    <a href="" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Aspirasi Siswa
                                     </a>
                                 </div>
                             </div>

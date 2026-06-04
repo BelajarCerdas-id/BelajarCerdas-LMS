@@ -3,7 +3,9 @@
 @if (Auth::user()->role === 'Siswa')
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-50 min-h-screen pb-12">
 
-        <div class="p-4 sm:p-6 md:p-8">
+        <div id="alert-success-answer-daily-reflection"></div>
+
+        <div id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="p-4 sm:p-6 md:p-8">
             
             {{-- ======================================= --}}
             {{-- 1. HERO SECTION                         --}}
@@ -21,12 +23,12 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8">
                 
                 {{-- ======================================= --}}
                 {{-- KOLOM KIRI (Lebar 2/3)                  --}}
                 {{-- ======================================= --}}
-                <div class="xl:col-span-2 flex flex-col gap-6 md:gap-8">
+                <div class="xl:col-span-7 flex flex-col gap-6 md:gap-8">
                     
                     {{-- A. JADWAL PELAJARAN --}}
                     <div class="bg-gradient-to-br from-white to-blue-50/50 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-8 flex flex-col max-h-[450px] md:max-h-[500px]">
@@ -315,7 +317,84 @@
                 {{-- ======================================= --}}
                 {{-- KOLOM KANAN (Lebar 1/3)                 --}}
                 {{-- ======================================= --}}
-                <div class="xl:col-span-1 flex flex-col gap-6 md:gap-8">
+                <div class="xl:col-span-5 flex flex-col gap-6 md:gap-8">
+
+                    <!-- DAILY REFLECTION -->
+                    <div class="bg-linear-to-br from-white to-indigo-50/40 rounded-3xl md:rounded-4xl shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col relative 
+                        overflow-hidden">
+
+                        <!-- Decorative Background -->
+                        <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-100/30 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <!-- Header -->
+                        <div class="relative z-10 flex items-start justify-between gap-3 mb-5 pb-4 border-b border-indigo-100">
+
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-11 h-11 rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center shadow-md 
+                                    shadow-indigo-200">
+                                    <i class="fas fa-clipboard-check text-lg"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="font-bold text-indigo-900 text-base md:text-lg leading-tight">
+                                        Refleksi Harian
+                                    </h3>
+
+                                    <p class="text-[10px] md:text-xs text-indigo-600/70 font-medium mt-0.5">
+                                        Evaluasi kondisi dan pengalaman belajar siswa
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <!-- Status -->
+                            <div id="status-daily-reflection">
+                                <!-- show status in ajax -->
+                            </div>
+
+                        </div>
+
+                        <!-- Reflection Information -->
+                        <div id="container-student-daily-reflection" class="relative z-10 flex flex-col gap-4 overflow-y-auto max-h-185 pr-2 custom-scrollbar">
+
+                            <div id="daily-reflection-form">
+                                <!-- show form in ajax -->
+                            </div>
+
+                            <div class="pagination-container-daily-reflection flex justify-center"></div>
+                            
+                            <div id="empty-message-daily-reflection" class="py-12 px-6 text-center border-2 border-dashed border-slate-200 rounded-3xl 
+                                bg-linear-to-b from-slate-50 to-white hidden">
+
+                                <div class="flex flex-col items-center justify-center">
+
+                                    <!-- ICON -->
+                                    <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center border border-blue-100 shadow-sm mb-4">
+                                        <i class="fas fa-book-open text-2xl"></i>
+                                    </div>
+
+                                    <!-- TITLE -->
+                                    <h3 class="text-base font-bold text-slate-800">
+                                        Belum Ada Refleksi Hari Ini
+                                    </h3>
+
+                                    <!-- DESCRIPTION -->
+                                    <p class="text-sm text-slate-500 leading-relaxed mt-2 max-w-sm">
+                                        Saat ini belum ada refleksi harian yang perlu kamu isi.
+                                        Refleksi akan muncul setelah guru membagikannya.
+                                    </p>
+
+                                    <!-- OPTIONAL BADGE -->
+                                    <div class="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs 
+                                        font-semibold">
+                                        <i class="fas fa-check-circle"></i>
+                                        Tidak ada refleksi tertunda
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     {{-- A. TUGAS & PR --}}
                     <div class="bg-gradient-to-br from-white to-blue-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-6 flex flex-col max-h-[350px]">
@@ -655,6 +734,10 @@
 {{-- SCRIPT DEPENDENCIES --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
+<script src="{{ asset('assets/js/features/lms/student/dashboard/daily-reflection/daily-reflection-form.js') }}"></script>
+
+<!--- PUSHER LISTENER ---->
+<script src="{{ asset('assets/js/pusher-listener/student/daily-reflection/daily-reflection-form-listener.js') }}"></script> <!--- pusher listener student daily reflection form ---->
 
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
