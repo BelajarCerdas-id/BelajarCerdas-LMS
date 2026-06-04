@@ -18,135 +18,125 @@ class BankSoalWordImportService
 {
     public function bankSoalImportService(Request $request)
     {
-        // Buat instance dari class DocxImageExtractor yang berfungsi untuk ekstrak gambar + HTML styled dari file Word
+        $userId = Auth::id();
+        Log::info("[BankSoalImport] Memulai proses import bank soal.", [
+            'user_id' => $userId,
+            'kurikulum_id' => $request->kurikulum_id,
+            'mapel_id' => $request->mapel_id
+        ]);
+
         $extractor = new DocxExtractor('lms');
 
-        // Validasi input form dari frontend (wajib diisi)
+        // Validasi input form dari frontend
         $validator = Validator::make($request->all(), [
-            // File wajib ada, format .docx, max 10 MB
-            'bulkUpload-lms' => 'required|file|mimes:docx|max:100000',
-            'kurikulum_id' => 'required',
-            'kelas_id' => 'required',
-            'mapel_id' => 'required',
-            'bab_id' => 'required',
+            'bulkUpload-lms'    => 'required|file|mimes:docx|max:100000',
+            'kurikulum_id'      => 'required',
+            'kelas_id'          => 'required',
+            'mapel_id'          => 'required',
+            'bab_id'            => 'required',
             'question_category' => 'required',
         ], [
-            // Pesan error custom
-            'bulkUpload-lms.required' => 'Harap upload soal.',
-            'bulkUpload-lms.max' => 'Ukuran file melebihi kapasitas yang ditentukan.',
-            'kurikulum_id.required' => 'Harap pilih kurikulum.',
-            'kelas_id.required' => 'Harap pilih kelas.',
-            'mapel_id.required' => 'Harap pilih mapel.',
-            'bab_id.required' => 'Harap pilih bab.',
+            'bulkUpload-lms.required'    => 'Harap upload soal.',
+            'bulkUpload-lms.max'         => 'Ukuran file melebihi kapasitas yang ditentukan.',
+            'kurikulum_id.required'      => 'Harap pilih kurikulum.',
+            'kelas_id.required'          => 'Harap pilih kelas.',
+            'mapel_id.required'          => 'Harap pilih mapel.',
+            'bab_id.required'            => 'Harap pilih bab.',
             'question_category.required' => 'Harap pilih kategori soal.',
         ]);
 
-        // Simpan error validasi form (tidak langsung return, biar bisa digabung dengan error validasi isi file Word)
         $formErrors = $validator->fails() ? $validator->errors()->toArray() : [];
+        if (!empty($formErrors)) {
+            Log::warning("[BankSoalImport] Validasi form gagal.", ['errors' => $formErrors]);
+        }
 
-        // Array untuk menampung semua error validasi dari isi tabel di file Word
         $allWordValidationErrors = [];
-
-        // Ambil ID user yang sedang login
-        $userId = Auth::id();
-
-        // Ambil file .docx yang diupload
+        $validSoalData = []; 
         $uploadedFile = $request->file('bulkUpload-lms');
 
-        // Mengecek apakah ada file yang diupload
-        if ($uploadedFile) {
-            // Tentukan path sementara untuk file docx dan file html hasil konversi
-            $docxPath = storage_path('app/tmp_soal.docx');
-            $outputHtmlPath = storage_path('app/converted_soal.html');
+        $docxPath = storage_path('app/tmp_soal.docx');
+        $outputHtmlPath = storage_path('app/converted_soal.html');
+        $mediaImages = [];
 
-            // Pindahkan file upload ke storage/app sebagai tmp_soal.docx
+        if ($uploadedFile && empty($formErrors)) {
+            Log::info("[BankSoalImport] File DOCX diterima. Memindahkan ke storage sementara.");
             $uploadedFile->move(storage_path('app'), 'tmp_soal.docx');
 
-            // Konversi file Word ke HTML menggunakan Pandoc (dengan mathml untuk equation)
+            Log::info("[BankSoalImport] Menjalankan Pandoc untuk konversi DOCX ke HTML.");
             $process = new Process(['pandoc', $docxPath, '-f', 'docx', '-t', 'html', '--mathml', '-o', $outputHtmlPath]);
             $process->run();
 
-            // Jika pandoc gagal, lempar exception
             if (!$process->isSuccessful()) {
+                Log::error("[BankSoalImport] Pandoc gagal dieksekusi.", ['error_output' => $process->getErrorOutput()]);
                 throw new ProcessFailedException($process);
             }
+            Log::info("[BankSoalImport] Pandoc berhasil dieksekusi.");
 
-            // Inisialisasi variabel
-            $styledData = [];    // Hasil ekstrak HTML styled dari PhpWord
-            $mediaImages = [];   // List gambar dari file Word
-            $validSoalData = []; // Soal-soal yang lolos validasi
-    
-            // Ekstrak semua gambar dari file .docx → disimpan di $mediaImages
-            $extractor->extractImagesFromDocxFile($docxPath, $mediaImages);
-    
-            // Deteksi apakah file punya equation atau list
+            $styledData = [];
             $forcePandocMode = false;
+            
+            Log::info("[BankSoalImport] Mengekstrak gambar dari dokumen.");
+            $extractor->extractImagesFromDocxFile($docxPath, $mediaImages);
+            Log::debug("[BankSoalImport] Hasil ekstraksi gambar.", ['total_images' => count($mediaImages)]);
+    
             if ($extractor->docxHasEquation($docxPath) || $extractor->docxHasList($docxPath)) {
-                // Jika iya → skip PhpWord dan pakai hasil Pandoc saja
-                Log::info('Deteksi equation OMML, skip PhpWord dan pakai hasil Pandoc sepenuhnya.');
-                Log::info("Deteksi " . ($extractor->docxHasEquation($docxPath) ? "equation " : "") . ($extractor->docxHasList($docxPath) ? "list " : "") . "- gunakan Pandoc.");
-                $styledData = [];
+                Log::info("[BankSoalImport] Deteksi equation/list. Menggunakan Pandoc sepenuhnya (force mode).");
                 $forcePandocMode = true;
             } else {
-                // Jika tidak ada equation/list → coba parsing HTML styled dengan PhpWord
                 try {
+                    Log::info("[BankSoalImport] Mencoba memuat dokumen dengan PhpWord untuk styling.");
                     $phpWord = IOFactory::load($docxPath);
                     $styledData = $extractor->extractStyledTableData($phpWord, $mediaImages);
+                    Log::info("[BankSoalImport] PhpWord berhasil memuat dokumen.");
                 } catch (\Throwable $e) {
-                    // Jika gagal → log warning dan kosongkan styledData
-                    Log::warning('Gagal load PhpWord atau extractStyledTableData: ' . $e->getMessage());
-                    $styledData = [];
+                    Log::warning("[BankSoalImport] Gagal load PhpWord, akan menggunakan fallback Pandoc.", ['message' => $e->getMessage()]);
                 }
             }
     
-            // Parse HTML hasil Pandoc
+            Log::info("[BankSoalImport] Mem-parsing HTML hasil Pandoc menggunakan DOMDocument.");
             $htmlContent = file_get_contents($outputHtmlPath);
             $dom = new \DOMDocument();
-            libxml_use_internal_errors(true); // Supaya error parsing HTML tidak mematikan proses
+            libxml_use_internal_errors(true);
             $dom->loadHTML(mb_convert_encoding($htmlContent, 'HTML-ENTITIES', 'UTF-8'));
             libxml_clear_errors();
     
-            // Ambil semua tabel dari hasil Pandoc
             $tables = $dom->getElementsByTagName('table');
-    
-            // Ambil semua key-value dari tabel hasil Pandoc
+            Log::info("[BankSoalImport] Ditemukan " . $tables->length . " tabel/soal dalam dokumen.");
+
             $pandocTableValues = [];
+            
             foreach ($tables as $tIndex => $t) {
                 if (!$t instanceof \DOMElement) continue;
-                    $rowsForFallback = $t->getElementsByTagName('tr');
+                $rowsForFallback = $t->getElementsByTagName('tr');
                 foreach ($rowsForFallback as $row) {
                     if (!$row instanceof \DOMElement) continue;
     
-                    // Ambil cell per baris
                     $cells = [];
                     foreach ($row->childNodes as $child) {
                         if ($child instanceof \DOMElement && in_array(strtolower($child->nodeName), ['td', 'th'])) {
                             $cells[] = $child;
                         }
                     }
-                    if (count($cells) < 2) continue; // Harus ada minimal 2 kolom (key & value)
+                    if (count($cells) < 2) continue;
     
-                    // Ambil key (kolom 1)
                     $keyHtml = '';
                     foreach ($cells[0]->childNodes as $child) {
                         $keyHtml .= $dom->saveHTML($child);
                     }
-                        $normalizedKey = strtoupper(trim($extractor->normalizeTextContent($keyHtml)));
-                        $key = preg_replace('/[\s\xA0]+/u', '', $normalizedKey);
-                    if ($key === '') $key = 'QUESTION'; // Default key kalau kosong
+                    $normalizedKey = strtoupper(trim($extractor->normalizeTextContent($keyHtml)));
+                    $key = preg_replace('/[\s\xA0]+/u', '', $normalizedKey);
+                    if ($key === '') $key = 'QUESTION';
     
-                    // Ambil value (kolom 2)
                     $valueHtml = '';
                     foreach ($cells[1]->childNodes as $child) {
                         $valueHtml .= $dom->saveHTML($child);
                     }
     
-                    // Simpan ke array berdasarkan index tabel
                     $pandocTableValues[$tIndex][$key] = $valueHtml;
                 }
             }
     
-            // Proses setiap tabel (setiap tabel = 1 soal)
+            Log::info("[BankSoalImport] Memulai proses validasi data per tabel.");
             foreach ($tables as $index => $table) {
                 if (!$table instanceof \DOMElement) continue;
                 $rows = $table->getElementsByTagName('tr');
@@ -154,19 +144,14 @@ class BankSoalWordImportService
                 $validationErrors = [];
                 $soalNumber = $index + 1;
     
-                // Kalau styledData tersedia → gabungkan dengan hasil Pandoc
                 if (!$forcePandocMode && isset($styledData[$index]) && is_array($styledData[$index]) && count($styledData[$index]) > 0) {
-                        $dataSoal = $styledData[$index];
-                        Log::info("Soal ke-$soalNumber: memakai styledData + fallback Pandoc untuk key/value.");
+                    $dataSoal = $styledData[$index];
                     foreach ($dataSoal as $k => $htmlValue) {
                         $styledHtml = $htmlValue;
-                        $pandocHtmlRaw = $pandocTableValues[$index][$k] ?? '';
-                        $pandocHtml = $pandocHtmlRaw;
-                        // Gabungkan styled HTML dan Pandoc HTML
+                        $pandocHtml = $pandocTableValues[$index][$k] ?? '';
                         $dataSoal[$k] = $extractor->combineStyledAndPandoc($styledHtml, $pandocHtml);
                     }
                 } else {
-                    // Kalau styledData kosong → ambil dari Pandoc + merge styled kalau ada
                     foreach ($rows as $row) {
                         if (!$row instanceof \DOMElement) continue;
     
@@ -178,7 +163,6 @@ class BankSoalWordImportService
                         }
                         if (count($cells) < 2) continue;
     
-                        // Ambil key (kolom 1)
                         $innerHtml = '';
                         foreach ($cells[0]->childNodes as $child) {
                             $innerHtml .= $dom->saveHTML($child);
@@ -189,31 +173,25 @@ class BankSoalWordImportService
                         $key = preg_replace('/[\s\xA0]+/u', '', $rawHtmlKey);
                         if (empty($key) && empty($dataSoal['QUESTION'])) $key = 'QUESTION';
     
-                        // Ambil value (kolom 2)
                         $rawHtmlValue = '';
                         foreach ($cells[1]->childNodes as $child) {
                             $rawHtmlValue .= $dom->saveHTML($child);
                         }
     
-                        $pandocValue = $rawHtmlValue;
-    
-                        // Coba ambil styled value jika ada
                         $styledValue = $styledData[$index][$key] ?? '';
-                        $plainPandoc = $extractor->normalizeTextContent($pandocValue);
+                        $plainPandoc = $extractor->normalizeTextContent($rawHtmlValue);
                         $plainStyled = $extractor->normalizeTextContent($styledValue);
     
-                        // Tentukan value akhir
                         if (empty($styledValue)) {
-                            $value = $pandocValue;
+                            $value = $rawHtmlValue;
                         } elseif ($plainPandoc === $plainStyled) {
                             $value = $styledValue;
-                        } elseif (str_contains($pandocValue, '<math') || str_contains($pandocValue, '<img') || str_contains($pandocValue, '<ul') || str_contains($pandocValue, '<ol')) {
-                            $value = $extractor->mergeStyledAndPandocHtml($pandocValue, $styledValue, $mediaImages);
+                        } elseif (str_contains($rawHtmlValue, '<math') || str_contains($rawHtmlValue, '<img') || str_contains($rawHtmlValue, '<ul') || str_contains($rawHtmlValue, '<ol')) {
+                            $value = $extractor->mergeStyledAndPandocHtml($rawHtmlValue, $styledValue, $mediaImages);
                         } else {
                             $value = $styledValue;
                         }
     
-                        // Pastikan value dibungkus <p>
                         if (!str_contains($value, '<p>') && !str_contains($value, '<div>')) {
                             $value = "<p>$value</p>";
                         }
@@ -221,9 +199,26 @@ class BankSoalWordImportService
                     }
                 }
     
-                // Validasi field wajib
-                if (!isset($dataSoal['QUESTION']) || $extractor->isMeaningfullyEmpty($dataSoal['QUESTION'])) {
-                    $validationErrors[] = "Soal ke-$soalNumber: QUESTION tidak boleh kosong.";
+                // Aliasing ITEM -> LEFT, CATEGORY -> RIGHT
+                foreach ($dataSoal as $k => $v) {
+                    if (str_starts_with($k, 'ITEM')) {
+                        $dataSoal[str_replace('ITEM', 'LEFT', $k)] = $v;
+                        unset($dataSoal[$k]);
+                    }
+                    if (str_starts_with($k, 'CATEGORY')) {
+                        $dataSoal[str_replace('CATEGORY', 'RIGHT', $k)] = $v;
+                        unset($dataSoal[$k]);
+                    }
+                }
+
+                // Log isi mentah dataSoal sebelum divalidasi
+                Log::debug("[BankSoalImport] Data mentah Soal ke-$soalNumber:", ['data' => array_keys($dataSoal)]);
+
+                $requiredBaseFields = ['QUESTION', 'DIFFICULTY', 'BLOOM', 'TYPE'];
+                foreach ($requiredBaseFields as $field) {
+                    if (!isset($dataSoal[$field]) || $extractor->isMeaningfullyEmpty($dataSoal[$field])) {
+                        $validationErrors[] = "Soal ke-$soalNumber: Field '$field' tidak boleh kosong.";
+                    }
                 }
     
                 $normalizeAnswers = function (?string $raw): array {
@@ -233,182 +228,121 @@ class BankSoalWordImportService
                         preg_split('/[,;]+/', strip_tags($raw))
                     )));
                 };
-
+    
                 $isEmpty = fn($v) => !isset($v) || $extractor->isMeaningfullyEmpty($v);
-                    
                 $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
                 $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
-                    
-                $requiredBaseFields = ['QUESTION', 'DIFFICULTY', 'BLOOM', 'TYPE'];
-
-                foreach ($requiredBaseFields as $field) {
-                    if (!isset($dataSoal[$field]) || $extractor->isMeaningfullyEmpty($dataSoal[$field])) {
-                        $validationErrors[] = "Soal ke-$soalNumber: Field '$field' tidak boleh kosong.";
-                    }
-                }
-
-                // VALIDASI OPTION
+    
                 $options = array_filter(
                     $dataSoal,
                     fn($v, $k) => str_starts_with($k, 'OPTION') && !$isEmpty($v),
                     ARRAY_FILTER_USE_BOTH
                 );
-
+    
                 switch ($type) {
                     case 'mcq':
-                        if (count($options) < 2) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MCQ minimal punya 2 OPTION.";
-                        }
-                        if (count($answers) !== 1) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MCQ harus tepat 1 jawaban.";
-                        }
+                        if (count($options) < 2) $validationErrors[] = "Soal ke-$soalNumber: MCQ minimal punya 2 OPTION.";
+                        if (count($answers) !== 1) $validationErrors[] = "Soal ke-$soalNumber: MCQ harus tepat 1 jawaban.";
                         if (!isset($dataSoal[$answers[0] ?? '']) || $isEmpty($dataSoal[$answers[0]])) {
                             $validationErrors[] = "Soal ke-$soalNumber: ANSWER tidak cocok dengan OPTION.";
                         }
                         break;
-
+    
                     case 'mcma':
-                        if (count($options) < 2) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal punya 2 OPTION.";
-                        }
-                        if (count($answers) < 1) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal 1 jawaban.";
-                        }
+                        if (count($options) < 2) $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal punya 2 OPTION.";
+                        if (count($answers) < 1) $validationErrors[] = "Soal ke-$soalNumber: MCMA minimal 1 jawaban.";
                         foreach ($answers as $a) {
                             if (!isset($dataSoal[$a]) || $isEmpty($dataSoal[$a])) {
                                 $validationErrors[] = "Soal ke-$soalNumber: ANSWER '$a' tidak valid atau OPTION kosong.";
                             }
                         }
                         break;
-
+    
                     case 'matching':
                     case 'pg_kompleks':
                         if ($isEmpty($dataSoal['ANSWER'] ?? null)) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya ANSWER.";
+                            $validationErrors[] = "Soal ke-$soalNumber: $type wajib punya ANSWER.";
                             break;
                         }
-
+    
                         $isMatrix = $type === 'pg_kompleks';
-
-                        foreach ($dataSoal as $k => $v) {
-                            if (str_starts_with($k, 'ITEM')) {
-                                $dataSoal[str_replace('ITEM', 'LEFT', $k)] = $v;
-                            }
-
-                            if (str_starts_with($k, 'CATEGORY')) {
-                                $dataSoal[str_replace('CATEGORY', 'RIGHT', $k)] = $v;
-                            }
-                        }
-
-                        // LEFT & RIGHT
-                        $leftKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) =>
-                            (str_starts_with($k,'LEFT') || str_starts_with($k,'ITEM')) && !$isEmpty($v),
-                            ARRAY_FILTER_USE_BOTH
-                        )));
-
-                        $rightKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) =>
-                            (str_starts_with($k,'RIGHT') || str_starts_with($k,'CATEGORY')) && !$isEmpty($v),
-                            ARRAY_FILTER_USE_BOTH
-                        )));
-
+                        
+                        $leftKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) => str_starts_with($k,'LEFT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH)));
+                        $rightKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) => str_starts_with($k,'RIGHT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH)));
+    
                         if (!$leftKeys || !$rightKeys) {
-                            $validationErrors[] = "Soal ke-$soalNumber: MATCHING wajib punya LEFT & RIGHT.";
+                            $validationErrors[] = "Soal ke-$soalNumber: $type wajib punya LEFT/ITEM & RIGHT/CATEGORY.";
                             break;
                         }
-
-                        // Parse ANSWER
+    
                         $pairMap = [];
-                        $leftUsed  = [];
-                        $rightUsed = [];
-
                         $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER']));
-                            foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
-
-                                $parts = preg_split('/\s*,\s*/', trim($line));
-
-                                // WAJIB 2 token
-                                if (count($parts) !== 2) {
-                                    $validationErrors[] =
-                                        "Soal ke-$soalNumber: format ANSWER harus ITEM/CATEGORY atau LEFT/RIGHT.";
-                                    continue;
-                                }
-
-                                [$l, $r] = array_map(
-                                    fn($v) => strtoupper(trim($v)),
-                                    $parts
-                                );
-
-                                // LEFT valid
-                                if (!in_array($l, $leftKeys)) {
-                                    $validationErrors[] =
-                                        "Soal ke-$soalNumber: ITEM/LEFT '$l' tidak valid.";
-                                    continue;
-                                }
-
-                                // RIGHT valid
-                                if (!in_array($r, $rightKeys)) {
-                                    $validationErrors[] =
-                                        "Soal ke-$soalNumber: CATEGORY/RIGHT '$r' tidak valid.";
-                                    continue;
-                                }
-
-                                $pairMap[$l] = $r;
-                                $rightUsed[] = $r;
+                        
+                        foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
+                            $parts = preg_split('/\s*,\s*/', trim($line));
+                            if (count($parts) !== 2) {
+                                $validationErrors[] = "Soal ke-$soalNumber: format ANSWER harus ITEM,CATEGORY atau LEFT,RIGHT.";
+                                continue;
                             }
-
-                            // MATCHING: semua LEFT wajib punya pasangan
-                            if (!$isMatrix && count($pairMap) !== count($leftKeys)) {
-                                $validationErrors[] =
-                                    "Soal ke-$soalNumber: semua LEFT harus punya pasangan.";
-                            }
-
-                            // PG KOMPLEKS: minimal 1 jawaban saja sudah valid
-                            if ($isMatrix && count($pairMap) < 1) {
-                                $validationErrors[] =
-                                    "Soal ke-$soalNumber: minimal harus ada 1 pasangan jawaban.";
-                            }
-
-                            break;
-
-                    case 'essay':
-                        // tidak perlu ANSWER & OPTION
+    
+                            [$l, $r] = array_map(fn($v) => strtoupper(trim($v)), $parts);
+                            
+                            if (str_starts_with($l, 'ITEM')) $l = str_replace('ITEM', 'LEFT', $l);
+                            if (str_starts_with($r, 'CATEGORY')) $r = str_replace('CATEGORY', 'RIGHT', $r);
+    
+                            if (!in_array($l, $leftKeys)) $validationErrors[] = "Soal ke-$soalNumber: Key LEFT/ITEM '$l' tidak valid.";
+                            if (!in_array($r, $rightKeys)) $validationErrors[] = "Soal ke-$soalNumber: Key RIGHT/CATEGORY '$r' tidak valid.";
+    
+                            $pairMap[$l] = $r;
+                        }
+    
+                        if (!$isMatrix && count($pairMap) !== count($leftKeys)) {
+                            $validationErrors[] = "Soal ke-$soalNumber: semua LEFT harus punya pasangan.";
+                        }
+                        if ($isMatrix && count($pairMap) < 1) {
+                            $validationErrors[] = "Soal ke-$soalNumber: minimal harus ada 1 pasangan jawaban.";
+                        }
                         break;
-
+    
+                    case 'essay':
+                    case 'tf':
+                    case 'yn':
+                        break;
+    
                     default:
                         $validationErrors[] = "Soal ke-$soalNumber: TYPE '$type' tidak dikenali.";
                 }
     
-                // Jika validasi gagal → simpan error & lanjut ke soal berikutnya
                 if (!empty($validationErrors)) {
+                    Log::warning("[BankSoalImport] Soal ke-$soalNumber gagal validasi konten.", ['errors' => $validationErrors]);
                     $allWordValidationErrors = array_merge($allWordValidationErrors, $validationErrors);
                     continue;
                 }
     
-                // Kalau validasi lolos → baru ganti placeholder gambar & bersihkan HTML
                 foreach ($dataSoal as $k => $v) {
                     $v = $extractor->replaceImageSrc($v, $mediaImages);
-                    $v = $extractor->cleanHtml($v); // Hilangkan tag sampah
+                    $v = $extractor->cleanHtml($v);
                     $dataSoal[$k] = $v;
                 }
                 $validSoalData[] = $dataSoal;
+                Log::info("[BankSoalImport] Soal ke-$soalNumber lolos validasi.");
             }
 
-            // Kalau ada error form atau word → hapus semua gambar yang sudah tersimpan
-            if (!empty($formErrors) || !empty($allWordValidationErrors)) {
+            if (!empty($allWordValidationErrors)) {
+                Log::info("[BankSoalImport] Menghapus temporary images karena terdapat error validasi dokumen.");
                 foreach ($mediaImages as $img) {
                     if (!empty($img['public_url'] ?? '')) {
                         $imgPath = public_path($img['public_url']);
-                        if (file_exists($imgPath)) {
-                            unlink($imgPath);
-                            Log::info("Hapus gambar karena validasi gagal: $imgPath");
-                        }
+                        if (file_exists($imgPath)) @unlink($imgPath);
                     }
                 }
             }
         }
 
-        // Return respon error validasi
         if (!empty($formErrors) || !empty($allWordValidationErrors)) {
+            Log::error("[BankSoalImport] Proses import digagalkan karena terdapat error validasi.");
+            @unlink($docxPath);
+            @unlink($outputHtmlPath);
             return response()->json([
                 'status' => 'validation-error',
                 'errors' => [
@@ -418,209 +352,139 @@ class BankSoalWordImportService
             ], 422);
         }
 
-        $validSoalData[] = $dataSoal;
-        // Simpan soal ke database
-        foreach ($validSoalData as $dataSoal) {
-
+        Log::info("[BankSoalImport] Memulai transaksi insert ke database. Total soal valid: " . count($validSoalData));
+        $createBankSoal = null;
+        
+        foreach ($validSoalData as $index => $dataSoal) {
             $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
             $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
-
             $schoolPartnerId = $request->school_partner_id;
 
-            // Cek duplikasi soal
-            $existingQuestion = $schoolPartnerId
-                ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)->exists()
-                : LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->exists();
+            // 1. Ubah query exists() menjadi first(['id']) untuk mengambil data ID
+            $existingQuestionQuery = $schoolPartnerId
+                ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)
+                : LmsQuestionBank::where('questions', $dataSoal['QUESTION']);
 
-            // Tentukan status bank soal (Publish kalau sudah ada soal publish sebelumnya di sub_bab_id yang sama)
+            $existingQuestion = $existingQuestionQuery->first(['id']);
+
+            // 2. Tampilkan ID database dari variabel $existingQuestion->id
+            if ($existingQuestion) {
+                Log::info("[BankSoalImport] Soal urutan dokumen $index terdeteksi duplikat dengan data di database (DB ID: {$existingQuestion->id}), dilewati.");
+                continue;
+            }
+
             $queryStatus = LmsQuestionBank::where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))->where('status_bank_soal', 'Unpublish');
-
             if ($request->sub_bab_id) {
                 $queryStatus->where('sub_bab_id', $request->sub_bab_id);
             } else {
                 $queryStatus->whereNull('sub_bab_id');
             }
-
             $statusBankSoal = $queryStatus->exists() ? 'Unpublish' : 'Publish';
 
-            // Simpan setiap opsi jawaban ke DB
-            if (!$allWordValidationErrors) {
-                if (!$existingQuestion) {
-                    $createBankSoal = LmsQuestionBank::create([
-                        'user_id' => $userId,
-                        'school_partner_id' => $schoolPartnerId ?? null,
-                        'kurikulum_id' => $request->kurikulum_id,
-                        'kelas_id' => $request->kelas_id,
-                        'mapel_id' => $request->mapel_id,
-                        'bab_id' => $request->bab_id,
-                        'sub_bab_id' => $request->sub_bab_id,
-                        'questions' => $dataSoal['QUESTION'],
-                        'header_item'  => trim(strip_tags($dataSoal['HEADER_ITEM'] ?? '')),
-                        'difficulty' => trim(strip_tags($dataSoal['DIFFICULTY'] ?? '')),
-                        'bloom' => trim(strip_tags($dataSoal['BLOOM'] ?? '')),
-                        'explanation' => $dataSoal['EXPLANATION'] ?? '',
-                        'tipe_soal' => trim(strip_tags($dataSoal['TYPE'] ?? '')),
-                        'status_bank_soal' => $statusBankSoal,
-                        'question_source' => $schoolPartnerId ? 'school' : 'default',
-                        'question_category' => $request->question_category,
-                    ]);
+            try {
+                $createBankSoal = LmsQuestionBank::create([
+                    'user_id'           => $userId,
+                    'school_partner_id' => $schoolPartnerId ?? null,
+                    'kurikulum_id'      => $request->kurikulum_id,
+                    'kelas_id'          => $request->kelas_id,
+                    'mapel_id'          => $request->mapel_id,
+                    'bab_id'            => $request->bab_id,
+                    'sub_bab_id'        => $request->sub_bab_id,
+                    'questions'         => $dataSoal['QUESTION'],
+                    'header_item'       => trim(strip_tags($dataSoal['HEADER_ITEM'] ?? '')),
+                    'difficulty'        => trim(strip_tags($dataSoal['DIFFICULTY'] ?? '')),
+                    'bloom'             => trim(strip_tags($dataSoal['BLOOM'] ?? '')),
+                    'explanation'       => $dataSoal['EXPLANATION'] ?? '',
+                    'tipe_soal'         => trim(strip_tags($dataSoal['TYPE'] ?? '')),
+                    'status_bank_soal'  => $statusBankSoal,
+                    'question_source'   => $schoolPartnerId ? 'school' : 'default',
+                    'question_category' => $request->question_category,
+                ]);
+                Log::info("[BankSoalImport] Soal insert sukses (ID: {$createBankSoal->id}, Tipe: {$type}).");
+            } catch (\Exception $e) {
+                Log::error("[BankSoalImport] Gagal insert soal utama ke database.", ['error' => $e->getMessage()]);
+                continue;
+            }
 
-                    if (in_array($type, ['mcq', 'mcma'])) {
-
-                        foreach ($dataSoal as $key => $value) {
-                            if (!str_starts_with($key, 'OPTION')) continue;
-
-                            LmsQuestionOption::create([
-                                'question_id'   => $createBankSoal->id,
-                                'options_key'   => $key,              // OPTION1, OPTION2
-                                'options_value' => $value,
-                                'is_correct'    => in_array($key, $answers),
-                            ]);
-                        }
-
-                    } elseif (in_array($type, ['tf', 'yn'])) {
-
-                        $choices = $type === 'tf'
-                            ? ['TRUE', 'FALSE']
-                            : ['YES', 'NO'];
-
-                        foreach ($choices as $choice) {
-                            LmsQuestionOption::create([
-                                'question_id'   => $createBankSoal->id,
-                                'options_key'   => $choice,
-                                'options_value' => $choice,
-                                'is_correct'    => in_array($choice, $answers),
-                            ]);
-                        }
-
-                    } elseif ($type === 'matching') {
-
-                        // Bersihkan ANSWER (hindari <br>, </p>, dll)
-                        $pairMap = [];
-                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
-
-                        $lines = preg_split('/\r\n|\r|\n/', $answerRaw);
-
-                        foreach ($lines as $line) {
-                            $line = trim($line);
-                            if (!$line) continue;
-
-                            // pecah LEFTx,RIGHTy (spasi aman)
-                            [$l, $r] = array_map(
-                                fn($v) => strtoupper(trim($v)),
-                                preg_split('/\s*,\s*/', $line)
-                            );
-
-                            if ($l && $r) {
-                                $pairMap[$l] = $r;
-                            }
-                        }
-
-                        // simpan right side
-                        foreach ($dataSoal as $key => $value) {
-                            if (!is_string($key)) continue;
-                            if (!str_starts_with($key, 'RIGHT')) continue;
-                            if ($extractor->isMeaningfullyEmpty($value)) continue;
-
-                            LmsQuestionOption::create([
-                                'question_id'   => $createBankSoal->id,
-                                'options_key'   => strtoupper(trim($key)),   // RIGHT1
-                                'options_value' => $value,
-                                'is_correct'    => false,
-                                'extra_data'    => [
-                                    'side' => 'right',
-                                ],
-                            ]);
-                        }
-
-                        // Simpan LEFT side + pasangan
-                        foreach ($dataSoal as $key => $value) {
-                            if (!is_string($key)) continue;
-                            if (!str_starts_with($key, 'LEFT')) continue;
-                            if ($extractor->isMeaningfullyEmpty($value)) continue;
-
-                            $leftKey = strtoupper(trim($key));
-
-                            LmsQuestionOption::create([
-                                'question_id'   => $createBankSoal->id,
-                                'options_key'   => $leftKey, // LEFT1
-                                'options_value' => $value,
-                                'is_correct'    => false,
-                                'extra_data'    => [
-                                    'side'      => 'left',
-                                    'pair_with' => $pairMap[$leftKey] ?? null, // RIGHTx
-                                ],
-                            ]);
-                        }
-                    } else if ($type === 'pg_kompleks') {
-                        $pairMap = [];
-                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
-
-                        foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
-                            $line = trim($line);
-                            if (!$line) continue;
-
-                            [$l, $r] = array_map(
-                                fn($v) => strtoupper(trim($v)),
-                                preg_split('/\s*,\s*/', $line)
-                            );
-
-                            if ($l && $r) {
-                                $pairMap[$l] = $r;
-                            }
-                        }
-
-                        // Simpan CATEGORY (kolom)
-                        foreach ($dataSoal as $key => $value) {
-                            if (!is_string($key)) continue;
-                            if (!str_starts_with($key, 'CATEGORY')) continue;
-                            if ($extractor->isMeaningfullyEmpty($value)) continue;
-
+            // INSERT OPSI JAWABAN
+            try {
+                if (in_array($type, ['mcq', 'mcma'])) {
+                    foreach ($dataSoal as $key => $value) {
+                        if (!str_starts_with($key, 'OPTION')) continue;
+                        LmsQuestionOption::create([
+                            'question_id'   => $createBankSoal->id,
+                            'options_key'   => $key,
+                            'options_value' => $value,
+                            'is_correct'    => in_array($key, $answers),
+                        ]);
+                    }
+                } elseif (in_array($type, ['tf', 'yn'])) {
+                    $choices = $type === 'tf' ? ['TRUE', 'FALSE'] : ['YES', 'NO'];
+                    foreach ($choices as $choice) {
+                        LmsQuestionOption::create([
+                            'question_id'   => $createBankSoal->id,
+                            'options_key'   => $choice,
+                            'options_value' => $choice,
+                            'is_correct'    => in_array($choice, $answers),
+                        ]);
+                    }
+                } elseif (in_array($type, ['matching', 'pg_kompleks'])) {
+                    $pairMap = [];
+                    $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
+                    foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
+                        if (!trim($line)) continue;
+                        [$l, $r] = array_map(fn($v) => strtoupper(trim($v)), preg_split('/\s*,\s*/', $line));
+                        
+                        if (str_starts_with($l, 'ITEM')) $l = str_replace('ITEM', 'LEFT', $l);
+                        if (str_starts_with($r, 'CATEGORY')) $r = str_replace('CATEGORY', 'RIGHT', $r);
+                        
+                        if ($l && $r) $pairMap[$l] = $r;
+                    }
+    
+                    foreach ($dataSoal as $key => $value) {
+                        if (!is_string($key) || $extractor->isMeaningfullyEmpty($value)) continue;
+    
+                        if (str_starts_with($key, 'RIGHT')) {
                             LmsQuestionOption::create([
                                 'question_id'   => $createBankSoal->id,
                                 'options_key'   => strtoupper(trim($key)),
                                 'options_value' => $value,
                                 'is_correct'    => false,
-                                'extra_data'    => [
-                                    'side' => 'category',
-                                ],
+                                'extra_data'    => ['side' => ($type === 'matching' ? 'right' : 'category')],
                             ]);
                         }
-
-                        // Simpan ITEM (baris + jawaban)
-                        foreach ($dataSoal as $key => $value) {
-                            if (!is_string($key)) continue;
-                            if (!str_starts_with($key, 'ITEM')) continue;
-                            if ($extractor->isMeaningfullyEmpty($value)) continue;
-
-                            $itemKey = strtoupper(trim($key));
-
+    
+                        if (str_starts_with($key, 'LEFT')) {
+                            $leftKey = strtoupper(trim($key));
                             LmsQuestionOption::create([
                                 'question_id'   => $createBankSoal->id,
-                                'options_key'   => $itemKey,
+                                'options_key'   => $leftKey,
                                 'options_value' => $value,
                                 'is_correct'    => false,
                                 'extra_data'    => [
-                                    'side'   => 'item',
-                                    'answer' => $pairMap[$itemKey] ?? null,
+                                    'side'      => ($type === 'matching' ? 'left' : 'item'),
+                                    'pair_with' => $pairMap[$leftKey] ?? null,
+                                    'answer'    => $pairMap[$leftKey] ?? null,
                                 ],
                             ]);
                         }
                     }
                 }
+                Log::debug("[BankSoalImport] Opsi jawaban untuk soal ID {$createBankSoal->id} berhasil di-insert.");
+            } catch (\Exception $e) {
+                Log::error("[BankSoalImport] Gagal insert opsi jawaban untuk soal ID {$createBankSoal->id}.", ['error' => $e->getMessage()]);
             }
         }
 
-        // Kirim event broadcast kalau soal berhasil ditambahkan
-        if (isset($createBankSoal)) {
+        if ($createBankSoal) {
+            Log::info("[BankSoalImport] Menjalankan broadcast event BankSoalLmsUploaded.");
             broadcast(new BankSoalLmsUploaded($createBankSoal))->toOthers();
         }
 
-        // Bersihkan file sementara
+        Log::info("[BankSoalImport] Proses import selesai. Membersihkan file temporary.");
         @unlink($docxPath);
         @unlink($outputHtmlPath);
 
-        // Return success
         return response()->json([
             'status' => 'success',
             'message' => 'Bank Soal berhasil diupload.',
