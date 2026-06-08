@@ -3,5 +3,6 @@
 return [
     'roles' => [
         'Administrator',
+        'Finance',
     ],
 ];
