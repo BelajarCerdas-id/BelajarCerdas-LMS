@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdministratorDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradebookAssessmentController;
@@ -152,8 +151,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 
-    // ADMINISTRATOR DASHBOARD
-    Route::get('/lms/{role}/dashboard', [AdministratorDashboardController::class, 'index'])->name('lms.administrator.dashboard.view');
+    // OFFICES DASHBOARD
+    Route::get('/lms/{role}/dashboard', [DashboardController::class, 'index'])->name('lms.office.dashboard.view');
 
     // =========================================================
     // ROUTES SYLLABUS-SERVICES

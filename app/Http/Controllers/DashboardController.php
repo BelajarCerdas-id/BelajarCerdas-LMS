@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use App\Models\ParentProfile; 
 use App\Models\SchoolStaffProfile;
 use App\Models\StudentProfile;
@@ -130,11 +129,13 @@ class DashboardController extends Controller
             }
         }
 
-        // 6. Jika yang masuk adalah Administrator atau Role Lainnya
-        if ($user->role === 'Administrator') {
-            return redirect()->route('lms.administrator.dashboard.view', [
-                'role' => $user->role,
-            ]);
+        // 6. Jika yang masuk adalah office roles
+        if (in_array($user->role, ['Administrator', 'Finance'])) {
+            return match ($user->role) {
+                'Finance' => app(FinanceDashboardController::class)->index($user->role),
+                'Administrator' => app(AdministratorDashboardController::class)->index($user->role),
+                default => abort(404),
+            };
         }
 
         // Default Fallback jika role tidak dikenali
