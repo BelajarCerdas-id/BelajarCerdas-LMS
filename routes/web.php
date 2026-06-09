@@ -54,9 +54,16 @@ Route::fallback(function () {
 
         $role = Auth::user()->role;
 
-        return redirect()->route('beranda', [
-            'role' => $role
-        ]);
+        // jika role nya untuk office, maka gunakan route ini
+        if (in_array($role, ['Administrator', 'Finance'])) {
+            return redirect()->route('lms.office.dashboard.view', [
+                'role' => $role,
+            ]);
+        } else {
+            return redirect()->route('beranda', [
+                'role' => $role,
+            ]);
+        }
     }
 
     return redirect()->route('login');

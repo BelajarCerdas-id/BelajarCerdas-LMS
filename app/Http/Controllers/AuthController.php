@@ -68,9 +68,16 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         // 8. SUCCESS
-        return redirect()->route('beranda', [
-            'role' => $user->role,
-        ]);
+        // jika role nya untuk office, maka gunakan route ini
+        if (in_array($user->role, ['Administrator', 'Finance'])) {
+            return redirect()->route('lms.office.dashboard.view', [
+                'role' => $user->role,
+            ]);
+        } else {
+            return redirect()->route('beranda', [
+                'role' => $user->role,
+            ]);
+        }
     }
 
     // function logout
