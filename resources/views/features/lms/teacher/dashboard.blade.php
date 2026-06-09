@@ -327,7 +327,7 @@
                             </div>
                         </div>
 
-                        <div id="container-teacher-assessment-cheating-history" data-school-name="{{ $schoolName ?? 'sekolah' }}" data-school-id="{{ $schoolId ?? '1' }}" class="flex flex-col gap-5">
+                        <div id="container-teacher-assessment-cheating-history" data-role="{{ $role }}" data-school-name="{{ $schoolName ?? 'sekolah' }}" data-school-id="{{ $schoolId ?? '1' }}" class="flex flex-col gap-5">
                             <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
                                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
                                     <div class="flex items-center gap-2">

@@ -154,7 +154,7 @@ class LmsController extends Controller
     }
 
     // function get teacher assessment cheating history
-    public function getTeacherAssessmentCheatingHistory(Request $request, $schoolName, $schoolId)
+    public function getTeacherAssessmentCheatingHistory(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
 
