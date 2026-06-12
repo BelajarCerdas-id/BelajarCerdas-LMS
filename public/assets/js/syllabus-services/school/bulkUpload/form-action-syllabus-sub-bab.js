@@ -1,5 +1,5 @@
-$('#submit-button-bulkUpload-bab').on('click', function (e) {
-    const container = document.getElementById('container-bab-management');
+$('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
+    const container = document.getElementById('container-sub-bab-management');
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
@@ -8,6 +8,7 @@ $('#submit-button-bulkUpload-bab').on('click', function (e) {
     const faseId = container.dataset.faseId;
     const kelasId = container.dataset.kelasId;
     const mapelId = container.dataset.mapelId;
+    const babId = container.dataset.babId;
 
     e.preventDefault();
 
@@ -15,14 +16,14 @@ $('#submit-button-bulkUpload-bab').on('click', function (e) {
 
     isProcessing = true; // tandai sedang proses
 
-    const form = $('#bulkUpload-syllabus-bab-form')[0]; // ambil DOM Form-nya
+    const form = $('#bulkUpload-syllabus-sub-bab-form')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
     const btn = $(this);
     btn.prop('disabled', true); // Disable button UI
 
     $.ajax({
-        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/academic-management/${curriculumName}/${curriculumId}/${kelasId}/${mapelId}/${faseId}/bab/bulkUpload`,
+        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/academic-management/${curriculumName}/${curriculumId}/${kelasId}/${mapelId}/${babId}/${faseId}/sub-bab/bulkUpload`,
         method: "POST",
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -36,7 +37,7 @@ $('#submit-button-bulkUpload-bab').on('click', function (e) {
             if (modal) {
                 modal.close();
 
-                $('#alert-success-import-syllabus-bab').html(`
+                $('#alert-success-import-syllabus-sub-bab').html(`
                     <div class=" w-full flex justify-center">
                         <div class="fixed z-9999">
                             <div id="alertSuccess"
@@ -55,7 +56,7 @@ $('#submit-button-bulkUpload-bab').on('click', function (e) {
             }
 
             // Reset form
-            $('#bulkUpload-syllabus-bab-form')[0].reset();
+            $('#bulkUpload-syllabus-sub-bab-form')[0].reset();
             $('#excelPreviewContainer-bulkUpload-excel').addClass('hidden');
             $('#textPreview-bulkUpload-excel').text('');
             $('#textSize-bulkUpload-excel').text('');
@@ -71,7 +72,7 @@ $('#submit-button-bulkUpload-bab').on('click', function (e) {
                 $('#alertSuccess').remove();
             });
 
-            paginateBabManagement();
+            paginateSubBabManagement();
 
             isProcessing = false;
             btn.prop('disabled', false);

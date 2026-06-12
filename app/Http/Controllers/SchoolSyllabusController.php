@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\SyllabusCrud;
 use App\Imports\Syllabus\School\SyllabusBabSheetImport;
+use App\Imports\Syllabus\School\SyllabusSubBabSheetImport;
 use App\Models\Bab;
 use App\Models\Fase;
 use App\Models\Kelas;
@@ -643,6 +644,44 @@ class SchoolSyllabusController extends Controller
             $userId = Auth::id();
             Excel::import(new SyllabusBabSheetImport($userId, $schoolName, $schoolId, $curriculumId, $kelasId, $mapelId,
             $request->file('bulkUpload-bab'), $faseId), $request->file('bulkUpload-bab'));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Import syllabus berhasil.',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => [],
+                    'excel_validation_errors' => $e->errors()['import'] ?? [],
+                ]
+            ], 422);
+        }
+    }
+
+    // function bulkUpload syllabus sub bab (EXCEL)
+    public function bulkUploadSchoolSyllabusSubBab(Request $request, $role, $schoolName, $schoolId, $curriculumName, $curriculumId, $kelasId, $mapelId, $babId, $faseId = null)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulkUpload-sub-bab' => 'required|file|mimes:xlsx,xls,csv|max:100000',
+        ], [
+            'bulkUpload-sub-bab.required' => 'File tidak boleh kosong.',
+            'bulkUpload-sub-bab.mimes' => 'Format file harus .xlsx.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => $validator->errors(),
+                    'excel_validation_errors' => [],
+                ]
+            ], 422);
+        }
+
+        try {
+            $userId = Auth::id();
+            Excel::import(new SyllabusSubBabSheetImport($userId, $schoolName, $schoolId, $curriculumId, $kelasId, $mapelId, $babId,
+            $request->file('bulkUpload-sub-bab'), $faseId), $request->file('bulkUpload-sub-bab'));
 
             return response()->json([
                 'status' => 'success',
