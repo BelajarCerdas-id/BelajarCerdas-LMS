@@ -242,6 +242,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/paginate', [SchoolSyllabusController::class, 'paginateBab'])->name('schoolBabManagement.paginate');
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/paginate', [SchoolSyllabusController::class, 'paginateSubBab'])->name('schoolSubBabManagement.paginate');
 
+    // bulkupload
+    Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{kelasId}/{mapelId}/{faseId}/bab/bulkUpload', [SchoolSyllabusController::class, 'bulkUploadSchoolSyllabusBab'])->name('schoolBabManagement.bulkupload');
+
     // =========================================================
     // ROUTES LMS FEATURE (administrator)
     // =========================================================
