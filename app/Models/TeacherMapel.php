@@ -30,4 +30,9 @@ class TeacherMapel extends Model
     {
         return $this->belongsTo(SchoolClass::class, 'school_class_id');
     }
+
+    public function SubjectAttendance()
+    {
+        return $this->hasMany(SubjectAttendance::class, 'teacher_subject_id');
+    }
 }

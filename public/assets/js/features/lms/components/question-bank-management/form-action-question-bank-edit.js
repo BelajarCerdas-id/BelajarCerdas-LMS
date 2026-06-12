@@ -13,14 +13,13 @@ function formQuestionBankEdit() {
     const schoolId = container.dataset.schoolId;
 
     if (!source) return;
-    if (!subBabId) return;
     if (!questionId) return;
     if (!questionType) return;
 
     $.ajax({
         url: schoolId
-            ? `/lms/school-subscription/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${subBabId}/${questionId}/${schoolName}/${schoolId}/edit`
-            : `/lms/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${subBabId}/${questionId}/edit`,
+            ? `/lms/school-subscription/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${questionId}/${schoolName}/${schoolId}/edit/${subBabId}`
+            : `/lms/question-bank-management/bank-soal/form/source/${source}/review/question-type/${questionType}/${questionId}/edit/${subBabId}`,
         method: 'GET',
         success: function (response) {
             const question = response.editQuestion;

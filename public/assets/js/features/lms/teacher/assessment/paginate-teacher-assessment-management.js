@@ -75,7 +75,6 @@ function paginateTeacherAssessmentManagement(search_year = null, search_class = 
                     const timeFormatter = new Intl.DateTimeFormat('id-ID', {
                         hour: '2-digit',
                         minute: '2-digit',
-                        second: '2-digit',
                     });
 
                     // Format tanggal mulai dan akhir

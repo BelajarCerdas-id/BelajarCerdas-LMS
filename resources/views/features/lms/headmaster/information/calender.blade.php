@@ -181,15 +181,16 @@
                 loadedYears.push(2026);
             }
         } finally {
-            document.getElementById('loading-api').classList.add('hidden');
-            renderCalendarUI(currentDate); 
-        }
+    document.getElementById('loading-api').classList.add('hidden');
+}
     }
 
     // Inisialisasi awal (Load data lalu Render)
-    async function initCalendar() {
-        await loadHolidaysAPI(currentDate.getFullYear());
-    }
+async function initCalendar() {
+    renderCalendarUI(currentDate);
+
+    loadHolidaysAPI(currentDate.getFullYear());
+}
 
     function renderCalendarUI(date) {
         const daysEl = document.getElementById('calendar-days');
@@ -405,15 +406,25 @@
         saveCalendarData('published', true);
     };
 
-    document.getElementById('prev-month').onclick = async () => { 
-        currentDate.setMonth(currentDate.getMonth()-1); 
-        await loadHolidaysAPI(currentDate.getFullYear()); 
-    };
-    
-    document.getElementById('next-month').onclick = async () => { 
-        currentDate.setMonth(currentDate.getMonth()+1); 
-        await loadHolidaysAPI(currentDate.getFullYear()); 
-    };
+document.getElementById('prev-month').onclick = async () => { 
+    currentDate.setMonth(currentDate.getMonth() - 1);
+
+    // render langsung
+    renderCalendarUI(currentDate);
+
+    // fetch holiday di background
+    loadHolidaysAPI(currentDate.getFullYear());
+};
+
+document.getElementById('next-month').onclick = async () => { 
+    currentDate.setMonth(currentDate.getMonth() + 1);
+
+    // render langsung
+    renderCalendarUI(currentDate);
+
+    // fetch holiday di background
+    loadHolidaysAPI(currentDate.getFullYear());
+};
 
     async function saveCalendarData(statusType, isAutoSave = false) {
         if (!isAutoSave) {
@@ -436,7 +447,7 @@
         }
 
         try {
-            const url = `{{ route('lms.kepsek.calendar.save', ['role' => $role ?? Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 0]) }}`;            
+            const url = `{{ route('lms.headmaster.calendar.save', ['role' => $role ?? Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 0]) }}`;            
             const response = await fetch(url, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                 body: JSON.stringify({ status: statusType, events: userEvents })

@@ -2,12 +2,13 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
     const container = document.getElementById('container-teacher-assessment-cheating-history');
     if (!container) return;
 
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
-    if (!schoolName || !schoolId) return;
+    if (!role || !schoolName || !schoolId) return;
 
     $.ajax({
-        url: `/lms/Guru/${schoolName}/${schoolId}/beranda/cheating-history`,
+        url: `/lms/${role}/${schoolName}/${schoolId}/beranda/cheating-history`,
         method: 'GET',
         data: {
             search_year,

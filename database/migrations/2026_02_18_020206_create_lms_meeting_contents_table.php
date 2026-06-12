@@ -25,7 +25,9 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['school_class_id', 'mapel_id', 'service_id', 'school_partner_id', 'semester', 'meeting_number']);
+            $table->unique(['school_class_id', 'mapel_id',]);
+            $table->unique(['service_id', 'school_partner_id']);
+            $table->unique(['semester', 'meeting_number']);
         });
     }
 

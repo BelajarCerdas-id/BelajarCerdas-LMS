@@ -3,17 +3,19 @@ function managementMajorsSchoolSubscription() {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
 
-    fetchMajors(schoolName, schoolId, role);
+    fetchMajors(role, schoolName, schoolId, managedRole);
 
     function fetchMajors() {
         $.ajax({
-            url: `/lms/school-subscription/${schoolName}/${schoolId}/role-account/${role}/management-majors/paginate`,
+            url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/role-account/${managedRole}/management-majors/paginate`,
             method: 'GET',
             success: function (response) {
                 const containerMajorList = $('#grid-management-major-list');
@@ -69,8 +71,8 @@ function managementMajorsSchoolSubscription() {
                     `;
                     $.each(response.data, function (index, item) {
 
-                        const lmsManagementClass = response.lmsManagementClass.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id).replace(':role', role)
-                            .replace(':majorId', item.id);
+                        const lmsManagementClass = response.lmsManagementClass.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                            .replace(':schoolId', schoolIdentity.id).replace(':managedRole', managedRole).replace(':majorId', item.id);
 
                         const card = `
                             <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition duration-300 flex flex-col justify-between">
@@ -222,11 +224,14 @@ $('#submit-button-create-major').on('click', function (e) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
+
     const form = $('#form-create-major-lms-subscription')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
@@ -237,7 +242,7 @@ $('#submit-button-create-major').on('click', function (e) {
     btn.prop('disabled', true);
 
     $.ajax({
-        url: `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-majors/create`,
+        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-majors/create`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -331,11 +336,13 @@ $('#submit-button-edit-major').on('click', function (e) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
 
     const majorId = $('#edit-major-id').val();
 
@@ -349,7 +356,7 @@ $('#submit-button-edit-major').on('click', function (e) {
     btn.prop('disabled', true);
 
     $.ajax({
-        url: `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-majors/${majorId}/edit`,
+        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-majors/${majorId}/edit`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

@@ -109,6 +109,18 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                 contentContainer.innerHTML = response.contents.map(item => {
                     const filename = item.lms_content_item?.[0]?.original_filename ?? '-';
 
+                    let = subBab_display = '';
+
+                    if (item.sub_bab_id) {
+                        subBab_display = `
+                            <i class="fa-solid fa-circle text-[4px]"></i>
+
+                            <span class="truncate max-w-full">
+                                ${item.sub_bab?.sub_bab ?? '-'}
+                            </span>
+                        `;
+                    }
+
                     return `
                         <label class="content-item flex gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
                             data-service="${item.service_id}">
@@ -126,6 +138,8 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                                         ${item.kurikulum?.nama_kurikulum ?? ''}
                                     </span>
 
+                                    <i class="fa-solid fa-circle text-[4px]"></i>
+
                                     <span class="truncate max-w-full">
                                         ${item.kelas?.kelas ?? ''}
                                     </span>
@@ -141,6 +155,8 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                                     <span class="truncate max-w-full">
                                         ${item.bab?.nama_bab ?? '-'}
                                     </span>
+
+                                    ${subBab_display}
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
 

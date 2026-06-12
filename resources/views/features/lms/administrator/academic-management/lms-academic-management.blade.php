@@ -1,7 +1,7 @@
 @if(Auth::user()->role === 'Administrator')
     @include('components/sidebar-beranda', [
         'headerSideNav' => 'LMS Manajemen Akademik',
-        'linkBackButton' => route('lms.schoolSubscription.view'),
+        'linkBackButton' => route('lms.schoolSubscription.view', [Auth::user()->role]),
         'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     ]);
 @else
@@ -15,7 +15,7 @@
         <div class="my-15 mx-7.5">
                 <!---- list card academic management ---->
                 <section class="relative">
-                    <div id="container-academic-management-list" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
+                    <div id="container-academic-management-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
                         <!-- DETAIL SEKOLAH -->
                         <div id="school-detail-card"
                             class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden">

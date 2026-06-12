@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Edit Question',
     'linkBackButton' => $schoolId
-        ? route('lms.questionBankManagementDetail.view.schoolPartner', [$schoolName, $schoolId, $source, $questionType, $subBabId])
-        : route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]),
+        ? route('lms.questionBankManagementDetail.view.schoolPartner', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId])
+        : route('lms.questionBankManagementDetail.view.noSchoolPartner', [$role, $source, $questionType, $questionCategory, $subBabId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -22,7 +22,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/components/question-bank-management/form-action-question-bank-edit.js') }}"></script> <!--- form action question bank edit ---->
+<script src="{{ asset('assets/js/features/lms/components/question-bank-management/form-action-question-bank-edit.js') }}"></script> <!--- form action question bank edit ---->
 
 <!--- PUSHER LISTENER ---->
 <script src="{{ asset('assets/js/pusher-listener/lms/question-bank/edit-question-pg-listener.js') }}"></script> <!--- pusher listener pada saat edit bank soal ---->

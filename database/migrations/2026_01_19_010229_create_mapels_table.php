@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('mapels', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('user_accounts');
+            $table->string('mata_pelajaran');
+            $table->string('kode');
+            $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
+            $table->foreignId('fase_id')->nullable()->constrained('fases')->onDelete('cascade');
+            $table->foreignId('kurikulum_id')->constrained('kurikulums')->onDelete('cascade');
+            $table->foreignId('school_partner_id')->nullable()->constrained('school_partners');
+            $table->enum('status_mata_pelajaran', ['active', 'inactive'])->default('active');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('mapels');
+    }
+};

@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Review Content',
     'linkBackButton' => $schoolId
-        ? route('lms.contentManagement.view.schoolPartner', [$schoolName, $schoolId])
-        : route('lms.contentManagement.view.noSchoolPartner'),
+        ? route('lms.contentManagement.view.schoolPartner', [$role, $schoolName, $schoolId])
+        : route('lms.contentManagement.view.noSchoolPartner', [$role]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 

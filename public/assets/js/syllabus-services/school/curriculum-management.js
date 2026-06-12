@@ -1,13 +1,15 @@
 function paginateCurriculumManagement(page = 1) {
     const container = document.getElementById('container-curriculum-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
 
-    fetchDataCurriculum(schoolName, schoolId);
+    fetchDataCurriculum(role, schoolName, schoolId);
     
     function fetchDataCurriculum() {
         $.ajax({
@@ -22,8 +24,8 @@ function paginateCurriculumManagement(page = 1) {
                     // Render rows
                     $.each(data.data, function (index, item) {
     
-                        let faseDetail = data.faseDetail.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumName', item.nama_kurikulum)
-                            .replace(':curriculumId', item.id);
+                        let faseDetail = data.faseDetail.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':curriculumName', item.nama_kurikulum).replace(':curriculumId', item.id);
     
                         $('#tbody-curriculum-management').append(`
                             <tr class="text-xs">

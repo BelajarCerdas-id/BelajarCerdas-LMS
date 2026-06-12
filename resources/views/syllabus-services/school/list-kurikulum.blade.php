@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Kurikulum',
 ]);
@@ -7,7 +7,7 @@
     <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
         <div class="my-15 mx-7.5">
             <!---- Table list data kurikulum  ---->
-            <div id="container-curriculum-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
+            <div id="container-curriculum-management" class="overflow-x-auto mt-8 pb-24" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}">
                 <table id="table-curriculum-management" class="min-w-full text-sm border-collapse">
                     <thead class="thead-table-curriculum-management hidden bg-gray-50 shadow-inner">
                         <tr>

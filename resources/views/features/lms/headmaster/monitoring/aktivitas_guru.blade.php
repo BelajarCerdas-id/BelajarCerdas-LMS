@@ -5,9 +5,9 @@
 
         <div class="bg-white border-b border-slate-200 px-6 py-6 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-30 shadow-sm">
             <div>
-                <a href="{{ route('lms.kepsek.dashboard', [
+                <a href="{{ route('lms.headmaster.dashboard.view', [
                     'role'       => Auth::user()->role,
-                    'schoolName' => \Illuminate\Support\Str::slug(Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah'),
+                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                     'schoolId'   => Auth::user()->SchoolStaffProfile->school_partner_id ?? 0
                 ]) }}" class="text-sm font-bold text-[#0071BC] hover:text-blue-800 flex items-center gap-2 mb-2 transition-colors">
                     <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
@@ -19,7 +19,11 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <form action="{{ route('lms.kepsek.aktivitas.guru') }}" method="GET" class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 shadow-inner">
+                <form action="{{ route('lms.headmaster.teacher.activity', [
+                    'role' => Auth::user()->role,
+                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                    'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                ]) }}" method="GET" class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 shadow-inner">
                     <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#0071BC] shadow-sm shrink-0">
                         <i class="fas fa-filter"></i>
                     </div>
@@ -32,7 +36,11 @@
                         @endforeach
                     </select>
                     @if($filterGuruId)
-                        <a href="{{ route('lms.kepsek.aktivitas.guru') }}" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors shrink-0" title="Hapus Filter">
+                        <a href="{{ route('lms.headmaster.teacher.activity', [
+                            'role' => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 flex items-center justify-center transition-colors shrink-0" title="Hapus Filter">
                             <i class="fas fa-times"></i>
                         </a>
                     @endif

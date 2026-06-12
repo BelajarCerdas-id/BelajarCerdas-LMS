@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DailyReflectionAnswered;
+use App\Events\DailyReflectionLivePreview;
+use App\Models\SchoolClass;
+use App\Models\SchReflAnswer;
+use App\Models\SchReflQuestion;
+use App\Models\SchReflTarget;
 use App\Models\StudentAssessmentAttempt;
+use App\Models\StudentSchoolClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class StudentDashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
 
@@ -356,7 +364,7 @@ class StudentDashboardController extends Controller
             ->get();
     }
         return view('features.lms.students.dashboard', compact(
-            'dataSiswa', 'schoolName', 'agendaSekolah', 'selectedDate', 
+            'dataSiswa', 'role', 'schoolName', 'schoolId', 'agendaSekolah', 'selectedDate', 
             'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',
             'jadwalHariIni', 'hariIni', 'selectedJadwalDate', 'hariDipilih',
             'unreadModules', 'pendingTasks'
@@ -402,7 +410,229 @@ class StudentDashboardController extends Controller
                 'message' => 'Error Sistem: ' . $e->getMessage()
             ], 500);
         }
-    }   
+    }
+
+    // function get daily reflection
+    public function getDailyReflection($role, $schoolName, $schoolId)
+    {
+        $user = Auth::user();
+
+        $timezone = request()->header('X-Timezone', 'Asia/Jakarta');
+        $today = now($timezone)->toDateString();
+
+        $activeClass = StudentSchoolClass::with('SchoolClass')->where('student_id', $user->id)->where('student_class_status', 'active')->first();
+
+        if (!$activeClass) {
+            return response()->json([
+                'data' => [],
+                'links' => '',
+                'emotion_status' => config('reflection-management.emotion-status'),
+            ]);
+        }
+
+        $kelasId = $activeClass->SchoolClass->kelas_id;
+
+        $SchRefl = SchReflQuestion::with(['SchReflAnswer' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }
+        ])->whereHas('SchReflTarget', function ($query) use ($kelasId) {
+            $query->where('target_class_id', $kelasId);
+        })->where('school_partner_id', $schoolId)->whereDate('created_at', $today)->latest()->paginate(1);
+
+        return response()->json([
+            'data' => $SchRefl->items(),
+            'links' => (string) $SchRefl->links(),
+            'emotion_status' => config('reflection-management.emotion-status'),
+        ]);
+    }
+
+    // function daily reflection store
+    public function dailyReflectionStore(Request $request, $role, $schoolName, $schoolId)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'sch_refl_question_id' => 'required|exists:sch_refl_questions,id',
+            'answer' => 'required',
+            'emotion_status' => 'required',
+        ], [
+            'sch_refl_question_id.required' => 'Refleksi tidak valid.',
+            'sch_refl_question_id.exists' => 'Refleksi tidak ditemukan.',
+            'answer.required' => 'Harap isi jawaban refleksi.',
+            'emotion_status.required' => 'Harap pilih status emosi.',
+        ]);
+
+        $existingAnswer = SchReflAnswer::where('user_id', $user->id)
+            ->where('sch_refl_question_id', $request->sch_refl_question_id)
+            ->first();
+
+        if ($existingAnswer) {
+            return response()->json([
+                'message' => 'Anda sudah mengisi refleksi ini sebelumnya.'
+            ], 409);
+        }
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $currentSchoolClass = StudentSchoolClass::where('student_id', $user->id)->where('student_class_status', 'active')->first();
+
+        $answer = SchReflAnswer::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'sch_refl_question_id' => $request->sch_refl_question_id,
+            ],
+            [
+                'school_class_id' => $currentSchoolClass->school_class_id,
+                'answer' => $request->answer,
+                'emotion_status' => $request->emotion_status,
+            ]
+        );
+
+        $reflection = SchReflQuestion::with(['SchReflAnswer'])->findOrFail($request->sch_refl_question_id);
+
+        $totalAnswers = SchReflAnswer::where('sch_refl_question_id', $reflection->id)->count();
+
+        $emotionConfig = config('reflection-management.emotion-status');
+
+        $emotionCounts = SchReflAnswer::select(
+                'emotion_status',
+                DB::raw('COUNT(*) as total')
+            )
+            ->where('sch_refl_question_id', $reflection->id)
+            ->groupBy('emotion_status')
+            ->pluck('total', 'emotion_status');
+
+        $formattedEmotions = collect($emotionConfig)->map(function ($emotion) use ($emotionCounts, $totalAnswers) {
+
+            $total = $emotionCounts[$emotion['value']] ?? 0;
+
+            preg_match('/hover:bg-(\w+)-50/', $emotion['classes']['hover'], $matches);
+
+            $color = $matches[1] ?? 'slate';
+
+            return [
+                'label' => $emotion['label'],
+                'value' => $emotion['value'],
+                'icon' => $emotion['icon'],
+                'color' => $color,
+                'total' => $total,
+                'percentage' => $totalAnswers > 0 ? round(($total / $totalAnswers) * 100) : 0,
+            ];
+        });
+
+        $targetKelasIds = $reflection->SchReflTarget->pluck('target_class_id');
+
+        $schoolClassIds = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $reflection->tahun_ajaran)->whereIn('kelas_id', $targetKelasIds)->pluck('id');
+
+        $totalStudents = StudentSchoolClass::whereIn('school_class_id', $schoolClassIds)->where('student_class_status', 'active')->count();
+
+        $participationPercentage = $totalStudents > 0 ? round(($totalAnswers / $totalStudents) * 100, 1) : 0;
+
+        $reflectionTargets = SchReflTarget::with('Kelas')->where('sch_refl_question_id', $reflection->id)->get();
+
+        $targetClasses = $reflectionTargets->map(function ($target) {
+            return $target->Kelas->kelas;
+        });
+
+        $schoolClasses = SchoolClass::with('Kelas')
+            ->where('school_partner_id', $schoolId)
+            ->where('tahun_ajaran', $reflection->tahun_ajaran)
+            ->whereIn('kelas_id', $targetKelasIds)
+            ->get();
+
+        $barChart = $schoolClasses->map(function ($schoolClass) use ($reflection) {
+
+            $studentIds = StudentSchoolClass::where(
+                    'school_class_id',
+                    $schoolClass->id
+                )
+                ->where('student_class_status', 'active')
+                ->pluck('student_id');
+
+            $totalSiswa = $studentIds->count();
+
+            $answered = SchReflAnswer::where(
+                    'sch_refl_question_id',
+                    $reflection->id
+                )
+                ->whereIn('user_id', $studentIds)
+                ->count();
+
+            return [
+                'kelas' => $schoolClass->Kelas->kelas,
+                'answered' => $answered,
+                'unanswered' => max(0, $totalSiswa - $answered),
+            ];
+        });
+
+        $positive = 0;
+        $neutral = 0;
+        $attention = 0;
+
+        foreach ($emotionConfig as $emotion) {
+            $total = $emotionCounts[$emotion['value']] ?? 0;
+
+            switch ($emotion['category']) {
+
+                case 'positive':
+                    $positive += $total;
+                    break;
+
+                case 'neutral':
+                    $neutral += $total;
+                    break;
+
+                case 'attention':
+                    $attention += $total;
+                    break;
+            }
+        }
+
+        $emotion = collect($emotionConfig)
+            ->firstWhere('value', $answer->emotion_status);
+
+        preg_match(
+            '/hover:bg-(\w+)-50/',
+            $emotion['classes']['hover'],
+            $matches
+        );
+
+        $answerData = [
+            'nama_lengkap' => $user->StudentProfile->nama_lengkap,
+            'class_name' => $currentSchoolClass->SchoolClass->class_name,
+            'answer' => $answer->answer,
+            'emotion_status' => $answer->emotion_status,
+            'emotion_color' => $matches[1] ?? 'slate',
+        ];
+
+        broadcast(new DailyReflectionLivePreview('SchReflAnswer', 'create', [
+                'reflection_id' => $reflection->id,
+                'new_answer' => $answerData,
+                'bar_chart' => [
+                    'labels' => $targetClasses,
+                    'answered' => $barChart->pluck('answered'),
+                    'unanswered' => $barChart->pluck('unanswered'),
+                ],
+
+                'emotions' => $formattedEmotions,
+                'total_responden' => $totalAnswers,
+                'participation_percentage' => $participationPercentage,
+                'positive' => $positive,
+                'neutral' => $neutral,
+                'attention' => $attention,
+            ]
+        ))->toOthers();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Jawaban refleksi berhasil disimpan.',
+        ]);
+    }
 
     // function get student assessment cheating history
     public function getStudentAssessmentCheatingHistory()
@@ -419,8 +649,8 @@ class StudentDashboardController extends Controller
             'data' => $data,
         ]);
     }
-    // Tambahkan di dalam class StudentDashboardController, misalnya di bawah fungsi submitVote
     
+    // Tambahkan di dalam class StudentDashboardController, misalnya di bawah fungsi submitVote
     public function markAnnouncementAsRead(Request $request)
     {
         try {

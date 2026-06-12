@@ -12,13 +12,13 @@ use Illuminate\Validation\Rule;
 class MajorController extends Controller
 {
     // function lms management majors view
-    public function lmsManagementMajorsView($schoolName, $schoolId, $role)
+    public function lmsManagementMajorsView($role, $schoolName, $schoolId, $managedRole)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-majors', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-majors', compact('role', 'schoolName', 'schoolId', 'managedRole'));
     }
 
     // function paginate lms management majors
-    public function paginateLmsSchoolSubscriptionMajors(Request $request, $schoolName, $schoolId, $role)
+    public function paginateLmsSchoolSubscriptionMajors(Request $request, $role, $schoolName, $schoolId, $managedRole)
     {
         $majors = SchoolMajor::withCount([
             'schoolClass as school_class_count' => function ($q) {
@@ -31,12 +31,12 @@ class MajorController extends Controller
         return response()->json([
             'data' => $majors,
             'schoolIdentity' => $getSchool,
-            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-majors/:majorId/management-class',
+            'lmsManagementClass' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-majors/:majorId/management-class',
         ]);
     }
 
     // function lms management create majors
-    public function lmsManagementCreateMajor(Request $request, $schoolName, $schoolId, $role)
+    public function lmsManagementCreateMajor(Request $request, $role, $schoolName, $schoolId, $managedRole)
     {
         $validator = Validator::make($request->all(), [
             'major_name' => [
@@ -76,7 +76,7 @@ class MajorController extends Controller
     }
 
     // function lms management edit major
-    public function lmsManagementEditMajor(Request $request, $schoolName, $schoolId, $role, $majorId)
+    public function lmsManagementEditMajor(Request $request, $role, $schoolName, $schoolId, $managedRole, $majorId)
     {
         $validator = Validator::make($request->all(), [
             'major_name' => [

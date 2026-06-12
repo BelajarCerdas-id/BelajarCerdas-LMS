@@ -49,7 +49,7 @@ class Kelas extends Model
 
     public function SchoolClass()
     {
-        return $this->hasOne(SchoolClass::class, 'kelas_id');
+        return $this->hasMany(SchoolClass::class, 'kelas_id');
     }
 
     // LMS QUESTION BANK
@@ -67,5 +67,10 @@ class Kelas extends Model
     public function SubjectPassingGradeCriteria()
     {
         return $this->hasMany(SubjectPassingGradeCriteria::class, 'kelas_id');
+    }
+
+    public function SchReflTarget()
+    {
+        return $this->hasMany(SchReflTarget::class, 'target_class_id');
     }
 }

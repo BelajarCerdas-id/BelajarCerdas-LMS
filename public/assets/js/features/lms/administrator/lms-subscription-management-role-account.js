@@ -1,9 +1,11 @@
 function managementRoleAccountSchoolSubscription() {
     const container = document.getElementById('container-role-account-list');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
 
@@ -90,18 +92,19 @@ function managementRoleAccountSchoolSubscription() {
                         const total = group.length;
 
                         let lmsLinkDetail = '';
-                        let manageAccountLink = response.lmsManagementAccounts.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id).replace(':role', first.role);
+                        let manageAccountLink = response.lmsManagementAccounts.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                            .replace(':schoolId', schoolIdentity.id).replace(':managedRole', first.role);
 
                         let containerLihatDetail = '';
                         let containerManageAccount = '';
 
                         if (first.role === 'Siswa') {
                             if (schoolIdentity.jenjang_sekolah === 'SMA' || schoolIdentity.jenjang_sekolah === 'SMK') {
-                                lmsLinkDetail = response.lmsManagementMajors.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id)
-                                    .replace(':role', first.role);
+                                lmsLinkDetail = response.lmsManagementMajors.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                                    .replace(':schoolId', schoolIdentity.id).replace(':managedRole', first.role);
                             } else {
-                                lmsLinkDetail = response.lmsManagementClass.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id)
-                                    .replace(':role', first.role);
+                                lmsLinkDetail = response.lmsManagementClass.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                                    .replace(':schoolId', schoolIdentity.id).replace(':managedRole', first.role);
                             }
 
                             containerLihatDetail = `

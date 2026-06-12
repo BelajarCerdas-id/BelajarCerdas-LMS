@@ -20,6 +20,12 @@ class TeacherQuestionBankController extends Controller
         $classNameService = new ClassNameService();
         return $classNameService->extractClassLevel($className);
     }
+
+    private function resolveClassLevel($class): ?int
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->resolveClassLevel($class);
+    }
     
     // function teacher question bank management view
     public function teacherQuestionBankManagement($role, $schoolName, $schoolId)
@@ -80,7 +86,7 @@ class TeacherQuestionBankController extends Controller
         // LEVEL KELAS UNIK
         $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
         $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
@@ -111,11 +117,11 @@ class TeacherQuestionBankController extends Controller
         if ($selectedClass) {
             $questionCollection = $questionCollection->filter(function ($item) use ($selectedClass) {
 
-                if (!$item || !$item->kelas_id) {
+                if (!$item || !$item->Kelas?->kelas) {
                     return false;
                 }
 
-                return $this->extractClassLevel($item->kelas_id) == $selectedClass;
+                return $this->extractClassLevel($item->Kelas->kelas) == $selectedClass;
             });
         }
 
@@ -151,25 +157,25 @@ class TeacherQuestionBankController extends Controller
             'selectedYear'  => $searchYear,
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
-            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
+            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory',
         ]);
     }
 
     // function teacher question bank management detail
-    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $source, $questionType, $subBabId)
+    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId = null)
     {
         return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-detail', compact('role', 'schoolName', 'schoolId', 
-            'source', 'questionType', 'subBabId'));
+            'source', 'questionType', 'questionCategory', 'subBabId'));
     }
 
     // function teacher question bank management edit
-    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $source, $questionType, $subBabId, $questionId)
+    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $questionId, $subBabId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion || !$editQuestion->school_partner_id) {
-            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $subBabId]);
+            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId]);
         }
 
         // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
@@ -179,6 +185,6 @@ class TeacherQuestionBankController extends Controller
         $groupedSoal = $dataSoal;
 
         return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-edit', compact('role', 'schoolId', 'schoolName', 
-        'source', 'subBabId', 'questionId', 'questionType'));
+        'source', 'subBabId', 'questionId', 'questionType', 'questionCategory'));
     }
 }

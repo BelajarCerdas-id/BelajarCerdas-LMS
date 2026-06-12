@@ -1,9 +1,11 @@
 function managementAcademic() {
     const container = document.getElementById('container-academic-management-list');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
 
@@ -62,14 +64,37 @@ function managementAcademic() {
                         </div>
                     `;
 
-                    const lmsRoleManagement = response.lmsRoleManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsContentManagement = response.lmsContentManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsAssessmentTypeManagement = response.lmsAssessmentTypeManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsTeacherSubjectManagement = response.lmsTeacherSubjectManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsAssessmentWeightManagement = response.lmsAssessmentWeightManagement.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
-                    const lmsSubjectPassingGradeCriteria = response.lmsSubjectPassingGradeCriteria.replace(':schoolName', schoolName).replace(':schoolId', schoolId);
+                    // lms role management
+                    const lmsRoleManagement = response.lmsRoleManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms question bank management
+                    const lmsQuestionBankManagement = response.lmsQuestionBankManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms curriculum management
+                    const lmsCurriculumManagementBySchool = response.lmsCurriculumManagementBySchool.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms content management
+                    const lmsContentManagement = response.lmsContentManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms assessment type management
+                    const lmsAssessmentTypeManagement = response.lmsAssessmentTypeManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms teacher subject management
+                    const lmsTeacherSubjectManagement = response.lmsTeacherSubjectManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms assessment weight management
+                    const lmsAssessmentWeightManagement = response.lmsAssessmentWeightManagement.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
+
+                    // lms subject passing grade criteria
+                    const lmsSubjectPassingGradeCriteria = response.lmsSubjectPassingGradeCriteria.replace(':role', role).replace(':schoolName', schoolName)
+                        .replace(':schoolId', schoolId);
 
                     const academicManagementGroups = [
                         {

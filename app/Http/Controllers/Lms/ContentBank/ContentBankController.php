@@ -24,16 +24,18 @@ class ContentBankController extends Controller
     {}
     
     // function content management view
-    public function lmsContentManagementView($schoolName = null, $schoolId = null)
+    public function lmsContentManagementView($role, $schoolName = null, $schoolId = null)
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.lms-content-management', compact('getCurriculum', 'role', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms content
     public function paginateLmsContentManagement($schoolName = null, $schoolId = null)
     {
+        $user = Auth::user();
+
         // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
         if ($schoolId) {
             $schoolPartner = SchoolPartner::findOrFail($schoolId);
@@ -72,13 +74,14 @@ class ContentBankController extends Controller
 
         return response()->json([
             'data'   => $getContent->items(),
+            'user'   => $user,
             'links'  => (string) $getContent->links(),
             'current_page' => $getContent->currentPage(),
             'per_page' => $getContent->perPage(),
-            'reviewContent' => '/lms/content-management/:contentId/review',
-            'reviewContentBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/content-management/:contentId/review',
-            'editContent' => '/lms/content-management/:contentId/edit',
-            'editContentBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/content-management/:contentId/edit',
+            'reviewContent' => '/lms/:role/content-management/:contentId/review',
+            'reviewContentBySchool' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/content-management/:contentId/review',
+            'editContent' => '/lms/:role/content-management/:contentId/edit',
+            'editContentBySchool' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/content-management/:contentId/edit',
         ]);
     }
     
@@ -92,7 +95,7 @@ class ContentBankController extends Controller
             'kelas_id'     => 'required',
             'mapel_id'     => 'required',
             'bab_id'       => 'required',
-            'sub_bab_id'   => 'required',
+            'sub_bab_id' => 'nullable|exists:sub_babs,id',
         ];
 
         $messages = [
@@ -100,8 +103,8 @@ class ContentBankController extends Controller
             'kelas_id.required'     => 'Harap pilih kelas.',
             'mapel_id.required'     => 'Harap pilih mapel.',
             'bab_id.required'       => 'Harap pilih bab.',
-            'sub_bab_id.required'   => 'Harap pilih sub bab.',
             'service_id.required'   => 'Harap pilih service.',
+            'sub_bab_id.exists' => 'Sub bab tidak valid.',
         ];
 
         // DYNAMIC VALIDATION (BERDASARKAN SERVICE RULE)
@@ -192,39 +195,45 @@ class ContentBankController extends Controller
     }
 
     // function review content default view (function untuk review content milik bc)
-    public function lmsReviewContentDefault($contentId, $schoolName = null, $schoolId = null)
+    public function lmsReviewContentDefault($role, $contentId, $schoolName = null, $schoolId = null)
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-review-content', compact('role', 'contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function review content school view (function untuk review content milik sekolah)
-    public function lmsReviewContentSchool($schoolName, $schoolId, $contentId)
+    public function lmsReviewContentSchool($role, $schoolName, $schoolId, $contentId)
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.lms.administrator.content-management.administrator-review-content', compact('contentId', 'data', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-review-content', compact('role', 'contentId', 'data', 'schoolName', 'schoolId'));
     }
 
     // function edit content default view (function untuk edit content milik bc)
-    public function lmsDefaultContentManagementEditView($contentId, $schoolName = null, $schoolId = null)
+    public function lmsDefaultContentManagementEditView($role, $contentId, $schoolName = null, $schoolId = null)
     {
         $content = LmsContent::with(['Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service'])->findOrFail($contentId);
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-content-management-edit',compact('role', 'content', 'getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function edit content default view (function untuk edit content milik sekolah)
-    public function lmsSchoolContentManagementEditView($schoolName, $schoolId, $contentId)
+    public function lmsSchoolContentManagementEditView($role, $schoolName, $schoolId, $contentId)
     {
+        $user = Auth::user();
+                
         $content = LmsContent::with(['Kurikulum', 'Kelas', 'Mapel', 'Bab', 'SubBab', 'Service'])->findOrFail($contentId);
+
+        if ($user->role === 'Admin Sekolah' && !$content->school_partner_id) {
+            return redirect()->route('lms.contentManagement.view.schoolPartner', [$schoolName, $schoolId]);    
+        }
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.lms.administrator.content-management.administrator-content-management-edit',compact('content', 'getCurriculum', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.content-management.administrator-content-management-edit',compact('role', 'content', 'getCurriculum', 'schoolName', 'schoolId'));
     }
 
     // function form edit content
@@ -249,7 +258,6 @@ class ContentBankController extends Controller
             'kelas_id'     => 'required',
             'mapel_id'     => 'required',
             'bab_id'       => 'required',
-            'sub_bab_id'   => 'required',
             'service_id'   => 'required',
         ];
 
@@ -258,7 +266,6 @@ class ContentBankController extends Controller
             'kelas_id.required'     => 'Harap pilih kelas.',
             'mapel_id.required'     => 'Harap pilih mapel.',
             'bab_id.required'       => 'Harap pilih bab.',
-            'sub_bab_id.required'   => 'Harap pilih sub bab.',
             'service_id.required'   => 'Harap pilih service.',
         ];
 

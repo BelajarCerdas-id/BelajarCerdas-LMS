@@ -25,6 +25,11 @@ class TeacherSubjectController extends Controller
             return (int) $match[0];
         }
 
+        // 1b. Coba label kelas baku seperti "Kelas 10"
+        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
+            return (int) $match[1];
+        }
+
         // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
         if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
             return $this->romanToInt($match[0]);
@@ -53,13 +58,22 @@ class TeacherSubjectController extends Controller
         return $map[$roman] ?? 0;
     }
 
+    private function resolveClassLevel($class): ?int
+    {
+        if ($class === null || $class === '') {
+            return null;
+        }
+
+        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
+    }
+
     // TEACHER SUBJECT MANAGEMENT
     // function teacher suject management view
-    public function lmsTeacherSubjectManagement($schoolName, $schoolId)
+    public function lmsTeacherSubjectManagement($role, $schoolName, $schoolId)
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.administrator.subject-teacher-management.lms-subject-teacher-management', compact('schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.administrator.subject-teacher-management.lms-subject-teacher-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate teacher subject management
@@ -82,7 +96,7 @@ class TeacherSubjectController extends Controller
 
         $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : $defaultLevel;
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $defaultLevel;
 
         // dropdown data
         $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->pluck('tahun_ajaran')->unique()->sortDesc()->values();

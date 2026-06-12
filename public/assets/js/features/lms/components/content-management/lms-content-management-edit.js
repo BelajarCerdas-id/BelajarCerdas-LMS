@@ -18,8 +18,6 @@ $('#submit-button-edit-content').on('click', function (e) {
     if (!kelasId) return;
     if (!mapelId) return;
     if (!babId) return;
-    if (!subBabId) return;
-
 
     const form = $('#content-management-form')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol

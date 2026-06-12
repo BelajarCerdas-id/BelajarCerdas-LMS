@@ -6,9 +6,9 @@
         {{-- HEADER --}}
         <div class="bg-white border-b border-slate-200 px-6 py-6 md:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sticky top-0 z-30">
             <div>
-                <a href="{{ route('lms.kepsek.dashboard', [
+                <a href="{{ route('lms.headmaster.dashboard.view', [
                     'role'       => Auth::user()->role,
-                    'schoolName' => \Illuminate\Support\Str::slug(Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah ?? 'sekolah'),
+                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                     'schoolId'   => Auth::user()->SchoolStaffProfile->school_partner_id ?? 0
                 ]) }}" class="text-sm font-bold text-[#0071BC] hover:text-blue-800 flex items-center gap-2 mb-2 transition-colors">
                     <i class="fas fa-arrow-left"></i> Kembali ke Dashboard
@@ -17,7 +17,11 @@
                 <p class="text-xs font-medium text-slate-500 mt-1">Pantau keterlibatan siswa dalam mengakses materi dan menyelesaikan tugas secara real-time.</p>
             </div>
             
-            <form action="{{ route('lms.kepsek.laporan.akademik') }}" method="GET" class="flex items-center gap-3">
+            <form action="{{ route('lms.headmaster.academic.report', [
+                'role' => Auth::user()->role,
+                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+            ]) }}" method="GET" class="flex items-center gap-3">
                 <div class="relative">
                     <select name="tahun_ajaran" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer appearance-none pr-10">
                         @foreach($tahunAjaranList ?? [] as $tahun)

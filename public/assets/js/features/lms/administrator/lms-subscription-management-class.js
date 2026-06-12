@@ -3,20 +3,22 @@ function managementClassSchoolSubscription(search_class = null, search_year = nu
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
     const majorId = container.dataset.majorId;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
 
-    fetchClass(schoolName, schoolId, role, majorId);
+    fetchClass(role, schoolName, schoolId, managedRole, majorId);
 
     function fetchClass() {
         $.ajax({
             url: majorId
-                ? `/lms/school-subscription/${schoolName}/${schoolId}/role-account/${role}/management-majors/${majorId}/management-class/paginate`
-                : `/lms/school-subscription/${schoolName}/${schoolId}/role-account/${role}/management-class/paginate`,
+                ? `/lms/${role}/school-subscription/${schoolName}/${schoolId}/role-account/${managedRole}/management-majors/${majorId}/management-class/paginate`
+                : `/lms/${role}/school-subscription/${schoolName}/${schoolId}/role-account/${managedRole}/management-class/paginate`,
 
             method: 'GET',
             data: {
@@ -117,11 +119,11 @@ function managementClassSchoolSubscription(search_class = null, search_year = nu
                         let lmsManagementStudents = '';
 
                         if (majorId) {
-                            lmsManagementStudents = response.lmsManagementStudentsWithMajor.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id)
-                                .replace(':role', role).replace(':classId', item.id).replace(':majorId', majorId);
+                            lmsManagementStudents = response.lmsManagementStudentsWithMajor.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                                .replace(':schoolId', schoolIdentity.id).replace(':managedRole', managedRole).replace(':classId', item.id).replace(':majorId', majorId);
                         } else {
-                            lmsManagementStudents = response.lmsManagementStudentsNoMajor.replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id)
-                                .replace(':role', role).replace(':classId', item.id);
+                            lmsManagementStudents = response.lmsManagementStudentsNoMajor.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                                .replace(':schoolId', schoolIdentity.id).replace(':managedRole', managedRole).replace(':classId', item.id);
                         }
 
                         const card = `
@@ -272,12 +274,15 @@ $('#submit-button-create-class').on('click', function (e) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
     const majorId = container.dataset.majorId;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
+
     const form = $('#form-create-class-lms-subscription')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
@@ -289,8 +294,8 @@ $('#submit-button-create-class').on('click', function (e) {
 
     $.ajax({
         url: majorId
-            ? `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-majors/${majorId}/management-class/create`
-            : `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-class/create`,
+            ? `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-majors/${majorId}/management-class/create`
+            : `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-class/create`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -391,12 +396,15 @@ $('#submit-button-edit-class').on('click', function (e) {
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
+    const managedRole = container.dataset.managedRole;
     const majorId = container.dataset.majorId;
 
     if (!container) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!role) return;
+    if (!managedRole) return;
+
     const form = $('#form-edit-class-lms-subscription')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
@@ -410,8 +418,8 @@ $('#submit-button-edit-class').on('click', function (e) {
 
     $.ajax({
         url: majorId
-            ? `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-class/${classId}/management-majors/${majorId}/edit`
-            : `/lms/school-subscription/${schoolName}/${schoolId}/management-role-account/${role}/management-class/${classId}/edit`,
+            ? `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-class/${classId}/management-majors/${majorId}/edit`
+            : `/lms/${role}/school-subscription/${schoolName}/${schoolId}/management-role-account/${managedRole}/management-class/${classId}/edit`,
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

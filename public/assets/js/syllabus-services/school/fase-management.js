@@ -1,17 +1,19 @@
 function paginateFaseManagement(page = 1) {
     const container = document.getElementById('container-fase-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
     const curriculumId = container.dataset.curriculumId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!curriculumName) return;
     if (!curriculumId) return;
 
-    fetchDataFase(schoolName, schoolId, curriculumName, curriculumId);
+    fetchDataFase(role, schoolName, schoolId, curriculumName, curriculumId);
 
     function fetchDataFase() {
         $.ajax({
@@ -70,8 +72,8 @@ function paginateFaseManagement(page = 1) {
                     // Render rows
                     $.each(response.data, function (index, item) {
 
-                        const kelasDetail = response.kelasDetail.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumName', curriculumName)
-                            .replace(':curriculumId', curriculumId).replace(':faseId', item.id);
+                        const kelasDetail = response.kelasDetail.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':curriculumName', curriculumName).replace(':curriculumId', curriculumId).replace(':faseId', item.id);
 
                         $('#tbody-fase-management').append(`
                             <tr class="text-xs">

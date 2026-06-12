@@ -24,6 +24,11 @@ class TeacherQuestionBankReleaseController extends Controller
         $classNameService = new ClassNameService();
         return $classNameService->extractClassLevel($className);
     }
+    private function resolveClassLevel($class): ?int
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->resolveClassLevel($class);
+    }
     
     public function teacherQuestionBankForRelease($role, $schoolName, $schoolId)
     {
@@ -71,7 +76,7 @@ class TeacherQuestionBankReleaseController extends Controller
         // LEVEL KELAS UNIK
         $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
         $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
@@ -287,12 +292,14 @@ class TeacherQuestionBankReleaseController extends Controller
         $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
 
         // FILTER BERDASARKAN TAHUN AJARAN
-        $schoolClasses = $query->where('SchoolAssessment.SchoolClass.tahun_ajaran', $searchYear)->values();
-
+        $schoolClasses = $query->filter(function ($item) use ($searchYear) {
+            return $item->SchoolAssessment?->SchoolClass?->tahun_ajaran === $searchYear;
+        })->values();
+        
         // LEVEL KELAS UNIK
         $classLevels = $schoolClasses->pluck('SchoolAssessment.SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
         $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolAssessment->SchoolClass->class_name) === $selectedClass)->values();

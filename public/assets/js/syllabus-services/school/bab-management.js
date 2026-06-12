@@ -1,5 +1,6 @@
 function paginateBabManagement(page = 1) {
     const container = document.getElementById('container-bab-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
@@ -9,6 +10,7 @@ function paginateBabManagement(page = 1) {
     const mapelId = container.dataset.mapelId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!curriculumName) return;
@@ -17,7 +19,7 @@ function paginateBabManagement(page = 1) {
     if (!kelasId) return;
     if (!mapelId) return;
 
-    fetchDataBab(schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId, mapelId);
+    fetchDataBab(role, schoolName, schoolId, curriculumName, curriculumId, faseId, kelasId, mapelId);
 
     function fetchDataBab() {
         $.ajax({
@@ -105,8 +107,9 @@ function paginateBabManagement(page = 1) {
 
                         const updatedAt = item.updated_at ? `${formatDate(item.updated_at)}` : '-';
 
-                        const subBabDetail = response.subBabDetail.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumName', curriculumName)
-                            .replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', kelasId).replace(':mapelId', mapelId).replace(':babId', item.id);
+                        const subBabDetail = response.subBabDetail.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':curriculumName', curriculumName).replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', kelasId)
+                            .replace(':mapelId', mapelId).replace(':babId', item.id);
 
                         $('#tbody-bab-management').append(`
                             <tr class="text-xs">

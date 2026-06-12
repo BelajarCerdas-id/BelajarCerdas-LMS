@@ -9,9 +9,9 @@ use Illuminate\Http\Request;
 class RoleController extends Controller
 {
     // function lms management roles view
-    public function lmsManagementRolesView($schoolName, $schoolId)
+    public function lmsManagementRolesView($role, $schoolName, $schoolId)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-role-account', compact('schoolName', 'schoolId'));
+        return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms management roles
@@ -35,9 +35,9 @@ class RoleController extends Controller
             'data' => $groupedRoles->values(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'lmsManagementAccounts' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-accounts',
-            'lmsManagementMajors' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-majors',
-            'lmsManagementClass' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class',
+            'lmsManagementAccounts' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-accounts',
+            'lmsManagementMajors' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-majors',
+            'lmsManagementClass' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class',
         ]);
     }
 }

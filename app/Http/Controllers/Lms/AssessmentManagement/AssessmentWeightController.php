@@ -17,13 +17,13 @@ use Illuminate\Support\Facades\Validator;
 class AssessmentWeightController extends Controller
 {
     // function assessment weight management
-    public function assessmentWeight($schoolName, $schoolId)
+    public function assessmentWeight($role, $schoolName, $schoolId)
     {
         $assessmentType = SchoolAssessmentType::where('is_active', 1)->where('school_partner_id', $schoolId)->get();
 
         $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->pluck('tahun_ajaran')->unique()->sortDesc()->values();
 
-        return view('features.lms.administrator.assessment-weight-management.lms-assessment-weight-management', compact('schoolName', 'schoolId', 'assessmentType', 'tahunAjaran'));
+        return view('features.lms.administrator.assessment-weight-management.lms-assessment-weight-management', compact('role', 'schoolName', 'schoolId', 'assessmentType', 'tahunAjaran'));
     }
 
     // function paginate assessment weight

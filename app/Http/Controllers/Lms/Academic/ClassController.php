@@ -25,6 +25,11 @@ class ClassController extends Controller
             return (int) $match[0];
         }
 
+        // 1b. Coba label kelas baku seperti "Kelas 10"
+        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
+            return (int) $match[1];
+        }
+
         // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
         if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
             return $this->romanToInt($match[0]);
@@ -52,9 +57,18 @@ class ClassController extends Controller
 
         return $map[$roman] ?? 0;
     }
+
+    private function resolveClassLevel($class): ?int
+    {
+        if ($class === null || $class === '') {
+            return null;
+        }
+
+        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
+    }
     
     // function lms management class view
-    public function lmsManagementClassView($schoolName, $schoolId, $role, $majorId = null)
+    public function lmsManagementClassView($role, $schoolName, $schoolId, $managedRole, $majorId = null)
     {
         $getSchool = SchoolPartner::where('id', $schoolId)->first();
 
@@ -73,11 +87,11 @@ class ClassController extends Controller
 
         $phases = Fase::whereIn(DB::raw('LOWER(kode)'), $allowedPhases)->get();
 
-        return view('Features.lms.administrator.lms-school-subscription-management-class', compact('schoolName', 'schoolId', 'role', 'majorId', 'phases'));
+        return view('features.lms.administrator.lms-school-subscription-management-class', compact('role', 'schoolName', 'schoolId', 'managedRole', 'majorId', 'phases'));
     }
 
     // function paginate lms management class
-    public function paginateLmsSchoolSubscriptionClass(Request $request, $schoolName, $schoolId, $role, $majorId = null) 
+    public function paginateLmsSchoolSubscriptionClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $majorId = null) 
     {
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 
@@ -95,7 +109,7 @@ class ClassController extends Controller
         $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
 
         // level dari dropdown (optional)
-        $selectedClass = $request->filled('search_class') ? (int) $request->search_class : $defaultLevel;
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $defaultLevel;
         $selectedYear = $request->filled('search_year') ? $request->search_year : SchoolClass::where('school_partner_id', $schoolId)
         ->orderBy('tahun_ajaran')->value('tahun_ajaran');
 
@@ -140,13 +154,13 @@ class ClassController extends Controller
             'tahunAjaran' => $tahunAjaran,
             'selectedYear' => $selectedYear,
             'selectedClass' => $selectedClass,
-            'lmsManagementStudentsWithMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-majors/:majorId/management-students',
-            'lmsManagementStudentsNoMajor' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:role/management-class/:classId/management-students',
+            'lmsManagementStudentsWithMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-majors/:majorId/management-students',
+            'lmsManagementStudentsNoMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-students',
         ]);
     }
 
     // function lms management create class
-    public function lmsManagementCreateClass(Request $request, $schoolName, $schoolId, $role, $majorId = null)
+    public function lmsManagementCreateClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $majorId = null)
     {
         // Rule dasar yang selalu berlaku
         $rules = [
@@ -224,7 +238,7 @@ class ClassController extends Controller
     }
 
     // function lms management edit class
-    public function lmsManagementEditClass(Request $request, $schoolName, $schoolId, $role, $classId, $majorId = null)
+    public function lmsManagementEditClass(Request $request, $role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
         // Rule dasar yang selalu berlaku
         $rules = [

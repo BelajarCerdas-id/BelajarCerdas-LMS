@@ -25,6 +25,7 @@ class LmsQuestionBank extends Model
         'status_bank_soal',
         'tipe_soal',
         'question_source',
+        'question_category',
     ];
 
     public function LmsQuestionOption()

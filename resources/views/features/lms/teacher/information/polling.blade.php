@@ -665,7 +665,7 @@
 
     // FORM BUAT POLLING BAWAAN
     let opsiCount = 2;
-    function tambahOpsi() {
+    function addOption() {
         if(opsiCount >= 6) {
             alert('Maksimal 6 pilihan jawaban untuk menjaga kemudahan membaca.');
             return;

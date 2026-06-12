@@ -21,9 +21,9 @@ use Illuminate\Validation\Rule;
 class SchoolSyllabusController extends Controller
 {
     // function kurikulum view
-    public function curriculumView($schoolName, $schoolId)
+    public function curriculumView($role, $schoolName, $schoolId)
     {
-        return view('syllabus-services.school.list-kurikulum', compact('schoolName', 'schoolId'));
+        return view('syllabus-services.school.list-kurikulum', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate kurikulum
@@ -34,14 +34,14 @@ class SchoolSyllabusController extends Controller
         return response()->json([
             'data' => $getCurriculum->items(),
             'links' => (string) $getCurriculum->links(),
-            'faseDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/fase',
+            'faseDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/fase',
         ]);
     }
 
     // function fase view
-    public function faseView($schoolName, $schoolId, $curriculumName, $curriculumId)
+    public function faseView($role, $schoolName, $schoolId, $curriculumName, $curriculumId)
     {
-        return view('syllabus-services.school.list-fase', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId'));
+        return view('syllabus-services.school.list-fase', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId'));
     }
 
     // function paginate fase
@@ -79,14 +79,14 @@ class SchoolSyllabusController extends Controller
             'data' => $dataFase,
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'kelasDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/kelas',
+            'kelasDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/kelas',
         ]);
     }
 
     // function kelas view
-    public function kelasView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId)
+    public function kelasView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId)
     {
-        return view('syllabus-services.school.list-kelas', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId'));
+        return view('syllabus-services.school.list-kelas', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId'));
     }
 
     // function paginate kelas
@@ -111,14 +111,14 @@ class SchoolSyllabusController extends Controller
             'links' => (string) $dataKelas->links(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'mapelDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
+            'mapelDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/mapel',
         ]);
     }
 
     // function mapel view
-    public function mapelView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
+    public function mapelView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
     {
-        return view('syllabus-services.school.list-mapel', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId'));
+        return view('syllabus-services.school.list-mapel', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId'));
     }
 
     // function paginate mapel
@@ -173,7 +173,7 @@ class SchoolSyllabusController extends Controller
             'links' => (string) $dataSchoolMapel->links(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
-            'babDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
+            'babDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/bab',
         ]);
     }
 
@@ -314,9 +314,9 @@ class SchoolSyllabusController extends Controller
     }
 
     // function bab view
-    public function babView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
+    public function babView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
-        return view('syllabus-services.school.list-bab', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId'));
+        return view('syllabus-services.school.list-bab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId'));
     }
 
     // function paginate bab
@@ -346,7 +346,7 @@ class SchoolSyllabusController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'mapel' => $mapel,
-            'subBabDetail' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
+            'subBabDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
 
@@ -466,9 +466,9 @@ class SchoolSyllabusController extends Controller
     }
 
     // function sub bab view
-    public function subBabView($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
+    public function subBabView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        return view('syllabus-services.school.list-sub-bab', compact('schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 
+        return view('syllabus-services.school.list-sub-bab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 
         'kelasId', 'mapelId', 'babId'));
     }
 

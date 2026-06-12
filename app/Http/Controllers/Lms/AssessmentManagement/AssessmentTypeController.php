@@ -17,11 +17,11 @@ class AssessmentTypeController extends Controller
 {
     // LMS ASSESSMENT TYPE MANAGEMENT
     // function lms assessment type management view
-    public function lmsAssessmentTypeManagementView($schoolName, $schoolId)
+    public function lmsAssessmentTypeManagementView($role, $schoolName, $schoolId)
     {
         $getAssessmentMode = AssessmentMode::all();
 
-        return view('features.lms.administrator.assessment-type-management.lms-assessment-type-management', compact('schoolName', 'schoolId', 'getAssessmentMode'));
+        return view('features.lms.administrator.assessment-type-management.lms-assessment-type-management', compact('role', 'schoolName', 'schoolId', 'getAssessmentMode'));
     }
 
     // function paginate lms assessment type management

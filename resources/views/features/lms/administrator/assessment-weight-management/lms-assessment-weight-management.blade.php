@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Assessment Weight',
-    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -91,7 +91,8 @@
                     <div class="border-b-2 border-gray-200 mt-4"></div>
 
                     <!---- Table list data assessment weight ---->
-                    <div id="container-assessment-weight-management" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="overflow-x-auto mt-8 pb-24">
+                    <div id="container-assessment-weight-management" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
+                        class="overflow-x-auto mt-8 pb-24">
 
                         <h2 class="text-lg font-bold text-gray-800 pb-6">
                             Assessment Weight List

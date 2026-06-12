@@ -251,17 +251,31 @@ function detectFullscreenExit() {
 
     document.addEventListener("fullscreenchange", function () {
 
+        if (document.fullscreenElement) {
+
+            // fullscreen aktif -> anti cheat ON
+            antiCheatCooldown = false;
+            return;
+        }
+
         if (examFinished) return;
         if (isPageReloading) return;
         if (antiCheatCooldown) return;
 
-        if (!document.fullscreenElement) {
-            reportCheating();
-        }
+        // keluar fullscreen
+        reportCheating();
 
     });
 
 }
+
+document.addEventListener("fullscreenchange", function () {
+
+    if (document.fullscreenElement) {
+        antiCheatCooldown = false;
+    }
+
+});
 
 function detectKeyboardCheating() {
 

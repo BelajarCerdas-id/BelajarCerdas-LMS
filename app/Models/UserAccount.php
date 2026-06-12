@@ -121,4 +121,24 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(StudentAssessmentSummary::class, 'student_id');
     }
+
+    public function SubjectAttendance()
+    {
+        return $this->hasMany(SubjectAttendance::class, 'student_id');
+    }
+
+    public function ParentProfile()
+    {
+        return $this->hasOne(parentProfile::class, 'user_id');
+    }
+
+    public function SchReflQuestion()
+    {
+        return $this->hasMany(SchReflQuestion::class, 'user_id');
+    }
+
+    public function SchReflAnswer()
+    {
+        return $this->hasMany(SchReflAnswer::class, 'user_id');
+    }
 }

@@ -129,7 +129,7 @@
                                     </div>
 
                                     <div class="relative w-full md:w-auto">
-                                        <a href="{{ route('lms.teacher.class.detail', ['schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'scheduleId' => explode(',', $group->ids)[0]]) }}" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-bold rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                                        <a href="{{ route('lms.teacher.class.detail', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1', 'scheduleId' => explode(',', $group->ids)[0]]) }}" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 text-sm font-bold rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
                                             <i class="fas fa-sign-in-alt"></i> Buka Kelas
                                         </a>
                                     </div>
@@ -327,7 +327,7 @@
                             </div>
                         </div>
 
-                        <div id="container-teacher-assessment-cheating-history" data-school-name="{{ $schoolName ?? 'sekolah' }}" data-school-id="{{ $schoolId ?? '1' }}" class="flex flex-col gap-5">
+                        <div id="container-teacher-assessment-cheating-history" data-role="{{ $role }}" data-school-name="{{ $schoolName ?? 'sekolah' }}" data-school-id="{{ $schoolId ?? '1' }}" class="flex flex-col gap-5">
                             <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
                                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
                                     <div class="flex items-center gap-2">
@@ -349,7 +349,7 @@
                                 <div id="empty-message-teacher-assessment-cheating-history" class="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-white hidden">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-14 h-14 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center text-2xl mb-3 border border-blue-100 shadow-sm">
-                                            <i class="fas fa-shield-check"></i>
+                                            <i class="fas fa-shield"></i>
                                         </div>
                                         <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
                                         <p class="text-xs font-medium text-slate-500 mt-1">Tidak ada pelanggaran yang tercatat pada kelas ini.</p>

@@ -130,9 +130,15 @@ function teacherGradebook(semester = 1) {
                     row += `<td class="border border-gray-300 px-3 py-2">${item.name}</td>`;
 
                     item.types.forEach(t => {
+                        const gradebookAssessmentPreview = t.gradebookAssessmentPreview.replace(":role", role).replace(":schoolName", schoolName)
+                            .replace(":schoolId", schoolId).replace(":subjectTeacherId", subjectTeacherId).replace(":assessmentTypeId", t.type_id)
+                            .replace(':studentId', item.student_id).replace(':semester', semester);
+                        
                         row += `
-                            <td class="border border-gray-300 px-3 py-2 text-center">
-                                ${t.avg} (${t.count})
+                            <td class="border border-gray-300 px-3 py-2 text-center underline text-[#4189E0] font-bold cursor-pointer">
+                                <a href="${gradebookAssessmentPreview}" class="cursor-pointer">
+                                    ${t.avg} (${t.count_done}/${t.count_total})
+                                </a>
                             </td>
                         `;
                     });

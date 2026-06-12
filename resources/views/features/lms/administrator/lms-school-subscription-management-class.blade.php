@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'LMS Management Class',
     'linkBackButton' => $majorId
-        ? route('lms.managementMajors.view', [$schoolName, $schoolId, $role])
-        : route('lms.managementRoles.view', [$schoolName, $schoolId]),
+        ? route('lms.managementMajors.view', [$role, $schoolName, $schoolId, $managedRole])
+        : route('lms.managementRoles.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ])
 
@@ -15,7 +15,8 @@
 
             <main>
                 <section class="relative pb-6">
-                    <div id="container-management-class-list" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}" data-major-id="{{ $majorId }}">
+                    <div id="container-management-class-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
+                        data-managed-role="{{ $managedRole }}" data-major-id="{{ $majorId }}">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-gray-800">
                                 Manajemen Kelas
@@ -228,7 +229,7 @@
 @endif
 
 <!---- paginate lms subscription management class ---->
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-class.js') }}"></script> <!--- lms subscription management class ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-class.js') }}"></script> <!--- lms subscription management class ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

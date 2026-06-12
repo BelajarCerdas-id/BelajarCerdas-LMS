@@ -101,7 +101,11 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                            <a href="{{ route('lms.kepsek.laporan.akademik') }}" class="group block">
+                            <a href="{{ route('lms.headmaster.academic.report', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}" class="group block">
                                 <div class="relative rounded-[2rem] bg-slate-50 p-8 border border-transparent hover:border-[#0071BC] hover:bg-white hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500">
                                     <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center text-2xl text-[#0071BC] mb-6 group-hover:rotate-6 transition-transform">
                                         <i class="fas fa-graduation-cap"></i>
@@ -114,7 +118,11 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('lms.kepsek.aktivitas.guru') }}" class="group block">
+                            <a href="{{ route('lms.headmaster.teacher.activity', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}" class="group block">
                                 <div class="relative rounded-[2rem] bg-slate-50 p-8 border border-transparent hover:border-emerald-500 hover:bg-white hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-500">
                                     <div class="w-16 h-16 bg-white shadow-sm rounded-2xl flex items-center justify-center text-2xl text-emerald-500 mb-6 group-hover:rotate-6 transition-transform">
                                         <i class="fas fa-clipboard-check"></i>

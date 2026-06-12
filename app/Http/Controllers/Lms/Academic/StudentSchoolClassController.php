@@ -22,6 +22,11 @@ class StudentSchoolClassController extends Controller
             return (int) $match[0];
         }
 
+        // 1b. Coba label kelas baku seperti "Kelas 10"
+        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
+            return (int) $match[1];
+        }
+
         // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
         if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
             return $this->romanToInt($match[0]);
@@ -51,13 +56,13 @@ class StudentSchoolClassController extends Controller
     }
     
     // function lms management students view
-    public function lmsManagementStudentsView($schoolName, $schoolId, $role, $classId, $majorId = null)
+    public function lmsManagementStudentsView($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-students', compact('schoolName', 'schoolId', 'role', 'classId', 'majorId'));
+        return view('features.lms.administrator.lms-school-subscription-management-students', compact('role', 'schoolName', 'schoolId', 'managedRole', 'classId', 'majorId'));
     }
 
     // function paginate lms management users
-    public function paginateLmsSchoolSubscriptionUsers($schoolName, $schoolId, $role, $classId, $majorId = null)
+    public function paginateLmsSchoolSubscriptionUsers($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
         $getUsersQuery = StudentSchoolClass::with(['UserAccount.StudentProfile', 'SchoolClass', 
         'SchoolClass.UserAccount.SchoolStaffProfile']);

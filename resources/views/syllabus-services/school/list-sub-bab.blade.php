@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('schoolBabManagement.view', [$schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId]),
+    'linkBackButton' => route('schoolBabManagement.view', [$role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Sub Bab',
 ]);
@@ -47,9 +47,9 @@
                     
                     <section>
                         <!---- Table list data sub bab  ---->
-                        <div id="container-sub-bab-management" class="overflow-x-auto mt-8 pb-24" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                                data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}" 
-                                data-mapel-id="{{ $mapelId }}" data-bab-id="{{ $babId }}">
+                        <div id="container-sub-bab-management" class="overflow-x-auto mt-8 pb-24" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" 
+                                data-school-id="{{ $schoolId }}" data-curriculum-name="{{ $curriculumName }}" data-curriculum-id="{{ $curriculumId }}" 
+                                data-fase-id="{{ $faseId }}" data-kelas-id="{{ $kelasId }}" data-mapel-id="{{ $mapelId }}" data-bab-id="{{ $babId }}">
                             <table id="table-sub-bab-management" class="min-w-full text-sm border-collapse">
                                 <thead class="thead-table-sub-bab-management hidden bg-gray-50 shadow-inner">
                                     <tr>

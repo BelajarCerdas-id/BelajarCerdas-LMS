@@ -1,5 +1,6 @@
 function paginateKelasManagement(page = 1) {
     const container = document.getElementById('container-kelas-management');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
@@ -7,13 +8,14 @@ function paginateKelasManagement(page = 1) {
     const faseId = container.dataset.faseId;
 
     if (!container) return;
+    if (!role) return;
     if (!schoolName) return;
     if (!schoolId) return;
     if (!curriculumName) return;
     if (!curriculumId) return;
     if (!faseId) return;
 
-    fetchDataKelas(schoolName, schoolId, curriculumName, curriculumId, faseId);
+    fetchDataKelas(role, schoolName, schoolId, curriculumName, curriculumId, faseId);
 
     function fetchDataKelas() {
         $.ajax({
@@ -72,8 +74,8 @@ function paginateKelasManagement(page = 1) {
                     // Render rows
                     $.each(response.data, function (index, item) {
 
-                        const mapelDetail = response.mapelDetail.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumName', curriculumName)
-                            .replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', item.id);
+                        const mapelDetail = response.mapelDetail.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':curriculumName', curriculumName).replace(':curriculumId', curriculumId).replace(':faseId', faseId).replace(':kelasId', item.id);
 
                         $('#tbody-kelas-management').append(`
                             <tr class="text-xs">

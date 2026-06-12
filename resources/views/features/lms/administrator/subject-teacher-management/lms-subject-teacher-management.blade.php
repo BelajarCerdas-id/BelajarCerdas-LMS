@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Subject Teacher',
-    'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+    'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -12,7 +12,8 @@
             <div id="alert-success-edit-data-teacher-mapel"></div>
 
             <main class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <section id="container" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="space-y-8 border-b border-gray-300 pb-8">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
+                    class="space-y-8 border-b border-gray-300 pb-8">
 
                     <!-- Header -->
                     <div>

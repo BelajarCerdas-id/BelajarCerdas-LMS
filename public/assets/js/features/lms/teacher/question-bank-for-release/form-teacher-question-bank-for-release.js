@@ -193,6 +193,10 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
                             ${item.tipe_soal}
                         </td>
 
+                        <td class="border border-gray-300 px-3 py-2 text-center text-xs">
+                            ${item.question_category}
+                        </td>
+
                         <td class="border border-gray-300 px-3 py-2 text-center">
                             <div class="flex flex-col items-center gap-1">
                                 <input type="number" min="1" step="1" max="100" name="question_weight[${item.id}]" data-question-id="${item.id}" placeholder="0" 
@@ -429,7 +433,7 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
                                 <div class="bg-white border border-gray-200 rounded-xl p-5">
 
                                     <!-- Badge Row -->
-                                    <div class="grid grid-cols-2 lg:grid-cols-4 items-center gap-2 mb-4">
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 items-center gap-4 mb-4">
 
                                         <span class="px-3 py-1 text-xs rounded-full font-bold bg-green-100 text-green-700 text-center">
                                             ${item.difficulty ?? '-'}
@@ -437,6 +441,10 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
 
                                         <span class="px-3 py-1 text-xs rounded-full font-bold bg-blue-100 text-blue-700 text-center">
                                             ${item.tipe_soal ?? '-'}
+                                        </span>
+
+                                        <span class="px-3 py-1 text-xs rounded-full font-bold bg-blue-100 text-blue-700 text-center">
+                                            ${item.question_category ?? '-'}
                                         </span>
 
                                         <span class="px-3 py-1 text-xs rounded-full font-bold bg-purple-100 text-purple-700 text-center">

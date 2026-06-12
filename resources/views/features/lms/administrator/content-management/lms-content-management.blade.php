@@ -4,7 +4,7 @@
     ],
     $schoolId
         ? [
-            'linkBackButton' => route('lms.academicManagement.view', [$schoolName, $schoolId]),
+            'linkBackButton' => route('lms.academicManagement.view', [$role, $schoolName, $schoolId]),
             'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
         ]
         : []
@@ -17,7 +17,7 @@
             <div id="alert-success-create-content"></div>
 
             <main class="bg-white shadow-lg h-max rounded-lg border border-gray-200">
-                <section id="container" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200">
                     <form id="content-management-form">
                         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
                             <!--- Kurikulum --->
@@ -92,7 +92,6 @@
                             <div class="flex flex-col order-5 xl:order-0">
                                 <label class="mb-2 text-sm">
                                     Sub Bab
-                                    <sup class="text-red-500">&#42;</sup>
                                 </label>
                                 <select name="sub_bab_id" id="id_sub_bab"
                                     class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
@@ -216,7 +215,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/administrator/content-management/lms-content-management.js') }}"></script> <!--- lms content management ---->
+<script src="{{ asset('assets/js/features/lms/administrator/content-management/lms-content-management.js') }}"></script> <!--- lms content management ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->

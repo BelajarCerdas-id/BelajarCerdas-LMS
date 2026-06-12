@@ -1,10 +1,12 @@
 function paginateContentManagemet(page = 1) {
     const container = document.getElementById('container');
+    const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const isSchoolMode = !!schoolId;
 
     if (!container) return;
+    if (!role) return;
 
     $.ajax({
         url: schoolId
@@ -15,6 +17,7 @@ function paginateContentManagemet(page = 1) {
             page: page
         },
         success: function (response) {
+            const user = response.user;
             $('#tbody-content-management-list').empty();
             $('.pagination-container-content-management-list').empty();
 
@@ -40,11 +43,38 @@ function paginateContentManagemet(page = 1) {
                     let reviewContent = '';
 
                     if (schoolId) {
-                        editContent = response.editContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id);
-                        reviewContent = response.reviewContentBySchool.replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':contentId', item.id)
+                        editContent = response.editContentBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':contentId', item.id);
+                        
+                        reviewContent = response.reviewContentBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':contentId', item.id)
                     } else {
-                        editContent = response.editContent.replace(':contentId', item.id);
-                        reviewContent = response.reviewContent.replace(':contentId', item.id)
+                        editContent = response.editContent.replace(':role', role).replace(':contentId', item.id);
+                        reviewContent = response.reviewContent.replace(':role', role).replace(':contentId', item.id)
+                    }
+
+                    let editContent_display = '';
+
+                    if (user.role === 'Administrator') {
+                        editContent_display = `
+                            <li class="text-md">
+                                <a href="${editContent}" class="btn-edit-content">
+                                    <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                    Edit Content
+                                </a>
+                            </li>
+                        `;
+                    } else if (user.role === 'Admin Sekolah') {
+                        if (item.school_partner_id) {
+                            editContent_display = `
+                                <li class="text-md">
+                                    <a href="${editContent}" class="btn-edit-content">
+                                        <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                        Edit Content
+                                    </a>
+                                </li>
+                            `;
+                        }
                     }
 
                     const isGlobalActive = item.is_active;
@@ -78,12 +108,12 @@ function paginateContentManagemet(page = 1) {
                     $('#tbody-content-management-list').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kurikulum?.nama_kurikulum}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.service?.name}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kelas?.kelas}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.mapel?.mata_pelajaran}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.bab?.nama_bab}</td>
-                            <td class="border border-gray-300 px-3 py-2 text-center">${item.sub_bab?.sub_bab}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kurikulum?.nama_kurikulum ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.service?.name ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.kelas?.kelas ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.mapel?.mata_pelajaran ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.bab?.nama_bab ?? '-'}</td>
+                            <td class="border border-gray-300 px-3 py-2 text-center">${item.sub_bab?.sub_bab ?? '-'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">${item.school_partner_id ? item.school_partner?.nama_sekolah : 'belajarcerdas.id'}</td>
                             <td class="border border-gray-300 px-3 py-2 text-center">
                                 ${toggleActivateContent}
@@ -117,12 +147,7 @@ function paginateContentManagemet(page = 1) {
                                                 History Content
                                             </span>
                                         </li>
-                                        <li class="text-md">
-                                            <a href="${editContent}" class="btn-edit-content">
-                                                <i class="fa-solid fa-pen text-[#0071BC]"></i>
-                                                Edit Content
-                                            </a>
-                                        </li>
+                                        ${editContent_display}
                                     </ul>
                                 </div>
                             </td>

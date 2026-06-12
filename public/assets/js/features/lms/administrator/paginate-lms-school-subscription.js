@@ -1,4 +1,10 @@
 function paginateLmsSchoolSubscription(search_school, page = 1) {
+    const container = document.getElementById('container-school-partner-list');
+    const role = container.dataset.role;
+
+    if (!container) return;
+    if (!role) return;
+
     $.ajax({
         url: '/lms/school-subscription/paginate',
         method: 'GET',
@@ -30,7 +36,7 @@ function paginateLmsSchoolSubscription(search_school, page = 1) {
                     const startDate = item.school_lms_subscription?.start_date ? formatDate(item.school_lms_subscription?.start_date) : 'Tanggal tidak tersedia';
                     const endDate = item.school_lms_subscription?.end_date ? formatDate(item.school_lms_subscription?.end_date) : 'Tanggal tidak tersedia';
 
-                    const lmsAcademicManagement = response.lmsAcademicManagement.replace(':schoolName', item.nama_sekolah).replace(':schoolId', item.id);
+                    const lmsAcademicManagement = response.lmsAcademicManagement.replace(':role', role).replace(':schoolName', item.nama_sekolah).replace(':schoolId', item.id);
 
                     $('#tbody-school-partner-list').append(`
                         <tr>

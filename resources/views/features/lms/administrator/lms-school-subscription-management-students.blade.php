@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'LMS Management Students',
     'linkBackButton' => $majorId
-        ? route('lms.managementClass.view.major', [$schoolName, $schoolId, $role, $majorId])
-        : route('lms.managementClass.view.noMajor', [$schoolName, $schoolId, $role]),
+        ? route('lms.managementClass.view.major', [$role, $schoolName, $schoolId, $managedRole, $majorId])
+        : route('lms.managementClass.view.noMajor', [$role, $schoolName, $schoolId, $managedRole]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -18,8 +18,8 @@
             <main>
                 <!---- table list school partner lms subscription ---->
                 <section id="container-management-lms-students-list" class="relative pb-6"
-                    data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
-                    data-role="{{ $role }}" data-class-id="{{ $classId }}"
+                    data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
+                    data-managed-role="{{ $managedRole }}" data-class-id="{{ $classId }}"
                     data-major-id="{{ $majorId }}">
                     <div class="overflow-x-auto pb-14">
                         <!-- DETAIL SEKOLAH -->
@@ -415,7 +415,7 @@
 @endif
 
 <!---- paginate lms subscription management users ---->
-<script src="{{ asset('assets/js/Features/lms/administrator/lms-subscription-management-students.js') }}"></script> <!--- lms subscription management students ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-students.js') }}"></script> <!--- lms subscription management students ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

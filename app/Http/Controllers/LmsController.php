@@ -3,10 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\LmsSchoolSubscription;
-use App\Models\AcademicCalendar;
-use App\Models\LessonSchedule;
-use App\Models\Poll;
-use App\Models\PollOption;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolPartner;
@@ -26,11 +22,16 @@ class LmsController extends Controller
         $classNameService = new ClassNameService();
         return $classNameService->extractClassLevel($className);
     }
+    private function resolveClassLevel($class): ?int
+    {
+        $classNameService = new ClassNameService();
+        return $classNameService->resolveClassLevel($class);
+    }
     
     // function lms school subscription view
-    public function lmsSchoolSubscriptionView()
+    public function lmsSchoolSubscriptionView($role)
     {
-        return view('features.lms.administrator.lms-school-subscription');
+        return view('features.lms.administrator.lms-school-subscription', compact('role'));
     }
 
     // function pagiante lms school subscription
@@ -71,7 +72,7 @@ class LmsController extends Controller
             'links' => (string) $paginated->links(),
             'current_page' => $paginated->currentPage(),
             'per_page' => $paginated->perPage(),
-            'lmsAcademicManagement' => '/lms/school-subscription/:schoolName/:schoolId/academic-management',
+            'lmsAcademicManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management',
         ]);
     }
 
@@ -153,7 +154,7 @@ class LmsController extends Controller
     }
 
     // function get teacher assessment cheating history
-    public function getTeacherAssessmentCheatingHistory(Request $request, $schoolName, $schoolId)
+    public function getTeacherAssessmentCheatingHistory(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
 
@@ -212,7 +213,7 @@ class LmsController extends Controller
         // KELAS LEVEL
         $classLevels = $dataByYear->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->search_class ?? $classLevels->first() ?? $defaultLevel;
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         $dataByClass = $dataByYear->filter(function ($item) use ($selectedClass) {
             return (int)$this->extractClassLevel($item->SchoolClass->class_name) === (int)$selectedClass;
@@ -281,7 +282,7 @@ class LmsController extends Controller
             'schoolAssessmentType' => $schoolAssessmentType,
         ]);
     }
-   public function lmsTeacherView($schoolName, $schoolId)
+   public function lmsTeacherView($role,$schoolName, $schoolId)
     {
         $tanggalDipilih = request('date', date('Y-m-d'));
         $user = \Illuminate\Support\Facades\Auth::user();
@@ -492,6 +493,7 @@ class LmsController extends Controller
             });
 
         return view('features.lms.teacher.dashboard', compact(
+            'role',
             'schoolName', 
             'schoolId', 
             'totalKelas', 
@@ -507,7 +509,7 @@ class LmsController extends Controller
             'daftarKelas'
         ));
     }
-    public function classDetailView($schoolName, $schoolId, $scheduleId)
+    public function classDetailView($role, $schoolName, $schoolId, $scheduleId)
     {
         $user = \Illuminate\Support\Facades\Auth::user();
         if (!$user || $user->role !== 'Guru') abort(403, 'Akses Ditolak.');
@@ -648,6 +650,7 @@ class LmsController extends Controller
         ];
 
         return view('features.lms.teacher.class_detail', compact(
+            'role',
             'schoolName', 
             'schoolId', 
             'jadwal',    
@@ -751,22 +754,25 @@ class LmsController extends Controller
         ]);
 
         try {
-            \Illuminate\Support\Facades\DB::table('announcements')->insert([
+
+            $classId = $request->class_id;
+
+            DB::table('announcements')->insert([
                 'school_partner_id' => $request->school_id,
-                'target_class_id'   => $request->class_id ?? null, // 👈 Simpan ke database
+                'target_class_id'   => $classId,
                 'author_id'         => $user->id,
                 'author_role'       => 'Guru',
-                'target'            => 'Siswa', // Selalu ke Siswa
+                'target'            => 'Siswa',
                 'title'             => $request->title,
                 'type'              => $request->type,
-                'content'           => $request->content,
+                'content'           => $request->input('content'),
                 'created_at'        => now(),
                 'updated_at'        => now(),
             ]);
 
             return response()->json([
-                'success' => true, 
-                'message' => 'Pengumuman berhasil disebarkan ke kelas ini!'
+                'success' => true,
+                'message' => 'Pengumuman berhasil dikirim!'
             ]);
 
         } catch (\Exception $e) {

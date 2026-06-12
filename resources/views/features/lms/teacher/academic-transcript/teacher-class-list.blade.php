@@ -61,4 +61,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/academic-transcript/paginate-teacher-class-list.js') }}"></script> <!--- paginate teacher class list ---->
+<script src="{{ asset('assets/js/features/lms/teacher/academic-transcript/paginate-teacher-class-list.js') }}"></script> <!--- paginate teacher class list ---->

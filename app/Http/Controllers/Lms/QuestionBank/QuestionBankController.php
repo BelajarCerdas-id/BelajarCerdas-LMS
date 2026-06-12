@@ -22,11 +22,11 @@ use Illuminate\Support\Facades\Validator;
 class QuestionBankController extends Controller
 {
     // function question bank management view
-    public function lmsQuestionBankManagementView($schoolName = null, $schoolId = null)
+    public function lmsQuestionBankManagementView($role, $schoolName = null, $schoolId = null)
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.administrator.question-bank-management.lms-question-bank-management', compact('schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate bank soal
@@ -115,8 +115,8 @@ class QuestionBankController extends Controller
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'source' => $source ?? null,
-            'lmsReviewQuestion' => '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
-            'lmsReviewQuestionBySchool' => '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/:subBabId',
+            'lmsReviewQuestion' => '/lms/:role/question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory',
+            'lmsReviewQuestionBySchool' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory',
         ]);
     }
 
@@ -127,17 +127,18 @@ class QuestionBankController extends Controller
     }
 
     // function activate bank soal
-    public function lmsActivateQuestionBank(Request $request, $subBabId, $source, $questionType, $schoolName = null, $schoolId = null) 
+    public function lmsActivateQuestionBank(Request $request, $source, $questionType, $questionCategory, $subBabId = null, $schoolName = null, $schoolId = null)
     {
         $isEnable = $request->action === 'enable';
 
-        // Ambil semua soal target (TANPA gate global)
-        $questions = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)
-        ->where('tipe_soal', $questionType)->get();
+        $query = LmsQuestionBank::where('question_source', $source)
+            ->where('tipe_soal', $questionType)
+            ->where('question_category', $questionCategory)
+            ->where('sub_bab_id', $subBabId);
+
+        $questions = $query->get();
 
         if ($schoolId) {
-
-            // MODE SEKOLAH (OVERRIDE)
             foreach ($questions as $question) {
                 SchoolQuestionBank::updateOrCreate(
                     [
@@ -150,16 +151,47 @@ class QuestionBankController extends Controller
                 );
             }
         } else {
-            // MODE GLOBAL
-            $status = $isEnable ? 'Publish' : 'Unpublish';
-
-            $affected = LmsQuestionBank::where('sub_bab_id', $subBabId)->where('question_source', $source)
-            ->where('tipe_soal', $questionType)->update([
-                'status_bank_soal' => $status,
+            $query->update([
+                'status_bank_soal' => $isEnable ? 'Publish' : 'Unpublish',
             ]);
         }
 
-        broadcast(new ActivateQuestionBankPG($subBabId,$source,$request->action,$questions->count()))->toOthers();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Berhasil mengubah status bank soal',
+        ]);
+    }
+
+    public function lmsActivateQuestionBankNoSubBab(Request $request, $source, $questionType, $questionCategory, $schoolName = null, $schoolId = null)
+    {
+        $isEnable = $request->action === 'enable';
+
+        $query = LmsQuestionBank::where('question_source', $source)
+            ->where('tipe_soal', $questionType)
+            ->where('question_category', $questionCategory)
+            ->whereNull('sub_bab_id');
+
+        $questions = $query->get();
+
+        if ($schoolId) {
+            foreach ($questions as $question) {
+                SchoolQuestionBank::updateOrCreate(
+                    [
+                        'question_id' => $question->id,
+                        'school_partner_id' => $schoolId,
+                    ],
+                    [
+                        'is_active' => $isEnable,
+                    ]
+                );
+            }
+        } else {
+            $query->update([
+                'status_bank_soal' => $isEnable ? 'Publish' : 'Unpublish',
+            ]);
+        }
+
+        broadcast(new ActivateQuestionBankPG($source, $request->action, $questions->count()))->toOthers();
 
         return response()->json([
             'status' => 'success',
@@ -168,31 +200,47 @@ class QuestionBankController extends Controller
     }
 
     // function bank soal detail view (milik bc)
-    public function lmsDefaultQuestionBankManagementDetailView($source, $questionType, $subBabId, $schoolName = null, $schoolId = null)
+    public function lmsDefaultQuestionBankManagementDetailView($role, $source, $questionType, $questionCategory, $subBabId = null, $schoolName = null, $schoolId = null)
     {
-        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 
-        'subBabId', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 'questionCategory',
+        'subBabId', 'role', 'schoolName', 'schoolId'));
     }
 
     // function bank soal detail view (milik sekolah)
-    public function lmsSchoolQuestionBankManagementDetailView($schoolName, $schoolId, $source, $questionType, $subBabId)
+    public function lmsSchoolQuestionBankManagementDetailView($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId = null)
     {
-        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 
-        'subBabId', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 'questionCategory',
+        'subBabId', 'role', 'schoolName', 'schoolId'));
     }
 
-    // function paginate bank soal detail
-    public function paginateReviewQuestionBank($source, $questionType, $subBabId, $schoolName = null, $schoolId = null) 
+    public function paginateReviewQuestionBank($source, $questionType, $questionCategory, $subBabId = null) 
     {
+        return $this->getQuestionBankResponse($source, $questionType, $questionCategory, $subBabId);
+    }
+
+    public function paginateReviewQuestionBankSchool($source, $questionType, $questionCategory, $schoolName, $schoolId, $subBabId = null) 
+    {
+        return $this->getQuestionBankResponse($source, $questionType, $questionCategory, $subBabId, $schoolName, $schoolId);
+    }
+
+    private function getQuestionBankResponse($source, $questionType, $questionCategory, $subBabId = null, $schoolName = null, $schoolId = null) 
+    {
+
         $user = Auth::user();
 
         $questions = LmsQuestionBank::with('LmsQuestionOption')
-            ->where('sub_bab_id', $subBabId)
             ->where('question_source', $source)
             ->where('tipe_soal', $questionType)
+            ->where('question_category', $questionCategory)
+
+            ->when($subBabId, function ($query) use ($subBabId) {
+                $query->where('sub_bab_id', $subBabId);
+            })
+
             ->get();
 
         $videoIds = $questions->map(function ($q) {
+
             if (preg_match(
                 '/youtu\.be\/([a-zA-Z0-9_-]{11})|youtube\.com\/.*v=([a-zA-Z0-9_-]{11})/',
                 $q->explanation,
@@ -200,6 +248,7 @@ class QuestionBankController extends Controller
             )) {
                 return $matches[1] ?? $matches[2];
             }
+
             return null;
         });
 
@@ -209,26 +258,33 @@ class QuestionBankController extends Controller
         ];
 
         if ($user->role === 'Administrator' || $user->role === 'Admin Sekolah') {
-            $response['lmsEditQuestion'] = '/lms/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
-            $response['lmsEditQuestionBySchool'] = '/lms/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
+
+            $response['lmsEditQuestion'] =
+                '/lms/:role/question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory/:questionId/edit';
+
+            $response['lmsEditQuestionBySchool'] =
+                '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory/:questionId/edit';
+
         } else if ($user->role === 'Guru') {
-            $response['lmsEditQuestion'] = '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/:subBabId/:questionId/edit';
+
+            $response['lmsEditQuestion'] =
+                '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory/:questionId/edit';
         }
 
         return response()->json($response);
     }
 
     // function edit question view
-    public function lmsDefaultQuestionBankManagementEditView($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    public function lmsDefaultQuestionBankManagementEditView($role, $source, $questionType, $questionCategory, $questionId, $subBabId = null, $schoolName = null, $schoolId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion) {
             if ($schoolId) {
-                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $questionType, $subBabId, $schoolName, $schoolId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$role, $source, $questionType, $subBabId, $schoolName, $schoolId]);
             } else {
-                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$role, $source, $questionType, $subBabId]);
             }
         }
 
@@ -238,21 +294,21 @@ class QuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
-        'schoolName', 'schoolId', 'questionType'));
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 'role',
+        'schoolName', 'schoolId', 'questionType', 'questionCategory'));
     }
 
     // function edit question view
-    public function lmsSchoolQuestionBankManagementEditView($schoolName, $schoolId, $source, $questionType, $subBabId, $questionId)
+    public function lmsSchoolQuestionBankManagementEditView($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $questionId, $subBabId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion) {
             if ($schoolId) {
-                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$source, $questionType, $subBabId, $schoolName, $schoolId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.schoolPartner', [$role, $source, $questionType, $subBabId, $schoolName, $schoolId]);
             } else {
-                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$source, $questionType, $subBabId]);
+                return redirect()->route('lms.questionBankManagementDetail.view.noSchoolPartner', [$role, $source, $questionType, $subBabId]);
             }
         }
 
@@ -262,12 +318,12 @@ class QuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 
-        'schoolName', 'schoolId', 'questionType'));
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'subBabId', 'questionId', 'role',
+        'schoolName', 'schoolId', 'questionType', 'questionCategory'));
     }
 
     // form edit question
-    public function formEditQuestion($source, $questionType, $subBabId, $questionId, $schoolName = null, $schoolId = null)
+    public function formEditQuestion($source, $questionType, $questionId, $subBabId = null, $schoolName = null, $schoolId = null)
     {
         $editQuestion = LmsQuestionBank::with('LmsQuestionOption')->findOrFail($questionId);
 

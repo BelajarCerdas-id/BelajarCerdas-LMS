@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Review Question',
     'linkBackButton' => $schoolId
-        ? route('lms.questionBankManagement.view.schoolPartner', [$schoolName, $schoolId])
-        : route('lms.questionBankManagement.view.noSchoolPartner'),
+        ? route('lms.questionBankManagement.view.schoolPartner', [$role, $schoolName, $schoolId])
+        : route('lms.questionBankManagement.view.noSchoolPartner', [$role]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 
@@ -20,7 +20,7 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/components/question-bank-management/paginate-question-bank-management-detail.js') }}"></script> <!--- paginate lms question bank detail ---->
+<script src="{{ asset('assets/js/features/lms/components/question-bank-management/paginate-question-bank-management-detail.js') }}"></script> <!--- paginate lms question bank detail ---->
 
 <!--- PUSHER LISTENER ---->
 <script src="{{ asset('assets/js/pusher-listener/lms/question-bank/review-question-pg-listener.js') }}"></script> <!--- pusher listener insert bank soal and edit soal in bankSoal detail ---->

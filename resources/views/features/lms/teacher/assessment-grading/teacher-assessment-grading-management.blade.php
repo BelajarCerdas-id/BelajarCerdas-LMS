@@ -105,4 +105,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/Features/lms/teacher/assessment-grading/paginate-teacher-assessment-grading.js') }}"></script> <!--- paginate teacher assessment grading ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment-grading/paginate-teacher-assessment-grading.js') }}"></script> <!--- paginate teacher assessment grading ---->

@@ -12,13 +12,13 @@ use Illuminate\Support\Facades\DB;
 class AccountController extends Controller
 {
     // function lms management account view
-    public function lmsManagementAccountView($schoolName, $schoolId, $role)
+    public function lmsManagementAccountView($role, $schoolName, $schoolId, $managedRole)
     {
-        return view('Features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role'));
+        return view('features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role', 'managedRole'));
     }
 
     // function paginate lms management account
-    public function paginateLmsSchoolAccount(Request $request, $schoolName, $schoolId, $role)
+    public function paginateLmsSchoolAccount(Request $request, $role, $schoolName, $schoolId, $managedRole)
     {
         $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
             $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
@@ -26,7 +26,7 @@ class AccountController extends Controller
             })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
-        })->where('role', $role);
+        })->where('role', $managedRole);
 
         // Filter school
         if ($request->filled('search_user')) {

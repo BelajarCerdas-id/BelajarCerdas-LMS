@@ -47,7 +47,7 @@ class SchoolClass extends Model
 
     public function StudentSchoolClass()
     {
-        return $this->hasOne(StudentSchoolClass::class, 'school_class_id');
+        return $this->hasMany(StudentSchoolClass::class, 'school_class_id');
     }
 
     public function Fase()
@@ -63,5 +63,10 @@ class SchoolClass extends Model
     public function SchoolAssessment()
     {
         return $this->hasMany(SchoolAssessment::class, 'school_class_id');
+    }
+
+    public function SchReflAnswer()
+    {
+        return $this->hasMany(SchReflAnswer::class, 'school_class_id');
     }
 }
