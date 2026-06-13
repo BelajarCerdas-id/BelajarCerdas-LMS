@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
 class SyllabusSubBabImport implements ToCollection, WithHeadingRow, WithStartRow, WithTitle
@@ -66,6 +67,17 @@ class SyllabusSubBabImport implements ToCollection, WithHeadingRow, WithStartRow
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 3;
+
+            $validator = Validator::make($row->toArray(), [
+                'sub_bab' => 'required',
+            ], [
+                "sub_bab.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Sub Bab wajib diisi.",
+            ]);
+
+            if ($validator->fails()) {
+                $errors = array_merge($errors, $validator->errors()->all());
+                continue;
+            }
 
             // 1. Sub Bab
             $subBab = SubBab::firstOrCreate([
