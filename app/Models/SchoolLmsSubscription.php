@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class SchoolLmsSubscription extends Model
 {
     use HasFactory;
+
     protected $casts = [
         'start_date' => 'datetime',
-        'end_date'   => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'transaction_id',
         'start_date',

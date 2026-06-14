@@ -2,26 +2,33 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, WithEvents, WithTitle
+class GradebookExport implements FromCollection, ShouldAutoSize, WithEvents, WithStyles, WithTitle
 {
     // Menyimpan data export dan informasi header excel
     protected $data;
+
     protected $assessmentTypes;
+
     protected $schoolName;
+
     protected $schoolClass;
+
     protected $semester;
+
     protected $tahunAjaran;
+
     protected $subject;
+
     protected $kkm;
 
     // Menerima data dari controller
@@ -40,7 +47,7 @@ class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, Wit
     // Nama sheet excel
     public function title(): string
     {
-        return 'Buku Nilai - ' . $this->schoolClass;
+        return 'Buku Nilai - '.$this->schoolClass;
     }
 
     // Menghitung jumlah assessment terbanyak per tipe
@@ -101,27 +108,27 @@ class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, Wit
                 $lastColumn = Coordinate::stringFromColumnIndex($col);
 
                 // Merge kolom nilai akhir
-                $sheet->mergeCells(Coordinate::stringFromColumnIndex($nilaiAkhirCol) . "{$headerTop}:" .Coordinate::stringFromColumnIndex($nilaiAkhirCol) . "{$headerBottom}");
+                $sheet->mergeCells(Coordinate::stringFromColumnIndex($nilaiAkhirCol)."{$headerTop}:".Coordinate::stringFromColumnIndex($nilaiAkhirCol)."{$headerBottom}");
 
                 // Merge kolom kontribusi raport
-                $sheet->mergeCells(Coordinate::stringFromColumnIndex($kontribusiCol) . "{$headerTop}:" .Coordinate::stringFromColumnIndex($kontribusiCol) . "{$headerBottom}");
+                $sheet->mergeCells(Coordinate::stringFromColumnIndex($kontribusiCol)."{$headerTop}:".Coordinate::stringFromColumnIndex($kontribusiCol)."{$headerBottom}");
 
                 // Menampilkan mata pelajaran
                 $sheet->mergeCells("A4:{$lastColumn}4");
-                $sheet->setCellValue("A4", "Mata Pelajaran: {$this->subject}");
+                $sheet->setCellValue('A4', "Mata Pelajaran: {$this->subject}");
 
                 // Menampilkan KKM
                 $sheet->mergeCells("A5:{$lastColumn}5");
-                $sheet->setCellValue("A5", "KKM: {$this->kkm}");
+                $sheet->setCellValue('A5', "KKM: {$this->kkm}");
 
                 // Style teks mata pelajaran
-                $sheet->getStyle("A4")->applyFromArray([
+                $sheet->getStyle('A4')->applyFromArray([
                     'font' => ['bold' => true],
                     'size' => 11,
                 ]);
 
                 // Style teks KKM
-                $sheet->getStyle("A5")->applyFromArray([
+                $sheet->getStyle('A5')->applyFromArray([
                     'font' => ['bold' => true],
                     'size' => 11,
                 ]);
@@ -135,9 +142,9 @@ class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, Wit
                 $sheet->mergeCells("A3:{$lastColumn}3");
 
                 // Menampilkan nama sekolah, semester, tahun ajaran
-                $sheet->setCellValue("A1", strtoupper($this->schoolName));
-                $sheet->setCellValue("A2", "BUKU NILAI - SEMESTER {$this->semester}");
-                $sheet->setCellValue("A3", "TAHUN AJARAN {$this->tahunAjaran}");
+                $sheet->setCellValue('A1', strtoupper($this->schoolName));
+                $sheet->setCellValue('A2', "BUKU NILAI - SEMESTER {$this->semester}");
+                $sheet->setCellValue('A3', "TAHUN AJARAN {$this->tahunAjaran}");
 
                 // Style header sekolah
                 $sheet->getStyle("A1:{$lastColumn}3")->applyFromArray([
@@ -197,12 +204,12 @@ class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, Wit
 
                     if ($nilai < $this->kkm) {
 
-                        $sheet->getStyle(Coordinate::stringFromColumnIndex($kontribusiCol) . $rowIndex)
+                        $sheet->getStyle(Coordinate::stringFromColumnIndex($kontribusiCol).$rowIndex)
                             ->applyFromArray([
                                 'font' => [
                                     'color' => ['rgb' => 'FF0000'],
-                                    'bold' => true
-                                ]
+                                    'bold' => true,
+                                ],
                             ]);
                     }
                 }
@@ -226,7 +233,7 @@ class GradebookExport implements FromCollection, WithStyles, ShouldAutoSize, Wit
 
             for ($i = 1; $i <= $maxDetail; $i++) {
                 $header1[] = $type['name'];
-                $header2[] = $type['name'] . ' ' . $i;
+                $header2[] = $type['name'].' '.$i;
             }
 
             $header1[] = $type['name'];

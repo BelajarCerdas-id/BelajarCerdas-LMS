@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminYayasanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradebookAssessmentController;
 use App\Http\Controllers\LmsController;
@@ -46,6 +47,7 @@ use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\OfficeManagementController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\StudentVicePrincipalController;
+use App\Http\Controllers\YayasanController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -105,6 +107,14 @@ Route::get('/service/{service}/rules', [ServiceRuleController::class, 'index']);
 
 // MIDDLEWARE LOGIN
 Route::middleware([AuthMiddleware::class])->group(function () {
+    // Routes Yayasan management harus di atas /lms/{role} agar tidak tertangkap sebagai role.
+    Route::get('/lms/yayasan-management', [AdminYayasanController::class, 'index'])->name('admin.yayasan.index');
+    Route::get('/lms/yayasan-management/create', [AdminYayasanController::class, 'create'])->name('admin.yayasan.create');
+    Route::post('/lms/yayasan-management/store', [AdminYayasanController::class, 'store'])->name('admin.yayasan.store');
+    Route::get('/lms/yayasan-management/{yayasanId}/edit', [AdminYayasanController::class, 'edit'])->name('admin.yayasan.edit');
+    Route::put('/lms/yayasan-management/{yayasanId}', [AdminYayasanController::class, 'update'])->name('admin.yayasan.update');
+    Route::delete('/lms/yayasan-management/{yayasanId}', [AdminYayasanController::class, 'destroy'])->name('admin.yayasan.destroy');
+
     // DASHBOARD
     Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('beranda');
 
@@ -475,6 +485,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // paginate
     Route::get('/lms/{role}/office-management/manage-user/paginate', [OfficeManagementController::class, 'paginateManageUser'])->name('lms.officeManagement.manage-user.paginate');
+
+    // ROUTES YAYASAN
+    Route::prefix('/lms/yayasan/{yayasanId}')->group(function () {
+        Route::get('/dashboard', [YayasanController::class, 'dashboard'])->name('yayasan.dashboard');
+        Route::get('/sekolah', [YayasanController::class, 'schools'])->name('yayasan.schools');
+        Route::get('/kalender-agenda', [YayasanController::class, 'calendar'])->name('yayasan.calendar');
+        Route::get('/pengumuman', [YayasanController::class, 'announcements'])->name('yayasan.announcements');
+        Route::post('/pengumuman', [YayasanController::class, 'storeAnnouncement'])->name('yayasan.announcements.store');
+        Route::get('/data-warga-sekolah', [YayasanController::class, 'people'])->name('yayasan.people');
+        Route::get('/sekolah/{schoolId}/edit', [YayasanController::class, 'schoolEdit'])->name('yayasan.school.edit');
+        Route::post('/sekolah/{schoolId}/update', [YayasanController::class, 'schoolUpdate'])->name('yayasan.school.update');
+    });
 
     // =========================================================
     // ROUTES STUDENT LMS (wildcard — harus PALING BAWAH di grup /lms/{role}/...)

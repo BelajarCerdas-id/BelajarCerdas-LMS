@@ -84,14 +84,14 @@ class TeacherSubjectController extends Controller
             ->first();
 
         $startLevelMap = [
-            'SD'  => 1,
-            'MI'  => 1,
+            'SD' => 1,
+            'MI' => 1,
             'SMP' => 7,
             'MTS' => 7,
             'SMA' => 10,
             'SMK' => 10,
-            'MA'  => 10,
-            'MAK' => 10
+            'MA' => 10,
+            'MAK' => 10,
         ];
 
         $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
@@ -111,17 +111,17 @@ class TeacherSubjectController extends Controller
 
         // base query
         $query = TeacherMapel::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'SchoolClass'])
-        ->whereHas('SchoolClass', function ($q) use ($schoolId, $searchYear) {
-            $q->where('school_partner_id', $schoolId);
+            ->whereHas('SchoolClass', function ($q) use ($schoolId, $searchYear) {
+                $q->where('school_partner_id', $schoolId);
 
-            if ($searchYear) {
-                $q->where('tahun_ajaran', $searchYear);
-            }
-        });
+                if ($searchYear) {
+                    $q->where('tahun_ajaran', $searchYear);
+                }
+            });
 
         if ($searchTeacher) {
             $query->whereHas('UserAccount.SchoolStaffProfile', function ($q) use ($searchTeacher) {
-                $q->where('nama_lengkap', 'like', '%' . $searchTeacher . '%');
+                $q->where('nama_lengkap', 'like', '%'.$searchTeacher.'%');
             });
         }
 
@@ -131,7 +131,7 @@ class TeacherSubjectController extends Controller
         if ($selectedClass) {
             $teacherSubjectCollection = $teacherSubjectCollection->filter(function ($item) use ($selectedClass) {
 
-                if (!$item->SchoolClass || !$item->SchoolClass->class_name) {
+                if (! $item->SchoolClass || ! $item->SchoolClass->class_name) {
                     return false;
                 }
 
@@ -152,14 +152,14 @@ class TeacherSubjectController extends Controller
         );
 
         return response()->json([
-            'data'          => $teacherSubject->items(),
-            'links'         => (string) $teacherSubject->links(),
-            'current_page'  => $teacherSubject->currentPage(),
-            'per_page'      => $teacherSubject->perPage(),
-            'tahunAjaran'   => $tahunAjaran,
-            'selectedYear'  => $searchYear,
+            'data' => $teacherSubject->items(),
+            'links' => (string) $teacherSubject->links(),
+            'current_page' => $teacherSubject->currentPage(),
+            'per_page' => $teacherSubject->perPage(),
+            'tahunAjaran' => $tahunAjaran,
+            'selectedYear' => $searchYear,
             'selectedClass' => $selectedClass,
-            'className'     => $className
+            'className' => $className,
         ]);
     }
 
@@ -183,9 +183,9 @@ class TeacherSubjectController extends Controller
             'mapel_id.required' => 'Harap pilih mapel.',
             'school_class_id.required' => 'Harap pilih rombel kelas.',
             'teacher.required' => 'Harap isi nama guru.',
-            'teacher.email'    => 'Format email tidak valid.',
-            'teacher.regex'    => 'Format email harus @belajarcerdas.id.',
-            'teacher.unique'    => 'Guru telah terdaftar pada rombel kelas di tahun ini.',
+            'teacher.email' => 'Format email tidak valid.',
+            'teacher.regex' => 'Format email harus @belajarcerdas.id.',
+            'teacher.unique' => 'Guru telah terdaftar pada rombel kelas di tahun ini.',
         ]);
 
         if ($validator->fails()) {
@@ -199,12 +199,12 @@ class TeacherSubjectController extends Controller
             $query->where('email', $request->teacher);
         })->where('school_partner_id', $schoolId)->first();
 
-        if (!$getTeacher) {
+        if (! $getTeacher) {
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'teacher' => ['Akun guru tidak terdaftar.']
-                ]
+                    'teacher' => ['Akun guru tidak terdaftar.'],
+                ],
             ], 422);
         }
 
@@ -217,8 +217,8 @@ class TeacherSubjectController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'teacher' => ['Guru telah terdaftar pada mapel dan rombel kelas ini.']
-                ]
+                    'teacher' => ['Guru telah terdaftar pada mapel dan rombel kelas ini.'],
+                ],
             ], 422);
         }
 
@@ -241,8 +241,8 @@ class TeacherSubjectController extends Controller
             'teacher' => 'required|email|regex:/^[A-Za-z0-9._%+-]+@belajarcerdas\.id$/',
         ], [
             'teacher.required' => 'Harap isi nama guru.',
-            'teacher.email'    => 'Format email tidak valid.',
-            'teacher.regex'    => 'Format email harus @belajarcerdas.id.',
+            'teacher.email' => 'Format email tidak valid.',
+            'teacher.regex' => 'Format email harus @belajarcerdas.id.',
         ]);
 
         if ($validator->fails()) {
@@ -256,12 +256,12 @@ class TeacherSubjectController extends Controller
             $query->where('email', $request->teacher);
         })->where('school_partner_id', $schoolId)->first();
 
-        if (!$getTeacher) {
+        if (! $getTeacher) {
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'teacher' => ['Akun guru tidak terdaftar.']
-                ]
+                    'teacher' => ['Akun guru tidak terdaftar.'],
+                ],
             ], 422);
         }
 
@@ -274,11 +274,11 @@ class TeacherSubjectController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'teacher' => ['Guru telah terdaftar pada mapel dan rombel kelas ini.']
-                ]
+                    'teacher' => ['Guru telah terdaftar pada mapel dan rombel kelas ini.'],
+                ],
             ], 422);
         }
-        
+
         $teacherSubject = TeacherMapel::findOrFail($teacherSubjectId);
 
         $teacherSubject->update([

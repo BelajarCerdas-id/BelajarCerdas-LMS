@@ -11,6 +11,7 @@ class SchoolAssessmentTypeWeight extends Model
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'assessment_type_id',
         'school_year',

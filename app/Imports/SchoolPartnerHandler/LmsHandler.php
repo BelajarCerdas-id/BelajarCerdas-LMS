@@ -3,8 +3,8 @@
 namespace App\Imports\SchoolPartnerHandler;
 
 use App\Events\LmsSchoolSubscription;
-use App\Models\FeaturePrice;
 use App\Models\Feature;
+use App\Models\FeaturePrice;
 use App\Models\Mapel;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolMapel;
@@ -22,6 +22,7 @@ use Illuminate\Validation\ValidationException;
 class LmsHandler
 {
     protected $userId;
+
     protected $sheetTitle;
 
     public function __construct($userId, $sheetTitle = '')
@@ -93,7 +94,7 @@ class LmsHandler
                     'email_akun.regex' => "Sheet {$this->sheetTitle} - Baris $rowNumber: Format email_akun harus @belajarcerdas.id.",
                     'password_akun.required' => 'Password akun tidak boleh kosong.',
                     'enrollment_type.required' => 'Enrollment type tidak boleh kosong.',
-                    'jenjang_sekolah.required' => "Jenjang Sekolah tidak boleh kosong.",
+                    'jenjang_sekolah.required' => 'Jenjang Sekolah tidak boleh kosong.',
                     'role_account.required' => 'Role akun tidak boleh kosong.',
                     'nama_sekolah.required' => 'Nama sekolah tidak boleh kosong.',
                     'npsn.required' => 'NPSN tidak boleh kosong.',
@@ -139,12 +140,12 @@ class LmsHandler
                 }
 
                 // validasi jika fitur tidak terdaftar
-                if (!$feature) {
+                if (! $feature) {
                     throw new \Exception("Fitur {$row['pembelian_fitur']} tidak terdaftar.");
                 }
 
                 // validasi jika variant feature (durasi) tidak terdaftar
-                if (!$variantFeature) {
+                if (! $variantFeature) {
                     throw new \Exception("Durasi {$row['durasi']} tidak terdaftar pada fitur {$row['pembelian_fitur']}.");
                 }
 
@@ -179,7 +180,7 @@ class LmsHandler
                     $kepalaSekolahCount++;
 
                     if ($kepalaSekolahCount > 1) {
-                        throw new \Exception("Tidak dapat menginput lebih dari satu Kepala Sekolah.");
+                        throw new \Exception('Tidak dapat menginput lebih dari satu Kepala Sekolah.');
                     }
                 }
 
@@ -201,7 +202,7 @@ class LmsHandler
                  * ======================= */
                 $schoolPartner = SchoolPartner::where('npsn', $row['npsn'])->first();
 
-                if (!$schoolPartner) {
+                if (! $schoolPartner) {
                     $schoolPartner = SchoolPartner::create([
                         'npsn' => $row['npsn'],
                         'nama_sekolah' => $row['nama_sekolah'],
@@ -261,20 +262,20 @@ class LmsHandler
                         );
                         break;
                     default:
-                        throw new \Exception("Hanya dapat membuat akun kepala sekolah pada saat proses transaksi.");
+                        throw new \Exception('Hanya dapat membuat akun kepala sekolah pada saat proses transaksi.');
                 }
 
                 $jenjang = strtoupper(trim($schoolPartner->jenjang_sekolah));
 
                 $mappingClasses = [
-                    'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
-                    'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
-                    'SMP' => ['kelas 7','kelas 8','kelas 9'],
-                    'MTS' => ['kelas 7','kelas 8','kelas 9'],
-                    'SMA' => ['kelas 10','kelas 11','kelas 12'],
-                    'SMK' => ['kelas 10','kelas 11','kelas 12'],
-                    'MA'  => ['kelas 10','kelas 11','kelas 12'],
-                    'MAK' => ['kelas 10','kelas 11','kelas 12'],
+                    'SD' => ['kelas 1', 'kelas 2', 'kelas 3', 'kelas 4', 'kelas 5', 'kelas 6'],
+                    'MI' => ['kelas 1', 'kelas 2', 'kelas 3', 'kelas 4', 'kelas 5', 'kelas 6'],
+                    'SMP' => ['kelas 7', 'kelas 8', 'kelas 9'],
+                    'MTS' => ['kelas 7', 'kelas 8', 'kelas 9'],
+                    'SMA' => ['kelas 10', 'kelas 11', 'kelas 12'],
+                    'SMK' => ['kelas 10', 'kelas 11', 'kelas 12'],
+                    'MA' => ['kelas 10', 'kelas 11', 'kelas 12'],
+                    'MAK' => ['kelas 10', 'kelas 11', 'kelas 12'],
                 ];
 
                 $allowedKelas = $mappingClasses[$jenjang] ?? [];
@@ -295,7 +296,7 @@ class LmsHandler
                 /* =======================
                  * TRANSACTION
                  * ======================= */
-                $orderId = 'BC-co-lms-' . Str::uuid();
+                $orderId = 'BC-co-lms-'.Str::uuid();
 
                 $transaction = Transaction::create([
                     'user_id' => $user->id,
@@ -331,7 +332,7 @@ class LmsHandler
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             throw ValidationException::withMessages(['import' => $errors]);
         }
     }

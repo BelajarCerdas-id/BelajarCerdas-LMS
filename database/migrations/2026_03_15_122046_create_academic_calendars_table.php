@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('academic_calendars', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('school_partner_id'); 
-            $table->date('date'); 
-            $table->string('title'); 
-            $table->string('type'); 
-            $table->string('display')->default('outline'); 
-            $table->string('color'); 
-            $table->enum('status', ['draft', 'published'])->default('draft'); 
+            $table->unsignedBigInteger('school_partner_id');
+            $table->date('date');
+            $table->string('title');
+            $table->string('type');
+            $table->string('display')->default('outline');
+            $table->string('color');
+            $table->enum('status', ['draft', 'published'])->default('draft');
             $table->timestamps();
         });
     }

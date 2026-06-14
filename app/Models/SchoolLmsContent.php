@@ -11,6 +11,7 @@ class SchoolLmsContent extends Model
 
     protected $fillable = [
         'lms_content_id',
+        'yayasan_id',
         'school_partner_id',
         'is_active',
     ];

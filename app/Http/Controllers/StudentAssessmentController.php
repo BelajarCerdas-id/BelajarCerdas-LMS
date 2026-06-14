@@ -20,11 +20,11 @@ class StudentAssessmentController extends Controller
 
         $getAssessment = SchoolAssessment::where('assessment_type_id', $assessmentTypeId)->first();
 
-        return view('features.lms.student.assessment.student-preview-assessment-schedule', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-preview-assessment-schedule', compact('role', 'schoolName', 'schoolId', 'curriculumId',
             'mapelId', 'assessmentTypeId', 'mode', 'parentAssessmentId', 'getAssessmentType', 'getAssessment'));
     }
 
-    public function loadStudentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $mode = null, $parentAssessmentId = null) 
+    public function loadStudentPreviewAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $mode = null, $parentAssessmentId = null)
     {
         $user = Auth::user();
 
@@ -36,18 +36,18 @@ class StudentAssessmentController extends Controller
 
             $rootAssessmentId = $assessment->parent_assessment_id ?? $assessment->id;
         }
-        
+
         $assessments = SchoolAssessment::with(['SchoolAssessmentType', 'SchoolClass', 'Mapel'])->whereHas('SchoolClass.StudentSchoolClass', function ($query) use ($user) {
             $query->where('student_id', $user->id)->where('student_class_status', 'active');
-        })->where('assessment_type_id', $assessmentTypeId)->where('semester', $semester)->where('mapel_id', $mapelId)->when(!$mode || $mode === 'main', function ($query) {
-                $query->whereNull('parent_assessment_id');
-            })
+        })->where('assessment_type_id', $assessmentTypeId)->where('semester', $semester)->where('mapel_id', $mapelId)->when(! $mode || $mode === 'main', function ($query) {
+            $query->whereNull('parent_assessment_id');
+        })
             ->when($mode && $mode !== 'main' && $parentAssessmentId, function ($query) use ($mode, $rootAssessmentId) {
                 $query->where('assessment_category', $mode)->where('parent_assessment_id', $rootAssessmentId);
             })
-        ->orderBy('created_at', 'desc')->get();
+            ->orderBy('created_at', 'desc')->get();
 
-        if (!$assessments) {
+        if (! $assessments) {
             return response()->json(['data' => null]);
         }
 
@@ -59,7 +59,7 @@ class StudentAssessmentController extends Controller
 
         $kkm = SubjectPassingGradeCriteria::where('mapel_id', $mapelId)->where('kelas_id', $studentClass?->SchoolClass->kelas_id)->where('school_year', $schoolYear)->latest()->value('kkm_value');
 
-        if (!$rootAssessmentId) {
+        if (! $rootAssessmentId) {
             $rootAssessmentId = $assessments->first()?->id;
         }
 
@@ -84,14 +84,18 @@ class StudentAssessmentController extends Controller
             $hasPassed = ($mainScore !== null && $mainScore >= $kkm) || ($susulanScore !== null && $susulanScore >= $kkm) || ($remedialScore !== null && $remedialScore >= $kkm);
         }
 
-        $data = $assessments->filter(function ($assessment) use ($summary, $finalScore, $kkm, $hasPassed) {
+        $data = $assessments->filter(function ($assessment) use ($summary, $hasPassed) {
 
             $category = strtolower($assessment->assessment_category ?? 'main');
 
             // MAIN -> selalu tampil
-            if ($category === 'main') return true;
+            if ($category === 'main') {
+                return true;
+            }
 
-            if (!$summary) return false;
+            if (! $summary) {
+                return false;
+            }
 
             // SUSULAN -> jika belum ada nilai main
             if ($category === 'susulan') {
@@ -101,7 +105,9 @@ class StudentAssessmentController extends Controller
             // REMEDIAL
             if ($category === 'remedial') {
 
-                if (!$summary) return false;
+                if (! $summary) {
+                    return false;
+                }
 
                 $lastRemedialId = $summary->last_remedial_assessment_id;
 
@@ -111,7 +117,9 @@ class StudentAssessmentController extends Controller
                 }
 
                 // BELUM LULUS -> lanjut chain
-                if (!$lastRemedialId) return true;
+                if (! $lastRemedialId) {
+                    return true;
+                }
 
                 return $assessment->id > $lastRemedialId;
             }
@@ -156,7 +164,7 @@ class StudentAssessmentController extends Controller
                 'teacher_feedback_submission' => $submission->teacher_feedback ?? null,
 
                 'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test',
-                'projectResultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/project-result'
+                'projectResultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/project-result',
             ];
         });
 

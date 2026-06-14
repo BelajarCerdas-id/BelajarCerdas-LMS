@@ -48,7 +48,7 @@ class AssessmentWeightController extends Controller
 
         // base query
         $query = SchoolAssessmentTypeWeight::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'SchoolAssessmentType'])
-        ->where('school_partner_id', $schoolId)->where('school_year', $searchYear);
+            ->where('school_partner_id', $schoolId)->where('school_year', $searchYear);
 
         $assessmentTypes = $query->orderBy('created_at', 'desc')->get();
 
@@ -67,8 +67,8 @@ class AssessmentWeightController extends Controller
         return response()->json([
             'data' => $assessmentTypes->items(),
             'links' => (string) $assessmentTypes->links(),
-            'tahunAjaran'   => $tahunAjaran,
-            'selectedYear'  => $searchYear,
+            'tahunAjaran' => $tahunAjaran,
+            'selectedYear' => $searchYear,
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
         ]);
@@ -104,8 +104,8 @@ class AssessmentWeightController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.']
-                ]
+                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.'],
+                ],
             ], 422);
         }
 
@@ -132,9 +132,9 @@ class AssessmentWeightController extends Controller
         broadcast(new LmsAssessmentWeightManagement('SchoolAssessmentTypeWeight', 'create', $assessmentTypeWeight))->toOthers();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Bobot berhasil ditambahkan.',
-            'data'    => $assessmentTypeWeight,
+            'data' => $assessmentTypeWeight,
         ]);
     }
 
@@ -163,14 +163,14 @@ class AssessmentWeightController extends Controller
         }
 
         $exists = SchoolAssessmentTypeWeight::where('school_partner_id', $schoolId)->where('school_year', $request->school_year)->where('assessment_type_id', $request->assessment_type_id)
-        ->where('id', '!=', $assessmentWeightId)->exists();
+            ->where('id', '!=', $assessmentWeightId)->exists();
 
         if ($exists) {
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.']
-                ]
+                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.'],
+                ],
             ], 422);
         }
 
@@ -201,9 +201,9 @@ class AssessmentWeightController extends Controller
         broadcast(new LmsAssessmentWeightManagement('SchoolAssessmentTypeWeight', 'update', $assessmentTypeWeight))->toOthers();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'data berhasil diubah.',
-            'data'    => $assessmentTypeWeight,
+            'data' => $assessmentTypeWeight,
         ]);
     }
 }

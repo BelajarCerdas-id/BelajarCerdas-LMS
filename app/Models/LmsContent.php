@@ -12,6 +12,7 @@ class LmsContent extends Model
     protected $fillable = [
         'user_id',
         'service_id',
+        'yayasan_id',
         'school_partner_id',
         'kurikulum_id',
         'kelas_id',
@@ -49,7 +50,7 @@ class LmsContent extends Model
     public function SchoolPartner()
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
-    }   
+    }
 
     public function Kurikulum()
     {

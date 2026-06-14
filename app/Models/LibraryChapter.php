@@ -10,7 +10,7 @@ class LibraryChapter extends Model
 
     protected $fillable = [
         'mapel',
-        'chapter_name'
+        'chapter_name',
     ];
 
     public function books()

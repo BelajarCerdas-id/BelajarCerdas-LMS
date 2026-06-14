@@ -10,6 +10,7 @@ class AcademicCalendar extends Model
     use HasFactory;
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'date',
         'title',

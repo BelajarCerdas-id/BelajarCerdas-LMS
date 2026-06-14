@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicCalendar;
+use App\Models\LmsMeetingContent;
+use App\Models\ParentProfile;
+use App\Models\Poll;
+use App\Models\PollOption;
+use App\Models\SchoolAssessment;
+use App\Models\StudentProfile;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\ParentProfile;
-use App\Models\StudentProfile;
-use App\Models\AcademicCalendar;
-use App\Models\Poll;
-use App\Models\PollOption;
-use Carbon\Carbon;
 
 class ParentController extends Controller
 {
@@ -19,12 +21,12 @@ class ParentController extends Controller
         $user = Auth::user();
 
         // 1. Validasi Dasar
-        if (!$user || $user->role !== 'Orang Tua') {
+        if (! $user || $user->role !== 'Orang Tua') {
             abort(403, 'Akses Ditolak.');
         }
 
         $profilOrangTua = ParentProfile::where('user_id', $user->id)->first();
-        if (!$profilOrangTua) {
+        if (! $profilOrangTua) {
             abort(403, 'Profil Orang Tua tidak ditemukan.');
         }
 
@@ -37,7 +39,7 @@ class ParentController extends Controller
 
         if ($targetId) {
             $studentProfile = StudentProfile::where('user_id', $targetId)->first();
-            
+
             if ($studentProfile) {
                 $studentUserId = $targetId;
             } else {
@@ -49,10 +51,10 @@ class ParentController extends Controller
         }
 
         // BACKUP: Jika tidak ditemukan dari profil ortu, cari terbalik dari profil anak
-        if (!$studentUserId) {
+        if (! $studentUserId) {
             $studentProfile = StudentProfile::where('parent_user_id', $user->id)
-                                ->orWhere('parent_id', $profilOrangTua->id)
-                                ->first();
+                ->orWhere('parent_id', $profilOrangTua->id)
+                ->first();
             if ($studentProfile) {
                 $studentUserId = $studentProfile->user_id;
                 $targetId = $studentUserId;
@@ -93,49 +95,49 @@ class ParentController extends Controller
                 ->where('student_id', $studentUserId)
                 ->whereDate('date', now()->format('Y-m-d'))
                 ->first();
-            
+
             if ($attendance) {
                 $statusHadir = ucfirst($attendance->status);
             }
         }
 
         // Data Dasar Anak untuk View
-        $dataAnak = (object)[
-            'nama_lengkap' => $studentProfile->nama_lengkap ?? "Siswa Tidak Ditemukan",
+        $dataAnak = (object) [
+            'nama_lengkap' => $studentProfile->nama_lengkap ?? 'Siswa Tidak Ditemukan',
             'kelas' => $studentClass,
-            'kehadiran_hari_ini' => $statusHadir
+            'kehadiran_hari_ini' => $statusHadir,
         ];
 
         // =========================================================
         // 4. STATISTIK KPI ANAK (Nilai, Hadir, Tugas Pending)
         // =========================================================
         $rataNilai = DB::table('class_task_submissions')->where('student_id', $studentUserId)->avg('score') ?? 0;
-        
+
         $totalHadir = DB::table('attendances')->where('student_id', $studentUserId)->whereIn('status', ['Hadir', 'hadir'])->count();
         $totalCatatan = DB::table('attendances')->where('student_id', $studentUserId)->count();
-        $persentaseHadir = $totalCatatan > 0 ? round(($totalHadir / $totalCatatan) * 100) : 0; 
-        
+        $persentaseHadir = $totalCatatan > 0 ? round(($totalHadir / $totalCatatan) * 100) : 0;
+
         $alpaCount = DB::table('attendances')->where('student_id', $studentUserId)->whereIn('status', ['Alpa', 'alpa'])->count();
 
         // Menghitung tugas
         $tugasKelas = [];
-        if($studentClassId){
+        if ($studentClassId) {
             $tugasKelas = DB::table('school_assessments')->where('school_class_id', $studentClassId)->pluck('id')->toArray();
         }
         $tugasDikerjakan = DB::table('class_task_submissions')->where('student_id', $studentUserId)->whereIn('task_id', $tugasKelas)->count();
         $tugasPending = max(0, count($tugasKelas) - $tugasDikerjakan);
 
-        $statsAnak = (object)[
+        $statsAnak = (object) [
             'persentase_hadir' => $persentaseHadir,
-            'rata_nilai'       => round($rataNilai, 1),
-            'tugas_pending'    => $tugasPending,
-            'alpa'             => $alpaCount
+            'rata_nilai' => round($rataNilai, 1),
+            'tugas_pending' => $tugasPending,
+            'alpa' => $alpaCount,
         ];
 
         // =========================================================
         // 5. JADWAL HARI INI & TUGAS ANAK TERBARU
         // =========================================================
-        $hariIndo = ['Monday'=>'Senin', 'Tuesday'=>'Selasa', 'Wednesday'=>'Rabu', 'Thursday'=>'Kamis', 'Friday'=>'Jumat', 'Saturday'=>'Sabtu', 'Sunday'=>'Minggu'];
+        $hariIndo = ['Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu', 'Sunday' => 'Minggu'];
         $hariIni = $hariIndo[now()->format('l')];
 
         $jadwalHariIni = collect([]);
@@ -147,15 +149,16 @@ class ParentController extends Controller
                 ->where('lesson_schedule_items.day_of_week', $hariIni)
                 ->where('lesson_schedules.status', 'published')
                 ->select(
-                    'lesson_schedule_items.start_time', 
-                    'lesson_schedule_items.subject_name as mata_pelajaran', 
+                    'lesson_schedule_items.start_time',
+                    'lesson_schedule_items.subject_name as mata_pelajaran',
                     'school_staff_profiles.nama_lengkap as nama_guru'
                 )
                 ->orderBy('lesson_schedule_items.start_time')
                 ->get()
-                ->map(function($j) use ($dataAnak) {
+                ->map(function ($j) use ($dataAnak) {
                     $j->status_kehadiran = $dataAnak->kehadiran_hari_ini;
                     $j->nama_guru = $j->nama_guru ?? 'Guru Mapel';
+
                     return $j;
                 });
         }
@@ -164,22 +167,23 @@ class ParentController extends Controller
         if ($studentClassId && $studentUserId) {
             $tugasAnak = DB::table('school_assessments')
                 ->where('school_assessments.school_class_id', $studentClassId)
-                ->leftJoin('class_task_submissions', function($join) use ($studentUserId) {
+                ->leftJoin('class_task_submissions', function ($join) use ($studentUserId) {
                     $join->on('school_assessments.id', '=', 'class_task_submissions.task_id')
-                         ->where('class_task_submissions.student_id', '=', $studentUserId);
+                        ->where('class_task_submissions.student_id', '=', $studentUserId);
                 })
                 ->select(
-                    'school_assessments.title as judul_tugas', 
-                    'school_assessments.end_date as deadline', 
+                    'school_assessments.title as judul_tugas',
+                    'school_assessments.end_date as deadline',
                     'class_task_submissions.id as submission_id'
                 )
                 ->orderBy('school_assessments.created_at', 'desc')
                 ->take(4)
                 ->get()
-                ->map(function($t) {
-                    $t->sudah_dikumpul = !is_null($t->submission_id);
+                ->map(function ($t) {
+                    $t->sudah_dikumpul = ! is_null($t->submission_id);
                     $t->judul_tugas = $t->judul_tugas ?? 'Tugas Kelas';
                     $t->mata_pelajaran = 'Mata Pelajaran';
+
                     return $t;
                 });
         }
@@ -192,15 +196,15 @@ class ParentController extends Controller
             ->whereMonth('date', now()->month)
             ->orderBy('date', 'asc')
             ->get()
-            ->map(fn($ev) => (object)[
-                'tanggal'  => Carbon::parse($ev->date)->format('d M Y'),
+            ->map(fn ($ev) => (object) [
+                'tanggal' => Carbon::parse($ev->date)->format('d M Y'),
                 'kegiatan' => $ev->title,
-                'color'    => $ev->color ?? '#0071BC'
+                'color' => $ev->color ?? '#0071BC',
             ]);
 
         $kumpulanMapel = [];
         if ($studentClassId && $studentUserId) {
-            $semuaTugas = \App\Models\SchoolAssessment::with('Mapel')
+            $semuaTugas = SchoolAssessment::with('Mapel')
                 ->where('school_class_id', $studentClassId)
                 ->get();
 
@@ -209,16 +213,16 @@ class ParentController extends Controller
                 ->pluck('task_id')
                 ->toArray();
 
-            $semuaMateri = \App\Models\LmsMeetingContent::with('Mapel')
+            $semuaMateri = LmsMeetingContent::with('Mapel')
                 ->where('school_class_id', $studentClassId)
                 ->where('is_active', 1)
                 ->get();
 
-            $materiDibacaSiswa = []; 
+            $materiDibacaSiswa = [];
 
             foreach ($semuaTugas as $tugas) {
                 $namaMapel = $tugas->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
-                if (!isset($kumpulanMapel[$namaMapel])) {
+                if (! isset($kumpulanMapel[$namaMapel])) {
                     $kumpulanMapel[$namaMapel] = ['tugas_total' => 0, 'tugas_selesai' => 0, 'materi_total' => 0, 'materi_dibaca' => 0];
                 }
                 $kumpulanMapel[$namaMapel]['tugas_total']++;
@@ -229,7 +233,7 @@ class ParentController extends Controller
 
             foreach ($semuaMateri as $materi) {
                 $namaMapel = $materi->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
-                if (!isset($kumpulanMapel[$namaMapel])) {
+                if (! isset($kumpulanMapel[$namaMapel])) {
                     $kumpulanMapel[$namaMapel] = ['tugas_total' => 0, 'tugas_selesai' => 0, 'materi_total' => 0, 'materi_dibaca' => 0];
                 }
                 $kumpulanMapel[$namaMapel]['materi_total']++;
@@ -241,11 +245,11 @@ class ParentController extends Controller
 
         $statistikMapel = collect();
         foreach ($kumpulanMapel as $mapel => $data) {
-            $statistikMapel->push((object)[
-                'mapel'         => $mapel,
-                'tugas_total'   => $data['tugas_total'],
+            $statistikMapel->push((object) [
+                'mapel' => $mapel,
+                'tugas_total' => $data['tugas_total'],
                 'tugas_selesai' => $data['tugas_selesai'],
-                'materi_total'  => $data['materi_total'],
+                'materi_total' => $data['materi_total'],
                 'materi_dibaca' => $data['materi_dibaca'],
             ]);
         }
@@ -256,9 +260,9 @@ class ParentController extends Controller
         $pollsDb = Poll::where('school_partner_id', $schoolId)
             ->where('status', 'active')
             // 1. Pastikan targetnya memang untuk Orang Tua atau Warga Sekolah
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereIn('target', ['Orang Tua', 'Semua Orang Tua', 'Semua Warga Sekolah', 'Semua'])
-                      ->orWhere('target', 'like', '%Orang Tua%');
+                    ->orWhere('target', 'like', '%Orang Tua%');
             })
             // 2. Filter Kelas: Tampilkan jika Global (Null) ATAU khusus kelas anak ini
             ->where(function ($query) use ($studentClassId) {
@@ -274,7 +278,7 @@ class ParentController extends Controller
 
         foreach ($pollsDb as $poll) {
             $pengirim = $poll->author_role ?? 'Manajemen Sekolah';
-            $target = $poll->target ?? 'Orang Tua'; 
+            $target = $poll->target ?? 'Orang Tua';
 
             // NAMA KELAS DINAMIS (Agar bisa ditampilkan di UI Orang Tua)
             $namaKelas = 'Semua Kelas (Global)';
@@ -286,50 +290,50 @@ class ParentController extends Controller
             // Cek apakah Orang Tua sudah vote
             $parentVote = DB::table('poll_votes')
                 ->where('poll_id', $poll->id)
-                ->where('user_id', $user->id) 
+                ->where('user_id', $user->id)
                 ->first();
-            
+
             $hasVoted = $parentVote ? true : false;
             $votedOptionId = $hasVoted ? $parentVote->poll_option_id : null;
 
             // Hitung opsi dan persentase
             $totalVotes = DB::table('poll_votes')->where('poll_id', $poll->id)->count();
-            $options = \App\Models\PollOption::where('poll_id', $poll->id)->get();
+            $options = PollOption::where('poll_id', $poll->id)->get();
 
             $formattedOptions = [];
             foreach ($options as $opt) {
                 $votesForOption = DB::table('poll_votes')->where('poll_option_id', $opt->id)->count();
                 $percentage = $totalVotes > 0 ? round(($votesForOption / $totalVotes) * 100) : 0;
-                
-                $formattedOptions[] = (object)[
-                    'id'          => $opt->id,
-                    'text'        => $opt->option_text,
+
+                $formattedOptions[] = (object) [
+                    'id' => $opt->id,
+                    'text' => $opt->option_text,
                     'option_text' => $opt->option_text,
-                    'votes'       => $votesForOption,
-                    'percentage'  => $percentage,
-                    'is_selected' => ($opt->id == $votedOptionId) 
+                    'votes' => $votesForOption,
+                    'percentage' => $percentage,
+                    'is_selected' => ($opt->id == $votedOptionId),
                 ];
             }
 
-            $polls[] = (object)[
-                'id'              => $poll->id,
-                'pertanyaan'      => $poll->question,
-                'target'          => $target,
-                'pengirim'        => $pengirim, 
-                'nama_kelas'      => $namaKelas,
-                'total_votes'     => $totalVotes,
-                'opsi'            => $formattedOptions,
-                'options'         => $formattedOptions,
-                'sudah_vote'      => $hasVoted,
+            $polls[] = (object) [
+                'id' => $poll->id,
+                'pertanyaan' => $poll->question,
+                'target' => $target,
+                'pengirim' => $pengirim,
+                'nama_kelas' => $namaKelas,
+                'total_votes' => $totalVotes,
+                'opsi' => $formattedOptions,
+                'options' => $formattedOptions,
+                'sudah_vote' => $hasVoted,
                 'voted_option_id' => $votedOptionId,
-                'jawaban_anak'    => null,
-                'created_at'      => $poll->created_at 
+                'jawaban_anak' => null,
+                'created_at' => $poll->created_at,
             ];
         }
 
         return view('features.lms.parents.dashboard', compact(
-            'role', 'schoolName', 'schoolId', 
-            'profilOrangTua', 'dataAnak', 'agendaSekolah', 
+            'role', 'schoolName', 'schoolId',
+            'profilOrangTua', 'dataAnak', 'agendaSekolah',
             'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak'
         ));
     }
@@ -341,7 +345,7 @@ class ParentController extends Controller
             $pollId = $id;
 
             $request->validate([
-                'option_id' => 'required' 
+                'option_id' => 'required',
             ]);
 
             $sudahVote = DB::table('poll_votes')
@@ -351,30 +355,30 @@ class ParentController extends Controller
 
             if ($sudahVote) {
                 return response()->json([
-                    'success' => false, 
-                    'message' => 'Anda sudah memberikan suara pada polling ini sebelumnya.'
+                    'success' => false,
+                    'message' => 'Anda sudah memberikan suara pada polling ini sebelumnya.',
                 ]);
             }
 
             DB::table('poll_votes')->insert([
-                'poll_id'        => $pollId,
+                'poll_id' => $pollId,
                 'poll_option_id' => $request->option_id,
-                'user_id'        => $user->id,
-                'created_at'     => now(),
-                'updated_at'     => now()
+                'user_id' => $user->id,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             DB::table('poll_options')->where('id', $request->option_id)->increment('votes_count');
 
             return response()->json([
-                'success' => true, 
-                'message' => 'Terima kasih! Suara Anda berhasil disimpan.'
+                'success' => true,
+                'message' => 'Terima kasih! Suara Anda berhasil disimpan.',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false, 
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'success' => false,
+                'message' => 'Terjadi kesalahan: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -385,16 +389,18 @@ class ParentController extends Controller
     private function getAnakInfo()
     {
         $user = Auth::user();
-        $profilOrangTua = \App\Models\ParentProfile::where('user_id', $user->id)->first();
-        if (!$profilOrangTua) return null;
+        $profilOrangTua = ParentProfile::where('user_id', $user->id)->first();
+        if (! $profilOrangTua) {
+            return null;
+        }
 
         $studentUserId = null;
         if ($profilOrangTua->student_id) {
-            $studentProfile = \App\Models\StudentProfile::where('user_id', $profilOrangTua->student_id)->first();
-            $studentUserId = $studentProfile ? $profilOrangTua->student_id : (\App\Models\StudentProfile::find($profilOrangTua->student_id)->user_id ?? null);
+            $studentProfile = StudentProfile::where('user_id', $profilOrangTua->student_id)->first();
+            $studentUserId = $studentProfile ? $profilOrangTua->student_id : (StudentProfile::find($profilOrangTua->student_id)->user_id ?? null);
         }
-        if (!$studentUserId) {
-            $studentProfile = \App\Models\StudentProfile::where('parent_user_id', $user->id)->first();
+        if (! $studentUserId) {
+            $studentProfile = StudentProfile::where('parent_user_id', $user->id)->first();
             $studentUserId = $studentProfile->user_id ?? null;
         }
 
@@ -407,10 +413,10 @@ class ParentController extends Controller
             $classId = $classRecord->school_class_id ?? null;
         }
 
-        return (object)[
+        return (object) [
             'user_id' => $studentUserId,
             'class_id' => $classId,
-            'school_id' => $profilOrangTua->school_partner_id
+            'school_id' => $profilOrangTua->school_partner_id,
         ];
     }
 
@@ -420,13 +426,13 @@ class ParentController extends Controller
     public function laporanNilai()
     {
         $anak = $this->getAnakInfo();
-        abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
+        abort_if(! $anak || ! $anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
         $nilaiTugas = DB::table('school_assessments')
             ->where('school_assessments.school_class_id', $anak->class_id)
-            ->leftJoin('class_task_submissions', function($join) use ($anak) {
+            ->leftJoin('class_task_submissions', function ($join) use ($anak) {
                 $join->on('school_assessments.id', '=', 'class_task_submissions.task_id')
-                     ->where('class_task_submissions.student_id', '=', $anak->user_id);
+                    ->where('class_task_submissions.student_id', '=', $anak->user_id);
             })
             ->select('school_assessments.title as judul', 'school_assessments.end_date', 'class_task_submissions.score as nilai', 'class_task_submissions.created_at as tanggal_kumpul')
             ->orderBy('school_assessments.created_at', 'desc')
@@ -441,7 +447,7 @@ class ParentController extends Controller
     public function kehadiran()
     {
         $anak = $this->getAnakInfo();
-        abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
+        abort_if(! $anak || ! $anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
         $absensi = DB::table('attendances')
             ->where('student_id', $anak->user_id)
@@ -457,7 +463,7 @@ class ParentController extends Controller
     public function jadwalPelajaran()
     {
         $anak = $this->getAnakInfo();
-        abort_if(!$anak || !$anak->class_id, 404, 'Data Kelas Siswa tidak ditemukan.');
+        abort_if(! $anak || ! $anak->class_id, 404, 'Data Kelas Siswa tidak ditemukan.');
 
         $jadwalRaw = DB::table('lesson_schedule_items')
             ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
@@ -480,15 +486,13 @@ class ParentController extends Controller
     public function kalenderAkademik()
     {
         $anak = $this->getAnakInfo();
-        abort_if(!$anak || !$anak->school_id, 404, 'Data Sekolah tidak ditemukan.');
+        abort_if(! $anak || ! $anak->school_id, 404, 'Data Sekolah tidak ditemukan.');
 
-        $kalender = \App\Models\AcademicCalendar::where('school_partner_id', $anak->school_id)
+        $kalender = AcademicCalendar::where('school_partner_id', $anak->school_id)
             ->where('status', 'published')
             ->orderBy('date', 'asc')
             ->get();
 
         return view('features.lms.parents.kalender', compact('kalender'));
     }
-
-    
 }

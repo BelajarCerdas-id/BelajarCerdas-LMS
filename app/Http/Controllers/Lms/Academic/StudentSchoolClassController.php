@@ -54,7 +54,7 @@ class StudentSchoolClassController extends Controller
 
         return $map[$roman] ?? 0;
     }
-    
+
     // function lms management students view
     public function lmsManagementStudentsView($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
@@ -64,8 +64,8 @@ class StudentSchoolClassController extends Controller
     // function paginate lms management users
     public function paginateLmsSchoolSubscriptionUsers($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
-        $getUsersQuery = StudentSchoolClass::with(['UserAccount.StudentProfile', 'SchoolClass', 
-        'SchoolClass.UserAccount.SchoolStaffProfile']);
+        $getUsersQuery = StudentSchoolClass::with(['UserAccount.StudentProfile', 'SchoolClass',
+            'SchoolClass.UserAccount.SchoolStaffProfile']);
 
         if ($majorId) {
             $getUsersQuery->with(['SchoolClass.SchoolMajor']);
@@ -78,9 +78,10 @@ class StudentSchoolClassController extends Controller
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 
         $academicActionCheck = $getUsers->map(function ($item) {
-            $item->has_academic_action = !empty($item->academic_action);
+            $item->has_academic_action = ! empty($item->academic_action);
+
             return $item;
-        });;
+        });
 
         return response()->json([
             'data' => $getUsers,
@@ -115,7 +116,7 @@ class StudentSchoolClassController extends Controller
 
         // ambil tingkat kelas (7 dari 7.1)
         $currentLevel = $this->extractClassLevel($currentClass->class_name);
-        $currentYear  = $currentClass->tahun_ajaran;
+        $currentYear = $currentClass->tahun_ajaran;
 
         $targetLevel = $currentLevel + 1;
 
@@ -126,7 +127,7 @@ class StudentSchoolClassController extends Controller
         }
 
         // ambil semua kelas sekolah
-        $classes = $classesQuery->get()->filter(function ($cls) use ($currentYear, $currentLevel, $targetLevel) {
+        $classes = $classesQuery->get()->filter(function ($cls) use ($currentYear, $targetLevel) {
             // tahun ajaran lebih besar
             if ($cls->tahun_ajaran <= $currentYear) {
                 return false;
@@ -150,7 +151,7 @@ class StudentSchoolClassController extends Controller
 
         // ambil tingkat kelas (7 dari 7.1)
         $currentLevel = $this->extractClassLevel($currentClass->class_name);
-        $currentYear  = $currentClass->tahun_ajaran;
+        $currentYear = $currentClass->tahun_ajaran;
 
         $classesQuery = SchoolClass::where('school_partner_id', $schoolId)->orderBy('tahun_ajaran');
 
@@ -183,18 +184,18 @@ class StudentSchoolClassController extends Controller
 
         // ambil tingkat kelas (7 dari 7.1)
         $currentLevel = $this->extractClassLevel($currentClass->class_name);
-        $currentYear  = $currentClass->tahun_ajaran;
+        $currentYear = $currentClass->tahun_ajaran;
 
         $classesQuery = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $currentYear)
-        ->where('id', '!=', $currentClassId)->orderBy('tahun_ajaran');
+            ->where('id', '!=', $currentClassId)->orderBy('tahun_ajaran');
 
         if ($majorId) {
             $classesQuery->where('major_id', $majorId);
         }
 
         // ambil semua kelas sekolah
-        $classes = $classesQuery->get()->filter(function ($cls) use ($currentYear, $currentLevel) {
-            $level = $level = $this->extractClassLevel($cls->class_name);;
+        $classes = $classesQuery->get()->filter(function ($cls) use ($currentLevel) {
+            $level = $level = $this->extractClassLevel($cls->class_name);
 
             // hanya memunculkan options 1 tingkat kelas dari kelas sebelumnya
             return $level === $currentLevel;
@@ -214,8 +215,7 @@ class StudentSchoolClassController extends Controller
             ->where('id', '!=', $currentClass->id)
             ->when($majorId, fn ($q) => $q->where('major_id', '!=', $majorId))
             ->get()
-            ->filter(fn ($cls) =>
-                $this->extractClassLevel($cls->class_name) === $currentLevel
+            ->filter(fn ($cls) => $this->extractClassLevel($cls->class_name) === $currentLevel
             )
             ->values();
 
@@ -243,7 +243,7 @@ class StudentSchoolClassController extends Controller
         $explodeStudentIds = explode(',', $request->student_id);
 
         $studentSchoolClass = StudentSchoolClass::whereIn('student_id', $explodeStudentIds)->where('school_class_id', $classId)->whereNotNull('academic_action')->where('academic_action', '!=', '')
-        ->exists();
+            ->exists();
 
         if ($studentSchoolClass) {
             return response()->json([
@@ -253,11 +253,11 @@ class StudentSchoolClassController extends Controller
             ], 422);
         } else {
             foreach ($explodeStudentIds as $studentId) {
-                StudentSchoolClass::where('student_id', $studentId) ->where('school_class_id', $classId)->update([
+                StudentSchoolClass::where('student_id', $studentId)->where('school_class_id', $classId)->update([
                     'student_class_status' => 'inactive',
                     'academic_action' => 'PROMOTED_CLASS',
                 ]);
-    
+
                 StudentSchoolClass::create([
                     'student_id' => $studentId,
                     'school_class_id' => $request->school_class_id,
@@ -295,7 +295,7 @@ class StudentSchoolClassController extends Controller
         $explodeStudentIds = explode(',', $request->student_id);
 
         $studentSchoolClass = StudentSchoolClass::whereIn('student_id', $explodeStudentIds)->where('school_class_id', $classId)->whereNotNull('academic_action')->where('academic_action', '!=', '')
-        ->exists();
+            ->exists();
 
         if ($studentSchoolClass) {
             return response()->json([
@@ -309,7 +309,7 @@ class StudentSchoolClassController extends Controller
                     'student_class_status' => 'inactive',
                     'academic_action' => 'REPEATED_CLASS',
                 ]);
-    
+
                 StudentSchoolClass::create([
                     'student_id' => $studentId,
                     'school_class_id' => $request->school_class_id,
@@ -347,7 +347,7 @@ class StudentSchoolClassController extends Controller
         $explodeStudentIds = explode(',', $request->student_id);
 
         $studentSchoolClass = StudentSchoolClass::whereIn('student_id', $explodeStudentIds)->where('school_class_id', $classId)->whereNotNull('academic_action')->where('academic_action', '!=', '')
-        ->exists();
+            ->exists();
 
         if ($studentSchoolClass) {
             return response()->json([
@@ -361,7 +361,7 @@ class StudentSchoolClassController extends Controller
                     'student_class_status' => 'inactive',
                     'academic_action' => 'TRANSFERRED_CLASS',
                 ]);
-    
+
                 StudentSchoolClass::create([
                     'student_id' => $studentId,
                     'school_class_id' => $request->school_class_id,
@@ -402,7 +402,7 @@ class StudentSchoolClassController extends Controller
         $majorId = $request->major_id;
 
         $studentSchoolClass = StudentSchoolClass::whereIn('student_id', $explodeStudentIds)->where('school_class_id', $classId)->whereNotNull('academic_action')->where('academic_action', '!=', '')
-        ->exists();
+            ->exists();
 
         if ($studentSchoolClass) {
             return response()->json([
@@ -416,7 +416,7 @@ class StudentSchoolClassController extends Controller
                     'student_class_status' => 'inactive',
                     'academic_action' => 'TRANSFERRED_MAJOR',
                 ]);
-    
+
                 StudentSchoolClass::create([
                     'student_id' => $studentId,
                     'school_class_id' => $request->school_class_id,

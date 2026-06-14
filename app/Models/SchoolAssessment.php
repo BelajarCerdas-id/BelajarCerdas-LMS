@@ -11,6 +11,7 @@ class SchoolAssessment extends Model
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'school_class_id',
         'mapel_id',

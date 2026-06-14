@@ -3,17 +3,18 @@
 namespace App\Imports;
 
 use App\Imports\SchoolPartnerHandler\LmsHandler;
-use Illuminate\Validation\ValidationException;
+use Exception;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Exception;
 
 class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow, WithTitle
 {
     protected $userId;
+
     protected $sheetTitle = '';
 
     // Konstruktor: akan dijalankan saat class diinisialisasi
@@ -58,9 +59,9 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
     public function handle(Collection $rows)
     {
         // Jika sheet kosong → langsung lempar error
-        if ($rows->isEmpty() || $rows->every(fn($r) => $r->filter()->isEmpty())) {
+        if ($rows->isEmpty() || $rows->every(fn ($r) => $r->filter()->isEmpty())) {
             throw ValidationException::withMessages([
-                'import' => ["File Excel kosong atau tidak memiliki data valid"]
+                'import' => ['File Excel kosong atau tidak memiliki data valid'],
             ]);
         }
 
@@ -84,7 +85,9 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
             $featureName = preg_replace('/\x{00A0}|\s+/u', ' ', strtolower(($row['pembelian_fitur'] ?? '')));
 
             // Jika kolom "pembelian_fitur" kosong → lewati baris
-            if (empty($featureName)) continue;
+            if (empty($featureName)) {
+                continue;
+            }
 
             // Simpan nama fitur untuk pengecekan nanti
             $collectedFeatures[] = $featureName;
@@ -92,8 +95,8 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
             // Cek apakah fitur ini cocok dengan salah satu handler yang terdaftar
             $matchedKey = collect($this->handlers)
                 ->keys() // ambil semua nama fitur yang ada di daftar handler
-                ->first(fn($key) => str_contains($featureName, strtolower(trim($key)))); 
-                // cari yang cocok (misal featureName mengandung "soal dan pembahasan")
+                ->first(fn ($key) => str_contains($featureName, strtolower(trim($key))));
+            // cari yang cocok (misal featureName mengandung "soal dan pembahasan")
 
             // Jika cocok, simpan baris ke handler yang sesuai
             if ($matchedKey) {
@@ -111,12 +114,12 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
 
             // Jika dalam satu sheet ditemukan lebih dari satu fitur berbeda, itu tidak diperbolehkan
             if ($uniqueFeatures->count() > 1) {
-                $invalidFeatures[] = "Sheet {$this->sheetTitle} memiliki lebih dari satu fitur berbeda (" . implode(', ', $uniqueFeatures->toArray()) . ").";
+                $invalidFeatures[] = "Sheet {$this->sheetTitle} memiliki lebih dari satu fitur berbeda (".implode(', ', $uniqueFeatures->toArray()).').';
             }
         }
 
         // Jika ada fitur yang tidak valid → hentikan proses dan tampilkan pesan error
-        if (!empty($invalidFeatures)) {
+        if (! empty($invalidFeatures)) {
             throw ValidationException::withMessages(['import' => $invalidFeatures]);
         }
 
@@ -126,7 +129,7 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
             $handler = new $handlerClass($this->userId, $this->sheetTitle); // Buat instance handler
 
             // Pastikan handler memiliki metode 'handle'
-            if (!method_exists($handler, 'handle')) {
+            if (! method_exists($handler, 'handle')) {
                 throw new Exception("Handler '{$handlerClass}' tidak memiliki metode handle().");
             }
 

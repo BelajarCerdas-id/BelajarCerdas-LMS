@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // PERISAI: Cek apakah tabel school_assessments sudah ada di SQLite
-        if (!Schema::hasTable('school_assessments')) {
+        if (! Schema::hasTable('school_assessments')) {
             Schema::create('school_assessments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('user_accounts');
@@ -20,8 +20,8 @@ return new class extends Migration
                 $table->foreignId('school_class_id')->constrained('school_classes');
                 $table->foreignId('mapel_id')->constrained('mapels');
                 $table->foreignId('assessment_type_id')->constrained('school_assessment_types');
-                $table->string('assessment_category')->default('main'); 
-                $table->foreignId('parent_assessment_id')->nullable()->constrained('school_assessments'); 
+                $table->string('assessment_category')->default('main');
+                $table->foreignId('parent_assessment_id')->nullable()->constrained('school_assessments');
                 $table->string('title');
                 $table->text('assessment_instruction')->nullable();
                 $table->integer('duration')->nullable();

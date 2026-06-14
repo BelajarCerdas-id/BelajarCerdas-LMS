@@ -11,6 +11,7 @@ class SchoolQuestionBank extends Model
 
     protected $fillable = [
         'question_id',
+        'yayasan_id',
         'school_partner_id',
         'is_active',
     ];

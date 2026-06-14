@@ -14,7 +14,8 @@ class Feature extends Model
         'status_fitur',
     ];
 
-    public function FeaturePrice() {
+    public function FeaturePrice()
+    {
         return $this->hasOne(FeaturePrice::class, 'feature_id');
     }
 }

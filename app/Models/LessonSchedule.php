@@ -12,6 +12,7 @@ class LessonSchedule extends Model
     protected $table = 'lesson_schedules';
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'class_id',
         'class_name',
@@ -26,5 +27,4 @@ class LessonSchedule extends Model
     {
         return $this->hasMany(LessonScheduleItem::class, 'lesson_schedule_id', 'id');
     }
-
 }

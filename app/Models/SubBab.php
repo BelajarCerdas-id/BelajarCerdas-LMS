@@ -18,6 +18,7 @@ class SubBab extends Model
         'kelas_id',
         'fase_id',
         'kurikulum_id',
+        'yayasan_id',
         'school_partner_id',
         'status_sub_bab',
     ];

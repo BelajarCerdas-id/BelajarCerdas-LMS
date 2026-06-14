@@ -1,16 +1,20 @@
 <?php
 
 namespace App\Services;
+
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpWord\Element\Image;
 use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\Element\Text;
 use PhpOffice\PhpWord\Element\TextRun;
-use Illuminate\Support\Facades\Log;
 use ZipArchive;
+
 class DocxExtractor
 {
     protected string $basePath;
+
     protected string $baseUrl;
+
     public function __construct(string $feature = '')
     {
         $map = [
@@ -30,7 +34,8 @@ class DocxExtractor
     // → agar gambar yang sama tidak disimpan berkali-kali
     protected array $savedImageHashes = [];
 
-    public function normalizeTextContent(string $html): string {
+    public function normalizeTextContent(string $html): string
+    {
         // Menghapus semua tag HTML dan mengubah entitas HTML ke teks biasa
         $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
@@ -62,7 +67,7 @@ class DocxExtractor
 
                 // Ukuran font: konversi pt ke px (1pt ≈ 1.33px)
                 if ($size = $style->getSize()) {
-                    $styleAttr .= "font-size:" . ($size * 1.33) . "px;";
+                    $styleAttr .= 'font-size:'.($size * 1.33).'px;';
                 }
 
                 // Nama font → CSS font-family
@@ -73,37 +78,37 @@ class DocxExtractor
                 // Bold → bungkus dengan <strong>
                 if ($style->isBold()) {
                     $prefix .= '<strong>';
-                    $suffix = '</strong>' . $suffix;
+                    $suffix = '</strong>'.$suffix;
                 }
 
                 // Italic → bungkus dengan <em>
                 if ($style->isItalic()) {
                     $prefix .= '<em>';
-                    $suffix = '</em>' . $suffix;
+                    $suffix = '</em>'.$suffix;
                 }
 
                 // Underline → bungkus dengan <u>
                 if ($style->getUnderline() !== 'none') {
                     $prefix .= '<u>';
-                    $suffix = '</u>' . $suffix;
+                    $suffix = '</u>'.$suffix;
                 }
 
                 // Strike-through → bungkus dengan <s>
                 if ($style->isStrikeThrough()) {
                     $prefix .= '<s>';
-                    $suffix = '</s>' . $suffix;
+                    $suffix = '</s>'.$suffix;
                 }
 
                 // Subscript → bungkus dengan <sub>
                 if ($style->isSubScript()) {
                     $prefix .= '<sub>';
-                    $suffix = '</sub>' . $suffix;
+                    $suffix = '</sub>'.$suffix;
                 }
 
                 // Superscript → bungkus dengan <sup>
                 if ($style->isSuperScript()) {
                     $prefix .= '<sup>';
-                    $suffix = '</sup>' . $suffix;
+                    $suffix = '</sup>'.$suffix;
                 }
 
                 // Cek highlight warna background
@@ -125,7 +130,7 @@ class DocxExtractor
                         'lightgray' => '#d3d3d3',
                     ];
                     $prefix .= '<mark>';
-                    $suffix = '</mark>' . $suffix;
+                    $suffix = '</mark>'.$suffix;
                 }
 
                 // Jika ingin bungkus style langsung di span (saat ini dikomentari)
@@ -134,13 +139,13 @@ class DocxExtractor
                 // }
 
                 // Gabungkan tag pembuka + teks + tag penutup
-                $text = $prefix . $text . $suffix;
+                $text = $prefix.$text.$suffix;
             }
 
             // Tambahkan ke HTML akhir
             $html .= $text;
 
-        // Jika elemen adalah TextRun (sekumpulan teks)
+            // Jika elemen adalah TextRun (sekumpulan teks)
         } elseif ($element instanceof TextRun) {
             $content = '';
             foreach ($element->getElements() as $child) {
@@ -149,16 +154,16 @@ class DocxExtractor
             }
             $html .= "<p>$content</p>"; // Bungkus semua teks dalam paragraf
 
-        // Jika elemen adalah gambar
+            // Jika elemen adalah gambar
         } elseif ($element instanceof Image) {
             $binary = base64_decode($element->getImageStringData(true)); // Ambil data gambar biner
             $mime = $this->detectMimeType($binary); // Deteksi tipe MIME gambar
 
             $hashKey = $this->generateImageHash($binary); // Buat hash unik gambar
-            $key = 'media/' . $hashKey; // Buat key unik untuk gambar
+            $key = 'media/'.$hashKey; // Buat key unik untuk gambar
 
             // Jika gambar belum pernah disimpan
-            if (!isset($mediaImages[$key])) {
+            if (! isset($mediaImages[$key])) {
                 $imgUrl = $this->saveImage($binary, $mime); // Simpan gambar dan ambil URL-nya
                 $mediaImages[$key] = $imgUrl; // Simpan URL di array
                 Log::info("Image extracted - key: $key, url: $imgUrl"); // Log info
@@ -170,7 +175,7 @@ class DocxExtractor
             // Simpan placeholder <img> dengan src key (nanti akan diganti URL asli)
             $html .= "<p><img src=\"$key\"></p>";
 
-        // Jika elemen adalah tipe lain (misal tabel, list, dll.)
+            // Jika elemen adalah tipe lain (misal tabel, list, dll.)
         } else {
             // Jika bisa ambil teks langsung
             if (method_exists($element, 'getText')) {
@@ -200,12 +205,12 @@ class DocxExtractor
         $prefix = str_repeat('  ', $indent);
 
         // Log class dari elemen saat ini (misal: Table, Text, Image, dsb.)
-        Log::info($prefix . 'Class: ' . get_class($element));
+        Log::info($prefix.'Class: '.get_class($element));
 
         // Jika elemen memiliki method getText(), ambil teksnya dan log
         if (method_exists($element, 'getText')) {
             $text = $element->getText();
-            Log::info($prefix . '  getText(): ' . json_encode($text));
+            Log::info($prefix.'  getText(): '.json_encode($text));
         }
 
         // Jika elemen memiliki child elements (misal Table → Row → Cell → TextRun), telusuri anak-anaknya
@@ -243,7 +248,9 @@ class DocxExtractor
                         $cells = $row->getCells();
 
                         // Lewati baris jika jumlah kolom kurang dari 2 (tidak valid)
-                        if (count($cells) < 2) continue;
+                        if (count($cells) < 2) {
+                            continue;
+                        }
 
                         // ======== PROSES KOLOM PERTAMA (KEY) ========
                         // Debug: tampilkan struktur elemen kolom 1
@@ -279,11 +286,11 @@ class DocxExtractor
         }
 
         // Log total soal yang berhasil diekstrak
-        Log::info('[extractStyledTableData] Total soal styled: ' . count($styledData));
+        Log::info('[extractStyledTableData] Total soal styled: '.count($styledData));
 
         // Log daftar key yang ditemukan untuk setiap soal
         foreach ($styledData as $i => $data) {
-            Log::info("  Soal ke-$i, keys: " . implode(', ', array_keys($data)));
+            Log::info("  Soal ke-$i, keys: ".implode(', ', array_keys($data)));
         }
 
         // Kembalikan array hasil ekstraksi
@@ -327,10 +334,10 @@ class DocxExtractor
             $hashKey = $this->generateImageHash($binary);
 
             // Kunci array media, mengikuti format "media/<hash>"
-            $key = 'media/' . $hashKey;
+            $key = 'media/'.$hashKey;
 
             // Jika gambar ini belum ada di array mediaImages, simpan
-            if (!isset($mediaImages[$key])) {
+            if (! isset($mediaImages[$key])) {
                 // Simpan gambar ke storage dan dapatkan URL-nya
                 $imgUrl = $this->saveImage($binary, $mime);
 
@@ -341,7 +348,7 @@ class DocxExtractor
                 Log::info("Image extracted - key: $key, url: $imgUrl");
             }
 
-        // Jika elemen adalah TextRun (sekumpulan teks & elemen lain dalam satu paragraf)
+            // Jika elemen adalah TextRun (sekumpulan teks & elemen lain dalam satu paragraf)
         } elseif ($element instanceof TextRun) {
             // Loop semua child element di dalam TextRun
             foreach ($element->getElements() as $child) {
@@ -349,7 +356,7 @@ class DocxExtractor
                 $this->extractImages($child, $mediaImages);
             }
 
-        // Jika elemen adalah tabel
+            // Jika elemen adalah tabel
         } elseif ($element instanceof Table) {
             // Loop semua baris dalam tabel
             foreach ($element->getRows() as $row) {
@@ -368,7 +375,7 @@ class DocxExtractor
     public function mergeStyledAndPandocHtml($pandocHtml, $styledHtml, $mediaImages)
     {
         // Buat DOMDocument untuk HTML hasil Pandoc
-        $pandocDom = new \DOMDocument();
+        $pandocDom = new \DOMDocument;
         libxml_use_internal_errors(true); // Supaya warning/error parsing HTML diabaikan sementara
         $pandocDom->loadHTML(
             mb_convert_encoding($pandocHtml, 'HTML-ENTITIES', 'UTF-8') // Pastikan encoding ke HTML entities agar aman untuk DOM
@@ -376,7 +383,7 @@ class DocxExtractor
         libxml_clear_errors(); // Bersihkan error setelah parsing
 
         // Buat DOMDocument untuk HTML hasil PhpWord (styled)
-        $styledDom = new \DOMDocument();
+        $styledDom = new \DOMDocument;
         libxml_use_internal_errors(true);
         $styledDom->loadHTML(
             mb_convert_encoding($styledHtml, 'HTML-ENTITIES', 'UTF-8')
@@ -385,7 +392,9 @@ class DocxExtractor
 
         // 🔹 Sinkronisasi gambar: ganti <img src="..."> dari Pandoc dengan URL hasil extract PhpWord
         foreach ($pandocDom->getElementsByTagName('img') as $img) {
-            if (!$img instanceof \DOMElement) continue;
+            if (! $img instanceof \DOMElement) {
+                continue;
+            }
             $src = $img->getAttribute('src'); // Ambil path asli gambar di HTML Pandoc
             $key = strtolower(pathinfo($src, PATHINFO_FILENAME)); // Ambil nama file tanpa ekstensi (jadi key)
             if (isset($mediaImages[$key])) { // Jika key ini ada di daftar gambar hasil extract PhpWord
@@ -471,17 +480,17 @@ class DocxExtractor
      */
     public function extractImagesFromDocxFile($docxPath, &$mediaImages)
     {
-        $zip = new ZipArchive(); // Class bawaan PHP untuk membaca ZIP (DOCX itu sebenarnya ZIP)
+        $zip = new ZipArchive; // Class bawaan PHP untuk membaca ZIP (DOCX itu sebenarnya ZIP)
         if ($zip->open($docxPath) === true) { // Cek apakah file DOCX bisa dibuka
             for ($i = 0; $i < $zip->numFiles; $i++) { // Loop semua file di dalam DOCX
                 $fileName = $zip->getNameIndex($i); // Ambil nama file berdasarkan index
                 // Cek apakah file berada di folder word/media dan berformat gambar (jpg, png, dll)
                 if (preg_match('/^word\/media\/(.+\.(jpg|jpeg|png|gif|bmp|webp))$/i', $fileName, $matches)) {
                     $baseName = strtolower(pathinfo($matches[1], PATHINFO_FILENAME)); // Ambil nama file tanpa ekstensi
-                    $key = 'media/' . $baseName; // Key standar agar mudah dicocokkan dengan Pandoc
+                    $key = 'media/'.$baseName; // Key standar agar mudah dicocokkan dengan Pandoc
 
                     // Pastikan gambar ini belum pernah dimasukkan
-                    if (!isset($mediaImages[$key])) {
+                    if (! isset($mediaImages[$key])) {
                         $binary = $zip->getFromIndex($i); // Ambil data binary gambar
                         $mime = $this->detectMimeType($binary); // Deteksi tipe MIME
                         $mediaImages[$key] = [
@@ -506,12 +515,14 @@ class DocxExtractor
     public function persistImageIfNotExists($key, &$mediaImages)
     {
         // Jika key tidak ada di array mediaImages, hentikan
-        if (!isset($mediaImages[$key])) return null;
+        if (! isset($mediaImages[$key])) {
+            return null;
+        }
 
         $item = $mediaImages[$key]; // Ambil data gambar
 
         // Jika sudah punya URL publik, langsung kembalikan tanpa simpan ulang
-        if (!empty($item['public_url'])) {
+        if (! empty($item['public_url'])) {
             return $item['public_url'];
         }
 
@@ -523,11 +534,11 @@ class DocxExtractor
         $path = "{$this->basePath}/$fileName"; // Lokasi penyimpanan di folder publik
 
         // Pastikan folder tujuan ada
-        if (!file_exists(dirname($path))) {
+        if (! file_exists(dirname($path))) {
             mkdir(dirname($path), 0775, true);
         }
         // Simpan file jika belum ada
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             file_put_contents($path, $binary);
         }
 
@@ -560,13 +571,12 @@ class DocxExtractor
         return $html; // Kembalikan HTML yang sudah dibersihkan
     }
 
-
     /**
      * Mengecek apakah file DOCX memiliki persamaan matematika (Equation).
      */
     public function docxHasEquation($docxPath): bool
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         // Buka file DOCX (yang sebenarnya adalah ZIP berisi XML)
         if ($zip->open($docxPath) === true) {
@@ -590,7 +600,7 @@ class DocxExtractor
      */
     public function docxHasList($docxPath): bool
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         // Buka file DOCX
         if ($zip->open($docxPath) === true) {
@@ -628,15 +638,15 @@ class DocxExtractor
         $fileName = "img_$hash.$ext";
 
         // Path penyimpanan fisik di public/
-        $path = $this->basePath . "/$fileName";
+        $path = $this->basePath."/$fileName";
 
         // Jika folder belum ada, buat folder dengan izin 0775
-        if (!file_exists(dirname($path))) {
+        if (! file_exists(dirname($path))) {
             mkdir(dirname($path), 0775, true);
         }
 
         // Simpan file jika belum ada
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             file_put_contents($path, $binaryData);
         }
 
@@ -656,6 +666,7 @@ class DocxExtractor
     {
         // Gunakan ekstensi FileInfo PHP untuk mendeteksi MIME type
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
+
         return $finfo->buffer($binaryData);
     }
 
@@ -683,10 +694,12 @@ class DocxExtractor
     public function replaceImageSrc($html, &$mediaImages)
     {
         // Jika HTML kosong atau hanya berisi spasi, langsung kembalikan string kosong
-        if (empty(trim($html))) return '';
+        if (empty(trim($html))) {
+            return '';
+        }
 
         // Membuat instance DOMDocument untuk memanipulasi struktur HTML
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
 
         // Mengabaikan error parsing HTML agar tidak mengganggu proses
         libxml_use_internal_errors(true);
@@ -699,7 +712,9 @@ class DocxExtractor
 
         // Loop semua elemen <img> dalam HTML
         foreach ($dom->getElementsByTagName('img') as $img) {
-            if (!$img instanceof \DOMElement) continue;
+            if (! $img instanceof \DOMElement) {
+                continue;
+            }
             // Ambil nilai atribut src asli dari tag <img>
             $originalSrc = $img->getAttribute('src');
 

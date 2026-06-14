@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Imports\SchoolPartnerSheetImport;
 use App\Imports\SchoolPartnerUsersSheetImport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SchoolPartnerController extends Controller
 {
@@ -27,7 +27,7 @@ class SchoolPartnerController extends Controller
                 'errors' => [
                     'form_errors' => $validator->errors(),
                     'excel_validation_errors' => [],
-                ]
+                ],
             ], 422);
         }
 
@@ -44,7 +44,7 @@ class SchoolPartnerController extends Controller
                 'errors' => [
                     'form_errors' => [],
                     'excel_validation_errors' => $e->errors()['import'] ?? [],
-                ]
+                ],
             ], 422);
         }
     }
@@ -64,7 +64,7 @@ class SchoolPartnerController extends Controller
                 'errors' => [
                     'form_errors' => $validator->errors(),
                     'excel_validation_errors' => [],
-                ]
+                ],
             ], 422);
         }
 
@@ -81,7 +81,7 @@ class SchoolPartnerController extends Controller
                 'errors' => [
                     'form_errors' => [],
                     'excel_validation_errors' => $e->errors()['import'] ?? [],
-                ]
+                ],
             ], 422);
         }
     }

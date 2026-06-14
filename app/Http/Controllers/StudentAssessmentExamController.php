@@ -12,9 +12,9 @@ use App\Models\StudentSchoolClass;
 use App\Models\SubjectPassingGradeCriteria;
 use App\Models\UserAccount;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -26,14 +26,14 @@ class StudentAssessmentExamController extends Controller
     {
         $this->summaryService = $summaryService;
     }
-    
+
     public function studentAssessmentExam($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
-        return view('features.lms.student.assessment.student-assessment-test', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-assessment-test', compact('role', 'schoolName', 'schoolId', 'curriculumId',
             'mapelId', 'assessmentTypeId', 'semester', 'assessmentId'));
     }
 
-    public function studentAssessmentExamForm($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId) 
+    public function studentAssessmentExamForm($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
         $user = UserAccount::with('StudentProfile')->find(Auth::id());
 
@@ -42,7 +42,7 @@ class StudentAssessmentExamController extends Controller
                 $query->where('student_id', $user->id)->where('student_class_status', 'active');
             })->where('assessment_type_id', $assessmentTypeId)->where('semester', $semester)->first();
 
-        if (!$assessment) {
+        if (! $assessment) {
             return response()->json(['data' => null]);
         }
 
@@ -81,7 +81,7 @@ class StudentAssessmentExamController extends Controller
             }
 
             // CACHE KEY
-            $cacheKeyWrong = "assessment-remedial-wrong-{$user->id}-prev-" . ($previousAssessment->id ?? 'none');
+            $cacheKeyWrong = "assessment-remedial-wrong-{$user->id}-prev-".($previousAssessment->id ?? 'none');
 
             if (Cache::has($cacheKeyWrong)) {
 
@@ -121,22 +121,22 @@ class StudentAssessmentExamController extends Controller
             $cachedIds = Cache::get($cacheKey);
 
             $questions = SchoolAssessmentQuestion::with(['LmsQuestionBank', 'LmsQuestionBank.LmsQuestionOption', 'LmsQuestionBank.Mapel'])->whereIn('id', $cachedIds)
-            ->when(!empty($wrongBankIds), function ($q) use ($wrongBankIds) {
-            $q->whereIn('question_bank_id', $wrongBankIds);
-        })->get()
-            ->sortBy(function ($q) use ($cachedIds) {
-                return array_search($q->id, $cachedIds);
-            })
-            ->values();
+                ->when(! empty($wrongBankIds), function ($q) use ($wrongBankIds) {
+                    $q->whereIn('question_bank_id', $wrongBankIds);
+                })->get()
+                ->sortBy(function ($q) use ($cachedIds) {
+                    return array_search($q->id, $cachedIds);
+                })
+                ->values();
 
         } else {
 
-            $baseQuery = SchoolAssessmentQuestion::with(['LmsQuestionBank', 'LmsQuestionBank.LmsQuestionOption', 'LmsQuestionBank.Mapel'
+            $baseQuery = SchoolAssessmentQuestion::with(['LmsQuestionBank', 'LmsQuestionBank.LmsQuestionOption', 'LmsQuestionBank.Mapel',
             ])->where('school_assessment_id', $sourceAssessmentId)->whereHas('LmsQuestionBank', function ($q) {
                 $q->where('status_bank_soal', 'Publish');
             });
 
-            if (!empty($wrongBankIds)) {
+            if (! empty($wrongBankIds)) {
                 $baseQuery->whereIn('question_bank_id', $wrongBankIds);
             }
 
@@ -158,7 +158,7 @@ class StudentAssessmentExamController extends Controller
 
             $options = $question->LmsQuestionBank->LmsQuestionOption;
 
-            if (!$options) {
+            if (! $options) {
                 return $question;
             }
 
@@ -167,7 +167,7 @@ class StudentAssessmentExamController extends Controller
             $optionCacheKey = "assessment-option-{$user->id}-{$assessmentId}-{$question->id}-{$publishedOptionIds}-{$semester}-{$shuffleOptions}";
 
             // MCQ / MCMA
-            if (in_array($type, ['MCQ','MCMA'])) {
+            if (in_array($type, ['MCQ', 'MCMA'])) {
 
                 if (Cache::has($optionCacheKey)) {
 
@@ -205,12 +205,12 @@ class StudentAssessmentExamController extends Controller
             if ($type === 'MATCHING') {
 
                 $left = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'left';
                 })->values();
 
                 $right = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'right';
                 })->values();
 
@@ -264,7 +264,7 @@ class StudentAssessmentExamController extends Controller
 
                 // AMBIL ITEMS (ROW)
                 $items = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'item';
                 })->values();
 
@@ -293,7 +293,7 @@ class StudentAssessmentExamController extends Controller
 
                 // AMBIL CATEGORY (COLUMN)
                 $right = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'category';
                 })->values();
 
@@ -392,7 +392,7 @@ class StudentAssessmentExamController extends Controller
 
                     if ($type === 'MCMA') {
 
-                        if (!is_array($studentAnswer)) {
+                        if (! is_array($studentAnswer)) {
                             $isCorrect = false;
                         } else {
 
@@ -409,19 +409,18 @@ class StudentAssessmentExamController extends Controller
                             $studentAnswer = json_decode($studentAnswer, true);
                         }
 
-                        if (!is_array($studentAnswer)) {
+                        if (! is_array($studentAnswer)) {
                             $isCorrect = false;
                         } else {
 
                             $correctPairs = $question->LmsQuestionBank->LmsQuestionOption
                                 ->filter(function ($opt) {
-                                    return isset($opt->extra_data['side']) 
+                                    return isset($opt->extra_data['side'])
                                         && $opt->extra_data['side'] === 'left';
                                 })
                                 ->mapWithKeys(function ($opt) {
                                     return [
-                                        trim($opt->options_key) =>
-                                        trim($opt->extra_data['pair_with'] ?? '')
+                                        trim($opt->options_key) => trim($opt->extra_data['pair_with'] ?? ''),
                                     ];
                                 })
                                 ->toArray();
@@ -445,19 +444,18 @@ class StudentAssessmentExamController extends Controller
                             $studentAnswer = json_decode($studentAnswer, true);
                         }
 
-                        if (!is_array($studentAnswer)) {
+                        if (! is_array($studentAnswer)) {
                             $isCorrect = false;
                         } else {
 
                             $correctPairs = $question->LmsQuestionBank->LmsQuestionOption
                                 ->filter(function ($opt) {
-                                    return isset($opt->extra_data['side']) 
+                                    return isset($opt->extra_data['side'])
                                         && $opt->extra_data['side'] === 'item';
                                 })
                                 ->mapWithKeys(function ($opt) {
                                     return [
-                                        trim($opt->options_key) =>
-                                        trim($opt->extra_data['answer'] ?? '')
+                                        trim($opt->options_key) => trim($opt->extra_data['answer'] ?? ''),
                                     ];
                                 })
                                 ->toArray();
@@ -479,7 +477,7 @@ class StudentAssessmentExamController extends Controller
                 $data['is_correct'] = $isCorrect;
 
                 return [
-                    $item->school_assessment_question_id => $data
+                    $item->school_assessment_question_id => $data,
                 ];
             });
 
@@ -494,7 +492,7 @@ class StudentAssessmentExamController extends Controller
             'end_date' => $assessment->end_date ? $assessment->end_date->format('Y-m-d H:i') : null,
             'assessment_title' => $assessment->SchoolAssessmentType->name,
             'semester' => $assessment->semester,
-            'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test'
+            'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test',
         ]);
     }
 
@@ -507,19 +505,19 @@ class StudentAssessmentExamController extends Controller
         $attempt = StudentAssessmentAttempt::firstOrCreate(
             [
                 'student_id' => $userId,
-                'school_assessment_id' => $assessmentId
+                'school_assessment_id' => $assessmentId,
             ],
             [
                 'start_time' => now(),
                 'expire_time' => now()->addMinutes($assessment->duration),
-                'status' => 'in_progress'
+                'status' => 'in_progress',
             ]
         );
 
         return response()->json([
             'start_time' => $attempt->start_time->timestamp * 1000,
             'expire_time' => $attempt->expire_time->timestamp * 1000,
-            'duration' => $assessment->duration
+            'duration' => $assessment->duration,
         ]);
     }
 
@@ -527,7 +525,7 @@ class StudentAssessmentExamController extends Controller
     {
         $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())->where('school_assessment_id', $assessmentId)->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json(['status' => 'error']);
         }
 
@@ -544,13 +542,13 @@ class StudentAssessmentExamController extends Controller
             $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
 
             return response()->json([
-                'status' => 'blocked'
+                'status' => 'blocked',
             ]);
         }
 
         return response()->json([
             'status' => 'warning',
-            'count' => $attempt->tab_switch_count
+            'count' => $attempt->tab_switch_count,
         ]);
     }
 
@@ -560,31 +558,31 @@ class StudentAssessmentExamController extends Controller
             ->where('school_assessment_id', $assessmentId)
             ->first();
 
-        if (!$attempt) {
+        if (! $attempt) {
             return response()->json([
-                'status' => 'error'
+                'status' => 'error',
             ]);
         }
 
         if ($attempt->status === 'cheating') {
             return response()->json([
                 'status' => 'blocked',
-                'count' => $attempt->tab_switch_count
+                'count' => $attempt->tab_switch_count,
             ]);
         }
 
         if ($attempt->tab_switch_count > 0) {
             return response()->json([
                 'status' => 'warning',
-                'count' => $attempt->tab_switch_count
+                'count' => $attempt->tab_switch_count,
             ]);
         }
 
         return response()->json([
-            'status' => 'ok'
+            'status' => 'ok',
         ]);
     }
-    
+
     public function studentAssessmentExamAnswer(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
         $userId = Auth::id();
@@ -593,12 +591,12 @@ class StudentAssessmentExamController extends Controller
 
         $isExpired = now()->greaterThan($assessment->end_date);
 
-        if ($isExpired && !$request->auto_submit) {
+        if ($isExpired && ! $request->auto_submit) {
 
             // ubah request agar dianggap auto submit
             $request->merge([
                 'auto_submit' => true,
-                'status_attempt' => 'timeout'
+                'status_attempt' => 'timeout',
             ]);
 
         }
@@ -606,7 +604,7 @@ class StudentAssessmentExamController extends Controller
         $validator = Validator::make($request->all(), [
             'school_assessment_question_id' => 'required|exists:school_assessment_questions,id',
             'answer_value' => [
-                Rule::requiredIf(!$request->auto_submit)
+                Rule::requiredIf(! $request->auto_submit),
             ],
             'status_answer' => 'required|in:draft,submitted',
         ], [
@@ -627,7 +625,7 @@ class StudentAssessmentExamController extends Controller
 
         // cari jawaban siswa
         $answer = StudentAssessmentAnswer::where('student_id', $userId)->where('school_assessment_question_id', $request->school_assessment_question_id)
-        ->where('school_assessment_id', $assessmentId)->first();
+            ->where('school_assessment_id', $assessmentId)->first();
 
         // normalisasi answer_value
         $answerData = $request->answer_value;
@@ -670,7 +668,7 @@ class StudentAssessmentExamController extends Controller
             }
 
             // cache key harus sama dengan form
-            $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
+            $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-".($previousAssessment->id ?? 'none');
 
             $wrongBankIds = Cache::get($cacheKeyWrong, []);
 
@@ -706,9 +704,9 @@ class StudentAssessmentExamController extends Controller
                         $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
                     }
 
-                break;
+                    break;
 
-                // MCMA
+                    // MCMA
                 case 'MCMA':
 
                     if (is_array($answerData)) {
@@ -724,9 +722,9 @@ class StudentAssessmentExamController extends Controller
 
                     }
 
-                break;
+                    break;
 
-                // MATCHING
+                    // MATCHING
                 case 'MATCHING':
 
                     if (is_array($answerData)) {
@@ -739,7 +737,7 @@ class StudentAssessmentExamController extends Controller
                             })
                             ->mapWithKeys(function ($opt) {
                                 return [
-                                    $opt->options_key => $opt->extra_data['pair_with'] ?? null
+                                    $opt->options_key => $opt->extra_data['pair_with'] ?? null,
                                 ];
                             })
                             ->toArray();
@@ -753,7 +751,7 @@ class StudentAssessmentExamController extends Controller
 
                     }
 
-                break;
+                    break;
 
                 case 'PG_KOMPLEKS':
 
@@ -762,7 +760,7 @@ class StudentAssessmentExamController extends Controller
                     })
                         ->mapWithKeys(function ($opt) {
                             return [
-                                $opt->options_key => $opt->extra_data['answer']
+                                $opt->options_key => $opt->extra_data['answer'],
                             ];
                         })->toArray();
 
@@ -772,14 +770,14 @@ class StudentAssessmentExamController extends Controller
                     if ($correctAnswers === $answerData) {
                         $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
                     }
-                break;
+                    break;
 
-                // ESSSAY
+                    // ESSSAY
                 case 'ESSAY':
 
                     $score = 0;
 
-                break;
+                    break;
             }
         }
 
@@ -836,7 +834,7 @@ class StudentAssessmentExamController extends Controller
                     StudentAssessmentAnswer::where('student_id', $userId)
                         ->where('school_assessment_id', $assessmentId)
                         ->update([
-                            'total_exam_duration' => $request->total_exam_duration
+                            'total_exam_duration' => $request->total_exam_duration,
                         ]);
                 }
 
@@ -849,7 +847,7 @@ class StudentAssessmentExamController extends Controller
         if ($attempt && $attempt->status === 'in_progress') {
 
             $attempt->update([
-                'status' => $request->status_attempt
+                'status' => $request->status_attempt,
             ]);
 
         }
@@ -858,7 +856,7 @@ class StudentAssessmentExamController extends Controller
 
             return response()->json([
                 'status' => 'expired',
-                'message' => 'Waktu ujian telah berakhir. Jawaban otomatis disubmit.'
+                'message' => 'Waktu ujian telah berakhir. Jawaban otomatis disubmit.',
             ], 422);
 
         }
@@ -870,22 +868,25 @@ class StudentAssessmentExamController extends Controller
     }
 
     // function submit essay (for ckeditor)
-    public function storeImageEssay(Request $request) {
+    public function storeImageEssay(Request $request)
+    {
         if ($request->hasFile('upload')) {
             $originName = $request->file('upload')->getClientOriginalName();
-            $fileName = pathInfo($originName, PATHINFO_FILENAME);
+            $fileName = pathinfo($originName, PATHINFO_FILENAME);
             $extension = $request->file('upload')->getClientOriginalExtension();
-            $fileName = $fileName . '_' . time() . '.' . $extension;
+            $fileName = $fileName.'_'.time().'.'.$extension;
 
             $request->file('upload')->move(public_path('lms-assessment-submission/assessment-test'), $fileName);
 
             $url = "/lms-assessment-submission/assessment-test/$fileName";
+
             return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
         }
     }
 
     // function delete image bank soal (for ckeditor)
-    public function deleteImageEssay(Request $request) {
+    public function deleteImageEssay(Request $request)
+    {
         $request->validate([
             'imageUrl' => 'required|url',
         ]);
@@ -895,6 +896,7 @@ class StudentAssessmentExamController extends Controller
 
         if (file_exists($fullImagePath)) {
             unlink($fullImagePath); // Hapus gambar
+
             return response()->json(['message' => 'Gambar berhasil dihapus']);
         }
 
@@ -912,30 +914,30 @@ class StudentAssessmentExamController extends Controller
         if ($isBeforeStart) {
             return response()->json([
                 'status' => 'not_started',
-                'message' => 'Asesmen belum dimulai.'
+                'message' => 'Asesmen belum dimulai.',
             ], 422);
         }
 
         if ($isExpired) {
             return response()->json([
                 'status' => 'expired',
-                'message' => 'Asesmen sudah berakhir.'
+                'message' => 'Asesmen sudah berakhir.',
             ], 422);
         }
-    
+
         $validator = Validator::make($request->all(), [
 
             'submission_type' => [
-                'required', 'in:file,text'
+                'required', 'in:file,text',
             ],
 
             'project_file' => [
-                'nullable', 'required_if:submission_type,file', 'file', 'mimes:pdf', 'max:100000'
+                'nullable', 'required_if:submission_type,file', 'file', 'mimes:pdf', 'max:100000',
             ],
 
             'project_text' => [
-                'nullable', 'required_if:submission_type,text'
-            ]
+                'nullable', 'required_if:submission_type,text',
+            ],
 
         ], [
             'project_file.required_if' => 'Harap upload file asesmen.',
@@ -956,13 +958,13 @@ class StudentAssessmentExamController extends Controller
         $data = [
             'student_id' => Auth::id(),
             'school_assessment_id' => $assessmentId,
-            'submission_type' => $submissionType
+            'submission_type' => $submissionType,
         ];
 
         if ($submissionType === 'file') {
-            $file = $request->file("project_file");
+            $file = $request->file('project_file');
 
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $filename = uniqid().'.'.$file->getClientOriginalExtension();
             $file->move(public_path('assessment/assessment-file-submission'), $filename);
 
             $data['file_path'] = $filename;
@@ -974,7 +976,7 @@ class StudentAssessmentExamController extends Controller
         StudentProjectSubmission::firstOrCreate(
             [
                 'student_id' => Auth::id(),
-                'school_assessment_id' => $assessmentId
+                'school_assessment_id' => $assessmentId,
             ],
             $data
         );
@@ -987,9 +989,9 @@ class StudentAssessmentExamController extends Controller
         ]);
     }
 
-    public function studentResultAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId) 
+    public function studentResultAssessment($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
-        $user = UserAccount::with(['StudentProfile','StudentSchoolClass'])->findOrFail(Auth::id());
+        $user = UserAccount::with(['StudentProfile', 'StudentSchoolClass'])->findOrFail(Auth::id());
         $classId = $user->StudentSchoolClass[0]->school_class_id;
 
         // GET ASSESSMENT
@@ -1002,13 +1004,13 @@ class StudentAssessmentExamController extends Controller
         $summary = StudentAssessmentSummary::where('student_id', $user->id)->where('root_assessment_id', $rootAssessmentId)->first();
 
         // DATA JAWABAN USER
-        $answers = StudentAssessmentAnswer::where('student_id',$user->id)->where('school_assessment_id', $assessmentId)->get();
+        $answers = StudentAssessmentAnswer::where('student_id', $user->id)->where('school_assessment_id', $assessmentId)->get();
 
         $totalQuestionsExam = $answers->count();
-        $totalCorrect = $answers->where('question_score','>',0)->count();
-        $totalWrong = $answers->where('question_score',0)->where('status_answer','submitted')->count();
-        $totalUnanswered = $answers->where('status_answer','draft')->count();
-        $totalPendingEssay = $answers->where('status_answer','submitted')->where('grading_status','pending')->count();
+        $totalCorrect = $answers->where('question_score', '>', 0)->count();
+        $totalWrong = $answers->where('question_score', 0)->where('status_answer', 'submitted')->count();
+        $totalUnanswered = $answers->where('status_answer', 'draft')->count();
+        $totalPendingEssay = $answers->where('status_answer', 'submitted')->where('grading_status', 'pending')->count();
 
         // SCORE
         $rawScore = $answers->whereNotNull('question_score')->sum('question_score');
@@ -1020,13 +1022,9 @@ class StudentAssessmentExamController extends Controller
 
             if ($category === 'main') {
                 $finalScore = $summary->main_score ?? $rawScore;
-            }
-
-            elseif ($category === 'susulan') {
+            } elseif ($category === 'susulan') {
                 $finalScore = $summary->susulan_score ?? $rawScore;
-            }
-
-            elseif ($category === 'remedial') {
+            } elseif ($category === 'remedial') {
 
                 // kalau kamu pakai JSON remedial_score
                 $remedials = $summary->remedial_score ?? [];
@@ -1035,13 +1033,9 @@ class StudentAssessmentExamController extends Controller
                     ->firstWhere('assessment_id', $assessmentId);
 
                 $finalScore = $currentRemedial['score'] ?? $rawScore;
-            }
-
-            elseif ($category === 'pengayaan') {
+            } elseif ($category === 'pengayaan') {
                 $finalScore = $summary->pengayaan_score ?? $rawScore;
-            }
-
-            else {
+            } else {
                 $finalScore = $rawScore;
             }
 
@@ -1057,21 +1051,13 @@ class StudentAssessmentExamController extends Controller
         if ($summary) {
             if ($category === 'main') {
                 $finalScoreGlobal = $summary->main_score ?? $finalScore;
-            }
-
-            elseif ($category === 'susulan') {
+            } elseif ($category === 'susulan') {
                 $finalScoreGlobal = $summary->susulan_score ?? $finalScore;
-            }
-
-            elseif ($category === 'remedial') {
+            } elseif ($category === 'remedial') {
                 $finalScoreGlobal = $finalScore;
-            }
-
-            elseif ($category === 'pengayaan') {
+            } elseif ($category === 'pengayaan') {
                 $finalScoreGlobal = $summary->pengayaan_score ?? $finalScore;
-            }
-
-            else {
+            } else {
                 $finalScoreGlobal = $finalScore;
             }
         }
@@ -1083,24 +1069,32 @@ class StudentAssessmentExamController extends Controller
         $percentage = $maxScore > 0 ? round(($finalScore / $maxScore) * 100, 2) : 0;
 
         // DURASI USER
-        $durations = $answers->where('answer_duration','>',0)->pluck('answer_duration');
+        $durations = $answers->where('answer_duration', '>', 0)->pluck('answer_duration');
         $fastestRaw = $durations->min() ?? 0;
         $slowestRaw = $durations->max() ?? 0;
-        $totalDurationRaw = $answers->where('answer_duration','>',0)->pluck('total_exam_duration')->first() ?? 0;
+        $totalDurationRaw = $answers->where('answer_duration', '>', 0)->pluck('total_exam_duration')->first() ?? 0;
 
-        $formatDuration = function($seconds){
-            if($seconds <= 0) return '-';
+        $formatDuration = function ($seconds) {
+            if ($seconds <= 0) {
+                return '-';
+            }
 
             $hours = floor($seconds / 3600);
             $minutes = floor(($seconds % 3600) / 60);
             $secondsRemain = $seconds % 60;
 
             $parts = [];
-            if($hours > 0) $parts[] = $hours.' jam';
-            if($minutes > 0) $parts[] = $minutes.' menit';
-            if($secondsRemain > 0) $parts[] = $secondsRemain.' detik';
+            if ($hours > 0) {
+                $parts[] = $hours.' jam';
+            }
+            if ($minutes > 0) {
+                $parts[] = $minutes.' menit';
+            }
+            if ($secondsRemain > 0) {
+                $parts[] = $secondsRemain.' detik';
+            }
 
-            return implode(' ',$parts);
+            return implode(' ', $parts);
         };
 
         $fastest = $formatDuration($fastestRaw);
@@ -1114,75 +1108,75 @@ class StudentAssessmentExamController extends Controller
         $confidence = round(($accuracy * 0.8 + $completion * 0.2) * 100, 2);
 
         // TOTAL SISWA
-        $totalStudents = StudentSchoolClass::where('school_class_id',$classId)->count();
+        $totalStudents = StudentSchoolClass::where('school_class_id', $classId)->count();
 
         $participants = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)
-        ->whereIn('student_id', function ($q) use ($classId) {
-            $q->select('student_id')->from('student_school_classes')->where('school_class_id', $classId);
-        })->distinct('student_id')->count('student_id');
+            ->whereIn('student_id', function ($q) use ($classId) {
+                $q->select('student_id')->from('student_school_classes')->where('school_class_id', $classId);
+            })->distinct('student_id')->count('student_id');
 
         // RANKING DURASI
-        $allDurations = StudentAssessmentAnswer::where('school_assessment_id',$assessmentId)->where('answer_duration','>', 0)->selectRaw('student_id, SUM(answer_duration) as total_duration')
-        ->groupBy('student_id')->orderBy('total_duration')->get();
+        $allDurations = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)->where('answer_duration', '>', 0)->selectRaw('student_id, SUM(answer_duration) as total_duration')
+            ->groupBy('student_id')->orderBy('total_duration')->get();
 
         $uniqueTotalDurations = $allDurations->pluck('total_duration')->unique()->sort()->values();
-        $userTotalDuration = $allDurations->firstWhere('student_id',$user->id)->total_duration ?? null;
+        $userTotalDuration = $allDurations->firstWhere('student_id', $user->id)->total_duration ?? null;
         $rankDuration = $userTotalDuration !== null ? $uniqueTotalDurations->search($userTotalDuration) + 1 : null;
 
         $percentileDuration = ($rankDuration !== null) ? ($participants == 1 ? 100 : round((($participants - $rankDuration) / ($participants - 1)) * 100, 2)) : 0;
 
         // FASTEST
-        $fastestQuestion = StudentAssessmentAnswer::where('school_assessment_id',$assessmentId)->where('answer_duration','>', 0)->selectRaw('student_id, MIN(answer_duration) as duration')
-        ->groupBy('student_id')->orderBy('duration')->get();
+        $fastestQuestion = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)->where('answer_duration', '>', 0)->selectRaw('student_id, MIN(answer_duration) as duration')
+            ->groupBy('student_id')->orderBy('duration')->get();
 
         $uniqueFastestDurations = $fastestQuestion->pluck('duration')->unique()->sort()->values();
-        $userFastestDuration = $fastestQuestion->firstWhere('student_id',$user->id)->duration ?? null;
+        $userFastestDuration = $fastestQuestion->firstWhere('student_id', $user->id)->duration ?? null;
         $rankFastest = $userFastestDuration !== null ? $uniqueFastestDurations->search($userFastestDuration) + 1 : null;
 
         $percentileFastest = ($rankFastest !== null) ? ($participants == 1 ? 100 : round((($participants - $rankFastest) / ($participants - 1)) * 100, 2)) : 0;
 
         // SLOWEST
-        $slowestQuestion = StudentAssessmentAnswer::where('school_assessment_id',$assessmentId)->where('answer_duration','>',0)->selectRaw('student_id, MAX(answer_duration) as duration')
-        ->groupBy('student_id')->orderBy('duration')->get();
+        $slowestQuestion = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)->where('answer_duration', '>', 0)->selectRaw('student_id, MAX(answer_duration) as duration')
+            ->groupBy('student_id')->orderBy('duration')->get();
 
         $uniqueSlowestDuration = $slowestQuestion->pluck('duration')->unique()->sortDesc()->values();
-        $userSlowestDuration = $slowestQuestion->firstWhere('student_id',$user->id)->duration ?? null;
+        $userSlowestDuration = $slowestQuestion->firstWhere('student_id', $user->id)->duration ?? null;
         $rankSlowest = $userSlowestDuration !== null ? $uniqueSlowestDuration->search($userSlowestDuration) + 1 : null;
 
         $percentileSlowest = ($rankSlowest !== null) ? ($participants == 1 ? 100 : round((($participants - $rankSlowest) / ($participants - 1)) * 100, 2)) : 0;
 
         // CONFIDENCE RANK
-        $totalQuestions = StudentAssessmentAnswer::where('school_assessment_id',$assessmentId)->distinct('school_assessment_question_id')->count('school_assessment_question_id');
+        $totalQuestions = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)->distinct('school_assessment_question_id')->count('school_assessment_question_id');
 
         $allConfidence = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)->selectRaw('student_id,
             SUM(CASE WHEN question_score > 0 THEN 1 ELSE 0 END) as correct,
             SUM(CASE WHEN status_answer = "submitted" THEN 1 ELSE 0 END) as answered,
             SUM(answer_duration) as total_duration')
-        ->groupBy('student_id')->get();
+            ->groupBy('student_id')->get();
 
         $durations = $allConfidence->pluck('total_duration');
         $minDuration = $durations->min();
         $maxDuration = $durations->max();
 
-        $allConfidence = $allConfidence->map(function($row) use ($totalQuestions,$minDuration,$maxDuration){
+        $allConfidence = $allConfidence->map(function ($row) use ($totalQuestions, $minDuration, $maxDuration) {
 
             $duration = $row->total_duration ?? 0;
             $accuracy = $row->answered > 0 ? $row->correct / $row->answered : 0;
             $completion = $totalQuestions > 0 ? min($row->answered / $totalQuestions, 1) : 0;
 
             $speed = ($maxDuration == $minDuration) ? 1 : ($maxDuration - $duration) / ($maxDuration - $minDuration);
-            $speed = max(min($speed,1),0);
+            $speed = max(min($speed, 1), 0);
 
             $confidence = min(($accuracy * 0.7 + $completion * 0.2 + $speed * 0.1) * 100, 100);
 
             return [
-                'student_id'=> $row->student_id,
-                'confidence'=> round($confidence,2)
+                'student_id' => $row->student_id,
+                'confidence' => round($confidence, 2),
             ];
         })->sortByDesc('confidence')->values();
 
         $uniqueConfidence = $allConfidence->pluck('confidence')->unique()->sortDesc()->values();
-        $userConfidenceRow = $allConfidence->firstWhere('student_id',$user->id);
+        $userConfidenceRow = $allConfidence->firstWhere('student_id', $user->id);
         $confidence = $userConfidenceRow['confidence'] ?? null;
 
         $rankConfidence = $confidence !== null ? $uniqueConfidence->search($confidence) + 1 : null;
@@ -1201,7 +1195,7 @@ class StudentAssessmentExamController extends Controller
 
         return view('features.lms.student.assessment.student-assessment-result-test', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId', 'assessmentTypeId', 'semester',
             'assessmentId', 'user', 'totalQuestions', 'totalCorrect', 'totalWrong', 'totalUnanswered', 'totalPendingEssay', 'finalScore', 'percentage', 'isFullyGraded', 'schoolAssessment',
-            'fastest', 'slowest', 'totalDuration', 'confidence', 'percentileDuration', 'percentileFastest', 'percentileSlowest', 'percentileConfidence', 'participants','totalStudents','kkm',
+            'fastest', 'slowest', 'totalDuration', 'confidence', 'percentileDuration', 'percentileFastest', 'percentileSlowest', 'percentileConfidence', 'participants', 'totalStudents', 'kkm',
             'hasAttempt', 'finalScoreGlobal', 'category'
         ));
     }
@@ -1221,7 +1215,7 @@ class StudentAssessmentExamController extends Controller
 
         $schoolAssessment = SchoolAssessment::find($assessmentId);
 
-        return view('features.lms.student.assessment.student-project-assessment-result', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-project-assessment-result', compact('role', 'schoolName', 'schoolId', 'curriculumId',
             'mapelId', 'assessmentTypeId', 'semester', 'assessmentId', 'submission', 'score', 'isFullyGraded', 'schoolAssessment'));
     }
 }

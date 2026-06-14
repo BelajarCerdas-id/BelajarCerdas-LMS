@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Lms\Academic;
 
 use App\Http\Controllers\Controller;

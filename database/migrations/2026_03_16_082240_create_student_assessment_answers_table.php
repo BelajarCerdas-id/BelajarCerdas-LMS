@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('student_assessment_answers')) {
+        if (! Schema::hasTable('student_assessment_answers')) {
             Schema::create('student_assessment_answers', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('student_id')->constrained('user_accounts');

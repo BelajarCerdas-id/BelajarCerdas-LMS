@@ -15,10 +15,12 @@ class LmsSubjectPassingGradeCriteria implements ShouldBroadcastNow
     /**
      * Create a new event instance.
      */
-
     public $tipe_model; // db subjectPassingGradeCriteria
+
     public $action; // macam" action CRUD subjectPassingGradeCriteria (create, update, delete, activate)
+
     public $data; // isi data setap model (db)
+
     public function __construct($tipe_model, $action, $data)
     {
         $this->tipe_model = $tipe_model;
@@ -29,7 +31,7 @@ class LmsSubjectPassingGradeCriteria implements ShouldBroadcastNow
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): Channel
     {

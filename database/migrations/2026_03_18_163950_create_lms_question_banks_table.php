@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Bungkus dengan pengecekan agar bank soal yang sudah diinput tidak hilang/error
-        if (!Schema::hasTable('lms_question_banks')) {
+        if (! Schema::hasTable('lms_question_banks')) {
             Schema::create('lms_question_banks', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('user_accounts');

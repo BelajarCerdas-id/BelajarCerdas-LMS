@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('poll_id')->constrained('polls')->cascadeOnDelete();
             $table->string('option_text'); // Teks pilihan (Contoh: "Sangat Paham", "Kurang Paham")
             $table->integer('votes_count')->default(0); // Menyimpan jumlah orang yang memilih opsi ini
-            
+
             $table->timestamps();
         });
     }

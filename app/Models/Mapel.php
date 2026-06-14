@@ -17,6 +17,7 @@ class Mapel extends Model
         'kelas_id',
         'fase_id',
         'kurikulum_id',
+        'yayasan_id',
         'school_partner_id',
         'status_mata_pelajaran',
     ];
@@ -55,7 +56,7 @@ class Mapel extends Model
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
-    
+
     // LMS QUESTION BANK
     public function LmsQuestionBank()
     {

@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class SchoolStaffProfile extends Model
 {
     use HasFactory;
-    
+
     // Pastikan nama tabel benar
     protected $table = 'school_staff_profiles';
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'enrollment_type',
         'nama_lengkap',

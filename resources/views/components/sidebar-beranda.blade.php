@@ -463,6 +463,22 @@
                         </div>
                     </div>
                 </li>
+
+                <li class="list-item pb-4 px-4">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                            <i class="fa-solid fa-building-columns text-[12px]"></i>
+                            <span class="text-[14px]">Yayasan</span>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6">
+                            <a href="{{ route('admin.yayasan.index') }}" class="link-href flex py-2 text-[14px]">
+                                Manajemen Yayasan
+                            </a>
+                        </div>
+                    </div>
+                </li>
             </div>
         </ul>
     </aside>
@@ -734,6 +750,22 @@
                             </div>
                         </div>
                     </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-building-columns text-[14px]"></i>
+                                <span class="text-[14px]">Yayasan</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                            </div>
+
+                            <div class="content-dropdown px-2 w-full">
+                                <a href="{{ route('admin.yayasan.index') }}" class="link-href flex py-2 text-[14px]">
+                                    Manajemen Yayasan
+                                </a>
+                            </div>
+                        </div>
+                    </li>
                 </ul>
 
                 <div class="border-b border-gray-300 mb-6"></div>
@@ -944,6 +976,269 @@
                             <span>Keluar</span>
                     </button>
                 </form>
+            </div>
+        </div>
+    </div>
+@elseif(Auth::user()->role === 'Yayasan')
+    @php
+        $yayasanProfile = Auth::user()->YayasanProfile;
+        $activeYayasan = $yayasan ?? optional($yayasanProfile)->Yayasan;
+        $yayasanId = optional($activeYayasan)->id ?? optional($yayasanProfile)->yayasan_id;
+        $yayasanLogo = optional($activeYayasan)->logo;
+        $yayasanName = optional($activeYayasan)->nama_yayasan ?? 'Yayasan';
+    @endphp
+
+    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
+        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500">
+
+            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
+                @if(!empty($yayasanLogo))
+                    <img id="school-logo-preview" src="{{ asset($yayasanLogo) }}" class="h-26 object-contain" alt="Logo Yayasan">
+                @else
+                    <span class="text-center text-sm font-bold px-4 text-[#0071BC]">{{ $yayasanName }}</span>
+                @endif
+            </div>
+        </div>
+
+        <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
+
+            <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
+
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-gauge text-[15px] w-5 text-center"></i>
+                        <a href="{{ $yayasanId ? route('yayasan.dashboard', $yayasanId) : '#' }}" class="link-href text-[14px]">
+                            Beranda
+                        </a>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-school-flag text-[15px] w-5 text-center"></i>
+                        <a href="{{ $yayasanId ? route('yayasan.schools', $yayasanId) : '#' }}" class="link-href text-[14px]">
+                            Kelola Sekolah
+                        </a>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-calendar-days text-[15px] w-5 text-center"></i>
+                        <a href="{{ $yayasanId ? route('yayasan.calendar', $yayasanId) : '#' }}" class="link-href text-[14px]">
+                            Kalender & Agenda
+                        </a>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-bullhorn text-[15px] w-5 text-center"></i>
+                        <a href="{{ $yayasanId ? route('yayasan.announcements', $yayasanId) : '#' }}" class="link-href text-[14px]">
+                            Pengumuman
+                        </a>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                        <i class="fa-solid fa-users-viewfinder text-[15px] w-5 text-center"></i>
+                        <a href="{{ $yayasanId ? route('yayasan.people', $yayasanId) : '#' }}" class="link-href text-[14px]">
+                            Data Warga Sekolah
+                        </a>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="mt-auto">
+                <hr class="border-white border opacity-60 mb-10 mx-6">
+
+                <div class="pb-16 -ml-2 flex justify-center">
+                    <div class="flex flex-col w-max">
+                        <span class="text-[13px] mb-3">
+                            Powered By:
+                        </span>
+                        <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
+        <div class="content">
+            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+                <header class="text-[20px] font-bold flex items-center gap-3.5">
+                    @if (isset($linkBackButton))
+                        <a href="{{ $linkBackButton }}">
+                            @if (isset($backButton))
+                                <div class="flex items-center gap-2">
+                                    <button class="font-bold text-xl cursor-pointer text-white">{!! $backButton !!}</button>
+                                    <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
+                                </div>
+                            @endif
+                        </a>
+                    @else
+                        @if (isset($backButton))
+                            <div class="flex items-center gap-2">
+                                <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
+                                <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
+                            </div>
+                        @else
+                            <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
+                        @endif
+                    @endif
+                </header>
+
+                <div class="list-item-button-profile m-2 z-40">
+                    <div class="dropdown-menu hidden lg:block">
+                        <div class="flex items-center gap-3.5 relative">
+                            <div class="flex flex-col">
+                                <span class="text-[12px] text-white font-semibold leading-6">
+                                    {{ Str::limit(optional($yayasanProfile)->nama_lengkap ?? Auth::user()->email, 20) }}
+                                </span>
+                                <span class="text-[11px] text-white font-semibold leading-6">Yayasan</span>
+                            </div>
+                            <i class="fas fa-circle-user text-4xl text-white opacity-85 toggle-menu-button-profile cursor-pointer"></i>
+
+                            <div class="content-dropdown-button-profile absolute right-0 top-full mt-2 bg-white border border-gray-200 shadow-lg w-55 rounded-lg">
+                                <a href="{{ route('beranda', ['role' => Auth::user()->role]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-solid fa-house"></i> Beranda
+                                    </div>
+                                </a>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-item-button-profile relative lg:hidden z-40">
+                    <div class="dropdown-menu">
+                        <div class="toggle-menu-button-profile cursor-pointer">
+                            <i class="fas fa-circle-user text-4xl text-white"></i>
+                        </div>
+                        <div class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
+                            <a href="{{ route('beranda', ['role' => Auth::user()->role]) }}">
+                                <div class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
+                                    <i class="fa-solid fa-house"></i> Beranda
+                                </div>
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i> Keluar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar-beranda-phone w-full h-20 flex justify-between items-center md:hidden bg-white shadow-lg px-6">
+        <div class="flex items-center h-full">
+            <label for="my-drawer-1">
+                <i class="fas fa-bars text-2xl relative top-1 cursor-pointer"></i>
+            </label>
+            <a href="{{ $yayasanId ? route('yayasan.dashboard', $yayasanId) : '#' }}">
+                @if(!empty($yayasanLogo))
+                    <img src="{{ asset($yayasanLogo) }}" alt="Logo Yayasan" class="h-12 w-30 ml-4 object-contain">
+                @else
+                    <span class="ml-4 text-sm font-bold text-[#0071BC] leading-tight max-w-40">{{ $yayasanName }}</span>
+                @endif
+            </a>
+        </div>
+        <div class="flex items-center gap-8 text-2xl relative top-1 z-40">
+            <div class="list-item-button-profile relative md:hidden">
+                <div class="dropdown-menu">
+                    <div class="toggle-menu-button-profile cursor-pointer">
+                        <i class="fas fa-circle-user text-4xl text-[#0071BC] font-bold"></i>
+                    </div>
+                    <div class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
+                        <a href="{{ route('beranda', ['role' => Auth::user()->role]) }}">
+                            <div class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
+                                <i class="fa-solid fa-house"></i> Beranda
+                            </div>
+                        </a>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
+                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i> Keluar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="drawer md:hidden z-9999">
+        <input id="my-drawer-1" type="checkbox" class="drawer-toggle"/>
+        <div class="drawer-side">
+            <label for="my-drawer-1" class="drawer-overlay"></label>
+            <div class="bg-gray-50 min-h-full min-w-[65vw] flex flex-col">
+                <header class="h-20 px-4 bg-[#0071BC] flex items-center justify-between shadow-sm">
+                    @if(!empty($yayasanLogo))
+                        <img src="{{ asset($yayasanLogo) }}" class="h-12 max-w-36 object-contain bg-white rounded-lg p-1" alt="Logo Yayasan">
+                    @else
+                        <span class="text-sm font-bold text-white leading-tight max-w-40">{{ $yayasanName }}</span>
+                    @endif
+                    <label for="my-drawer-1">
+                        <i class="fas fa-xmark text-2xl text-white cursor-pointer"></i>
+                    </label>
+                </header>
+
+                <div class="relative flex flex-col items-center">
+                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
+                        @if(!empty($yayasanLogo))
+                            <img src="{{ asset($yayasanLogo) }}"
+                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Yayasan">
+                        @else
+                            <span class="text-center text-sm font-semibold text-gray-700">{{ $yayasanName }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="border border-gray-200"></div>
+
+                <div class="flex items-center gap-3 px-4 py-4 mt-2">
+                    <i class="fas fa-circle-user text-3xl text-gray-400"></i>
+                    <div>
+                        <p class="text-sm font-semibold leading-tight">{{ optional($yayasanProfile)->nama_lengkap ?? 'Yayasan' }}</p>
+                        <p class="text-xs text-gray-500">Yayasan</p>
+                    </div>
+                </div>
+                <div class="border border-gray-200"></div>
+                <ul class="pb-6 pt-6 space-y-3 px-3">
+                    <li>
+                        <a href="{{ $yayasanId ? route('yayasan.dashboard', $yayasanId) : '#' }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                            <i class="fa-solid fa-gauge w-5 text-center"></i> Beranda
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $yayasanId ? route('yayasan.schools', $yayasanId) : '#' }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                            <i class="fa-solid fa-school-flag w-5 text-center"></i> Kelola Sekolah
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $yayasanId ? route('yayasan.calendar', $yayasanId) : '#' }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                            <i class="fa-solid fa-calendar-days w-5 text-center"></i> Kalender & Agenda
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $yayasanId ? route('yayasan.announcements', $yayasanId) : '#' }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                            <i class="fa-solid fa-bullhorn w-5 text-center"></i> Pengumuman
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $yayasanId ? route('yayasan.people', $yayasanId) : '#' }}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition text-sm">
+                            <i class="fa-solid fa-users-viewfinder w-5 text-center"></i> Data Warga Sekolah
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

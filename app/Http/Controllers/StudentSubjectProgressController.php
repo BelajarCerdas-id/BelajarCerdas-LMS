@@ -15,8 +15,8 @@ class StudentSubjectProgressController extends Controller
     {
         $getMapel = Mapel::with(['TeacherMapel' => function ($q) {
             $q->where('is_active', 1);
-            
-            },'TeacherMapel.UserAccount.SchoolStaffProfile'])->where('id', $mapelId)->first();
+
+        }, 'TeacherMapel.UserAccount.SchoolStaffProfile'])->where('id', $mapelId)->first();
 
         return response()->json([
             'mapel' => $getMapel,

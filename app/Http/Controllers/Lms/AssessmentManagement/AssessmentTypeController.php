@@ -25,10 +25,10 @@ class AssessmentTypeController extends Controller
     }
 
     // function paginate lms assessment type management
-    public function paginateLmsAssessmentTypeManagement($schoolName, $schoolId) 
+    public function paginateLmsAssessmentTypeManagement($schoolName, $schoolId)
     {
         $assessmentTypes = SchoolAssessmentType::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'AssessmentMode'])
-        ->where('school_partner_id', $schoolId)->paginate(10);
+            ->where('school_partner_id', $schoolId)->paginate(10);
 
         $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
             $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
@@ -65,7 +65,7 @@ class AssessmentTypeController extends Controller
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1|integer|min:1',
         ], [
             'name.required' => 'Nama asesmen tidak boleh kosong.',
-            'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
+            'name.unique' => 'Nama asesmen telah terdaftar pada sekolah ini.',
             'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',
@@ -99,9 +99,9 @@ class AssessmentTypeController extends Controller
         broadcast(new LmsAssessmentTypeManagement('SchoolAssessmentType', 'create', $assessmentType))->toOthers();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Nama asesmen berhasil ditambahkan.',
-            'data'    => $assessmentType,
+            'data' => $assessmentType,
         ]);
     }
 
@@ -120,7 +120,7 @@ class AssessmentTypeController extends Controller
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1|integer|min:1',
         ], [
             'name.required' => 'Nama asesmen tidak boleh kosong.',
-            'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
+            'name.unique' => 'Nama asesmen telah terdaftar pada sekolah ini.',
             'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',

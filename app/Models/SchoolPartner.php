@@ -14,7 +14,13 @@ class SchoolPartner extends Model
         'kepsek_id',
         'jenjang_sekolah',
         'logo',
+        'yayasan_id',
     ];
+
+    public function Yayasan()
+    {
+        return $this->belongsTo(Yayasan::class, 'yayasan_id');
+    }
 
     public function Transactions()
     {

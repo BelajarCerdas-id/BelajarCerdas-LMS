@@ -2,14 +2,15 @@
 
 namespace App\Imports\SubjectPassingGradeCriteria;
 
-use App\Imports\SubjectPassingGradeCriteria\SubjectPassingGradeCriteriaImport;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class SubjectPassingGradeCriteriaSheetImport implements WithMultipleSheets
 {
     protected $userId;
+
     protected $schoolId;
+
     protected $file;
 
     public function __construct($userId, $schoolId, $file)

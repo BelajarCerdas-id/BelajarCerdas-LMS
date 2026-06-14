@@ -10,6 +10,7 @@ class SchoolMapel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'mapel_id',
         'is_active',

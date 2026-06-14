@@ -4,12 +4,9 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Collection;
 
 class BankSoalLmsEditPG implements ShouldBroadcastNow
 {
@@ -18,8 +15,8 @@ class BankSoalLmsEditPG implements ShouldBroadcastNow
     /**
      * Create a new event instance.
      */
-
     public $groupedSoal;
+
     public $questionId;
 
     public function __construct($groupedSoal, $questionId)
@@ -31,13 +28,13 @@ class BankSoalLmsEditPG implements ShouldBroadcastNow
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {
         return [
             new Channel('editQuestionBankPG'), // Broadcast to review question
-            new Channel('editQuestionBankPG.' . $this->questionId), // Broadcast to form edit question
+            new Channel('editQuestionBankPG.'.$this->questionId), // Broadcast to form edit question
         ];
     }
 

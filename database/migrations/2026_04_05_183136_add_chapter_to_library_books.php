@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('library_books', function (Blueprint $table) {
 
-    $table->unsignedBigInteger('chapter_id')->nullable();
+            $table->unsignedBigInteger('chapter_id')->nullable();
 
-});
+        });
     }
 
     /**

@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('announcement_views', function (Blueprint $table) {
             $table->id();
-            
+
             // Menggunakan foreignId() dan constrained() untuk relasi yang lebih rapi
             $table->foreignId('announcement_id')->constrained('announcements')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            
+
             $table->timestamps();
 
-            // Mencegah 1 user tercatat melihat pengumuman yang sama berkali-kali 
+            // Mencegah 1 user tercatat melihat pengumuman yang sama berkali-kali
             $table->unique(['announcement_id', 'user_id']);
         });
     }

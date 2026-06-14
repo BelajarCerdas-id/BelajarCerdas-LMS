@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PollOption extends Model
 {
     use HasFactory;
-    
+
     // Tambahkan baris ini juga
-    protected $guarded = ['id']; 
+    protected $guarded = ['id'];
 }

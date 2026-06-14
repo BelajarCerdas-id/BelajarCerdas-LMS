@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class LmsQuestionOption extends Model
 {
     use HasFactory;
+
     protected $casts = [
         'extra_data' => 'array',
     ];
+
     protected $fillable = [
         'question_id',
         'options_key',

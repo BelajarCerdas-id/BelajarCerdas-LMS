@@ -10,6 +10,7 @@ class Announcement extends Model
     use HasFactory;
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'target_class_id', // 👈 TAMBAHKAN INI
         'author_id',
@@ -35,7 +36,7 @@ class Announcement extends Model
     {
         return $this->hasMany(AnnouncementView::class, 'announcement_id');
     }
-    
+
     /**
      * Cek apakah pengumuman ini sudah dibaca oleh user tertentu
      */

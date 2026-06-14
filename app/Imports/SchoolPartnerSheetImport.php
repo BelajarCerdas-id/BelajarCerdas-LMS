@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class SchoolPartnerSheetImport implements WithMultipleSheets
 {
     protected $userId;
+
     protected $file;
 
     public function __construct($userId, $file)

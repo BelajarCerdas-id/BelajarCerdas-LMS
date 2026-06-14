@@ -9,26 +9,26 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-public function up()
-{
-    Schema::create('library_books', function (Blueprint $table) {
+    public function up()
+    {
+        Schema::create('library_books', function (Blueprint $table) {
 
-        $table->id();
+            $table->id();
 
-        $table->string('title');
-        $table->text('description')->nullable();
+            $table->string('title');
+            $table->text('description')->nullable();
 
-        $table->string('cover')->nullable(); 
-        $table->string('file'); 
+            $table->string('cover')->nullable();
+            $table->string('file');
 
-        $table->enum('type',['read','task'])->default('read');
+            $table->enum('type', ['read', 'task'])->default('read');
 
-        $table->integer('class_level');
-        $table->string('category');
+            $table->integer('class_level');
+            $table->string('category');
 
-        $table->timestamps();
-    });
-}
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

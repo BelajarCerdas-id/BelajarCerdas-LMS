@@ -3,20 +3,29 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\{
-    FromCollection, WithHeadings, WithEvents, ShouldAutoSize, WithTitle
-};
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEvents, ShouldAutoSize, WithTitle
+class AcademicTranscriptExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithTitle
 {
     protected $students;
+
     protected $mapels;
+
     protected $kkm;
+
     protected $schoolName;
+
     protected $schoolClass;
+
     protected $schoolLogo;
+
     protected $rankings = [];
 
     public function __construct($students, $mapels, $kkm, $schoolName = '-', $schoolClass = '-', $schoolLogo = null)
@@ -126,7 +135,9 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
             $totalCols += 1;
 
             $row1[] = $mapelName;
-            for ($i = 1; $i < $totalCols; $i++) $row1[] = '';
+            for ($i = 1; $i < $totalCols; $i++) {
+                $row1[] = '';
+            }
 
             foreach ($classData as $classLevel => $yearData) {
                 foreach ($yearData as $year => $semesterData) {
@@ -162,7 +173,7 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
                 $sheet->insertNewRowBefore(1, 4);
 
                 if ($this->schoolLogo && file_exists(public_path($this->schoolLogo))) {
-                    $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawing = new Drawing;
                     $drawing->setName('School Logo');
                     $drawing->setDescription('School Logo');
                     $drawing->setPath(public_path($this->schoolLogo));
@@ -203,7 +214,7 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
                 $sheet->mergeCells("A{$headerTop}:A{$headerBottom}");
 
                 $totalCol = Coordinate::stringFromColumnIndex($colIndex);
-                $rankCol  = Coordinate::stringFromColumnIndex($colIndex + 1);
+                $rankCol = Coordinate::stringFromColumnIndex($colIndex + 1);
 
                 $sheet->mergeCells("{$totalCol}{$headerTop}:{$totalCol}{$headerBottom}");
                 $sheet->mergeCells("{$rankCol}{$headerTop}:{$rankCol}{$headerBottom}");
@@ -214,15 +225,15 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
                 $sheet->mergeCells("A2:{$lastColumn}2");
                 $sheet->mergeCells("A3:{$lastColumn}3");
 
-                $sheet->setCellValue("A1", strtoupper($this->schoolName));
-                $sheet->setCellValue("A2", "TRANSKRIP NILAI");
-                $sheet->setCellValue("A3", "KELAS {$this->schoolClass}");
+                $sheet->setCellValue('A1', strtoupper($this->schoolName));
+                $sheet->setCellValue('A2', 'TRANSKRIP NILAI');
+                $sheet->setCellValue('A3', "KELAS {$this->schoolClass}");
 
                 $sheet->getStyle("A1:{$lastColumn}3")->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
                     'alignment' => [
                         'horizontal' => 'center',
-                        'vertical' => 'center'
+                        'vertical' => 'center',
                     ],
                 ]);
 
@@ -245,7 +256,7 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
                 $lastRow = $dataStart + count($this->students) - 1;
                 $kkmRow = $lastRow + 1;
 
-                $sheet->setCellValue("A{$kkmRow}", "KKM");
+                $sheet->setCellValue("A{$kkmRow}", 'KKM');
 
                 $col = 2;
                 foreach ($this->mapels as $mapelName => $classData) {
@@ -298,7 +309,7 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
                     ]);
 
                 $sheet->freezePane("B{$dataStart}");
-            }
+            },
         ];
     }
 }

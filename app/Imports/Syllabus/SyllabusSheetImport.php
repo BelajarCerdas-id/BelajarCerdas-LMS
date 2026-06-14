@@ -2,13 +2,13 @@
 
 namespace App\Imports\Syllabus;
 
-use App\Imports\Syllabus\SyllabusImport;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class SyllabusSheetImport implements WithMultipleSheets
 {
     protected $userId;
+
     protected $file;
 
     public function __construct($userId, $file)

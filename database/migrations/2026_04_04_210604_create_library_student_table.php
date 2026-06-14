@@ -31,9 +31,9 @@ return new class extends Migration
 
             // relasi ke tabel buku
             $table->foreign('book_id')
-                  ->references('id')
-                  ->on('library_books')
-                  ->onDelete('cascade');
+                ->references('id')
+                ->on('library_books')
+                ->onDelete('cascade');
 
         });
     }

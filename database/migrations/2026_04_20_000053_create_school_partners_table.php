@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // PERISAI: Pastikan data sekolah tidak terhapus jika tabel sudah ada
-        if (!Schema::hasTable('school_partners')) {
+        if (! Schema::hasTable('school_partners')) {
             Schema::create('school_partners', function (Blueprint $table) {
                 $table->id();
                 $table->string('nama_sekolah');

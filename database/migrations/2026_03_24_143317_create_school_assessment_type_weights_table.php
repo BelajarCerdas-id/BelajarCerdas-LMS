@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Pengecekan agar data bobot nilai tidak error/hilang
-        if (!Schema::hasTable('school_assessment_type_weights')) {
+        if (! Schema::hasTable('school_assessment_type_weights')) {
             Schema::create('school_assessment_type_weights', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained('user_accounts');

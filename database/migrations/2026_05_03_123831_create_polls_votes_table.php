@@ -10,22 +10,22 @@ return new class extends Migration
     {
         Schema::create('poll_votes', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi ke tabel polls
             $table->foreignId('poll_id')
-                  ->constrained('polls')
-                  ->cascadeOnDelete();
-                  
+                ->constrained('polls')
+                ->cascadeOnDelete();
+
             // Relasi ke tabel poll_options
             $table->foreignId('poll_option_id')
-                  ->constrained('poll_options')
-                  ->cascadeOnDelete();
-                  
+                ->constrained('poll_options')
+                ->cascadeOnDelete();
+
             // 👇 FIX FINAL: Mengarah tepat ke tabel user_accounts!
             $table->foreignId('user_id')
-                  ->constrained('user_accounts')
-                  ->cascadeOnDelete();
-                  
+                ->constrained('user_accounts')
+                ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

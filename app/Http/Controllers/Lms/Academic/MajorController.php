@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Lms\Academic;
 
 use App\Events\LmsManagementMajors;
@@ -23,7 +24,7 @@ class MajorController extends Controller
         $majors = SchoolMajor::withCount([
             'schoolClass as school_class_count' => function ($q) {
                 $q->where('status_major', 'active');
-            }
+            },
         ])->where('school_partner_id', $schoolId)->get();
 
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
@@ -46,7 +47,7 @@ class MajorController extends Controller
             'major_code' => [
                 'required',
                 Rule::unique('school_majors', 'major_code')->where('school_partner_id', $schoolId),
-            ]
+            ],
         ], [
             'major_name.required' => 'Nama jurusan harus diisi.',
             'major_name.unique' => 'Nama jurusan telah terdaftar pada sekolah ini.',
@@ -85,7 +86,7 @@ class MajorController extends Controller
             ],
             'major_code' => [
                 'required',
-            ]
+            ],
         ], [
             'major_name.required' => 'Nama jurusan harus diisi.',
             'major_name.unique' => 'Nama jurusan telah terdaftar pada sekolah ini.',

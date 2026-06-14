@@ -11,6 +11,7 @@ class SchoolAssessmentType extends Model
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'name',
         'assessment_mode_id',
@@ -19,15 +20,18 @@ class SchoolAssessmentType extends Model
         'is_active',
     ];
 
-    public function UserAccount() {
+    public function UserAccount()
+    {
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
-    public function SchoolPartner() {
+    public function SchoolPartner()
+    {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
 
-    public function AssessmentMode() {
+    public function AssessmentMode()
+    {
         return $this->belongsTo(AssessmentMode::class, 'assessment_mode_id');
     }
 

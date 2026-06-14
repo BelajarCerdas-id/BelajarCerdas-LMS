@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use App\Models\ParentProfile; 
 use App\Models\SchoolStaffProfile;
 use App\Models\StudentProfile;
+use App\Models\YayasanProfile;
+use App\Models\ParentProfile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DashboardController extends Controller
@@ -103,7 +104,7 @@ class DashboardController extends Controller
             $schoolName = $school ? $school->nama_sekolah : 'sekolah';
 
             // Redirect otomatis ke rute Orang Tua
-            return redirect()->route('lms.parent.dashboard', [
+            return redirect()->route('lms.parent.dashboard.view', [
                 'role'       => 'Orang Tua', 
                 'schoolName' => $schoolName,
                 'schoolId'   => $schoolId
@@ -136,6 +137,16 @@ class DashboardController extends Controller
                 'Administrator' => app(AdministratorDashboardController::class)->index($user->role),
                 default => abort(404),
             };
+        }
+
+        if ($user->role === 'Yayasan') {
+            $profilYayasan = YayasanProfile::where('user_id', $user->id)->first();
+
+            if (! $profilYayasan) {
+                abort(403, 'Profil Yayasan Anda belum terdaftar di sistem.');
+            }
+
+            return redirect()->route('yayasan.dashboard', $profilYayasan->yayasan_id);
         }
 
         // Default Fallback jika role tidak dikenali

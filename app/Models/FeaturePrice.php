@@ -17,7 +17,8 @@ class FeaturePrice extends Model
         'price',
     ];
 
-    public function Feature() {
+    public function Feature()
+    {
         return $this->belongsTo(Feature::class, 'feature_id');
     }
 }

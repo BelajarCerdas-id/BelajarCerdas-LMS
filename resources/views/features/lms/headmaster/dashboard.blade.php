@@ -139,6 +139,45 @@
                 </div>
 
                 <div class="xl:col-span-4 space-y-8">
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col min-h-[360px]">
+                        <div class="p-8 border-b border-slate-50 bg-blue-50/50 flex items-center justify-between">
+                            <h3 class="font-black text-slate-800 tracking-tight flex items-center gap-2">
+                                <i class="fas fa-building-columns text-[#0071BC]"></i> Pengumuman Yayasan
+                            </h3>
+                            @php
+                                $unreadYayasan = collect($pengumumanYayasan ?? [])->whereNull('read_at')->count();
+                            @endphp
+                            @if ($unreadYayasan > 0)
+                                <span class="px-2.5 py-1 rounded-full bg-red-500 text-white text-[10px] font-black">{{ $unreadYayasan }} baru</span>
+                            @endif
+                        </div>
+
+                        <div class="p-8 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+                            @forelse($pengumumanYayasan ?? [] as $info)
+                                <button type="button"
+                                    onclick="openYayasanAnnouncement({{ $info->id }}, @js($info->title), @js($info->content), @js(\Carbon\Carbon::parse($info->created_at)->translatedFormat('d M Y H:i')))"
+                                    class="w-full text-left relative pl-6 border-l-2 {{ $info->read_at ? 'border-slate-100' : 'border-[#0071BC]' }} hover:border-[#0071BC] transition-colors group cursor-pointer">
+                                    <div class="absolute -left-[5px] top-0 w-2 h-2 rounded-full {{ $info->read_at ? 'bg-slate-200' : 'bg-red-500' }} group-hover:bg-[#0071BC] transition-colors"></div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}</span>
+                                            <h4 class="font-bold text-sm text-slate-700 mt-1 leading-snug group-hover:text-[#0071BC] transition-colors">{{ $info->title }}</h4>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">{{ $info->content }}</p>
+                                        </div>
+                                        <span class="shrink-0 px-2 py-1 rounded-lg {{ $info->read_at ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' }} text-[10px] font-black uppercase">
+                                            {{ $info->read_at ? 'Terbaca' : 'Baru' }}
+                                        </span>
+                                    </div>
+                                </button>
+                            @empty
+                                <div class="h-full flex flex-col items-center justify-center text-center opacity-40 py-12">
+                                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                                    <p class="text-sm font-bold">Belum ada pengumuman yayasan</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full min-h-[500px]">
                         <div class="p-8 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
                             <h3 class="font-black text-slate-800 tracking-tight flex items-center gap-2">
@@ -214,6 +253,20 @@
             </form>
         </div>
     </div>
+
+    <div id="yayasanAnnouncementModal" class="fixed inset-0 z-[70] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300">
+            <div class="bg-[#0071BC] p-6 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg"><i class="fas fa-building-columns mr-2"></i> Pengumuman Yayasan</h3>
+                <button onclick="closeYayasanAnnouncement()" class="hover:rotate-90 transition-transform"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p id="yayasanAnnouncementDate" class="text-xs font-black uppercase tracking-widest text-slate-400"></p>
+                <h3 id="yayasanAnnouncementTitle" class="text-xl font-black text-slate-900"></h3>
+                <p id="yayasanAnnouncementContent" class="text-sm text-slate-600 leading-relaxed whitespace-pre-line"></p>
+            </div>
+        </div>
+    </div>
 @endif
 
 <style>
@@ -281,5 +334,37 @@
             Swal.fire({ icon: 'error', title: 'Error', text: "Terjadi kesalahan jaringan." });
             btn.innerHTML = originalText; btn.disabled = false;
         }
+    }
+
+    async function openYayasanAnnouncement(id, title, content, dateText) {
+        const modal = document.getElementById('yayasanAnnouncementModal');
+        const box = modal.querySelector('div');
+        document.getElementById('yayasanAnnouncementTitle').innerText = title;
+        document.getElementById('yayasanAnnouncementContent').innerText = content;
+        document.getElementById('yayasanAnnouncementDate').innerText = dateText;
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.replace('opacity-0', 'opacity-100');
+            box.classList.replace('scale-95', 'scale-100');
+        }, 10);
+
+        let csrfToken = document.querySelector('meta[name="csrf-token"]');
+        let token = csrfToken ? csrfToken.getAttribute('content') : '';
+        await fetch("{{ route('lms.kepsek.yayasanAnnouncement.read') }}", {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ announcement_id: id })
+        });
+    }
+
+    function closeYayasanAnnouncement() {
+        const modal = document.getElementById('yayasanAnnouncementModal');
+        const box = modal.querySelector('div');
+        modal.classList.replace('opacity-100', 'opacity-0');
+        box.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            window.location.reload();
+        }, 300);
     }
 </script>

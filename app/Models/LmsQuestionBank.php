@@ -11,6 +11,7 @@ class LmsQuestionBank extends Model
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'kurikulum_id',
         'kelas_id',

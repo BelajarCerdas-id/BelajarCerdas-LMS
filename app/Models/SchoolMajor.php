@@ -10,6 +10,7 @@ class SchoolMajor extends Model
     use HasFactory;
 
     protected $fillable = [
+        'yayasan_id',
         'school_partner_id',
         'major_name',
         'major_code',

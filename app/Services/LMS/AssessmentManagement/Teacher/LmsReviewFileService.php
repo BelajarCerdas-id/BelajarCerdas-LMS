@@ -9,10 +9,10 @@ class LmsReviewFileService
     private function guessMime($ext)
     {
         return match (strtolower($ext)) {
-            'mp4', 'webm', 'ogg' => 'video/' . $ext,
-            'pdf'               => 'application/pdf',
-            'jpg', 'jpeg', 'png', 'webp' => 'image/' . $ext,
-            default             => 'application/octet-stream',
+            'mp4', 'webm', 'ogg' => 'video/'.$ext,
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg', 'png', 'webp' => 'image/'.$ext,
+            default => 'application/octet-stream',
         };
     }
 
@@ -25,9 +25,9 @@ class LmsReviewFileService
 
             return [
                 'file_name' => $item->assessment_original_filename,
-                'file_url' => asset('assessment/assessment-file/' . $item->assessment_value_file),
+                'file_url' => asset('assessment/assessment-file/'.$item->assessment_value_file),
                 'mime' => $this->guessMime($extension),
-                'type' => 'file'
+                'type' => 'file',
             ];
         });
     }

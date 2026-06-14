@@ -12,6 +12,6 @@ class LibraryStudent extends Model
         'book_id',
         'title',
         'genre',
-        'student_name'
+        'student_name',
     ];
 }

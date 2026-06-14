@@ -119,6 +119,7 @@ class AccountController extends Controller
                 // Jika hanya ada 1 kepsek aktif → TOLAK
                 if ($activeKepsek->count() <= 1) {
                     DB::rollBack();
+
                     return response()->json([
                         'status' => 'error',
                         'cannotDeactivateLastKepsek' => true,
@@ -139,11 +140,11 @@ class AccountController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
     }
-
 }

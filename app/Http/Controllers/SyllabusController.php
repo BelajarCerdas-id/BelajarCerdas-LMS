@@ -9,12 +9,9 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
-use App\Models\SchoolMapel;
-use App\Models\SchoolPartner;
 use App\Models\SubBab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -48,7 +45,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_kurikulum' => [
                 'required',
-                Rule::unique('kurikulums', 'nama_kurikulum')
+                Rule::unique('kurikulums', 'nama_kurikulum'),
             ],
         ], [
             'nama_kurikulum.required' => 'Harap masukkan nama kurikulum.',
@@ -58,7 +55,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -73,12 +70,12 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Kurikulum berhasil diubah.',
-            'data' => $curriculum
+            'data' => $curriculum,
         ]);
     }
 
     // function management kurikulum udpate
-    public function curiculumEdit(Request $request, String $id)
+    public function curiculumEdit(Request $request, string $id)
     {
         $user = Auth::user();
 
@@ -87,7 +84,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_kurikulum' => [
                 'required',
-                Rule::unique('kurikulums', 'nama_kurikulum')
+                Rule::unique('kurikulums', 'nama_kurikulum'),
             ],
         ], [
             'nama_kurikulum.required' => 'Harap masukkan nama kurikulum.',
@@ -97,7 +94,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -112,7 +109,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Kurikulum berhasil diubah.',
-            'data' => $curriculum
+            'data' => $curriculum,
         ]);
     }
 
@@ -121,14 +118,14 @@ class SyllabusController extends Controller
     {
         $dataFase = Fase::where('kurikulum_id', $curriculumId)->get();
 
-        return view('syllabus-services.default.list-fase', compact( 'curriculumName', 'curriculumId', 'dataFase'));
+        return view('syllabus-services.default.list-fase', compact('curriculumName', 'curriculumId', 'dataFase'));
     }
 
     // function paginate management fase
     public function paginateSyllabusFase(Request $request, $curriculumName, $curriculumId)
     {
         $getSyllabusFase = Fase::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('kurikulum_id', $curriculumId)
-        ->orderBy('created_at', 'asc')->paginate(20);
+            ->orderBy('created_at', 'asc')->paginate(20);
 
         return response()->json([
             'data' => $getSyllabusFase->items(),
@@ -145,7 +142,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_fase' => [
                 'required',
-                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId)
+                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId),
             ],
         ], [
             'nama_fase.required' => 'Harap masukkan Fase.',
@@ -155,7 +152,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422); // Gunakan 422 Unprocessable Entity untuk validasi
         }
 
@@ -171,7 +168,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Fase berhasil ditambahkan.',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -183,8 +180,8 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_fase' => [
                 'required',
-                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId)
-        ],
+                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId),
+            ],
         ], [
             'nama_fase.required' => 'Harap masukkan Fase.',
             'nama_fase.unique' => 'Fase telah terdaftar.',
@@ -193,7 +190,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -207,7 +204,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Fase berhasil diubah.',
-            'data' => $dataFase
+            'data' => $dataFase,
         ]);
     }
 
@@ -223,8 +220,8 @@ class SyllabusController extends Controller
     public function paginateSyllabusKelas($curriculumName, $curriculumId, $faseId)
     {
         $getSyllabusKelas = Kelas::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)
-        ->where('kurikulum_id', $curriculumId)
-        ->orderBy('created_at', 'asc')->paginate(20);
+            ->where('kurikulum_id', $curriculumId)
+            ->orderBy('created_at', 'asc')->paginate(20);
 
         return response()->json([
             'data' => $getSyllabusKelas->items(),
@@ -241,7 +238,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'kelas' => [
                 'required',
-                Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+                Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId),
             ],
         ], [
             'kelas.required' => 'Harap masukkan kelas.',
@@ -251,7 +248,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -268,7 +265,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Kelas berhasil ditambahkan.',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -281,7 +278,7 @@ class SyllabusController extends Controller
 
         $validator = Validator::make($request->all(), [
             'kelas' => [
-                'required', Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+                'required', Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId),
             ],
         ], [
             'kelas.required' => 'Harap masukkan kelas.',
@@ -291,7 +288,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -306,7 +303,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Kelas berhasil diubah.',
-            'data' => $dataKelas
+            'data' => $dataKelas,
         ]);
     }
 
@@ -342,7 +339,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'mata_pelajaran' => [
                 'required',
-                Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
+                Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId),
             ],
         ], [
             'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
@@ -352,7 +349,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -370,7 +367,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Mata Pelajaran berhasil ditambahkan.',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -382,7 +379,7 @@ class SyllabusController extends Controller
 
         $validator = Validator::make($request->all(), [
             'mata_pelajaran' => [
-                'required', Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)
+                'required', Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId),
             ],
         ], [
             'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
@@ -392,7 +389,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -407,7 +404,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Mata Pelajaran berhasil diubah.',
-            'data' => $dataMapel
+            'data' => $dataMapel,
         ]);
     }
 
@@ -427,7 +424,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Status Mata Pelajaran Berhasil Diubah',
-            'data' => $dataMapel
+            'data' => $dataMapel,
         ]);
     }
 
@@ -435,7 +432,7 @@ class SyllabusController extends Controller
     public function babView($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
         $dataBab = Bab::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
-        ->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
+            ->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->get();
 
         return view('syllabus-services.default.list-bab', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId', 'dataBab'));
     }
@@ -445,8 +442,8 @@ class SyllabusController extends Controller
     {
         // Query dengan filter lengkap
         $getSyllabusBab = Bab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)
-        ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
-        ->orderBy('created_at', 'asc')->paginate(20);
+            ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
+            ->orderBy('created_at', 'asc')->paginate(20);
 
         return response()->json([
             'data' => $getSyllabusBab->items(),
@@ -454,7 +451,6 @@ class SyllabusController extends Controller
             'subBabDetail' => '/syllabus/curriculum/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
-
 
     // function management bab store
     public function babStore(Request $request, $curriculumId, $faseId, $kelasId, $mapelId)
@@ -464,7 +460,7 @@ class SyllabusController extends Controller
             'nama_bab' => [
                 'required',
                 Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)
+                    ->where('mapel_id', $mapelId),
             ],
             'semester' => 'required',
         ], [
@@ -476,7 +472,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -496,7 +492,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Bab berhasil ditambahkan.',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -511,7 +507,7 @@ class SyllabusController extends Controller
             'nama_bab' => [
                 'required',
                 Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)
+                    ->where('mapel_id', $mapelId),
             ],
             'semester' => 'required',
         ], [
@@ -523,7 +519,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -539,7 +535,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Bab berhasil diubah.',
-            'data' => $dataBab
+            'data' => $dataBab,
         ]);
     }
 
@@ -564,7 +560,7 @@ class SyllabusController extends Controller
     // function management sub bab view
     public function subBabView($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        return view('syllabus-services.default.list-sub-bab', compact( 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId',  'babId'));
+        return view('syllabus-services.default.list-sub-bab', compact('curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId', 'babId'));
     }
 
     // function paginate management sub bab
@@ -582,7 +578,6 @@ class SyllabusController extends Controller
         ]);
     }
 
-
     // function management sub bab store
     public function subBabStore(Request $request, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
@@ -592,7 +587,7 @@ class SyllabusController extends Controller
             'sub_bab' => [
                 'required',
                 Rule::unique('sub_babs', 'sub_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)->where('bab_id', $babId)
+                    ->where('mapel_id', $mapelId)->where('bab_id', $babId),
             ],
         ], [
             'sub_bab.required' => 'Harap masukkan sub bab.',
@@ -602,7 +597,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -622,7 +617,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Sub Bab berhasil ditambahkan.',
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -637,7 +632,7 @@ class SyllabusController extends Controller
             'sub_bab' => [
                 'required',
                 Rule::unique('sub_babs', 'sub_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)->where('bab_id', $babId)
+                    ->where('mapel_id', $mapelId)->where('bab_id', $babId),
             ],
         ], [
             'sub_bab.required' => 'Harap masukkan sub bab.',
@@ -647,7 +642,7 @@ class SyllabusController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -662,7 +657,7 @@ class SyllabusController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Sub Bab berhasil diubah.',
-            'data' => $dataSubBab
+            'data' => $dataSubBab,
         ]);
     }
 
@@ -680,7 +675,6 @@ class SyllabusController extends Controller
         ]);
 
         broadcast(new SyllabusCrud('subBab', 'activate', $subBab))->toOthers();
-
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
@@ -700,7 +694,7 @@ class SyllabusController extends Controller
                 'errors' => [
                     'form_errors' => $validator->errors(),
                     'excel_validation_errors' => [],
-                ]
+                ],
             ], 422);
         }
 
@@ -717,7 +711,7 @@ class SyllabusController extends Controller
                 'errors' => [
                     'form_errors' => [],
                     'excel_validation_errors' => $e->errors()['import'] ?? [],
-                ]
+                ],
             ], 422);
         }
     }

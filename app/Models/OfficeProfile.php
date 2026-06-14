@@ -11,7 +11,7 @@ class OfficeProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'nama_lengkap'
+        'nama_lengkap',
     ];
 
     public function UserAccount()

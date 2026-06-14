@@ -21,7 +21,7 @@ return new class extends Migration
     {
         Schema::table('library_books', function (Blueprint $table) {
 
-            $table->dropColumn(['kelas_id','mapel_id','bab_id']);
+            $table->dropColumn(['kelas_id', 'mapel_id', 'bab_id']);
 
         });
     }

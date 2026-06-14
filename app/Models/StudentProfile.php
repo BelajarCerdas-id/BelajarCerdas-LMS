@@ -14,10 +14,12 @@ class StudentProfile extends Model
         'nama_lengkap',
         'personal_email',
         'enrollment_type',
+        'yayasan_id',
         'school_partner_id',
     ];
 
-    public function UserAccount() {
+    public function UserAccount()
+    {
         return $this->belongsTo(UserAccount::class);
     }
 

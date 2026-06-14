@@ -2,23 +2,28 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GradeLedgerExport implements FromCollection, WithStyles, ShouldAutoSize, WithEvents, WithTitle
+class GradeLedgerExport implements FromCollection, ShouldAutoSize, WithEvents, WithStyles, WithTitle
 {
     protected $students;
+
     protected $subjects;
+
     protected $schoolName;
+
     protected $schoolClass;
+
     protected $semester;
+
     protected $tahunAjaran;
 
     public function __construct($students, $subjects, $schoolName, $schoolClass, $semester, $tahunAjaran)
@@ -33,7 +38,7 @@ class GradeLedgerExport implements FromCollection, WithStyles, ShouldAutoSize, W
 
     public function title(): string
     {
-        return 'Leger Nilai - ' . $this->schoolClass;
+        return 'Leger Nilai - '.$this->schoolClass;
     }
 
     public function registerEvents(): array
@@ -56,11 +61,11 @@ class GradeLedgerExport implements FromCollection, WithStyles, ShouldAutoSize, W
                 $sheet->mergeCells("A2:{$lastColumn}2");
                 $sheet->mergeCells("A3:{$lastColumn}3");
 
-                $sheet->setCellValue("A1", strtoupper($this->schoolName));
-                $sheet->setCellValue("A2", "LEGER NILAI - SEMESTER {$this->semester}");
-                $sheet->setCellValue("A3", "TAHUN AJARAN {$this->tahunAjaran}");
+                $sheet->setCellValue('A1', strtoupper($this->schoolName));
+                $sheet->setCellValue('A2', "LEGER NILAI - SEMESTER {$this->semester}");
+                $sheet->setCellValue('A3', "TAHUN AJARAN {$this->tahunAjaran}");
 
-                $sheet->getStyle("A1:A3")->applyFromArray([
+                $sheet->getStyle('A1:A3')->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'size' => 14,

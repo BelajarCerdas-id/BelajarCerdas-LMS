@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class StudentAssessmentAttempt extends Model
 {
-
     protected $casts = [
         'start_time' => 'datetime',
         'expire_time' => 'datetime',
     ];
+
     protected $fillable = [
         'student_id',
         'school_assessment_id',

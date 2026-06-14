@@ -11,6 +11,7 @@ class SubjectPassingGradeCriteria extends Model
 
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'kelas_id',
         'mapel_id',

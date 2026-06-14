@@ -9,25 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
+    public function up(): void
     {
         Schema::create('parent_profiles', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi ke tabel user_accounts (Akun Login Si Orang Tua)
             $table->unsignedBigInteger('user_id');
-            
+
             // Relasi ke sekolah
             $table->unsignedBigInteger('school_partner_id');
-            
+
             // Relasi ke anak (Bisa dikosongkan dulu jika anak belum didaftarkan)
-            $table->unsignedBigInteger('student_id')->nullable(); 
-            
+            $table->unsignedBigInteger('student_id')->nullable();
+
             // Data Profil Orang Tua
             $table->string('nama_lengkap');
             $table->string('pekerjaan')->nullable(); // Opsional tambahan
             $table->string('alamat')->nullable();    // Opsional tambahan
-            
+
             $table->timestamps();
 
             // (Opsional) Jika kamu sudah menggunakan foreign key constraint yang ketat di database:

@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
+        'yayasan_id',
         'school_partner_id',
         'feature_id',
         'feature_variant_id',
@@ -21,23 +23,28 @@ class Transaction extends Model
         'transaction_source',
     ];
 
-    public function UserAccount() {
+    public function UserAccount()
+    {
         return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
-    public function SchoolPartner() {
+    public function SchoolPartner()
+    {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
 
-    public function Feature() {
+    public function Feature()
+    {
         return $this->belongsTo(Feature::class, 'feature_id');
     }
 
-    public function FeaturePrice() {
+    public function FeaturePrice()
+    {
         return $this->belongsTo(FeaturePrice::class, 'feature_variant_id');
     }
 
-    public function schoolLmsSubscription() {
+    public function schoolLmsSubscription()
+    {
         return $this->hasMany(SchoolLmsSubscription::class, 'transaction_id');
     }
 }

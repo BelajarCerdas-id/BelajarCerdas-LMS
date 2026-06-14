@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Poll extends Model
 {
     use HasFactory;
-    
+
     // Tambahkan baris ini agar Laravel mengizinkan data disimpan
-    protected $guarded = ['id']; 
+    protected $guarded = ['id'];
 
     // 👇 INI YANG WAJIB DITAMBAHKAN UNTUK MENGATASI ERROR TADI 👇
     public function PollOptions()

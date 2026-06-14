@@ -13,24 +13,24 @@ return new class extends Migration
     {
         Schema::create('lesson_schedule_items', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi ke tabel induk (lesson_schedules)
             $table->unsignedBigInteger('lesson_schedule_id');
-            
+
             // Relasi ke entitas guru dan mapel
             $table->unsignedBigInteger('teacher_id');
             $table->unsignedBigInteger('mapel_id')->nullable();
-            
+
             // Menyimpan nama untuk mempercepat pemuatan UI
             $table->string('teacher_name')->nullable();
             $table->string('subject_name')->nullable();
-            
+
             // Detail waktu jam pelajaran
             $table->string('day_of_week');
             $table->time('start_time');
             $table->time('end_time');
             $table->string('color')->default('#0071BC');
-            
+
             $table->timestamps();
 
             // Foreign key dengan fitur Cascade: jika jadwal kelas dihapus, itemnya otomatis terhapus

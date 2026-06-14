@@ -22,7 +22,8 @@ class TeacherContentReleaseController extends Controller
 {
     private function extractClassLevel($className)
     {
-        $classNameService = new ClassNameService();
+        $classNameService = new ClassNameService;
+
         return $classNameService->extractClassLevel($className);
     }
 
@@ -36,10 +37,10 @@ class TeacherContentReleaseController extends Controller
     private function guessMime($ext)
     {
         return match (strtolower($ext)) {
-            'mp4', 'webm', 'ogg' => 'video/' . $ext,
-            'pdf'               => 'application/pdf',
-            'jpg', 'jpeg', 'png', 'webp' => 'image/' . $ext,
-            default             => 'application/octet-stream',
+            'mp4', 'webm', 'ogg' => 'video/'.$ext,
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg', 'png', 'webp' => 'image/'.$ext,
+            default => 'application/octet-stream',
         };
     }
 
@@ -47,7 +48,7 @@ class TeacherContentReleaseController extends Controller
     public function teacherContentForRelease($role, $schoolName, $schoolId)
     {
         $getCurriculum = Kurikulum::all();
-        
+
         return view('features.lms.teacher.content-for-release.teacher-content-for-release', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
@@ -91,24 +92,24 @@ class TeacherContentReleaseController extends Controller
 
         // DEFAULT LEVEL BERDASARKAN JENJANG
         $startLevelMap = [
-            'SD'  => 1,  'MI'  => 1,
+            'SD' => 1,  'MI' => 1,
             'SMP' => 7,  'MTS' => 7,
             'SMA' => 10, 'SMK' => 10,
-            'MA'  => 10, 'MAK' => 10,
+            'MA' => 10, 'MAK' => 10,
         ];
 
         $defaultLevel = $startLevelMap[$jenjang] ?? 1;
 
         // MAPPING KELAS BERDASARKAN JENJANG
         $mappingClasses = [
-            'SD'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
-            'MI'  => ['kelas 1','kelas 2','kelas 3','kelas 4','kelas 5','kelas 6'],
-            'SMP' => ['kelas 7','kelas 8','kelas 9'],
-            'MTS' => ['kelas 7','kelas 8','kelas 9'],
-            'SMA' => ['kelas 10','kelas 11','kelas 12'],
-            'SMK' => ['kelas 10','kelas 11','kelas 12'],
-            'MA'  => ['kelas 10','kelas 11','kelas 12'],
-            'MAK' => ['kelas 10','kelas 11','kelas 12'],
+            'SD' => ['kelas 1', 'kelas 2', 'kelas 3', 'kelas 4', 'kelas 5', 'kelas 6'],
+            'MI' => ['kelas 1', 'kelas 2', 'kelas 3', 'kelas 4', 'kelas 5', 'kelas 6'],
+            'SMP' => ['kelas 7', 'kelas 8', 'kelas 9'],
+            'MTS' => ['kelas 7', 'kelas 8', 'kelas 9'],
+            'SMA' => ['kelas 10', 'kelas 11', 'kelas 12'],
+            'SMK' => ['kelas 10', 'kelas 11', 'kelas 12'],
+            'MA' => ['kelas 10', 'kelas 11', 'kelas 12'],
+            'MAK' => ['kelas 10', 'kelas 11', 'kelas 12'],
         ];
 
         $allowedKelas = $mappingClasses[$jenjang] ?? [];
@@ -128,14 +129,14 @@ class TeacherContentReleaseController extends Controller
                 })
 
                 // ATAU MAPEL GLOBAL
-                ->orWhere(function ($q2) use ($schoolId) {
-                    $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
+                    ->orWhere(function ($q2) use ($schoolId) {
+                        $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
 
-                        // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
-                        ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
-                            $sq->where('school_partner_id', $schoolId);
+                            // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                            ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                                $sq->where('school_partner_id', $schoolId);
+                            });
                     });
-                });
             })->with(['SchoolClass', 'Mapel'])->get();
 
         // TAHUN AJARAN
@@ -147,20 +148,20 @@ class TeacherContentReleaseController extends Controller
         $schoolClasses = $teacherMapels->where('SchoolClass.tahun_ajaran', $searchYear)->values();
 
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn ($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
 
         $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn ($item) => (int) $this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
         // AMBIL MAPEL ID GURU
         $mapelIds = $teacherMapels->pluck('mapel_id')->unique();
 
         // LMS CONTENT
         $query = LmsContent::with(['Kurikulum', 'Bab', 'SubBab', 'Kelas', 'Mapel', 'LmsContentItem', 'Service', 'SchoolPartner', 'SchoolLmsContent' => function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId)->where('is_active', true);
-            }
+            $q->where('school_partner_id', $schoolId)->where('is_active', true);
+        },
         ])->where('is_active', true)->where(function ($q) use ($schoolId) {
 
             $q->where(function ($q) use ($schoolId) {
@@ -171,23 +172,23 @@ class TeacherContentReleaseController extends Controller
                 })
 
                 // Jika tidak ada override, pakai global
-                ->orWhere(function ($qGlobal) use ($schoolId) {
-                    $qGlobal->whereNull('school_partner_id')->whereDoesntHave('SchoolLmsContent', function ($qCheck) use ($schoolId) {
-                        $qCheck->where('school_partner_id', $schoolId);
+                    ->orWhere(function ($qGlobal) use ($schoolId) {
+                        $qGlobal->whereNull('school_partner_id')->whereDoesntHave('SchoolLmsContent', function ($qCheck) use ($schoolId) {
+                            $qCheck->where('school_partner_id', $schoolId);
+                        });
                     });
-                });
             });
         })->whereIn('mapel_id', $mapelIds)->whereIn('kelas_id', $kelasIds)->orderByDesc('created_at');
 
         // FILTER SEARCH MATERI
         if ($request->filled('search_materi')) {
             $query->whereHas('LmsContentItem', function ($q) use ($request) {
-                $q->where('original_filename', 'LIKE', '%' . $request->search_materi . '%');
+                $q->where('original_filename', 'LIKE', '%'.$request->search_materi.'%');
             });
         }
 
         // FILTER CURRICULUM CORE
-        foreach (['kurikulum_id','service_id','kelas_id','mapel_id','bab_id'] as $filter) {
+        foreach (['kurikulum_id', 'service_id', 'kelas_id', 'mapel_id', 'bab_id'] as $filter) {
             if ($request->filled($filter)) {
                 $query->where($filter, $request->$filter);
             }
@@ -196,12 +197,12 @@ class TeacherContentReleaseController extends Controller
         $contents = $query->get();
 
         return response()->json([
-            'tahunAjaran'   => $tahunAjaran,
-            'selectedYear'  => $searchYear,
+            'tahunAjaran' => $tahunAjaran,
+            'selectedYear' => $searchYear,
             'selectedClass' => $selectedClass,
-            'className'     => $classLevels,
-            'rombel'        => $schoolClasses,
-            'contents'      => $contents
+            'className' => $classLevels,
+            'rombel' => $schoolClasses,
+            'contents' => $contents,
         ]);
     }
 
@@ -212,25 +213,25 @@ class TeacherContentReleaseController extends Controller
 
         $validator = Validator::make($request->all(), [
             'school_class_id' => 'required',
-            'mapel_id'        => 'required',
-            'lms_content_id'  => 'required',
-            'semester'        => 'required',
-            'pertemuan'       => 'required',
-            'meeting_date'    => 'required',
+            'mapel_id' => 'required',
+            'lms_content_id' => 'required',
+            'semester' => 'required',
+            'pertemuan' => 'required',
+            'meeting_date' => 'required',
         ], [
             'school_class_id.required' => 'Harap pilih kelas.',
-            'mapel_id.required'        => 'Mapel tidak ditemukan.',
-            'lms_content_id.required'  => 'Harap pilih materi.',
-            'semester.required'        => 'Harap pilih semester.',
-            'pertemuan.required'       => 'Harap pilih pertemuan.',
-            'meeting_date.required'    => 'Harap pilih tanggal.',
+            'mapel_id.required' => 'Mapel tidak ditemukan.',
+            'lms_content_id.required' => 'Harap pilih materi.',
+            'semester.required' => 'Harap pilih semester.',
+            'pertemuan.required' => 'Harap pilih pertemuan.',
+            'meeting_date.required' => 'Harap pilih tanggal.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Validation error',
-                'errors'  => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -245,11 +246,11 @@ class TeacherContentReleaseController extends Controller
 
             $content = LmsContent::find($request->lms_content_id);
 
-            if (!$content) {
+            if (! $content) {
                 return response()->json([
                     'errors' => [
-                        'lms_content_id' => ['Materi tidak ditemukan.']
-                    ]
+                        'lms_content_id' => ['Materi tidak ditemukan.'],
+                    ],
                 ], 422);
             }
 
@@ -258,8 +259,8 @@ class TeacherContentReleaseController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'errors' => [
-                        'lms_content_id' => ['Materi tidak sesuai dengan mata pelajaran rombel.']
-                    ]
+                        'lms_content_id' => ['Materi tidak sesuai dengan mata pelajaran rombel.'],
+                    ],
                 ], 422);
             }
 
@@ -290,9 +291,9 @@ class TeacherContentReleaseController extends Controller
                     'status' => 'error',
                     'errors' => [
                         'pertemuan' => [
-                            'Pertemuan ini telah terdaftar pada rombel kelas tersebut.'
-                        ]
-                    ]
+                            'Pertemuan ini telah terdaftar pada rombel kelas tersebut.',
+                        ],
+                    ],
                 ], 422);
             }
 
@@ -322,9 +323,9 @@ class TeacherContentReleaseController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Validation error',
-                'errors'  => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -338,7 +339,7 @@ class TeacherContentReleaseController extends Controller
                 'teacher_id' => $user->id,
                 'semester' => $request->semester,
                 'meeting_number' => $request->meeting_number,
-                'meeting_date' => $request->meeting_date
+                'meeting_date' => $request->meeting_date,
             ]);
 
             DB::commit();
@@ -354,9 +355,9 @@ class TeacherContentReleaseController extends Controller
                     'status' => 'error',
                     'errors' => [
                         'meeting_number' => [
-                            'Pertemuan ini telah terdaftar pada rombel kelas tersebut.'
-                        ]
-                    ]
+                            'Pertemuan ini telah terdaftar pada rombel kelas tersebut.',
+                        ],
+                    ],
                 ], 422);
             }
 
@@ -372,7 +373,7 @@ class TeacherContentReleaseController extends Controller
     // function teacher content for release review meetings view
     public function teacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId)
     {
-        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-meetings', compact('role', 'schoolName', 
+        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-meetings', compact('role', 'schoolName',
             'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId'));
     }
 
@@ -422,13 +423,13 @@ class TeacherContentReleaseController extends Controller
         $data = $items->map(function ($item) {
             $serviceName = $item->LmsContent?->Service?->name;
 
-            if (!$item->LmsContent->LmsContentItem[0]->value_file) {
+            if (! $item->LmsContent->LmsContentItem[0]->value_file) {
                 return [
                     'service_name' => $serviceName,
                     'rule_id' => $item->service_rule_id,
                     'rule_name' => $item->LmsContent->LmsContentItem[0]->ServiceRule?->name,
                     'value_text' => $item->LmsContent->LmsContentItem[0]->value_text,
-                    'type' => 'text'
+                    'type' => 'text',
                 ];
             }
 
@@ -436,17 +437,17 @@ class TeacherContentReleaseController extends Controller
 
             return [
                 'service_name' => $serviceName,
-                'rule_id'   => $item->service_rule_id,
+                'rule_id' => $item->service_rule_id,
                 'rule_name' => $item->ServiceRule?->name,
-                'file_name'=> $item->LmsContent->LmsContentItem[0]->original_filename,
-                'file_url' => asset('lms-contents/' . $item->LmsContent->LmsContentItem[0]->value_file),
-                'mime'     => $this->guessMime($extension),
-                'type'     => 'file'
+                'file_name' => $item->LmsContent->LmsContentItem[0]->original_filename,
+                'file_url' => asset('lms-contents/'.$item->LmsContent->LmsContentItem[0]->value_file),
+                'mime' => $this->guessMime($extension),
+                'type' => 'file',
             ];
 
         });
 
-        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-content', compact('role', 'schoolName', 
+        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-content', compact('role', 'schoolName',
             'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId', 'meetingContentId', 'data'));
     }
 }

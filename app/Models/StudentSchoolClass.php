@@ -16,11 +16,13 @@ class StudentSchoolClass extends Model
         'academic_action',
     ];
 
-    public function UserAccount() {
+    public function UserAccount()
+    {
         return $this->belongsTo(UserAccount::class, 'student_id');
     }
 
-    public function SchoolClass() {
+    public function SchoolClass()
+    {
         return $this->belongsTo(SchoolClass::class, 'school_class_id');
     }
 }

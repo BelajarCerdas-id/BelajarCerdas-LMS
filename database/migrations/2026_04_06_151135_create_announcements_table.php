@@ -10,15 +10,15 @@ return new class extends Migration
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
-            
+
             // Relasi Wajib (Constrained)
             $table->foreignId('school_partner_id')->constrained('school_partners')->cascadeOnDelete();
-            
+
             // Kolom baru untuk spesifik kelas (Boleh kosong/nullable jika pengumuman global)
-            $table->unsignedBigInteger('target_class_id')->nullable(); 
-            
+            $table->unsignedBigInteger('target_class_id')->nullable();
+
             $table->foreignId('author_id')->constrained('user_accounts')->cascadeOnDelete();
-            
+
             $table->string('author_role');
             $table->string('target');
             $table->string('title');
