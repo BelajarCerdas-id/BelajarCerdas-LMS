@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Bab;
 use App\Models\Mapel;
 use App\Models\Kelas;
+use App\Models\TopikMateri;
 
 class LibraryBook extends Model
 {
@@ -17,6 +18,8 @@ class LibraryBook extends Model
     'kelas_id',
     'mapel_id',
     'bab_id',
+    'topik_materi_id',
+    'series_no',
     'tipe'
 ];
 
@@ -33,5 +36,12 @@ class LibraryBook extends Model
     public function bab()
     {
         return $this->belongsTo(Bab::class, 'bab_id');
+    }
+    public function topik()
+    {
+        return $this->belongsTo(
+            TopikMateri::class,
+            'topik_materi_id'
+        );
     }
 }

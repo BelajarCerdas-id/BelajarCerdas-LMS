@@ -117,27 +117,76 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])
         ->name('library.chapter.store');
 
+    Route::post('/administrator/library/topik/store',[LibraryController::class, 'storeTopik'])
+    ->name('library.topik.store');
+
+    Route::get('/administrator/library/get-topik',[LibraryController::class, 'getTopikByMapel']);
+
+    Route::get('/administrator/library/get-series/{topikId}', [LibraryController::class, 'getSeries']);
+
     // =========================================================
-    // ROUTES LIBRARY STUDENT (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])
-        ->name('student.library');
+// STUDENT LIBRARY
+// =========================================================
 
-    Route::get('/lms/student/library/ppt', [LibraryController::class, 'pptLibrary'])
-        ->name('student.library.ppt');
+Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])
+    ->name('student.library');
 
-    Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])
-        ->name('student.library.read');
+Route::get('/lms/student/library/ppt', [LibraryController::class, 'pptLibrary'])
+    ->name('student.library.ppt');
 
-    Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])
-        ->name('student.library.submit');
+Route::prefix('student/library/lks')->group(function () {
 
-    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
-        ->where('mapel', '[0-9]+')
-        ->name('student.library.mapel');
+    Route::get('/', [LibraryController::class, 'lksLibrary'])
+        ->name('student.library.lks');
 
-    Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
+    Route::get('/mapel', [LibraryController::class, 'getMapelByKelas'])
+        ->name('student.library.lks.mapel');
 
+    Route::get('/{id}', [LibraryController::class, 'lksDetail'])
+        ->name('student.library.lks.detail');
+});
+
+Route::get('/lms/student/library/video', [LibraryController::class, 'videoLibrary'])
+    ->name('student.library.video');
+
+Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])
+    ->name('student.library.read');
+
+Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])
+    ->name('student.library.submit');
+
+Route::get('/lms/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
+    ->where('mapel', '[0-9]+')
+    ->name('student.library.mapel');
+
+Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
+
+
+// =========================================================
+// TEACHER LIBRARY (AKSES SAMA)
+// =========================================================
+// TEACHER LIBRARY
+Route::get('/lms/teacher/library', [LibraryController::class, 'teacherLibrary'])
+    ->name('teacher.library');
+
+Route::get('/lms/teacher/library/ppt', [LibraryController::class, 'pptLibrary'])
+    ->name('teacher.library.ppt');
+
+Route::get('/lms/teacher/library/lks', [LibraryController::class, 'lksLibrary'])
+    ->name('teacher.library.lks');
+
+Route::get('/lms/teacher/library/lks/{id}', [LibraryController::class, 'lksDetail'])
+    ->name('teacher.library.lks.detail');
+
+Route::get('/lms/teacher/library/video', [LibraryController::class, 'videoLibrary'])
+    ->name('teacher.library.video');
+
+Route::get('/lms/teacher/library/read/{id}', [LibraryController::class, 'readBook'])
+    ->name('teacher.library.read');
+
+Route::get('/lms/teacher/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
+    ->where('mapel', '[0-9]+')
+    ->name('teacher.library.mapel');
 
     // =========================================================
     // ROUTES LIBRARY (HARUS DI ATAS ROUTE WILDCARD LMS!)

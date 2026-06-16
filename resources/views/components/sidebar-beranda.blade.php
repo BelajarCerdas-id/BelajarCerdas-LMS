@@ -49,70 +49,69 @@
                         <span>LMS</span>
                     </a>
                 </li>
-            </ul>
 
-                    <!-- Menu Library -->
-                    <li class="list-menu-sidebar-dekstop-student">
+                   <!-- Menu Library -->
+<!-- LIBRARY -->
+<li class="list-item">
 
-<div class="flex flex-col">
+    <div class="flex flex-col">
 
-    <!-- MENU LIBRARY -->
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
+        @php
+            $isLibraryActive =
+                request()->routeIs('teacher.library') ||
+                request()->routeIs('teacher.library.ppt') ||
+                request()->routeIs('teacher.library.lks') ||
+                request()->routeIs('teacher.library.video');
+        @endphp
+
+        <!-- MAIN MENU -->
+        <a href="{{ route('teacher.library') }}"
+           class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-book"></i>
+                <span>Library</span>
+            </div>
+
+            <i class="fa-solid fa-chevron-down text-xs
+                {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
+
+        </a>
+
+        <!-- DROPDOWN -->
+        <div class="{{ $isLibraryActive
+                ? 'ml-7 mt-1 flex flex-col gap-1'
+                : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+
+            <a href="{{ route('teacher.library.ppt') }}"
+               class="{{ request()->routeIs('teacher.library.ppt')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Power Point
+            </a>
+
+            <a href="{{ route('teacher.library.lks') }}"
+               class="{{ request()->routeIs('teacher.library.lks')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                LKPD
+            </a>
+
+            <a href="{{ route('teacher.library.video') }}"
+               class="{{ request()->routeIs('teacher.library.video')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Video
+            </a>
+
         </div>
 
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </a>
-
-    <!-- DROPDOWN -->
-    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
-
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
-
     </div>
-</div>
 
 </li>
                 </ul>
-                    <!-- Menu Library -->
-                    <li class="list-menu-sidebar-dekstop-student">
 
-<div class="flex flex-col">
-
-    <!-- MENU LIBRARY -->
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
-        </div>
-
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </a>
-
-    <!-- DROPDOWN -->
-    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
-
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
-
-    </div>
-</div>
-
-</li>
-                </ul>
-
-            <!-- FOOTER (DIPAKSA KE BAWAH) -->
+            <!-- FOOTER -->
             <div class="mt-auto">
                 <hr class="border-white border opacity-60 mb-10 mx-6">
 
@@ -353,46 +352,62 @@
 
         <i class="fa-solid fa-chevron-down text-xs"></i>
     </a>
+<!-- LIBRARY -->
+<li class="list-item">
 
-    <!-- DROPDOWN -->
-<div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
+    <div class="flex flex-col">
 
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
+        @php
+            $isLibraryActive =
+                request()->routeIs('teacher.library') ||
+                request()->routeIs('teacher.library.ppt') ||
+                request()->routeIs('teacher.library.lks') ||
+                request()->routeIs('teacher.library.video');
+        @endphp
 
-</div>
+        <!-- MAIN MENU -->
+        <a href="{{ route('teacher.library') }}"
+           class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
 
-</div>
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-book"></i>
+                <span>Library</span>
+            </div>
 
-</li>
-                <li class="list-menu-sidebar-dekstop-student">
-<div class="flex flex-col">
+            <i class="fa-solid fa-chevron-down text-xs
+                {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
 
-    <!-- MENU LIBRARY -->
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
+        </a>
+
+        <!-- DROPDOWN -->
+        <div class="{{ $isLibraryActive
+                ? 'ml-7 mt-1 flex flex-col gap-1'
+                : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+
+            <a href="{{ route('teacher.library.ppt') }}"
+               class="{{ request()->routeIs('teacher.library.ppt')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Power Point
+            </a>
+
+            <a href="{{ route('teacher.library.lks') }}"
+               class="{{ request()->routeIs('teacher.library.lks')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                LKPD
+            </a>
+
+            <a href="{{ route('teacher.library.video') }}"
+               class="{{ request()->routeIs('teacher.library.video')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Video
+            </a>
+
         </div>
 
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </a>
-
-    <!-- DROPDOWN -->
-<div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
-
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
-
-</div>
-
-</div>
+    </div>
 
 </li>
             </ul>
@@ -807,10 +822,10 @@
                     <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                         <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
                         <a href="{{ route('lms.teacher.view', [
-                                'role' => Auth::user()->role, 
-                                'schoolName' => $schoolName, 
-                                'schoolId' => $schoolId
-                            ]) }}" class="link-href text-[14px]">
+                            'role' => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}" class="link-href text-[14px]">
                             Beranda
                         </a>
                     </div>
@@ -911,6 +926,41 @@
                         <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                             <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
                             <span class="text-[14px]">Meja Guru</span>
+                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6 pr-3.5 w-full">
+                            <div class="flex flex-col">
+                                <a href="{{ route('lms.teacherClassList.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    Buku Nilai
+                                </a>
+
+                                <a href="{{ route('lms.teacherClassListGradeLedger.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    Leger Nilai
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+
+
+            
+                <!-- INFORMASI -->
+                <li class="list-item mt-1">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
+                            <span class="text-[14px]">Informasi</span>
                             <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
                         </div>
 
@@ -1137,8 +1187,8 @@
                             <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
                             <a href="{{ route('lms.teacher.view', [
                                     'role' => Auth::user()->role, 
-                                    'schoolName' => $schoolName, 
-                                    'schoolId' => $schoolId
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                 ]) }}" class="link-href text-[14px]">
                                 Beranda
                             </a>
@@ -1232,9 +1282,44 @@
                             </div>
                         </div>
                     </li>
+
+                    <!-- MEJA GURU -->
+                    <li class="list-item">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                                <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
+                                <span class="text-[14px]">Meja Guru</span>
+                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6 pr-3.5 w-full">
+                                <div class="flex flex-col">
+                                    <a href="{{ route('lms.teacherClassList.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Buku Nilai
+                                    </a>
+
+                                    <a href="{{ route('lms.teacherClassListGradeLedger.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Leger Nilai
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </li>
+
+                    <!-- INFORMASI -->
                     <li class="list-item mt-1">
                         <div class="dropdown-menu w-full flex flex-col items-start">
-                            
+
                             <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
                                 <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
                                 <span class="text-[14px]">Informasi</span>
@@ -1243,45 +1328,83 @@
 
                             <div class="content-dropdown pl-6 pr-3.5 w-full">
                                 <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.teacherCalendar.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    <a href="{{ route('lms.teacherCalendar.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                         Kalender Akademik
                                     </a>
-                                    <a href="{{ route('lms.teacherSchedule.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                                    <a href="{{ route('lms.teacherSchedule.view', [
+                                            'role' => Auth::user()->role, 
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                        }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                         Jadwal Pelajaran
                                     </a>
-                                    <a href="{{ route('lms.teacherPolling.view', ['role' => Auth::user()->role, 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                                    <a href="{{ route('lms.teacherPolling.view', [
+                                            'role' => Auth::user()->role, 
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah, 
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id]) 
+                                        }}" class="link-href block py-2 text-[13px] hover:text-gray-300">
                                         Polling
                                     </a>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </li>
-    
-                <!-- Meja Guru -->
-                <li class="list-item">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
 
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Meja Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
+                    <li class="list-item">
+                        <div class="flex flex-col">
 
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <a href="{{ route('lms.teacherClassList.view', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Buku Nilai
+                            <!-- MENU LIBRARY -->
+                            <a href="{{ route('teacher.library') }}"
+                            class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-book"></i>
+                                    <span>Library</span>
+                                </div>
+
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </a>
+
+                            @php
+                                $isLibraryActive = request()->routeIs('teacher.library*');
+                            @endphp
+
+                            <!-- DROPDOWN -->
+                            <div class="{{ $isLibraryActive ? 'ml-7 mt-1 flex flex-col gap-1' : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+
+                                <a href="{{ route('teacher.library.ppt') }}"
+                                class="{{ request()->routeIs('teacher.library.ppt')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    Power Point
                                 </a>
+
+                                <a href="{{ route('teacher.library.lks') }}"
+                                class="{{ request()->routeIs('teacher.library.lks')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    LKPD
+                                </a>
+
+                                <a href="{{ route('teacher.library.video') }}"
+                                class="{{ request()->routeIs('teacher.library.video')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    Video
+                                </a>
+
                             </div>
+
                         </div>
-                    </div>
-                </li>
-            </ul>
+                        </li>
+                </ul>
 
                 <div class="p-4 border-t border-gray-300">
                     <form action="{{ route('logout') }}" method="POST">

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\TopikMateri;
 
 class Kelas extends Model
 {
@@ -68,4 +69,12 @@ class Kelas extends Model
     {
         return $this->hasMany(SubjectPassingGradeCriteria::class, 'kelas_id');
     }
+
+    public function topikMateri()
+{
+    return $this->hasMany(
+        TopikMateri::class,
+        'mapel_id'
+    );
+}
 }
