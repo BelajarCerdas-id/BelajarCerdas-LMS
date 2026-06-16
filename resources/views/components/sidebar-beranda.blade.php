@@ -326,9 +326,7 @@
                         <span>Beranda</span>
                     </a>
                 </li>
-
-                <li class="list-menu-sidebar-mobile-student">
-                    <a href="{{ route('lms.student.view', [ 
+                
                   <!-- Menu Library -->
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('lms.student.view', [
