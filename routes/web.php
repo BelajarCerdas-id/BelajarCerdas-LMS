@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceContractController;
 use App\Http\Controllers\Finance\FinanceDashboardController;
+use App\Http\Controllers\Finance\FinanceRevenueController;
 use App\Http\Controllers\GradebookAssessmentController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
@@ -507,8 +508,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/paginate', [FinanceContractController::class, 'paginateContractPaymentDetail'])->name('lms.finance.contract-payment-detail.paginate');
     Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/student-list/{termId}/paginate', [FinanceContractController::class, 'paginateStudentList'])->name('lms.finance.contract.student-list.paginate');
 
-    // data
-    // dashboard
+    // MANAGE REVENUE (VIEWS)
+    Route::get('/lms/{role}/manage/revenue', [FinanceRevenueController::class, 'index'])->name('lms.finance.manage.revenue.view');
+
+    // data manage revenue
+    Route::get('/lms/{role}/manage/revenue/load-kpi', [FinanceRevenueController::class, 'revenueManagementLoadKpi'])->name('lms.finance.manage.revenue.load-kpi');
+    Route::get('/lms/{role}/manage/revenue/load-leaderboard', [FinanceRevenueController::class, 'revenueManagementLoadLeaderboard'])->name('lms.finance.manage.revenue.load-leaderboard');
+    Route::get('/lms/{role}/manage/revenue/load-chart', [FinanceRevenueController::class, 'revenueManagementLoadChart'])->name('lms.finance.manage.revenue.load-chart');
+    Route::get('/lms/{role}/manage/revenue/paginate/load-ranking', [FinanceRevenueController::class, 'revenueManagementLoadRanking'])->name('lms.finance.manage.revenue.load-ranking');
+    
+    // data dashboard
     Route::get('/lms/{role}/manage-contract/load-kpi', [FinanceDashboardController::class, 'loadKpiDashboard'])->name('lms.finance.manage-contract.load-kpi');
     Route::get('/lms/{role}/manage-contract/load-chart', [FinanceDashboardController::class, 'loadChartDashboard'])->name('lms.finance.manage-contract.load-chart');
     Route::get('/lms/{role}/manage-contract/load-top-revenue', [FinanceDashboardController::class, 'loadTopRevenueDashboard'])->name('lms.finance.manage-contract.load-chart');

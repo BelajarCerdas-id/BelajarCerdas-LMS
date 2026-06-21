@@ -792,6 +792,29 @@
                     </div>
                 </div>
             </li>
+            
+            <!-- REVENUE -->
+            <li class="list-item pb-4 px-4">
+                <div class="dropdown-menu w-full flex flex-col items-start">
+
+                    <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                        <i class="fa-solid fa-money-bill-trend-up text-[12px]"></i>
+                        <span class="text-[14px]">Revenue</span>
+                        <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                    </div>
+
+                    <div class="content-dropdown pl-6">
+
+                        <a href="{{ route('lms.finance.manage.revenue.view', [
+                            'role' => Auth::user()->role
+                        ]) }}"
+                            class="link-href flex py-2 text-[14px]">
+                            Manage Revenue
+                        </a>
+
+                    </div>
+                </div>
+            </li>
         </ul>
     </aside>
 
@@ -975,6 +998,29 @@
                                 ]) }}"
                                     class="link-href flex py-2 text-[14px]">
                                     Manage Contract
+                                </a>
+
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- REVENUE -->
+                    <li class="list-item pb-4 px-4">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-money-bill-trend-up text-[12px]"></i>
+                                <span class="text-[14px]">Revenue</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6">
+
+                                <a href="{{ route('lms.finance.manage.revenue.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}"
+                                    class="link-href flex py-2 text-[14px]">
+                                    Manage Revenue
                                 </a>
 
                             </div>
