@@ -769,6 +769,29 @@
                     </a>
                 </div>
             </li>
+            
+            <!-- CONTRACT -->
+            <li class="list-item pb-4 px-4">
+                <div class="dropdown-menu w-full flex flex-col items-start">
+
+                    <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                        <i class="fa-solid fa-file-signature text-[12px]"></i>
+                        <span class="text-[14px]">Contract</span>
+                        <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                    </div>
+
+                    <div class="content-dropdown pl-6">
+
+                        <a href="{{ route('lms.finance.manage-contract.view', [
+                            'role' => Auth::user()->role
+                        ]) }}"
+                            class="link-href flex py-2 text-[14px]">
+                            Manage Contract
+                        </a>
+
+                    </div>
+                </div>
+            </li>
         </ul>
     </aside>
 
@@ -931,6 +954,29 @@
                             <div class="content-menu text-sm flex items-center gap-3">
                                 <i class="fas fa-house"></i>
                                 <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Beranda</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- CONTRACT -->
+                    <li class="list-item pb-4 px-4">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-file-signature text-[12px]"></i>
+                                <span class="text-[14px]">Contract</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
+                            </div>
+
+                            <div class="content-dropdown pl-6">
+
+                                <a href="{{ route('lms.finance.manage-contract.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}"
+                                    class="link-href flex py-2 text-[14px]">
+                                    Manage Contract
+                                </a>
+
                             </div>
                         </div>
                     </li>

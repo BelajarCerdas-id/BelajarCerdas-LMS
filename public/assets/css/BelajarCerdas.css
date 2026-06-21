@@ -192,3 +192,58 @@ input[type="radio"]:checked + label.checked-option,
 input[type="checkbox"]:checked + label.checked-option {
     background-color: rgba(0, 0, 0, 0.09);
 }
+
+.progress-shimmer {
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.45),
+        transparent
+    );
+
+    animation: shimmerMove 2s linear infinite;
+}
+
+@keyframes shimmerMove {
+
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(300%);
+    }
+}
+
+#payment-progress-bar::before {
+
+    content: '';
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            rgba(255,255,255,.18) 0px,
+            rgba(255,255,255,.18) 20px,
+            transparent 20px,
+            transparent 40px
+        );
+
+    background-size: 60px 60px;
+
+    animation: stripeFlow 1.5s linear infinite;
+}
+
+@keyframes stripeFlow {
+
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 60px 0;
+    }
+}   

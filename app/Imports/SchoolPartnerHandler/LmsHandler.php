@@ -6,11 +6,11 @@ use App\Events\LmsSchoolSubscription;
 use App\Models\FeaturePrice;
 use App\Models\Feature;
 use App\Models\Mapel;
-use App\Models\SchoolLmsSubscription;
+use App\Models\SchContract;
+use App\Models\SchContractTerm;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
-use App\Models\Transaction;
 use App\Models\UserAccount;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -79,8 +79,7 @@ class LmsHandler
                     'npsn' => 'required',
                     'nik_kepsek' => 'required',
                     'pembelian_fitur' => 'required',
-                    'durasi' => 'required',
-                    'metode_pembayaran' => 'required',
+                    'durasi_kontrak' => 'required',
                 ], [
                     'nama_kepsek.required' => 'Nama tidak boleh kosong.',
                     'email_user.required' => 'Email tidak boleh kosong.',
@@ -99,8 +98,7 @@ class LmsHandler
                     'npsn.required' => 'NPSN tidak boleh kosong.',
                     'nik_kepsek.required' => 'NIK kepala sekolah tidak boleh kosong.',
                     'pembelian_fitur.required' => 'Pembelian fitur tidak boleh kosong.',
-                    'durasi.required' => 'Durasi tidak boleh kosong.',
-                    'metode_pembayaran.required' => 'Metode pembayaran tidak boleh kosong.',
+                    'durasi_kontrak.required' => 'Durasi kontrak tidak boleh kosong.',
                 ]);
 
                 // mengambil npsn pada baris pertama
@@ -135,7 +133,7 @@ class LmsHandler
 
                 // ambil nama varian fitur yang dibeli
                 if ($feature) {
-                    $variantFeature = FeaturePrice::where('variant_name', $row['durasi'])->where('feature_id', $feature->id)->first();
+                    $variantFeature = FeaturePrice::where('variant_name', $row['durasi_kontrak'])->where('feature_id', $feature->id)->first();
                 }
 
                 // validasi jika fitur tidak terdaftar
@@ -143,9 +141,9 @@ class LmsHandler
                     throw new \Exception("Fitur {$row['pembelian_fitur']} tidak terdaftar.");
                 }
 
-                // validasi jika variant feature (durasi) tidak terdaftar
+                // validasi jika variant feature (durasi_kontrak) tidak terdaftar
                 if (!$variantFeature) {
-                    throw new \Exception("Durasi {$row['durasi']} tidak terdaftar pada fitur {$row['pembelian_fitur']}.");
+                    throw new \Exception("Durasi kontrak {$row['durasi_kontrak']} tidak terdaftar pada fitur {$row['pembelian_fitur']}.");
                 }
 
                 // cek apakah email atau no_hp sudah ada di database
@@ -215,17 +213,12 @@ class LmsHandler
                     ]);
                 }
 
-                // ambil lms subscription history
-                $getSubscriptionHistory = SchoolLmsSubscription::where('school_partner_id', $schoolPartner->id)
-                    ->whereHas('Transaction', function ($query) use ($feature) {
-                        $query->where('feature_id', $feature->id)
-                            ->where('transaction_status', 'Berhasil')
-                            ->where('transaction_source', 'school_partner');
-                    })->whereDate('end_date', '>=', $today)->where('subscription_status', 'active') // pastikan masih aktif
-                    ->first();
+                // ambil lms sch contract
+                $getContract = SchContract::where('school_partner_id', $schoolPartner->id)
+                    ->whereDate('end_contract', '>=', $today)->where('status', 'active')->first();
 
-                // cek jika siswa masih memiliki fitur yang aktif, maka tampilkan error
-                if ($getSubscriptionHistory) {
+                // cek jika sekolah masih memiliki kontrak yang aktif, maka tampilkan error
+                if ($getContract) {
                     throw new \Exception("Sekolah {$row['nama_sekolah']} masih memiliki fitur {$row['pembelian_fitur']} yang aktif.");
                 }
 
@@ -293,37 +286,56 @@ class LmsHandler
                 });
 
                 /* =======================
-                 * TRANSACTION
+                 * CONTRACT
                  * ======================= */
-                $orderId = 'BC-co-lms-' . Str::uuid();
+                $lastContract = SchContract::latest('id')->first();
 
-                $transaction = Transaction::create([
-                    'user_id' => $user->id,
-                    'school_partner_id' => $schoolPartner->id,
-                    'feature_id' => $feature->id,
-                    'feature_variant_id' => $variantFeature->id,
-                    'order_id' => $orderId,
-                    'payment_method' => $row['metode_pembayaran'],
-                    'transaction_status' => 'Berhasil',
-                    'price' => $variantFeature->price,
-                    'transaction_source' => 'school_partner',
-                ]);
+                $nextNumber = ($lastContract?->id ?? 0) + 1;
+
+                $contractNumber = 'CTR-' . date('Y') . '-' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
 
                 $months = (int) filter_var($variantFeature->duration, FILTER_SANITIZE_NUMBER_INT);
                 $start = Carbon::now();
                 $end = $start->copy()->addMonths($months);
 
-                $SchoolLmsSubscription = SchoolLmsSubscription::create([
+                $createContract = SchContract::create([
+                    'user_id' => $this->userId,
                     'school_partner_id' => $schoolPartner->id,
-                    'transaction_id' => $transaction->id,
-                    'start_date' => $start,
-                    'end_date' => $end,
-                    'subscription_status' => 'active',
+                    'feature_id' => $feature->id,
+                    'feature_price_id' => $variantFeature->id,
+                    'contract_number' => $contractNumber,
+                    'start_contract' => $start,
+                    'end_contract' => $end,
+                    'init_student_count' => $row['jumlah_siswa'],
+                    'price_per_student' => $row['harga_per_siswa'],
+                    'total_term' => $row['total_term'],
                 ]);
+
+                $startDate = Carbon::parse($createContract->start_contract);
+
+                $totalMonths = Carbon::parse($createContract->start_contract)->diffInMonths(Carbon::parse($createContract->end_contract));
+
+                $monthsPerTerm = floor($totalMonths / $createContract->total_term);
+
+                for ($i = 1; $i <= $createContract->total_term; $i++) {
+                    $termStart = $startDate->copy();
+
+                    $termEnd = $i == $createContract->total_term ? Carbon::parse($createContract->end_contract) : $termStart->copy()->addMonths($monthsPerTerm)->subDay();
+
+                    SchContractTerm::create([
+                        'contract_id' => $createContract->id,
+                        'term_number' => $i,
+                        'period_start' => $termStart,
+                        'period_end' => $termEnd,
+                        'status' => 'unpaid',
+                    ]);
+
+                    $startDate = $termEnd->copy()->addDay();
+                }
 
                 DB::commit();
 
-                broadcast(new LmsSchoolSubscription($SchoolLmsSubscription))->toOthers();
+                broadcast(new LmsSchoolSubscription($createContract))->toOthers();
 
             } catch (\Throwable $e) {
                 DB::rollBack();

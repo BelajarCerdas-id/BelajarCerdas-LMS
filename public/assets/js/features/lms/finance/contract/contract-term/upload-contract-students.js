@@ -2,20 +2,28 @@ let isProcessing = false;
 
 $(document).ready(function () {
     $('#submit-button').on('click', function (e) {
+        const container = document.getElementById('container');
+        const role = container.dataset.role;
+        const schoolId = container.dataset.schoolId;
+        const contractId = container.dataset.contractId;
+        const termId = container.dataset.termId;
+
+        if (!role || !schoolId || !contractId || !termId) return;
+
         e.preventDefault();
 
         if (isProcessing) return; // abaikan jika sedang proses
 
         isProcessing = true; // tandai sedang proses
 
-        const form = $('#school-partner-form')[0]; // ambil DOM Form-nya
+        const form = $('#contract-students-form')[0]; // ambil DOM Form-nya
         const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
         const btn = $(this);
         btn.prop('disabled', true); // Disable button UI
 
         $.ajax({
-            url: '/school-subcsription/store',
+            url: `/lms/${role}/manage-contract/schools/${schoolId}/contract/${contractId}/payment-detail/student-list/${termId}/store`,
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -30,7 +38,7 @@ $(document).ready(function () {
                 if (modal) {
                     modal.close();
 
-                    $('#alert-success-insert-school-partner').html(
+                    $('#alert-success-insert-contract-students').html(
                         `
                         <div class=" w-full flex justify-center">
                             <div class="fixed z-9999">
@@ -51,7 +59,7 @@ $(document).ready(function () {
                 }
 
                 // Reset form
-                $('#school-partner-form')[0].reset();
+                $('#contract-students-form')[0].reset();
                 $('#excelPreviewContainer-bulkUpload-excel').addClass('hidden');
                 $('#textPreview-bulkUpload-excel').text('');
                 $('#textSize-bulkUpload-excel').text('');
@@ -67,7 +75,7 @@ $(document).ready(function () {
                     document.getElementById('alertSuccess').remove();
                 });
 
-                paginateSchoolContract(1, false);
+                paginateStudentList('', '', 1, true);
 
                 isProcessing = false;
                 btn.prop('disabled', false);

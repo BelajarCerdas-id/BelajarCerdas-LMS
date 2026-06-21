@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Finance\FinanceContractController;
 use App\Http\Controllers\Finance\FinanceDashboardController;
 use App\Http\Controllers\GradebookAssessmentController;
 use App\Http\Controllers\LmsController;
@@ -483,6 +484,28 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // =========================================================
     // ROUTES FINANCE
+
+    // MANAGE CONTRACT (VIEWS)
+    Route::get('/lms/{role}/manage-contract', [FinanceContractController::class, 'index'])->name('lms.finance.manage-contract.view');
+    Route::get('/lms/{role}/manage-contract/schools/{schoolId}', [FinanceContractController::class, 'manageContractDetail'])->name('lms.finance.manage-contract-detail.view');
+    Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail', [FinanceContractController::class, 'contractPaymentDetail'])->name('lms.finance.contract.payment.detail');
+    Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/student-list/{termId}', [FinanceContractController::class, 'studentList'])->name('lms.finance.contract.student-list.view');
+
+    // crud manage contract detail
+    Route::put('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/activate', [FinanceContractController::class, 'contractDetailActivate'])->name('lms.finance.manage-contract-detail.activate');
+
+    // crud contract payment detail
+    Route::put('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/term/{termId}/mark-status', [FinanceContractController::class, 'markContractTerm'])->name('lms.finance.contract.payment.mark-status');
+
+    // crud manage contract term (student)
+    Route::post('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/student-list/{termId}/store', [FinanceContractController::class, 'bulkUploadContractStundents'])->name('lms.finance.contract.student-list.store');
+    Route::put('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/student-list/{termId}/student/{studentTermId}/activate', [FinanceContractController::class, 'studentListActivate'])->name('lms.finance.contract.student-list.activate');
+
+    // paginate
+    Route::get('/lms/{role}/manage/contract/paginate', [FinanceContractController::class, 'paginateManageContract'])->name('lms.finance.manage.contract.paginate');
+    Route::get('/lms/{role}/manage/contract/schools/{schoolId}/paginate', [FinanceContractController::class, 'paginateManageContractDetail'])->name('lms.finance.manage.contract-detail.paginate');
+    Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/paginate', [FinanceContractController::class, 'paginateContractPaymentDetail'])->name('lms.finance.contract-payment-detail.paginate');
+    Route::get('/lms/{role}/manage-contract/schools/{schoolId}/contract/{contractId}/payment-detail/student-list/{termId}/paginate', [FinanceContractController::class, 'paginateStudentList'])->name('lms.finance.contract.student-list.paginate');
 
     // data
     // dashboard
