@@ -17,4 +17,8 @@ class Feature extends Model
     public function FeaturePrice() {
         return $this->hasOne(FeaturePrice::class, 'feature_id');
     }
+
+    public function SchContract() {
+        return $this->hasMany(SchContract::class, 'feature_id');
+    }
 }

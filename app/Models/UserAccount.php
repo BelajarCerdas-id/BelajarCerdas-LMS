@@ -141,4 +141,16 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(SchReflAnswer::class, 'user_id');
     }
+
+    public function SchContract() {
+        return $this->hasMany(SchContract::class, 'user_id');
+    }
+
+    public function SchTermOffice() {
+        return $this->hasMany(SchTermStudent::class, 'office_id');
+    }
+
+    public function SchTermStudent() {
+        return $this->hasMany(SchTermStudent::class, 'student_id');
+    }
 }

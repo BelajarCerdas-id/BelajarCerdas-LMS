@@ -20,4 +20,8 @@ class FeaturePrice extends Model
     public function Feature() {
         return $this->belongsTo(Feature::class, 'feature_id');
     }
+
+    public function SchContract() {
+        return $this->hasMany(FeaturePrice::class, 'feature_price_id');
+    }
 }

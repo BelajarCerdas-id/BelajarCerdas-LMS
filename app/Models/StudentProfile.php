@@ -18,7 +18,7 @@ class StudentProfile extends Model
     ];
 
     public function UserAccount() {
-        return $this->belongsTo(UserAccount::class);
+        return $this->belongsTo(UserAccount::class, 'user_id');
     }
 
     public function SchoolPartner()
