@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Finance\FinanceDashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\ParentProfile; 
@@ -39,7 +40,7 @@ class DashboardController extends Controller
             if ($staffProfile) {
                 $schoolId = $staffProfile->school_partner_id;
                 $school = DB::table('school_partners')->where('id', $schoolId)->first();
-                $schoolName = $school ? Str::slug($school->nama_sekolah) : 'sekolah';
+                $schoolName = $school ? $school->nama_sekolah : 'sekolah';
                 
                 return redirect()->route('lms.teacher.view', [
                     'role'       => $user->role,

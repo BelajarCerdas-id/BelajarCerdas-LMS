@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Finance\FinanceDashboardController;
 use App\Http\Controllers\GradebookAssessmentController;
 use App\Http\Controllers\LmsController;
 use App\Http\Controllers\MasterAcademicController;
@@ -479,6 +480,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
     // paginate
     Route::get('/lms/{role}/office-management/manage-user/paginate', [OfficeManagementController::class, 'paginateManageUser'])->name('lms.officeManagement.manage-user.paginate');
+
+    // =========================================================
+    // ROUTES FINANCE
+
+    // data
+    // dashboard
+    Route::get('/lms/{role}/manage-contract/load-kpi', [FinanceDashboardController::class, 'loadKpiDashboard'])->name('lms.finance.manage-contract.load-kpi');
+    Route::get('/lms/{role}/manage-contract/load-chart', [FinanceDashboardController::class, 'loadChartDashboard'])->name('lms.finance.manage-contract.load-chart');
+    Route::get('/lms/{role}/manage-contract/load-top-revenue', [FinanceDashboardController::class, 'loadTopRevenueDashboard'])->name('lms.finance.manage-contract.load-chart');
+    Route::get('/lms/{role}/manage-contract/load-contract-expiring', [FinanceDashboardController::class, 'loadContractExpiringDashboard'])->name('lms.finance.manage-contract.load-contract-expiring');
 
     // =========================================================
     // ROUTES STUDENT LMS (wildcard — harus PALING BAWAH di grup /lms/{role}/...)

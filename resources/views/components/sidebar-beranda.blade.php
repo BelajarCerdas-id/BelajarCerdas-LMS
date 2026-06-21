@@ -756,17 +756,19 @@
                 <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="" class="w-50 h-32">
             </div>
         </a>
+
         <ul class="max-h-screen overflow-y-auto pb-3">
-            <div class="dropdown-menu">
-                <li class="list-item pb-2">
-                    <div class="content-menu flex items-center gap-3 px-3 py-2">
-                        <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href text-[14px]">
-                            Beranda
-                        </a>
-                    </div>
-                </li>
-            </div>
+
+            <!-- BERANDA -->
+            <li class="list-item pb-2">
+                <div class="content-menu flex items-center gap-3 px-3 py-2">
+                    <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
+                    <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}"
+                        class="link-href text-[14px]">
+                        Beranda
+                    </a>
+                </div>
+            </li>
         </ul>
     </aside>
 
