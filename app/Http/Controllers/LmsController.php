@@ -37,35 +37,15 @@ class LmsController extends Controller
     // function pagiante lms school subscription
     public function paginateLmsSchoolSubscription(Request $request)
     {
-        $today = now()->format('Y-m-d');
-
-        $lmsSchoolSubscription = SchoolLmsSubscription::whereHas('Transaction', function ($query) {
-            $query->where('transaction_status', 'Berhasil');
-        })->where('end_date', '<', $today)->get();
-
-        if ($lmsSchoolSubscription) {
-            foreach ($lmsSchoolSubscription as $history) {
-                $history->update([
-                    'subscription_status' => 'tidak_aktif'
-                ]);
-            }
-        }
-
-        $lmsSchoolSubscription = SchoolPartner::with(['UserAccount.SchoolStaffProfile', 'SchoolLmsSubscription' => function ($query) {
-            $query->whereHas('transaction', function ($q) {
-                $q->where('transaction_status', 'Berhasil');
-            })->orderByDesc('start_date')->limit(1); // ambil subscription terbaru
-        }
-        ])->orderBy('updated_at', 'desc');
-
+        $query = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->orderByDesc('created_at');
 
         // Filter school
         if ($request->filled('search_school')) {
             $search = $request->search_school;
-            $lmsSchoolSubscription->where('nama_sekolah', 'LIKE', "%{$search}%");
+            $query->where('nama_sekolah', 'LIKE', "%{$search}%");
         }
 
-        $paginated = $lmsSchoolSubscription->paginate(20);
+        $paginated = $query->paginate(20);
 
         return response()->json([
             'data' => $paginated->values(), // flat array, bukan nested
