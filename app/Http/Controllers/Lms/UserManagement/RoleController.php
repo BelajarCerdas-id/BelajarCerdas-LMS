@@ -17,10 +17,14 @@ class RoleController extends Controller
     // function paginate lms management roles
     public function paginateLmsSchoolSubscriptionRoleAccount(Request $request, $schoolName, $schoolId)
     {
-        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile', 'ParentProfile'])->where(function ($query) use ($schoolId) {
             $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
-            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+            })
+            ->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
         })->get();

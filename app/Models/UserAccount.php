@@ -132,6 +132,11 @@ class UserAccount extends Authenticatable
         return $this->hasOne(parentProfile::class, 'user_id');
     }
 
+    public function ParentChildren()
+    {
+        return $this->hasMany(StudentProfile::class, 'parent_id');
+    }
+
     public function SchReflQuestion()
     {
         return $this->hasMany(SchReflQuestion::class, 'user_id');

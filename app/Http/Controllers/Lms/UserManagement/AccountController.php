@@ -20,10 +20,14 @@ class AccountController extends Controller
     // function paginate lms management account
     public function paginateLmsSchoolAccount(Request $request, $role, $schoolName, $schoolId, $managedRole)
     {
-        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile', 'ParentProfile'])->withCount('ParentProfile')->where(function ($query) use ($schoolId) {
             $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
-            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+            })
+            ->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
         })->where('role', $managedRole);
@@ -54,6 +58,7 @@ class AccountController extends Controller
             'per_page' => $paginated->perPage(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
+            'parentChildrenList' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-accounts/:parentId/parent-children-list',
         ]);
     }
 
@@ -146,4 +151,22 @@ class AccountController extends Controller
         }
     }
 
+    public function lmsParentChildrenListView($role, $schoolName, $schoolId, $managedRole, $parentId)
+    {
+        return view('features.lms.administrator.lms-school-subscription-parent-children-list', compact('role', 'schoolName', 'schoolId', 'managedRole', 'parentId'));
+    }
+
+    public function paginateLmsParentChildrenList(Request $request, $role, $schoolName, $schoolId, $managedRole, $parentId)
+    {
+        $data = UserAccount::with(['StudentProfile', 'StudentSchoolClass.SchoolClass.Kelas', 'StudentProfile.SchoolPartner'])->where('role', 'Siswa')
+        ->whereHas('StudentProfile', function ($query) use ($parentId) {
+            $query->where('parent_id', $parentId);
+        })->whereHas('StudentSchoolClass', function ($query) {
+            $query->whereNull('academic_action')->orWhere('academic_action', '');
+        })->get();
+        
+        return response()->json([
+            'data' => $data,
+        ]);
+    }
 }

@@ -25,4 +25,9 @@ class StudentProfile extends Model
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
+
+    public function Parent()
+    {
+        return $this->belongsTo(UserAccount::class, 'parent_id');
+    }
 }

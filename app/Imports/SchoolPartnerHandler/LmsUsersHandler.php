@@ -5,6 +5,7 @@ namespace App\Imports\SchoolPartnerHandler;
 use App\Events\BulkUploadCreateAccount;
 use App\Models\Fase;
 use App\Models\Kelas;
+use App\Models\ParentProfile;
 use App\Models\SchoolClass;
 use App\Models\SchoolMajor;
 use App\Models\SchoolPartner;
@@ -54,33 +55,50 @@ class LmsUsersHandler
                  * VALIDASI UMUM
                  * ======================= */
                 $generalRules = [
-                    'nama_user' => 'required',
-
-                    'email_user' => [
-                        'required',
-                        'email',
-                        'regex:/^[a-zA-z0-9._%+-]+@gmail\.com$/',
-                    ],
-
-                    'no_hp' => [
-                        'required',
-                        'regex:/^08\d{9,11}$/',
-                    ],
-
-                    'email_akun' => [
-                        'required',
-                        'email',
-                        'regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
-                    ],
-
-                    'password_akun' => 'required',
                     'enrollment_type' => 'required',
                     'role_account' => 'required',
                     'nama_sekolah' => 'required',
                     'npsn' => 'required',
                     'jenjang_sekolah' => 'required',
+                    'email_akun' => [
+                        'required',
+                        'email',
+                        'regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+                    ],
                     'pembelian_fitur' => 'required',
                 ];
+
+                if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
+                    $generalRules['nama_orang_tua_siswa'] = 'required';
+
+                    $generalRules['no_hp_orang_tua'] = [
+                        'required',
+                        'regex:/^08\d{9,11}$/',
+                    ];
+
+                    $generalRules['email_akun_orang_tua'] = [
+                        'required',
+                        'email',
+                        'regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+                    ];
+
+                    $generalRules['password_akun_orang_tua'] = 'required';
+                } else {
+                    $generalRules['nama_user'] = 'required';
+
+                    $generalRules['email_user'] = [
+                        'required',
+                        'email',
+                        'regex:/^[a-zA-z0-9._%+-]+@gmail\.com$/',
+                    ];
+
+                    $generalRules['password_akun'] = 'required';
+
+                    $generalRules['no_hp'] = [
+                        'required',
+                        'regex:/^08\d{9,11}$/',
+                    ];
+                }
 
                 // jika role selain siswa, maka nik_user wajib
                 if ($row['role_account'] !== 'Siswa') {
@@ -131,6 +149,17 @@ class LmsUsersHandler
 
                         'password_akun.required' => 'Password Akun tidak boleh kosong.',
 
+                        'nama_orang_tua_siswa.required' => 'Nama Orang Tua Siswa tidak boleh kosong.',
+
+                        'no_hp_orang_tua.required' => 'Nomor HP Orang Tua tidak boleh kosong.',
+                        'no_hp_orang_tua.regex' => 'Nomor HP Orang Tua tidak valid.',
+
+                        'email_akun_orang_tua.required' => 'Email Akun Orang Tua tidak boleh kosong.',
+                        'email_akun_orang_tua.email' => 'Email Akun Orang Tua tidak valid.',
+                        'email_akun_orang_tua.regex' => 'Email Akun Orang Tua tidak valid.',
+
+                        'password_akun_orang_tua.required' => 'Password Akun Orang Tua tidak boleh kosong.',
+
                         'enrollment_type.required' => 'Tipe Pendaftaran tidak boleh kosong.',
                         'role_account.required' => 'Role Akun tidak boleh kosong.',
 
@@ -165,6 +194,19 @@ class LmsUsersHandler
                     throw new \Exception("Email akun {$row['email_akun']} sudah digunakan oleh nomor HP berbeda.");
                 }
 
+                $existingParentUser = null;
+
+                if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
+
+                    $existingParentUser = UserAccount::where('email', $row['email_akun_orang_tua'])->first();
+
+                    if ($existingParentUser && $existingParentUser->no_hp !== $row['no_hp_orang_tua']) {
+                        throw new \Exception(
+                            "Email akun orang tua {$row['email_akun_orang_tua']} sudah digunakan oleh nomor HP berbeda."
+                        );
+                    }
+                }
+
                 // SCHOOL PARTNER
                 $schoolPartner = SchoolPartner::where('npsn', $row['npsn'])->first();
 
@@ -175,20 +217,66 @@ class LmsUsersHandler
                 }
 
                 // USER ACCOUNT
-                $user = UserAccount::updateOrCreate(
-                    [
-                        'email' => $row['email_akun'],
-                    ],
-                    [
-                        'password' => bcrypt($row['password_akun']),
-                        'no_hp' => $row['no_hp'],
-                        'role' => $row['role_account'],
-                        'status_akun' => 'aktif',
-                    ]
-                );
+                if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
+                    $user = UserAccount::firstOrCreate(
+                        [
+                            'email' => $row['email_akun_orang_tua'],
+                        ],
+                        [
+                            'password' => bcrypt($row['password_akun_orang_tua']),
+                            'no_hp' => $row['no_hp_orang_tua'],
+                            'role' => $row['role_account_orang_tua'],
+                            'status_akun' => 'aktif',
+                        ]
+                    );
+                } else {
+                    $user = UserAccount::updateOrCreate(
+                        [
+                            'email' => $row['email_akun'],
+                        ],
+                        [
+                            'password' => bcrypt($row['password_akun']),
+                            'no_hp' => $row['no_hp'],
+                            'role' => $row['role_account'],
+                            'status_akun' => 'aktif',
+                        ]
+                    );
+                }
 
                 // ROLE SISWA
-                if ($row['role_account'] === 'Siswa') {
+                if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
+
+                    $studentId = UserAccount::where('email', $row['email_akun'])->first();
+
+                    $existingParentProfile = ParentProfile::where('user_id', $user->id)->first();
+
+                    if ($existingParentProfile && $existingParentProfile->school_partner_id != $schoolPartner->id) {
+                        throw new \Exception(
+                            "Akun orang tua {$row['email_akun_orang_tua']} sudah terdaftar pada sekolah lain."
+                        );
+                    }
+
+                    if (!$studentId) {
+                        throw new \Exception(
+                            "Akun siswa {$row['email_akun']} dari orang tua {$row['nama_orang_tua_siswa']} tidak terdaftar."
+                        );
+                    }
+
+                    // PARENT PROFILE
+                    ParentProfile::firstOrCreate(
+                        [
+                            'user_id' => $user->id,
+                        ],
+                        [
+                            'school_partner_id' => $schoolPartner->id,
+                            'nama_lengkap' => $row['nama_orang_tua_siswa'],
+                        ]
+                    );
+
+                    StudentProfile::where('user_id', $studentId->id)->update([
+                        'parent_id' => $user->id,
+                    ]);
+                } elseif ($row['role_account'] === 'Siswa') {
 
                     $getFase = Fase::where('nama_fase', $row['fase'])->first();
 

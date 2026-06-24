@@ -69,17 +69,34 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
                             </div>
                         </div>
                     `;
-
+                    
                     $.each(response.data, function (index, item) {
+
+                        let parentChildrenList = '';
+
+                        if (item.role === 'Orang Tua') {
+                            parentChildrenList = response.parentChildrenList.replace().replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
+                                .replace(':schoolId', schoolIdentity.id).replace(':managedRole', item.role).replace(':parentId', item.id);
+                        }
+
                         $('#tbody-management-staff-list').append(`
                             <tr>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.student_profile?.nama_lengkap || item.school_staff_profile?.nama_lengkap}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.role}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.student_profile?.personal_email || item.school_staff_profile?.personal_email}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.email}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.no_hp}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">${item.status_akun}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+                                    ${item.student_profile?.nama_lengkap || item.school_staff_profile?.nama_lengkap || item.parent_profile?.nama_lengkap || '-'}
+                                </td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${item.role ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+                                    ${item.student_profile?.personal_email || item.school_staff_profile?.personal_email || '-'}
+                                </td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${item.email ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${item.no_hp ?? '-'}</td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+                                    <a href="${parentChildrenList}" class="text-[#0071BC] font-semibold underline">
+                                        ${item.parent_profile_count ?? 0} Anak
+                                    </a>
+                                </td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">${item.status_akun ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" class="hidden peer toggle-activate-account"
