@@ -48,33 +48,63 @@
                     </a>
                 </li>
 
-                    <!-- Menu Library -->
-                    <li class="list-menu-sidebar-dekstop-student">
+                   <!-- Menu Library -->
+<!-- LIBRARY -->
+<li class="list-item">
 
-<div class="flex flex-col">
+    <div class="flex flex-col">
 
-    <!-- MENU LIBRARY -->
-    <a href="{{ route('student.library') }}" 
-       class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-       
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-book"></i>
-            <span>Library</span>
+        @php
+            $isLibraryActive =
+                request()->routeIs('teacher.library') ||
+                request()->routeIs('teacher.library.ppt') ||
+                request()->routeIs('teacher.library.lks') ||
+                request()->routeIs('teacher.library.video');
+        @endphp
+
+        <!-- MAIN MENU -->
+        <a href="{{ route('teacher.library') }}"
+           class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-book"></i>
+                <span>Library</span>
+            </div>
+
+            <i class="fa-solid fa-chevron-down text-xs
+                {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
+
+        </a>
+
+        <!-- DROPDOWN -->
+        <div class="{{ $isLibraryActive
+                ? 'ml-7 mt-1 flex flex-col gap-1'
+                : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+
+            <a href="{{ route('teacher.library.ppt') }}"
+               class="{{ request()->routeIs('teacher.library.ppt')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Power Point
+            </a>
+
+            <a href="{{ route('teacher.library.lks') }}"
+               class="{{ request()->routeIs('teacher.library.lks')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                LKPD
+            </a>
+
+            <a href="{{ route('teacher.library.video') }}"
+               class="{{ request()->routeIs('teacher.library.video')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Video
+            </a>
+
         </div>
 
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </a>
-
-    <!-- DROPDOWN -->
-    <div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
-
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
-
     </div>
-</div>
 
 </li>
                 </ul>
@@ -314,18 +344,62 @@
 
         <i class="fa-solid fa-chevron-down text-xs"></i>
     </a>
+<!-- LIBRARY -->
+<li class="list-item">
 
-    <!-- DROPDOWN -->
-<div class="@if(request()->routeIs('student.library') || request()->routeIs('student.library.ppt')) ml-7 mt-1 flex flex-col gap-1 @else hidden ml-7 mt-1 flex flex-col gap-1 @endif">
+    <div class="flex flex-col">
 
-    <a href="{{ route('student.library.ppt') }}" 
-       class="@if(request()->routeIs('student.library.ppt')) px-3 py-2 text-sm rounded-md bg-[#FFFFFF26] @else px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26] @endif">
-        Power Point
-    </a>
+        @php
+            $isLibraryActive =
+                request()->routeIs('teacher.library') ||
+                request()->routeIs('teacher.library.ppt') ||
+                request()->routeIs('teacher.library.lks') ||
+                request()->routeIs('teacher.library.video');
+        @endphp
 
-</div>
+        <!-- MAIN MENU -->
+        <a href="{{ route('teacher.library') }}"
+           class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
 
-</div>
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-book"></i>
+                <span>Library</span>
+            </div>
+
+            <i class="fa-solid fa-chevron-down text-xs
+                {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
+
+        </a>
+
+        <!-- DROPDOWN -->
+        <div class="{{ $isLibraryActive
+                ? 'ml-7 mt-1 flex flex-col gap-1'
+                : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+
+            <a href="{{ route('teacher.library.ppt') }}"
+               class="{{ request()->routeIs('teacher.library.ppt')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Power Point
+            </a>
+
+            <a href="{{ route('teacher.library.lks') }}"
+               class="{{ request()->routeIs('teacher.library.lks')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                LKPD
+            </a>
+
+            <a href="{{ route('teacher.library.video') }}"
+               class="{{ request()->routeIs('teacher.library.video')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Video
+            </a>
+
+        </div>
+
+    </div>
 
 </li>
             </ul>
@@ -1242,12 +1316,15 @@
             <div class="mt-auto">
                 <hr class="border-white border opacity-60 mb-10 mx-6">
 
-                <div class="pb-16 -ml-2 flex justify-center">
-                    <div class="flex flex-col w-max">
-                        <span class="text-[13px] mb-3">
-                            Powered By:
-                        </span>
-                        <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain">
+                <div class="pb-16 -ml-2">
+                    <span class="text-sm mb-6 flex justify-center font-bold">
+                        Partnership By:
+                    </span>
+
+                    <div class="flex justify-center w-full">
+                        <img
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                        >
                     </div>
                 </div>
             </div>
@@ -3176,6 +3253,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+});
+</script>
+<script>
+function openLibraryMenu() {
+    localStorage.setItem("openLibrary", "true");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const openLibrary = localStorage.getItem("openLibrary");
+
+    if (openLibrary === "true") {
+        const el = document.getElementById("libraryDropdown");
+        if (el) el.classList.remove("hidden");
+    }
 });
 </script>
 <script>

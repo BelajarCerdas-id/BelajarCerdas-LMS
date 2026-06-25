@@ -111,54 +111,79 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // DASHBOARD
     Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('beranda');
 
-    // =========================================================
-    // ROUTES LIBRARY (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/administrator/library', [LibraryController::class, 'administrator'])
-        ->name('library.administrator');
+    // =========================================================================
+    // 1. ADMINISTRATOR LIBRARY ROUTES
+    // =========================================================================
+    Route::prefix('administrator')->group(function () {
+        
+        // Main & Basic Management
+        Route::get('/library', [LibraryController::class, 'administrator'])->name('library.administrator');
+        Route::post('/library/store', [LibraryController::class, 'store'])->name('library.store');
+        Route::post('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
+        Route::put('/library/update/{id}', [LibraryController::class, 'update']); // Fallback method
 
-    Route::post('/administrator/library/store', [LibraryController::class, 'store'])
-        ->name('library.store');
+        // PPT Management
+        Route::post('/library/ppt/store', [LibraryController::class, 'storePpt'])->name('ppt.store');
+        Route::put('/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])->name('ppt.update');
+        Route::delete('/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])->name('ppt.delete');
 
-    Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])
-        ->name('library.update');
+        // Chapter & Topik Management
+        Route::post('/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
+        Route::post('/library/topik/store', [LibraryController::class, 'storeTopik'])->name('library.topik.store');
+        Route::put('/library/topik/update/{id}', [LibraryController::class, 'updateTopik'])->name('library.topik.update');
+        Route::get('/library/get-topik', [LibraryController::class, 'getTopikByMapel']);
+        Route::get('/library/get-series/{topikId}', [LibraryController::class, 'getSeries']);
+        
+        Route::get('/topik-management', [LibraryController::class, 'topikManagement'])->name('topik.management');
+    });
 
-    Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update']);
+    // Global delete (di luar prefix administrator karena URL aslinya tidak pakai /administrator)
+    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
 
-    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])
-        ->name('library.delete');
 
-    Route::post('/administrator/library/ppt/store', [LibraryController::class, 'storePpt'])
-        ->name('ppt.store');
+    // =========================================================================
+    // 2. STUDENT LIBRARY ROUTES
+    // =========================================================================
+    Route::prefix('lms/student/library')->group(function () {
+        Route::get('/', [LibraryController::class, 'studentLibrary'])->name('student.library');
+        Route::get('/ppt', [LibraryController::class, 'pptLibrary'])->name('student.library.ppt');
+        Route::get('/video', [LibraryController::class, 'videoLibrary'])->name('student.library.video');
+        Route::get('/read/{id}', [LibraryController::class, 'readBook'])->name('student.library.read');
+        Route::post('/submit', [LibraryController::class, 'submitTask'])->name('student.library.submit');
+        
+        // Perbaikan: Menyatukan prefix '/student/library/mapel' ke struktur LMS agar konsisten
+        Route::get('/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
+            ->where('mapel', '[0-9]+')
+            ->name('student.library.mapel');
 
-    Route::put('/administrator/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])
-        ->name('ppt.update');
+        // Sub-prefix LKS Student
+        Route::prefix('lks')->group(function () {
+            Route::get('/', [LibraryController::class, 'lksLibrary'])->name('student.library.lks');
+            Route::get('/mapel', [LibraryController::class, 'getMapelByKelas'])->name('student.library.lks.mapel');
+            Route::get('/{id}', [LibraryController::class, 'lksDetail'])->name('student.library.lks.detail');
+        });
+    });
 
-    Route::delete('/administrator/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])
-        ->name('ppt.delete');
 
-    Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])
-        ->name('library.chapter.store');
+    // =========================================================================
+    // 3. TEACHER LIBRARY ROUTES
+    // =========================================================================
+    Route::prefix('lms/teacher/library')->group(function () {
+        Route::get('/', [LibraryController::class, 'teacherLibrary'])->name('teacher.library');
+        Route::get('/ppt', [LibraryController::class, 'pptLibrary'])->name('teacher.library.ppt');
+        Route::get('/lks', [LibraryController::class, 'lksLibrary'])->name('teacher.library.lks');
+        Route::get('/lks/{id}', [LibraryController::class, 'lksDetail'])->name('teacher.library.lks.detail');
+        Route::get('/video', [LibraryController::class, 'videoLibrary'])->name('teacher.library.video');
+        Route::get('/read/{id}', [LibraryController::class, 'readBook'])->name('teacher.library.read');
+        Route::get('/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
+            ->where('mapel', '[0-9]+')
+            ->name('teacher.library.mapel');
+    });
 
-    // =========================================================
-    // ROUTES LIBRARY STUDENT (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])
-        ->name('student.library');
 
-    Route::get('/lms/student/library/ppt', [LibraryController::class, 'pptLibrary'])
-        ->name('student.library.ppt');
-
-    Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])
-        ->name('student.library.read');
-
-    Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])
-        ->name('student.library.submit');
-
-    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
-        ->where('mapel', '[0-9]+')
-        ->name('student.library.mapel');
-
+    // =========================================================================
+    // 4. UTILITIES / GLOBAL AJAX FETCH
+    // =========================================================================
     Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 
     // OFFICES DASHBOARD
@@ -236,6 +261,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/store', [SchoolSyllabusController::class, 'subBabStore'])->name('schoolSubBabManagement.store');
     Route::post('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/edit', [SchoolSyllabusController::class, 'subBabEdit'])->name('schoolSubBabManagement.edit');
     Route::put('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/{subBabId}/activate', [SchoolSyllabusController::class, 'subBabActivate'])->name('schoolSubBabManagement.activate');
+
 
     // paginate
     Route::get('/lms/school-subscription/{schoolName}/{schoolId}/kurikulum/paginate', [SchoolSyllabusController::class, 'paginateCurriculum'])->name('schoolCurriculumManagement.paginate');
@@ -568,24 +594,37 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.mode.view');
 
     // load assessment data by semester
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.mode.view');
+    
+    // load assessment data by semester
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment.mode');
     Route::get('/lms/check-assessment-status/{assessmentId}', [StudentAssessmentController::class, 'checkAssessmentStatus'])->name('lms.checkAssessmentStatus');
 
-    // assessment exam
+    // assessment (exam)
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/test/{assessmentId}', [StudentAssessmentExamController::class, 'studentAssessmentExam'])->name('lms.studentAssessmentExan.view');
+    
+    // form
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}', [StudentAssessmentExamController::class, 'studentAssessmentExamForm'])->name('lms.studentAssessmentExan.form');
+    
+    // routes timer
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/start-timer', [StudentAssessmentExamController::class, 'startTimer'])->name('lms.startTimer.test');
+    
+    // routes report tab switch (cheating detection)
     Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/report-tab-switch', [StudentAssessmentExamController::class, 'reportTabSwitch'])->name('lms.reportTabSwitch.cheating');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/attempt-status', [StudentAssessmentExamController::class, 'checkAttemptStatus'])->name('lms.checkAttemptStatus.cheating');
+    
+    // answer
     Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/answer', [StudentAssessmentExamController::class, 'studentAssessmentExamAnswer'])->name('lms.studentAssessmentExan.answer');
     Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/project-submission', [StudentAssessmentExamController::class, 'studentProjectSubmission'])->name('lms.studentProjectSubmission.answer');
+    
+    // end assessment
     Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/emd', [StudentAssessmentExamController::class, 'studentAssessmentExamEnd'])->name('lms.studentAssessmentExan.emd');
 
     // routes store and delete image essay
     Route::post('/lms/image-essay/store-image/endpoint', [StudentAssessmentExamController::class, 'storeImageEssay'])->name('assessment-test.storeImage');
     Route::post('/lms/image-essay/delete-image/endpoint', [StudentAssessmentExamController::class, 'deleteImageEssay'])->name('assessment-test.deleteImage');
-
+    
     // results
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/result-test', [StudentAssessmentExamController::class, 'studentResultAssessment'])->name('lms.studentAssessment.result');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/project-result', [StudentAssessmentExamController::class, 'studentProjectResult'])->name('lms.studentProjectAssessment.result');
@@ -595,7 +634,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // polling siswa
     Route::post('/lms/student/polling/vote', [StudentDashboardController::class, 'submitVote'])->name('lms.studentPolling.vote');
 
-    // =========================================================
+	// =========================================================
     // ROUTES TEACHER LMS
     // =========================================================
 
@@ -624,6 +663,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/view', [TeacherAssessmentController::class, 'teacherAssessmentManagementEdit'])->name('lms.teacherAssessmentManagementEdit.view');
 
     // form
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{mode}/{parentAssessmentId}', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.mode.view');
+    Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/view', [TeacherAssessmentController::class, 'teacherAssessmentManagementEdit'])->name('lms.teacherAssessmentManagementEdit.view');
+
+    // form
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/form', [TeacherAssessmentController::class, 'teacherFormAssessmentManagement'])->name('lms.teacherFormAssessmentManagement.form');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/form', [TeacherAssessmentController::class, 'teacherFormAssessmentManagementEdit'])->name('lms.teacherFormAssessmentManagement.edit');
     Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/validate-step-form/store', [TeacherAssessmentController::class, 'teacherFormAssessmentValidateStep'])->name('lms.teacherAssessmentManagementValidateStep.form');
@@ -645,7 +688,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/store', [TeacherQuestionBankReleaseController::class, 'teacherQuestionBankForReleaseStore'])->name('lms.teacherQuestionBankForRelease.store');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/paginate', [TeacherQuestionBankReleaseController::class, 'paginateTeacherQuestionBankForRelease'])->name('lms.teacherQuestionBankForRelease.paginate');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/review/{assessmentQuestionId}/paginate', [TeacherQuestionBankReleaseController::class, 'paginateTeacherReviewQuestionBankForRelease'])->name('lms.teacherReviewQuestionBankForRelease.paginate');
-
+    
     // teacher assessment grading
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading', [TeacherAssessmentGradingController::class, 'assessmentGradingManagement'])->name('lms.assessmentGradingManagement.view');
     Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading/{assessmentId}/mode/{mode}/student-list', [TeacherAssessmentGradingController::class, 'assessmentGradingStudentList'])->name('lms.assessmentGradingStudentList.view');
@@ -829,20 +872,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
     Route::post('/school-subscription/add-users/store', [SchoolPartnerController::class, 'bulkUploadAddUsers'])->name('bulkUploadAddUsers.store');
     Route::post('/lms/teacher/tugas/store', [App\Http\Controllers\LmsController::class, 'storeTugas'])->name('lms.teacher.tugas.store');
-
-     // ROUTES LIBRARY FEATURE
-    Route::get('/administrator/library', [LibraryController::class, 'index'])->name('library.index');
-    Route::post('/administrator/library/store', [LibraryController::class, 'store'])->name('library.store');
-    Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
-    Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
-    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
-    Route::get('/administrator/library', [LibraryController::class, 'administrator'])->name('library.administrator');
-    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])->name('student.library');
-    Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])->name('student.library.read');
-    Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])->name('student.library.submit');
-    Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
-    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])->name('student.library.mapel');
-    Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 
     // ROUTES SCHOOL ADMIN
     // dashboard

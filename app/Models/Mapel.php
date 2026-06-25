@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\LibraryBook;
+use App\Models\TopikMateri;
 use Illuminate\Database\Eloquent\Model;
 
 class Mapel extends Model
@@ -97,5 +98,13 @@ class Mapel extends Model
     public function libraryBooks()
 {
     return $this->hasMany(LibraryBook::class, 'mapel_id');
+}
+
+public function topikMateri()
+{
+    return $this->hasMany(
+        TopikMateri::class,
+        'kelas_id'
+    );
 }
 }

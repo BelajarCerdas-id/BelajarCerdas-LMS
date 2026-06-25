@@ -18,7 +18,7 @@
 /public/hot
 /public/storage
 /public/asessment/*/*.*
-/library/*.*
+/public/library/*/*.*
 /lms-contents/*.*
 /lms-docx-image/*.*
 /school-logo/*.*
