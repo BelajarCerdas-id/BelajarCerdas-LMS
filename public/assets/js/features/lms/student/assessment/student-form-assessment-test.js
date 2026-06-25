@@ -647,6 +647,17 @@ function studentFormAssessment(selectedIndex = 0) {
                             Tandai Jawaban
                         </button>
                     `;
+                
+                let explanationButtonHTML = '';
+
+                if (isAllAnswered && showAnswer) {
+                    explanationButtonHTML = `
+                        <button type="button" id="btn-show-explanation" data-question-id="${question.id}" class="bg-[#0071BC] text-white px-5 py-2.5 
+                            rounded-md shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold cursor-pointer">
+                            Lihat Pembahasan
+                        </button>
+                    `;
+                }
     
                 let buttonCorrectOrWrongHTML = '';
     
@@ -865,6 +876,8 @@ function studentFormAssessment(selectedIndex = 0) {
                                     <!-- Buttons -->
                                     <div class="flex flex-col sm:flex-row sm:justify-end items-stretch sm:items-center gap-3 sm:gap-6 mt-8 pt-6 border-t border-gray-100">
                                         ${buttonCorrectOrWrongHTML}
+                                    
+                                        ${explanationButtonHTML}
     
                                         ${btnMarkAnswerHTML}
     
@@ -1202,6 +1215,21 @@ function confirmStartExam() {
 
 $(document).off('change', 'input[type=radio], input[type=checkbox]').on('change', 'input[type=radio], input[type=checkbox]', function () {
     $(`#error-answer_value`).text('');
+});
+
+
+// btn show explanation
+$(document).on('click', '#btn-show-explanation', function () {
+
+    const questionId = $(this).data('question-id');
+
+    const question = questions.find(q => q.id == questionId);
+
+    const explanation = question?.lms_question_bank?.explanation ?? '<p class="text-gray-500">Pembahasan belum tersedia.</p>';
+
+    $('#explanation-content').html(explanation);
+
+    document.getElementById('modal-explanation').showModal();
 });
 
 $(document).off('click', '.matching-left, .matching-right')
