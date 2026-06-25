@@ -33,7 +33,6 @@ class BankSoalWordImportService
             'kurikulum_id'      => 'required',
             'kelas_id'          => 'required',
             'mapel_id'          => 'required',
-            'bab_id'            => 'required',
             'question_category' => 'required',
         ], [
             'bulkUpload-lms.required'    => 'Harap upload soal.',
@@ -41,7 +40,6 @@ class BankSoalWordImportService
             'kurikulum_id.required'      => 'Harap pilih kurikulum.',
             'kelas_id.required'          => 'Harap pilih kelas.',
             'mapel_id.required'          => 'Harap pilih mapel.',
-            'bab_id.required'            => 'Harap pilih bab.',
             'question_category.required' => 'Harap pilih kategori soal.',
         ]);
 

@@ -6,7 +6,7 @@
 
         <!--- daftar list soal --->
         <div id="container-bank-soal-detail" data-role="{{ Auth::user()->role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-source="{{ $source }}"
-            data-question-type="{{ $questionType }}" data-question-category="{{ $questionCategory }}" data-sub-bab-id="{{ $subBabId }}">
+            data-question-type="{{ $questionType }}" data-question-category="{{ $questionCategory }}" data-bab-id="{{ $babId }}" data-sub-bab-id="{{ $subBabId }}">
             <div id="grid-list-soal" class="container-accordion mb-8">
                 <!-- show data in ajax -->
             </div>

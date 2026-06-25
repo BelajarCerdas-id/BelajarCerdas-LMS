@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Edit Question',
     'linkBackButton' => $schoolId
-        ? route('lms.questionBankManagementDetail.view.schoolPartner', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $subBabId])
-        : route('lms.questionBankManagementDetail.view.noSchoolPartner', [$role, $source, $questionType, $questionCategory, $subBabId]),
+        ? route('lms.questionBankManagementDetail.view.schoolPartner', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $babId, $subBabId])
+        : route('lms.questionBankManagementDetail.view.noSchoolPartner', [$role, $source, $questionType, $questionCategory, $babId, $subBabId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);
 

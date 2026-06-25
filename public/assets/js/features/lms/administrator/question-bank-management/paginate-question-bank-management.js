@@ -94,15 +94,23 @@ function paginateBankSoal(page = 1) {
                             lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
                                 .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
                             
-                            if (first.sub_bab_id) {
-                                lmsReviewQuestion += `/${first.sub_bab_id}`;
+                            if (first.bab_id) {
+                                lmsReviewQuestion += `/${first.bab_id}`;
+
+                                if (first.sub_bab_id) {
+                                    lmsReviewQuestion += `/${first.sub_bab_id}`;
+                                }
                             }
                         } else {
                             lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
                                 .replace(':questionCategory', first.question_category);
 
-                            if (first.sub_bab_id) {
-                                lmsReviewQuestion += `/${first.sub_bab_id}`;
+                            if (first.bab_id) {
+                                lmsReviewQuestion += `/${first.bab_id}`;
+
+                                if (first.sub_bab_id) {
+                                    lmsReviewQuestion += `/${first.sub_bab_id}`;
+                                }
                             }
                         }
 

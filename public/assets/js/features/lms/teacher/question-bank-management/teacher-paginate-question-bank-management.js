@@ -71,8 +71,12 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                         lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
                             .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
                         
-                        if (first.sub_bab_id) {
-                            lmsReviewQuestion += `/${first.sub_bab_id}`;
+                        if (first.bab_id) {
+                            lmsReviewQuestion += `/${first.bab_id}`;
+
+                            if (first.sub_bab_id) {
+                                lmsReviewQuestion += `/${first.sub_bab_id}`;
+                            }
                         }
 
                         const isGlobalActive = first.status_bank_soal === 'Publish';

@@ -3,6 +3,7 @@ function paginateBankSoalDetail() {
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
+    const babId = container.dataset.babId;
     const subBabId = container.dataset.subBabId;
     const source = container.dataset.source;
     const questionType = container.dataset.questionType;
@@ -14,22 +15,46 @@ function paginateBankSoalDetail() {
     if (!questionType) return;
     if (!questionCategory) return;
 
-    fetchBankSoalDetail(schoolName, schoolId, subBabId, questionType, questionCategory);
+    fetchBankSoalDetail(schoolName, schoolId, babId, subBabId, questionType, questionCategory);
 
     function fetchBankSoalDetail() {
         let url = '';
 
         if (schoolId) {
 
-            url = subBabId
-                ? `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/${subBabId}`
-                : `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/without-subbab`;
+            // BAB + SUB BAB
+            if (babId && subBabId) {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}/sub-bab/${subBabId}`;
+
+                // BAB ONLY
+            } else if (babId) {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}`;
+
+                // NO BAB & NO SUB BAB
+            } else {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/without-bab`;
+            }
 
         } else {
 
-            url = subBabId
-                ? `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/${subBabId}`
-                : `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/without-subbab`;
+            // BAB + SUB BAB
+            if (babId && subBabId) {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}/sub-bab/${subBabId}`;
+
+                // BAB ONLY
+            } else if (babId) {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}`;
+
+                // NO BAB & NO SUB BAB
+            } else {
+
+                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/without-bab`;
+            }
         }
 
         $.ajax({
@@ -164,10 +189,14 @@ function paginateBankSoalDetail() {
                     }
 
                     lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
-                        .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
+                    .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
+                        
+                    if (babId) {
+                        lmsEditQuestion += `/${babId}`;
 
-                    if (subBabId) {
-                        lmsEditQuestion += `/${subBabId}`;
+                        if (subBabId) {
+                            lmsEditQuestion += `/${subBabId}`;
+                        }
                     }
                     
                     // jika role administrator, dapat akses edit soal global dan soal milik sekolah

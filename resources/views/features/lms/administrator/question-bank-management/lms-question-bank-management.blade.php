@@ -87,7 +87,6 @@
                             <div class="flex flex-col order-4 xl:order-0">
                                 <label class="mb-2 text-sm">
                                     Bab
-                                    <sup class="text-red-500">&#42;</sup>
                                 </label>
                                 <select name="bab_id" id="id_bab"
                                     class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
