@@ -739,10 +739,13 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                     }).join('');
 
                     // QUESTION SPLIT IMAGE
-                    const splitQuestions = question?.lms_question_bank?.questions.split('<img');
-                    const questionTextOnly = splitQuestions[0];
+                    const questionContent = question?.lms_question_bank?.questions ?? '';
 
-                    let questionImage = '', textAfterImage = '';
+                    const splitQuestions = questionContent.split('<img');
+                    const questionTextOnly = splitQuestions[0] ?? '';
+
+                    let questionImage = '';
+                    let textAfterImage = '';
 
                     if (splitQuestions.length > 1) {
                         const imgSplit = splitQuestions[1].split('>'); // pisahkan tag <img> dan sisa teks
