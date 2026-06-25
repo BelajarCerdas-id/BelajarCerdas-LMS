@@ -104,8 +104,11 @@ function paginateQuestionForReleaseDetail() {
                     ` : `<div class="max-w-7xl flex flex-col items-start gap-4">${imageInExplanation ? question.lms_question_bank?.explanation : question.lms_question_bank?.explanation}</div>`;
 
                         // untuk memisahkan teks sebelum dengan img dan text setelah img
-                        const splitQuestions = question.lms_question_bank?.questions.split('<img') ?? ''; // split sebelum <img>
-                        const questionTextOnly = splitQuestions[0]; // sebelum <img> ( [0] dan [1] digunakan untuk memisahkan 2 element berbeda )
+                        const questionContent = question.lms_question_bank?.questions ?? '';
+
+                        const splitQuestions = questionContent.split('<img');
+
+                        const questionTextOnly = splitQuestions[0] ?? '';
 
                         const previewLimit = 350;
 
