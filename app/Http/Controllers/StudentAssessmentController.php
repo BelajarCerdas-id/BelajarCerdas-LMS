@@ -139,7 +139,7 @@ class StudentAssessmentController extends Controller
                 'school_assessment_type' => $assessment->SchoolAssessmentType,
                 'assessment_mode' => $assessment->SchoolAssessmentType->assessmentMode->code ?? 'exam',
                 'mapel' => $assessment->Mapel->mata_pelajaran ?? '-',
-                'description' => $assessment->description ?? '-',
+                'assessment_instruction' => $assessment->assessment_instruction ?? '-',
                 'assessment_value_file' => $assessment->assessment_value_file,
                 'assessment_original_filename' => $assessment->assessment_original_filename,
                 'school_class' => $assessment->SchoolClass,

@@ -230,13 +230,13 @@ function changeSemester(semester) {
 
                                 </div>
 
-                                ${assessment.description ? `
+                                ${assessment.assessment_instruction ? `
                                     <div class="mt-5 bg-gray-50 border border-gray-200 rounded-lg p-3">
                                         <p class="text-xs font-semibold text-gray-400 mb-1">
                                             Deskripsi Guru
                                         </p>
                                         <p class="text-sm text-gray-600 leading-relaxed line-clamp-3">
-                                            ${assessment.description}
+                                            ${assessment.assessment_instruction}
                                         </p>
                                     </div>
                                 ` : ''}
