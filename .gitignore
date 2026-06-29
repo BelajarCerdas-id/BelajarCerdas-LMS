@@ -17,10 +17,11 @@
 /public/build
 /public/hot
 /public/storage
-/public/asessment/*/*.*
+/public/assessment/*/*.*
 /public/library/*/*.*
 /public/school-logo/*.*
-/lms-contents/*.*
+/public/lms-contents/*.*
+/public/lms-docx-image/*.*
 /lms-docx-image/*.*
 /storage/*.key
 /storage/pail
