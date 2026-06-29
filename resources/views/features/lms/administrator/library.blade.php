@@ -793,13 +793,12 @@
 
                     </button>
 
-                    <button type="button"
-                            onclick="modal_add_book.close()"
+                    <button
+                            type="button"
+                            onclick="resetModalTambah()"
                             class="px-5 py-2 rounded-lg border hover:bg-gray-100">
-
-                        Batal
-
-                    </button>
+                            Reset
+                        </button>
 
                     <button type="submit"
                             class="bg-blue-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg">
@@ -1244,9 +1243,56 @@ function openEditModal(id, tipe, title, description, kelas, mapel, bab, topik_id
 
     // 🔥 SKIP TOPIK untuk LKS & VIDEO
     if (tipe === 'lks' || tipe === 'video') {
-        modal.showModal();
-        return;
-    }
+
+    const schoolId = $('#container').data('school-id');
+
+    $.get(
+        schoolId
+            ? `/kelas/${kelas}/${schoolId}/mapel`
+            : `/kelas/${kelas}/mapel`,
+        function (mapels) {
+
+            let mapelSelect = $('#edit_mapel');
+            mapelSelect.html('<option value="">Pilih Mata Pelajaran</option>');
+
+            mapels.forEach(function (m) {
+
+                mapelSelect.append(`
+                    <option value="${m.id}">
+                        ${m.mata_pelajaran}
+                    </option>
+                `);
+
+            });
+
+            mapelSelect.val(mapel);
+
+            $.get(`/mapel/${mapel}/bab`, function (babs) {
+
+                let babSelect = $('#edit_bab');
+                babSelect.html('<option value="">Pilih Bab</option>');
+
+                babs.forEach(function (b) {
+
+                    babSelect.append(`
+                        <option value="${b.id}">
+                            ${b.nama_bab}
+                        </option>
+                    `);
+
+                });
+
+                babSelect.val(bab);
+
+                modal.showModal();
+
+            });
+
+        }
+    );
+
+    return;
+}
 
     fetch(`/administrator/library/get-topik?kelas_id=${kelas}&mapel_id=${mapel}`)
         .then(res => res.json())
@@ -1439,55 +1485,34 @@ document.getElementById('edit_topik_add')
     //================load topik============
    function loadTopikMateri() {
 
-    let kelasId =
-        document.querySelector('#modal_add_book select[name="kelas_id"]')?.value;
+    let mapelId = document.getElementById('mapel_add').value;
 
-    let mapelId =
-        document.getElementById('mapel_add')?.value;
+    if (!mapelId) return;
 
-    if (!kelasId || !mapelId) return;
-
-    fetch(`/administrator/library/get-topik?kelas_id=${kelasId}&mapel_id=${mapelId}`)
-        .then(response => response.json())
+    fetch(`/administrator/library/get-topik?mapel_id=${mapelId}`)
+        .then(res => res.json())
         .then(data => {
 
-            const topikSelect =
-                document.getElementById('topik_add');
+            const topik = document.getElementById('topik_add');
 
-            topikSelect.innerHTML =
-                '<option value="">Pilih Topik</option>';
+            topik.innerHTML = '<option value="">Pilih Topik</option>';
 
-            data.forEach(topik => {
+            data.forEach(item => {
 
-                const option = document.createElement('option');
-
-                option.value = topik.id;
-                option.textContent = topik.nama_topik;
-
-                // ✅ penting: simpan mapel untuk filter ulang kalau perlu
-                option.dataset.mapel = topik.mapel_id;
-                option.dataset.deskripsi = topik.deskripsi ?? '';
-
-                topikSelect.appendChild(option);
+                topik.innerHTML += `
+                    <option
+                        value="${item.id}"
+                        data-deskripsi="${item.deskripsi ?? ''}">
+                        ${item.nama_topik}
+                    </option>
+                `;
             });
 
-            // ✅ FILTER DI SINI (langsung setelah load)
-            topikSelect.querySelectorAll('option').forEach(opt => {
-
-                if (!opt.dataset.mapel) return;
-
-                opt.style.display =
-                    opt.dataset.mapel == mapelId ? 'block' : 'none';
-            });
-
-            // reset value
-            topikSelect.value = "";
-
-        })
-        .catch(err => {
-            console.log(err);
         });
 }
+
+document.getElementById('mapel_add')
+    .addEventListener('change', loadTopikMateri);
 
     function filterTopik(mapelId, topikSelect) {
 
@@ -2065,6 +2090,245 @@ document.getElementById('mapel_add')
 
     });
 
+$(document).ready(function () {
 
+    let oldKelas = $('#kelas_add').data('old-kelas');
+    let oldMapel = $('#mapel_add').data('old-mapel');
+    let oldBab = $('#bab_add').data('old-bab');
+
+    const schoolId = $('#container').data('school-id');
+
+    function resetSelect($select, placeholder) {
+        $select.html(`<option value="">${placeholder}</option>`);
+    }
+
+
+    // =====================================
+    // TIPE LIBRARY BERUBAH
+    // =====================================
+$('#tipe_library').on('change', function () {
+
+    const tipe = $(this).val();
+
+    resetSelect($('#bab_add'), 'Pilih Bab');
+    resetSelect($('#topik_add'), 'Pilih Topik');
+
+    if(tipe !== 'buku' && tipe !== 'ppt'){
+        resetSelect($('#mapel_add'), 'Pilih Mata Pelajaran');
+    }
+
+});
+
+    // =====================================
+    // KELAS -> MAPEL
+    // =====================================
+    $('#kelas_add').on('change', function () {
+
+        const tipe = $('#tipe_library').val();
+
+        if (tipe === 'buku' || tipe === 'ppt') {
+            return;
+        }
+
+        resetSelect($('#mapel_add'), 'Pilih Mata Pelajaran');
+        resetSelect($('#bab_add'), 'Pilih Bab');
+
+        const kelasId = $(this).val();
+
+        if (!kelasId) return;
+
+        $.get(
+            schoolId
+                ? `/kelas/${kelasId}/${schoolId}/mapel`
+                : `/kelas/${kelasId}/mapel`,
+            function (data) {
+
+                data.forEach(function (mapel) {
+
+                    $('#mapel_add').append(
+                        `<option value="${mapel.id}">
+                            ${mapel.mata_pelajaran}
+                        </option>`
+                    );
+
+                });
+
+                if (oldMapel) {
+                    $('#mapel_add').val(oldMapel).trigger('change');
+                    oldMapel = null;
+                }
+
+            }
+        );
+
+    });
+
+    // =====================================
+    // MAPEL
+    // =====================================
+    $('#mapel_add').on('change', function () {
+
+        const tipe = $('#tipe_library').val();
+        const mapelId = $(this).val();
+
+        resetSelect($('#bab_add'), 'Pilih Bab');
+        resetSelect($('#topik_add'), 'Pilih Topik');
+
+        if (!mapelId) return;
+
+        // =====================
+        // BUKU & PPT
+        // =====================
+        if (tipe === 'buku' || tipe === 'ppt') {
+
+            $.get(`/mapel/${mapelId}/topik`, function (data) {
+
+                data.forEach(function (topik) {
+
+                    $('#topik_add').append(
+                        `<option value="${topik.id}">
+                            ${topik.nama_topik}
+                        </option>`
+                    );
+
+                });
+
+            });
+
+            return;
+        }
+
+        // =====================
+        // VIDEO & LKPD
+        // =====================
+        $.get(`/mapel/${mapelId}/bab`, function (data) {
+
+            data.forEach(function (bab) {
+
+                $('#bab_add').append(
+                    `<option value="${bab.id}">
+                        ${bab.nama_bab}
+                    </option>`
+                );
+
+            });
+
+            if (oldBab) {
+                $('#bab_add').val(oldBab);
+                oldBab = null;
+            }
+
+        });
+
+    });
+
+    // =====================================
+    // EDIT MODE
+    // =====================================
+    const tipe = $('#tipe_library').val();
+
+    if (tipe === 'buku' || tipe === 'ppt') {
+
+
+        $('#kelas_add').val(oldKelas).trigger('change');
+
+    }
+
+});
+
+function resetModalTambah() {
+
+    const modal = document.getElementById('modal_add_book');
+    const form = modal.querySelector('form');
+
+    form.reset();
+
+    $('#tipe_library').val('');
+
+    resetSelect($('#mapel_add'), 'Pilih Mata Pelajaran');
+    resetSelect($('#bab_add'), 'Pilih Bab');
+    resetSelect($('#topik_add'), 'Pilih Topik');
+
+    $('#auto_cover').val('');
+
+    $('#cover_preview')
+        .attr('src', '')
+        .addClass('hidden');
+
+    $('#topik_deskripsi').val('');
+    $('#title_auto').val('');
+    $('#title').val('');
+
+    modal.close();
+}
+
+$('#edit_kelas').on('change', function () {
+
+    const tipe = $('#edit_tipe').val();
+
+    // buku & ppt tidak pakai logika ini
+    if (tipe === 'buku' || tipe === 'ppt') {
+        return;
+    }
+
+    $('#edit_mapel').html('<option value="">Pilih Mata Pelajaran</option>');
+    $('#edit_bab').html('<option value="">Pilih Bab</option>');
+
+    const kelasId = $(this).val();
+    if (!kelasId) return;
+
+    const schoolId = $('#container').data('school-id');
+
+    $.get(
+        schoolId
+            ? `/kelas/${kelasId}/${schoolId}/mapel`
+            : `/kelas/${kelasId}/mapel`,
+        function (data) {
+
+            data.forEach(function (mapel) {
+
+                $('#edit_mapel').append(`
+                    <option value="${mapel.id}">
+                        ${mapel.mata_pelajaran}
+                    </option>
+                `);
+
+            });
+
+        }
+    );
+
+});
+
+$('#edit_mapel').on('change', function () {
+
+    const tipe = $('#edit_tipe').val();
+
+    // Buku & PPT tetap pakai Topik
+    if (tipe === 'buku' || tipe === 'ppt') {
+        return;
+    }
+
+    const mapelId = $(this).val();
+
+    $('#edit_bab').html('<option value="">Pilih Bab</option>');
+
+    if (!mapelId) return;
+
+    $.get(`/mapel/${mapelId}/bab`, function (data) {
+
+        data.forEach(function (bab) {
+
+            $('#edit_bab').append(`
+                <option value="${bab.id}">
+                    ${bab.nama_bab}
+                </option>
+            `);
+
+        });
+
+    });
+
+});
     </script>
 
