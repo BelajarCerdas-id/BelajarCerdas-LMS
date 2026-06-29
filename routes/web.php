@@ -120,7 +120,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/library', [LibraryController::class, 'administrator'])->name('library.administrator');
         Route::post('/library/store', [LibraryController::class, 'store'])->name('library.store');
         Route::post('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
-        Route::put('/library/update/{id}', [LibraryController::class, 'update']); // Fallback method
+        Route::put('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update.put'); // Fallback method
 
         // PPT Management
         Route::post('/library/ppt/store', [LibraryController::class, 'storePpt'])->name('ppt.store');
@@ -559,7 +559,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // data dashboard
     Route::get('/lms/{role}/manage-contract/load-kpi', [FinanceDashboardController::class, 'loadKpiDashboard'])->name('lms.finance.manage-contract.load-kpi');
     Route::get('/lms/{role}/manage-contract/load-chart', [FinanceDashboardController::class, 'loadChartDashboard'])->name('lms.finance.manage-contract.load-chart');
-    Route::get('/lms/{role}/manage-contract/load-top-revenue', [FinanceDashboardController::class, 'loadTopRevenueDashboard'])->name('lms.finance.manage-contract.load-chart');
+    Route::get('/lms/{role}/manage-contract/load-top-revenue', [FinanceDashboardController::class, 'loadTopRevenueDashboard'])->name('lms.finance.manage-contract.load-top-revenue');
     Route::get('/lms/{role}/manage-contract/load-contract-expiring', [FinanceDashboardController::class, 'loadContractExpiringDashboard'])->name('lms.finance.manage-contract.load-contract-expiring');
 
     // =========================================================

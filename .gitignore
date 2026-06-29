@@ -19,9 +19,9 @@
 /public/storage
 /public/asessment/*/*.*
 /public/library/*/*.*
+/public/school-logo/*.*
 /lms-contents/*.*
 /lms-docx-image/*.*
-/school-logo/*.*
 /storage/*.key
 /storage/pail
 /vendor
