@@ -1005,10 +1005,12 @@ class StudentAssessmentExamController extends Controller
         $answers = StudentAssessmentAnswer::where('student_id',$user->id)->where('school_assessment_id', $assessmentId)->get();
 
         $totalQuestionsExam = $answers->count();
-        $totalCorrect = $answers->where('question_score','>',0)->count();
-        $totalWrong = $answers->where('question_score',0)->where('status_answer','submitted')->count();
-        $totalUnanswered = $answers->where('status_answer','draft')->count();
-        $totalPendingEssay = $answers->where('status_answer','submitted')->where('grading_status','pending')->count();
+
+        $totalCorrect = $answers->whereNotNull('answer_value')->where('question_score', '>', 0)->count();
+        $totalWrong = $answers->where('question_score', 0)->count();
+        $totalUnanswered = $answers->whereNull('answer_value')->count();
+        $totalAnswered = $answers->whereNotNull('answer_value')->count();
+        $totalPendingEssay = $answers->where('status_answer', 'submitted')->where('grading_status', 'pending')->count();
 
         // SCORE
         $rawScore = $answers->whereNotNull('question_score')->sum('question_score');
