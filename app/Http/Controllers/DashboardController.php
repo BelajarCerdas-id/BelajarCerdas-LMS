@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ParentProfile; 
 use App\Models\SchoolStaffProfile;
 use App\Models\StudentProfile;
-use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -104,7 +103,7 @@ class DashboardController extends Controller
             $schoolName = $school ? $school->nama_sekolah : 'sekolah';
 
             // Redirect otomatis ke rute Orang Tua
-            return redirect()->route('lms.parent.dashboard', [
+            return redirect()->route('lms.parent.dashboard.view', [
                 'role'       => 'Orang Tua', 
                 'schoolName' => $schoolName,
                 'schoolId'   => $schoolId
