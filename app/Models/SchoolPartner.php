@@ -120,7 +120,7 @@ class SchoolPartner extends Model
 
     public function ParentProfile()
     {
-        return $this->hasMany(parentProfile::class, 'school_partner_id');
+        return $this->hasMany(ParentProfile::class, 'school_partner_id');
     }
 
     public function SchReflQuestion()

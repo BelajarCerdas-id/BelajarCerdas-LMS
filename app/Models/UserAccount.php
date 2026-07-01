@@ -129,7 +129,7 @@ class UserAccount extends Authenticatable
 
     public function ParentProfile()
     {
-        return $this->hasOne(parentProfile::class, 'user_id');
+        return $this->hasOne(ParentProfile::class, 'user_id');
     }
 
     public function ParentChildren()
