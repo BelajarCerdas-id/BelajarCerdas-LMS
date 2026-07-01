@@ -41,7 +41,9 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Personal Email</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Email Akun</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No.HP</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Jumlah Anak</th>
+                                    @if ($managedRole === 'Orang Tua')
+                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Jumlah Anak</th>
+                                    @endif
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Akun</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
                                 </tr>

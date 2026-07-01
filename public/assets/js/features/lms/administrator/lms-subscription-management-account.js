@@ -79,6 +79,18 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
                                 .replace(':schoolId', schoolIdentity.id).replace(':managedRole', item.role).replace(':parentId', item.id);
                         }
 
+                        let totalChildren = '';
+
+                        if (managedRole === 'Orang Tua') {
+                            totalChildren = `
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+                                    <a href="${parentChildrenList}" class="text-[#0071BC] font-semibold underline">
+                                        ${item.parent_profile_count ?? 0} Anak
+                                    </a>
+                                </td>
+                            `;
+                        }
+
                         $('#tbody-management-staff-list').append(`
                             <tr>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${(response.current_page - 1) * response.per_page + index + 1}</td>
@@ -91,11 +103,7 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
                                 </td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.email ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.no_hp ?? '-'}</td>
-                                <td class="border border-gray-300 px-3 py-2 text-center">
-                                    <a href="${parentChildrenList}" class="text-[#0071BC] font-semibold underline">
-                                        ${item.parent_profile_count ?? 0} Anak
-                                    </a>
-                                </td>
+                                ${totalChildren}
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.status_akun ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">
                                     <label class="relative inline-flex items-center cursor-pointer">
