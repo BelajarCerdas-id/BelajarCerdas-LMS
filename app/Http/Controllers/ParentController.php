@@ -9,7 +9,6 @@ use App\Models\ParentProfile;
 use App\Models\StudentProfile;
 use App\Models\AcademicCalendar;
 use App\Models\Poll;
-use App\Models\PollOption;
 use Carbon\Carbon;
 
 class ParentController extends Controller
@@ -28,47 +27,10 @@ class ParentController extends Controller
             abort(403, 'Profil Orang Tua tidak ditemukan.');
         }
 
-        // =========================================================
-        // 2. LOGIKA PENCARIAN ANAK (LEBIH KOKOH)
-        // =========================================================
-        $targetId = $profilOrangTua->student_id;
-        $studentProfile = null;
-        $studentUserId = null;
+        // logika pencarian anak
+        $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
 
-        if ($targetId) {
-            $studentProfile = StudentProfile::where('user_id', $targetId)->first();
-            
-            if ($studentProfile) {
-                $studentUserId = $targetId;
-            } else {
-                $studentProfile = StudentProfile::find($targetId);
-                if ($studentProfile) {
-                    $studentUserId = $studentProfile->user_id;
-                }
-            }
-        }
-
-        // BACKUP: Jika tidak ditemukan dari profil ortu, cari terbalik dari profil anak
-        if (!$studentUserId) {
-            $studentProfile = StudentProfile::where('parent_user_id', $user->id)
-                                ->orWhere('parent_id', $profilOrangTua->id)
-                                ->first();
-            if ($studentProfile) {
-                $studentUserId = $studentProfile->user_id;
-                $targetId = $studentUserId;
-            }
-        }
-
-        // =========================================================
-        // 3. AMBIL DATA SEKOLAH, KELAS & ABSENSI HARI INI
-        // =========================================================
-        $schoolName = 'Belum Ada Sekolah';
-        if ($schoolId) {
-            $schoolRecord = DB::table('school_partners')->where('id', $schoolId)->first();
-            if ($schoolRecord) {
-                $schoolName = $schoolRecord->school_name ?? $schoolRecord->name ?? 'Sekolah Mitra';
-            }
-        }
+        $studentUserId = $studentProfile?->user_id;
 
         $studentClass = '-';
         $studentClassId = null;
@@ -385,32 +347,32 @@ class ParentController extends Controller
     private function getAnakInfo()
     {
         $user = Auth::user();
-        $profilOrangTua = \App\Models\ParentProfile::where('user_id', $user->id)->first();
-        if (!$profilOrangTua) return null;
 
-        $studentUserId = null;
-        if ($profilOrangTua->student_id) {
-            $studentProfile = \App\Models\StudentProfile::where('user_id', $profilOrangTua->student_id)->first();
-            $studentUserId = $studentProfile ? $profilOrangTua->student_id : (\App\Models\StudentProfile::find($profilOrangTua->student_id)->user_id ?? null);
-        }
-        if (!$studentUserId) {
-            $studentProfile = \App\Models\StudentProfile::where('parent_user_id', $user->id)->first();
-            $studentUserId = $studentProfile->user_id ?? null;
+        $profilOrangTua = ParentProfile::where('user_id', $user->id)->first();
+
+        if (!$profilOrangTua) {
+            return null;
         }
 
-        $classId = null;
-        if ($studentUserId) {
-            $classRecord = DB::table('student_school_classes')
-                ->where('student_id', $studentUserId)
-                ->where('student_class_status', 'active')
-                ->first();
-            $classId = $classRecord->school_class_id ?? null;
+        // Cari siswa berdasarkan parent_id (user_id orang tua)
+        $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
+
+        if (!$studentProfile) {
+            return null;
         }
 
-        return (object)[
-            'user_id' => $studentUserId,
-            'class_id' => $classId,
-            'school_id' => $profilOrangTua->school_partner_id
+        $studentUserId = $studentProfile->user_id;
+
+        // Ambil kelas aktif siswa
+        $classRecord = DB::table('student_school_classes')
+            ->where('student_id', $studentUserId)
+            ->where('student_class_status', 'active')
+            ->first();
+
+        return (object) [
+            'user_id'   => $studentUserId,
+            'class_id'  => $classRecord->school_class_id ?? null,
+            'school_id' => $profilOrangTua->school_partner_id,
         ];
     }
 
@@ -482,7 +444,7 @@ class ParentController extends Controller
         $anak = $this->getAnakInfo();
         abort_if(!$anak || !$anak->school_id, 404, 'Data Sekolah tidak ditemukan.');
 
-        $kalender = \App\Models\AcademicCalendar::where('school_partner_id', $anak->school_id)
+        $kalender = AcademicCalendar::where('school_partner_id', $anak->school_id)
             ->where('status', 'published')
             ->orderBy('date', 'asc')
             ->get();
