@@ -107,4 +107,10 @@ public function topikMateri()
         'kelas_id'
     );
 }
+
+    public function studentTkaAttempt()
+    {
+        return $this->hasMany(StudentTkaAttempt::class, 'mapel_id');
+    }
+
 }

@@ -59,7 +59,8 @@
                 request()->routeIs('teacher.library') ||
                 request()->routeIs('teacher.library.ppt') ||
                 request()->routeIs('teacher.library.lks') ||
-                request()->routeIs('teacher.library.video');
+                request()->routeIs('teacher.library.video') ||
+                request()->routeIs('student.tka-subject-list.view');
         @endphp
 
         <!-- MAIN MENU -->
@@ -100,6 +101,15 @@
                     ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
                     : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
                 Video
+            </a>
+
+            <a href="{{ route('student.tka-subject-list.view', [
+                    'role' => Auth::user()->role,
+                ]) }}"
+               class="{{ request()->routeIs('student.tka-subject-list.view')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Simulasi Soal TKA
             </a>
 
         </div>
@@ -354,7 +364,8 @@
                 request()->routeIs('teacher.library') ||
                 request()->routeIs('teacher.library.ppt') ||
                 request()->routeIs('teacher.library.lks') ||
-                request()->routeIs('teacher.library.video');
+                request()->routeIs('teacher.library.video') ||
+                request()->routeIs('student.tka-subject-list.view');
         @endphp
 
         <!-- MAIN MENU -->
@@ -395,6 +406,15 @@
                     ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
                     : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
                 Video
+            </a>
+
+            <a href="{{ route('student.tka-subject-list.view', [
+                    'role' => Auth::user()->role,
+                ]) }}"
+               class="{{ request()->routeIs('student.tka-subject-list.view')
+                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                Simulasi Soal TKA
             </a>
 
         </div>

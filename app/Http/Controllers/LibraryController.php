@@ -9,9 +9,16 @@ use App\Models\Mapel;
 use App\Models\TopikMateri;
 use App\Models\Bab;
 use App\Models\Kurikulum;
+use App\Models\LmsQuestionBank;
 use App\Models\StudentSchoolClass;
+use App\Models\StudentTkaAnswer;
+use App\Models\StudentTkaAttempt;
+use App\Models\UserAccount;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class LibraryController extends Controller
 {
@@ -792,5 +799,683 @@ class LibraryController extends Controller
 
         return back()
             ->with('success', 'Topik berhasil diperbarui');
+    }
+
+    // STUDENT TKA PRACTICE TEST
+    public function studentTKASubjectList($role)
+    {
+        $subjects = Mapel::whereNull('school_partner_id')->count();
+
+        return view('features.lms.components.library.tka.student.student-tka-subject-list', compact('role', 'subjects'));
+    }
+
+    public function paginateTKASubject($role)
+    {
+        $user = Auth::user();
+        
+        $getClass = StudentSchoolClass::with(['SchoolClass.Kelas'])->where('student_class_status', 'active')->where('student_id', $user->id)->where(function ($q) {
+            $q->whereNull('academic_action')->orWhere('academic_action', '');
+        })->first();
+
+        $currentClass = (int) preg_replace('/\D/', '', $getClass->SchoolClass->Kelas->kelas);
+
+        if ($currentClass <= 6) {
+            $targetClass = 6;
+        } elseif ($currentClass <= 9) {
+            $targetClass = 9;
+        } else {
+            $targetClass = 12;
+        }
+
+        $subjects = Mapel::whereHas('Kelas', function ($query) use ($targetClass) {
+            $query->where('kelas', 'Kelas ' . $targetClass);
+        })->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')->whereHas('LmsQuestionBank', function ($query) {
+            $query->where('question_category', 'TKA');
+        })
+        ->withCount(['LmsQuestionBank as total_question'])->get();
+
+        $subjectCount = $subjects->count();
+
+        return response()->json([
+            'data' => $subjects,
+            'subjectCount' => $subjectCount,
+            'studentTkaPracticeTest' => '/lms/:role/tka-simulation/class/:kelasId/subject/:mapelId/practice-test',
+        ]);
+    }
+
+    public function studentTKAPracticeTest($role, $kelasId, $mapelId)
+    {
+        return view('features.lms.components.library.tka.student.student-tka-practice-test', compact('role', 'kelasId', 'mapelId'));
+    }
+
+    public function studentTKAPracticeTestForm(Request $request, $role, $kelasId, $mapelId)
+    {
+        $user = UserAccount::with('StudentProfile')->find(Auth::id());
+
+        $attempt = StudentTkaAttempt::where('student_id', $user->id)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->latest()->first();
+
+        if (!$attempt) {
+            return response()->json([
+                'has_attempt' => false,
+            ]);
+        }
+
+        $questionIds = $attempt->question_order ?? [];
+
+        if (empty($questionIds)) {
+
+            return response()->json([
+                'message' => 'Question order tidak ditemukan.'
+            ], 500);
+
+        }
+
+        // Ambil soal berdasarkan ID yang sudah dipilih
+        $questions = LmsQuestionBank::with([
+            'LmsQuestionOption',
+            'Mapel'
+        ])
+        ->whereIn('id', $questionIds)
+        ->get()
+        ->sortBy(function ($question) use ($questionIds) {
+            return array_search($question->id, $questionIds);
+        })
+        ->values();
+
+        $optionOrder = $attempt->option_order ?? [];
+        $isOptionOrderChanged = false;
+
+        // SHUFFLE OPTIONS
+        $questions->transform(function ($question) use ($attempt, &$optionOrder, &$isOptionOrderChanged) {
+
+            $type = strtoupper($question->tipe_soal ?? '');
+
+            $options = $question->LmsQuestionOption;
+
+            if (!$options) {
+                return $question;
+            }
+
+            $publishedOptionIds = $options->sortBy('id')->pluck('id')->implode(',');
+
+            // $optionOrder = $attempt->option_order ?? [];
+
+            $cacheName = "mcq_{$question->id}_{$publishedOptionIds}";
+
+            // MCQ / MCMA
+            if (in_array($type, ['MCQ','MCMA'])) {
+
+                if (isset($optionOrder[$cacheName])) {
+
+                    $cachedIds = $optionOrder[$cacheName];
+
+                    $sorted = $options
+                        ->whereIn('id', $cachedIds)
+                        ->sortBy(function ($opt) use ($cachedIds) {
+                            return array_search($opt->id, $cachedIds);
+                        })
+                        ->values();
+
+                } else {
+
+                    $sorted = $options->shuffle()->values();
+
+                    $optionOrder[$cacheName] = $sorted
+                        ->pluck('id')
+                        ->toArray();
+
+                    // $attempt->option_order = $optionOrder;
+                    // $attempt->save();
+                    $isOptionOrderChanged = true;
+                }
+
+                $question->setRelation('LmsQuestionOption', $sorted);
+            }
+
+            // MATCHING
+            if ($type === 'MATCHING') {
+
+                $left = $options->filter(function ($opt) {
+                    return isset($opt->extra_data['side']) 
+                        && $opt->extra_data['side'] === 'left';
+                })->values();
+
+                $right = $options->filter(function ($opt) {
+                    return isset($opt->extra_data['side']) 
+                        && $opt->extra_data['side'] === 'right';
+                })->values();
+
+                $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
+
+                $cacheName = "matching_{$question->id}_{$publishedRightIds}";
+
+                if (isset($optionOrder[$cacheName])) {
+
+                    $cachedIds = $optionOrder[$cacheName];
+
+                    $right = $right
+                        ->whereIn('id', $cachedIds)
+                        ->sortBy(function ($opt) use ($cachedIds) {
+                            return array_search($opt->id, $cachedIds);
+                        })
+                        ->values();
+
+                } else {
+
+                    $right = $right->shuffle()->values();
+
+                    $optionOrder[$cacheName] = $right
+                        ->pluck('id')
+                        ->toArray();
+
+                    // $attempt->option_order = $optionOrder;
+                    // $attempt->save();
+                    $isOptionOrderChanged = true;
+                }
+
+                $shuffled = collect();
+
+                foreach ($left as $l) {
+                    $shuffled->push($l);
+                }
+
+                foreach ($right as $r) {
+                    $shuffled->push($r);
+                }
+
+                $question->setRelation('LmsQuestionOption', $shuffled);
+            }
+
+            if ($type === 'PG_KOMPLEKS') {
+
+                // AMBIL ITEMS (ROW)
+                $items = $options->filter(function ($opt) {
+                    return isset($opt->extra_data['side']) 
+                        && $opt->extra_data['side'] === 'item';
+                })->values();
+
+                $publishedItemIds = $items->sortBy('id')->pluck('id')->implode(',');
+                
+                $cacheName = "pgk_item_{$question->id}_{$publishedItemIds}";
+
+                if (isset($optionOrder[$cacheName])) {
+
+                    $cachedIds = $optionOrder[$cacheName];
+
+                    $items = $items
+                        ->whereIn('id', $cachedIds)
+                        ->sortBy(function ($opt) use ($cachedIds) {
+                            return array_search($opt->id, $cachedIds);
+                        })
+                        ->values();
+
+                } else {
+
+                    $items = $items->shuffle()->values();
+
+                    $optionOrder[$cacheName] = $items
+                        ->pluck('id')
+                        ->toArray();
+
+                    // $attempt->option_order = $optionOrder;
+                    // $attempt->save();
+                    $isOptionOrderChanged = true;
+                }
+
+                // AMBIL CATEGORY (COLUMN)
+                $right = $options->filter(function ($opt) {
+                    return isset($opt->extra_data['side']) 
+                        && $opt->extra_data['side'] === 'category';
+                })->values();
+
+                $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
+
+                $cacheName = "pgk_category_{$question->id}_{$publishedRightIds}";
+
+                if (isset($optionOrder[$cacheName])) {
+
+                    $cachedIds = $optionOrder[$cacheName];
+
+                    $right = $right
+                        ->whereIn('id', $cachedIds)
+                        ->sortBy(function ($opt) use ($cachedIds) {
+                            return array_search($opt->id, $cachedIds);
+                        })
+                        ->values();
+
+                } else {
+
+                    $right = $right->shuffle()->values();
+
+                    $optionOrder[$cacheName] = $right
+                        ->pluck('id')
+                        ->toArray();
+
+                    // $attempt->option_order = $optionOrder;
+                    // $attempt->save();
+                    $isOptionOrderChanged = true;
+                }
+
+                // GABUNGKAN ITEMS + CATEGORY
+                $shuffled = collect();
+
+                foreach ($items as $item) {
+                    $shuffled->push($item);
+                }
+
+                foreach ($right as $cat) {
+                    $shuffled->push($cat);
+                }
+
+                $question->setRelation('LmsQuestionOption', $shuffled);
+
+                $shuffled = collect();
+
+                foreach ($items as $l) {
+                    $shuffled->push($l);
+                }
+
+                foreach ($right as $r) {
+                    $shuffled->push($r);
+                }
+
+                $question->setRelation('LmsQuestionOption', $shuffled);
+            }
+
+            return $question;
+        });
+
+        if ($isOptionOrderChanged) {
+            $attempt->update([
+                'option_order' => $optionOrder
+            ]);
+        }
+        
+        $questionsAnswer = collect();
+
+        if ($attempt) {
+            // STUDENT ANSWER
+            $questionsAnswer = StudentTkaAnswer::with(['StudentTkaAttempt'])->where('attempt_id', $attempt->id)->get()->mapWithKeys(function ($item) {
+    
+                    $data = $item->attributesToArray();
+    
+                    if (is_string($data['answer_value'])) {
+                        $decoded = json_decode($data['answer_value'], true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $data['answer_value'] = $decoded;
+                        }
+                    }
+    
+                    $question = LmsQuestionBank::with('LmsQuestionOption')->find($item->question_id);
+    
+                    $isCorrect = false;
+    
+                    if ($question) {
+    
+                        $type = $question->tipe_soal;
+    
+                        $correctOptions = $question->LmsQuestionOption
+                            ->where('is_correct', 1)
+                            ->pluck('options_key')
+                            ->values()
+                            ->toArray();
+    
+                        $studentAnswer = $data['answer_value'];
+    
+                        if ($type === 'MCQ') {
+                            $isCorrect = $studentAnswer === ($correctOptions[0] ?? null);
+                        }
+    
+                        if ($type === 'MCMA') {
+    
+                            if (!is_array($studentAnswer)) {
+                                $isCorrect = false;
+                            } else {
+    
+                                sort($correctOptions);
+                                sort($studentAnswer);
+    
+                                $isCorrect = $studentAnswer === $correctOptions;
+                            }
+                        }
+    
+                        if ($type === 'MATCHING') {
+    
+                            if (is_string($studentAnswer)) {
+                                $studentAnswer = json_decode($studentAnswer, true);
+                            }
+    
+                            if (!is_array($studentAnswer)) {
+                                $isCorrect = false;
+                            } else {
+    
+                                $correctPairs = $question->LmsQuestionOption
+                                    ->filter(function ($opt) {
+                                        return isset($opt->extra_data['side']) 
+                                            && $opt->extra_data['side'] === 'left';
+                                    })
+                                    ->mapWithKeys(function ($opt) {
+                                        return [
+                                            trim($opt->options_key) =>
+                                            trim($opt->extra_data['pair_with'] ?? '')
+                                        ];
+                                    })
+                                    ->toArray();
+    
+                                $normalizedStudentAnswer = collect($studentAnswer)
+                                    ->mapWithKeys(function ($value, $key) {
+                                        return [trim($key) => trim($value)];
+                                    })
+                                    ->toArray();
+    
+                                ksort($correctPairs);
+                                ksort($normalizedStudentAnswer);
+    
+                                $isCorrect = $correctPairs === $normalizedStudentAnswer;
+                            }
+                        }
+    
+                        if ($type === 'PG_KOMPLEKS') {
+    
+                            if (is_string($studentAnswer)) {
+                                $studentAnswer = json_decode($studentAnswer, true);
+                            }
+    
+                            if (!is_array($studentAnswer)) {
+                                $isCorrect = false;
+                            } else {
+    
+                                $correctPairs = $question->LmsQuestionOption
+                                    ->filter(function ($opt) {
+                                        return isset($opt->extra_data['side']) 
+                                            && $opt->extra_data['side'] === 'item';
+                                    })
+                                    ->mapWithKeys(function ($opt) {
+                                        return [
+                                            trim($opt->options_key) =>
+                                            trim($opt->extra_data['answer'] ?? '')
+                                        ];
+                                    })
+                                    ->toArray();
+    
+                                $normalizedStudentAnswer = collect($studentAnswer)
+                                    ->mapWithKeys(function ($value, $key) {
+                                        return [trim($key) => trim($value)];
+                                    })
+                                    ->toArray();
+    
+                                ksort($correctPairs);
+                                ksort($normalizedStudentAnswer);
+    
+                                $isCorrect = $correctPairs === $normalizedStudentAnswer;
+                            }
+                        }
+                    }
+    
+                    $data['is_correct'] = $isCorrect;
+    
+                    return [
+                        $item->question_id => $data
+                    ];
+                });
+        }
+
+        return response()->json([
+            'has_attempt' => true,
+            'attempt' => [
+                'id' => $attempt->id,
+                'status' => $attempt->status,
+                'kelas_id' => $attempt->kelas_id,
+                'mapel_id' => $attempt->mapel_id,
+                'total_question' => $attempt->total_question,
+            ],
+
+            'data' => $questions,
+            'user' => $user,
+            'questionsAnswer' => $questionsAnswer,
+        ]);
+    }
+
+    public function studentTkaStartPractice(Request $request, $role, $kelasId, $mapelId)
+    {
+        $userId = Auth::id();
+
+        // Nonaktifkan attempt lama
+        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
+            'status' => 'inactive'
+        ]);
+
+        // Ambil 15 soal acak
+        $questionOrder = LmsQuestionBank::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status_bank_soal', 'Publish')->where('question_category', 'TKA')
+        ->inRandomOrder()->limit(15)->pluck('id')->toArray();
+
+        // Simpan attempt beserta urutan soal
+        $attempt = StudentTkaAttempt::create([
+            'student_id'     => $userId,
+            'kelas_id'       => $kelasId,
+            'mapel_id'       => $mapelId,
+            'total_question' => count($questionOrder),
+            'question_order' => $questionOrder,
+            'status'         => 'active',
+        ]);
+
+        return response()->json([
+            'attempt_id' => $attempt->id,
+        ]);
+    }
+
+    public function studentTkaResstartPractice(Request $request, $role, $kelasId, $mapelId)
+    {
+        $userId = Auth::id();
+
+        // Nonaktifkan attempt lama
+        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
+            'status' => 'inactive'
+        ]);
+
+        // Ambil 15 soal acak
+        $questionOrder = LmsQuestionBank::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status_bank_soal', 'Publish')->where('question_category', 'TKA')
+        ->inRandomOrder()->limit(15)->pluck('id')->toArray();
+
+        // Simpan attempt baru
+        $attempt = StudentTkaAttempt::create([
+            'student_id'     => $userId,
+            'kelas_id'       => $kelasId,
+            'mapel_id'       => $mapelId,
+            'total_question' => count($questionOrder),
+            'question_order' => $questionOrder,
+            'status'         => 'active',
+        ]);
+
+        return response()->json([
+            'attempt_id' => $attempt->id,
+        ]);
+    }
+
+    public function studentTkaSubmitAnswer(Request $request, $role, $kelasId, $mapelId, $attemptId)
+    {
+        $userId = Auth::id();
+
+        $attempt = StudentTkaAttempt::where('id', $attemptId)
+            ->where('status', 'active')
+            ->where('student_id', $userId)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'question_id' => 'required|exists:lms_question_banks,id',
+            'answer_value' => [
+                Rule::requiredIf(!$request->auto_submit)
+            ],
+            'status_answer' => 'required|in:draft,submitted',
+        ], [
+            'answer_value.required' => 'Jawaban tidak boleh kosong.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Ambil soal
+        $question = LmsQuestionBank::findOrFail($request->question_id);
+
+        // Ambil jawaban siswa
+        $answer = StudentTkaAnswer::where('attempt_id', $attemptId)
+            ->where('question_id', $request->question_id)
+            ->first();
+
+        // NORMALISASI JAWABAN
+        $answerData = $request->answer_value;
+
+        if (is_string($answerData)) {
+            $decoded = json_decode($answerData, true);
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $answerData = $decoded;
+            }
+        }
+
+        if ($answerData === '' || $answerData === [] || $answerData === null) {
+            $answerData = null;
+        }
+
+        // HITUNG SCORE
+        $scorePerQuestion = 100 / $attempt->total_question;
+
+        $isCorrect = false;
+        $score = 0;
+
+        if ($answerData !== null) {
+
+            switch ($question->tipe_soal) {
+
+                case 'MCQ':
+
+                    $correctOption = $question->lmsQuestionOption()
+                        ->where('is_correct', 1)
+                        ->first();
+
+                    $isCorrect = $correctOption &&
+                        $correctOption->options_key == $answerData;
+
+                break;
+
+                case 'MCMA':
+
+                    if (is_array($answerData)) {
+
+                        $correctOptions = $question->lmsQuestionOption()
+                            ->where('is_correct', 1)
+                            ->pluck('options_key')
+                            ->toArray();
+
+                        sort($correctOptions);
+                        sort($answerData);
+
+                        $isCorrect = ($correctOptions == $answerData);
+                    }
+
+                break;
+
+                case 'MATCHING':
+
+                    if (is_array($answerData)) {
+
+                        $correctPairs = $question->lmsQuestionOption()
+                            ->get()
+                            ->filter(function ($opt) {
+                                return isset($opt->extra_data['side'])
+                                    && $opt->extra_data['side'] === 'left';
+                            })
+                            ->mapWithKeys(function ($opt) {
+                                return [
+                                    $opt->options_key => $opt->extra_data['pair_with'] ?? null
+                                ];
+                            })
+                            ->toArray();
+
+                        ksort($correctPairs);
+                        ksort($answerData);
+
+                        $isCorrect = ($correctPairs == $answerData);
+                    }
+
+                break;
+
+                case 'PG_KOMPLEKS':
+
+                    if (is_array($answerData)) {
+
+                        $correctAnswers = $question->lmsQuestionOption()
+                            ->get()
+                            ->filter(function ($opt) {
+                                return isset($opt->extra_data['side'])
+                                    && $opt->extra_data['side'] === 'item';
+                            })
+                            ->mapWithKeys(function ($opt) {
+                                return [
+                                    $opt->options_key => $opt->extra_data['answer']
+                                ];
+                            })
+                            ->toArray();
+
+                        ksort($correctAnswers);
+                        ksort($answerData);
+
+                        $isCorrect = ($correctAnswers == $answerData);
+                    }
+
+                break;
+
+                case 'ESSAY':
+
+                    // Essay menunggu penilaian guru
+                    $score = 0;
+
+                break;
+            }
+
+            if ($question->tipe_soal !== 'ESSAY') {
+                $score = $isCorrect ? $scorePerQuestion : 0;
+            }
+        }
+
+        // SIMPAN JAWABAN
+        $answer = StudentTkaAnswer::where('question_id', $request->question_id)
+            ->whereHas('StudentTkaAttempt', function ($query) use ($userId, $kelasId, $mapelId) {
+                $query->where('student_id', $userId)
+                    ->where('kelas_id', $kelasId)
+                    ->where('mapel_id', $mapelId);
+            })
+            ->first();
+
+        if ($answer) {
+
+            $updateData = [
+                'attempt_id'     => $attemptId,
+                'status_answer'  => $request->status_answer,
+                'answer_value'   => $answerData,
+                'question_score' => $score,
+            ];
+
+            $answer->update($updateData);
+
+        } else {
+
+            StudentTkaAnswer::create([
+                'attempt_id'     => $attemptId,
+                'question_id'    => $request->question_id,
+                'answer_value'   => $answerData,
+                'question_score' => $score,
+                'status_answer'  => $request->status_answer,
+            ]);
+
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Jawaban berhasil disimpan',
+        ]);
     }
 }

@@ -188,6 +188,22 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // 4. UTILITIES / GLOBAL AJAX FETCH
         // =========================================================================
         Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
+
+        // STUDENT TKA PRACTICE TEST
+        // views
+        Route::get('/lms/{role}/tka-simulation', [LibraryController::class, 'studentTKASubjectList'])->name('student.tka-subject-list.view');
+        Route::get('/lms/{role}/tka-simulation/class/{kelasId}/subject/{mapelId}/practice-test', [LibraryController::class, 'studentTKAPracticeTest'])->name('student.tka-practice-test.view');
+        Route::get('/lms/{role}/tka-simulation/class/{kelasId}/subject/{mapelId}/practice-test/form', [LibraryController::class, 'studentTKAPracticeTestForm'])->name('student.tka-practice-test.form');
+    
+        // start & restart practice test
+        Route::post('/lms/{role}/tka-simulation/class/{kelasId}/subject/{mapelId}/practice-test/start', [LibraryController::class, 'studentTkaStartPractice'])->name('student.tka-practice-test.start');
+        Route::post('/lms/{role}/tka-simulation/class/{kelasId}/subject/{mapelId}/practice-test/restart', [LibraryController::class, 'studentTkaResstartPractice'])->name('student.tka-practice-test.restart');
+    
+        // submit answer
+        Route::post('/lms/{role}/tka-simulation/class/{kelasId}/subject/{mapelId}/practice-test/answer/{attemptId}', [LibraryController::class, 'studentTkaSubmitAnswer'])->name('student.tka-practice-test.answer');
+    
+        // paginate
+        Route::get('/lms/{role}/tka-simulation/subject-list/paginate', [LibraryController::class, 'paginateTKASubject'])->name('student.tka-practice-test.subject-list.paginate');
     
         // OFFICES DASHBOARD
         Route::get('/lms/{role}/dashboard', [DashboardController::class, 'index'])->name('lms.office.dashboard.view');

@@ -158,4 +158,9 @@ class UserAccount extends Authenticatable
     public function SchTermStudent() {
         return $this->hasMany(SchTermStudent::class, 'student_id');
     }
+    
+    public function studentTkaAttempt()
+    {
+        return $this->hasMany(StudentTkaAttempt::class, 'student_id');
+    }
 }

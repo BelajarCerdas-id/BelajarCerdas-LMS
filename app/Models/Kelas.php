@@ -82,4 +82,9 @@ class Kelas extends Model
     {
         return $this->hasMany(SchReflTarget::class, 'target_class_id');
     }
+
+    public function studentTkaAttempt()
+    {
+        return $this->hasMany(StudentTkaAttempt::class, 'kelas_id');
+    }
 }
