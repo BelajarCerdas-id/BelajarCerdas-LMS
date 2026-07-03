@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserAccount;
+use App\Services\SchoolContract\SchoolContractService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -18,7 +20,7 @@ class AuthController extends Controller
     // function login
     public function login(Request $request)
     {
-        // 1. VALIDATOR (untuk AJAX)
+        // VALIDASI
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
             'password' => 'required',
@@ -26,10 +28,9 @@ class AuthController extends Controller
             'email.required' => 'Email harus diisi.',
             'email.email' => 'Format email harus @belajarcerdas.id.',
             'email.regex' => 'Format email harus @belajarcerdas.id.',
-            'password' => 'Password harus diisi.',
+            'password.required' => 'Password harus diisi.',
         ]);
 
-        // 2. JIKA VALIDASI GAGAL → RETURN JSON
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
@@ -37,47 +38,60 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // 3. CREDENTIALS HARUS ARRAY
-        $credentials = [
-            'email' => $request->email,
-            'password' => $request->password,
-        ];
-
-        // 4. CARI USER
+        // Cari user berdasarkan email
         $user = UserAccount::where('email', $request->email)->first();
 
-        // 5. CEK STATUS AKUN
-        if ($user && $user->status_akun !== 'aktif') {
-            return response()->json([
-                'status' => 'error',
-                'isAccountInactive' => true,
-                'message' => 'Akun kamu telah dinonaktifkan, silahkan hubungi pihak yang bertanggung jawab.'
-            ], 422);
-        }
-
-        // 6. ATTEMPT LOGIN
-        if (!Auth::attempt($credentials)) {
+        // 3. Email atau password salah
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'invalidCredentials' => true,
-                'message' => 'Email atau password salah.'
+                'message' => 'Email atau password salah.',
             ], 422);
         }
 
-        // 7. REGENERATE SESSION
+        // Cek status akun
+        if ($user->status_akun !== 'aktif') {
+            return response()->json([
+                'status' => 'error',
+                'isAccountInactive' => true,
+                'message' => 'Akun kamu telah dinonaktifkan, silahkan hubungi pihak yang bertanggung jawab.',
+            ], 422);
+        }
+
+        // Cek Kontrak Sekolah
+        $result = app(SchoolContractService::class)->validate($user);
+
+        if (!$result['success']) {
+            return response()->json([
+                'status' => 'error',
+                'contractExpired' => true,
+                'message' => $result['message'],
+            ], 403);
+        }
+
+        // Login User
+        Auth::login($user);
+
+        // Regenerate session setelah login
         $request->session()->regenerate();
 
-        // 8. SUCCESS
-        // jika role nya untuk office, maka gunakan route ini
+        // Redirect
         if (in_array($user->role, ['Administrator', 'Finance'])) {
-            return redirect()->route('lms.office.dashboard.view', [
-                'role' => $user->role,
-            ]);
-        } else {
-            return redirect()->route('beranda', [
-                'role' => $user->role,
+            return response()->json([
+                'status' => 'success',
+                'redirect' => route('lms.office.dashboard.view', [
+                    'role' => $user->role,
+                ]),
             ]);
         }
+
+        return response()->json([
+            'status' => 'success',
+            'redirect' => route('beranda', [
+                'role' => $user->role,
+            ]),
+        ]);
     }
 
     // function logout

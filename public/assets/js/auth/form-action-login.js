@@ -82,6 +82,13 @@ $('#submit-button').on('click', function (e) {
                     text: xhr.responseJSON.message,
                     confirmButtonText: 'Mengerti'
                 });
+            } else if (xhr.status === 403 && xhr.responseJSON?.contractExpired) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Gagal',
+                    text: xhr.responseJSON.message,
+                    confirmButtonText: 'Mengerti'
+                });
             } else {
                 alert('Terjadi kesalahan saat mengirim data.');
             }

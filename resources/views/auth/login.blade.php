@@ -1,5 +1,15 @@
 <x-script></x-script>
 
+@if(session('failed'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Login Gagal',
+        text: @json(session('failed'))
+    });
+</script>
+@endif
+
 <div class="w-full h-lvh bg-cover bg-[#0071BC]" style="background-image: url('{{ asset('assets/images/components/background-bc.svg') }}')">
     <div class="min-h-lvh flex flex-col items-center justify-center px-4">
         <!-- Logo -->
