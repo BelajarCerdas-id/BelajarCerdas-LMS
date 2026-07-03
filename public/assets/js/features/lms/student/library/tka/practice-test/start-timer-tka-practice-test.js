@@ -1,7 +1,7 @@
 let countdown = null;
 let examFinished = false;
 
-const TIMER_DURATION = 10; // detik
+const TIMER_DURATION = 30 * 60; // 30 menit
 
 // WAKTU HABIS
 function emptyTime() {
