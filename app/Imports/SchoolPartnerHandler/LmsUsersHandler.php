@@ -241,39 +241,7 @@ class LmsUsersHandler
                 }
 
                 // ROLE SISWA
-                if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
-
-                    $studentId = UserAccount::where('email', $row['email_akun'])->first();
-
-                    $existingParentProfile = ParentProfile::where('user_id', $parent->id)->first();
-
-                    if ($existingParentProfile && $existingParentProfile->school_partner_id != $schoolPartner->id) {
-                        throw new \Exception(
-                            "Akun orang tua {$row['email_akun_orang_tua']} sudah terdaftar pada sekolah lain."
-                        );
-                    }
-
-                    if (!$studentId) {
-                        throw new \Exception(
-                            "Akun siswa {$row['email_akun']} dari orang tua {$row['nama_orang_tua_siswa']} tidak terdaftar."
-                        );
-                    }
-
-                    // PARENT PROFILE
-                    ParentProfile::firstOrCreate(
-                        [
-                            'user_id' => $parent->id,
-                        ],
-                        [
-                            'school_partner_id' => $schoolPartner->id,
-                            'nama_lengkap' => $row['nama_orang_tua_siswa'],
-                        ]
-                    );
-
-                    StudentProfile::where('user_id', $studentId->id)->update([
-                        'parent_id' => $parent->id,
-                    ]);
-                } elseif ($row['role_account'] === 'Siswa') {
+                if ($row['role_account'] === 'Siswa') {
 
                     $getFase = Fase::where('nama_fase', $row['fase'])->first();
 
@@ -323,10 +291,7 @@ class LmsUsersHandler
                     );
 
                     // SCHOOL MAJORS
-                    if (
-                        $row['jenjang_sekolah'] === 'SMA' ||
-                        $row['jenjang_sekolah'] === 'SMK'
-                    ) {
+                    if ($row['jenjang_sekolah'] === 'SMA' || $row['jenjang_sekolah'] === 'SMK') {
 
                         $schoolMajors = SchoolMajor::updateOrCreate(
                             [
@@ -365,6 +330,35 @@ class LmsUsersHandler
                             'school_class_id' => $schoolClass->id,
                         ]
                     );
+
+                    // PARENT PROFILE
+                    if ($row['role_account_orang_tua'] === 'Orang Tua') {
+
+                        $existingParentProfile = ParentProfile::where('user_id', $parent->id)->first();
+
+                        if (
+                            $existingParentProfile &&
+                            $existingParentProfile->school_partner_id != $schoolPartner->id
+                        ) {
+                            throw new \Exception(
+                                "Akun orang tua {$row['email_akun_orang_tua']} sudah terdaftar pada sekolah lain."
+                            );
+                        }
+
+                        ParentProfile::firstOrCreate(
+                            [
+                                'user_id' => $parent->id,
+                            ],
+                            [
+                                'school_partner_id' => $schoolPartner->id,
+                                'nama_lengkap' => $row['nama_orang_tua_siswa'],
+                            ]
+                        );
+
+                        StudentProfile::where('user_id', $user->id)->update([
+                            'parent_id' => $parent->id,
+                        ]);
+                    }
 
                 } else {
 
