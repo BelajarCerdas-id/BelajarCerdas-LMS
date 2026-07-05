@@ -217,27 +217,24 @@ class LmsUsersHandler
                 }
 
                 // USER ACCOUNT
+                $user = UserAccount::updateOrCreate(
+                    ['email' => $row['email_akun']],
+                    [
+                        'password' => bcrypt($row['password_akun']),
+                        'no_hp' => $row['no_hp'],
+                        'role' => $row['role_account'],
+                        'status_akun' => 'aktif',
+                    ]
+                );
+
+                // buat / update akun orang tua
                 if ($row['role_account_orang_tua'] === 'Orang Tua' && $row['role_account'] === 'Siswa') {
-                    $user = UserAccount::firstOrCreate(
-                        [
-                            'email' => $row['email_akun_orang_tua'],
-                        ],
+                    $parent = UserAccount::updateOrCreate(
+                        ['email' => $row['email_akun_orang_tua']],
                         [
                             'password' => bcrypt($row['password_akun_orang_tua']),
                             'no_hp' => $row['no_hp_orang_tua'],
                             'role' => $row['role_account_orang_tua'],
-                            'status_akun' => 'aktif',
-                        ]
-                    );
-                } else {
-                    $user = UserAccount::updateOrCreate(
-                        [
-                            'email' => $row['email_akun'],
-                        ],
-                        [
-                            'password' => bcrypt($row['password_akun']),
-                            'no_hp' => $row['no_hp'],
-                            'role' => $row['role_account'],
                             'status_akun' => 'aktif',
                         ]
                     );
@@ -248,7 +245,7 @@ class LmsUsersHandler
 
                     $studentId = UserAccount::where('email', $row['email_akun'])->first();
 
-                    $existingParentProfile = ParentProfile::where('user_id', $user->id)->first();
+                    $existingParentProfile = ParentProfile::where('user_id', $parent->id)->first();
 
                     if ($existingParentProfile && $existingParentProfile->school_partner_id != $schoolPartner->id) {
                         throw new \Exception(
@@ -265,7 +262,7 @@ class LmsUsersHandler
                     // PARENT PROFILE
                     ParentProfile::firstOrCreate(
                         [
-                            'user_id' => $user->id,
+                            'user_id' => $parent->id,
                         ],
                         [
                             'school_partner_id' => $schoolPartner->id,
@@ -274,7 +271,7 @@ class LmsUsersHandler
                     );
 
                     StudentProfile::where('user_id', $studentId->id)->update([
-                        'parent_id' => $user->id,
+                        'parent_id' => $parent->id,
                     ]);
                 } elseif ($row['role_account'] === 'Siswa') {
 
