@@ -1,14 +1,13 @@
-$('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
-    const container = document.getElementById('container-sub-bab-management');
+let isProcessing = false;
+
+$('#submit-button-bulkUpload-syllabus').on('click', function (e) {
+    const container = document.getElementById('container-kelas-management');
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     const curriculumName = container.dataset.curriculumName;
     const curriculumId = container.dataset.curriculumId;
     const faseId = container.dataset.faseId;
-    const kelasId = container.dataset.kelasId;
-    const mapelId = container.dataset.mapelId;
-    const babId = container.dataset.babId;
 
     e.preventDefault();
 
@@ -16,14 +15,14 @@ $('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
 
     isProcessing = true; // tandai sedang proses
 
-    const form = $('#bulkUpload-syllabus-sub-bab-form')[0]; // ambil DOM Form-nya
+    const form = $('#bulkUpload-syllabus-form')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
     const btn = $(this);
     btn.prop('disabled', true); // Disable button UI
 
     $.ajax({
-        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/academic-management/${curriculumName}/${curriculumId}/${kelasId}/${mapelId}/${babId}/${faseId}/sub-bab/bulkUpload`,
+        url: `/lms/${role}/school-subscription/${schoolName}/${schoolId}/academic-management/${curriculumName}/${curriculumId}/${faseId}/bulkupload-silabus`,
         method: "POST",
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -32,12 +31,12 @@ $('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
         contentType: false,
         processData: false,
         success: function (response) {
-            const modal = document.getElementById('my_modal_3');
+            const modal = document.getElementById('my_modal_1');
 
             if (modal) {
                 modal.close();
 
-                $('#alert-success-import-syllabus-sub-bab').html(`
+                $('#alert-success-import-syllabus').html(`
                     <div class=" w-full flex justify-center">
                         <div class="fixed z-9999">
                             <div id="alertSuccess"
@@ -56,7 +55,7 @@ $('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
             }
 
             // Reset form
-            $('#bulkUpload-syllabus-sub-bab-form')[0].reset();
+            $('#bulkUpload-syllabus-form')[0].reset();
             $('#excelPreviewContainer-bulkUpload-excel').addClass('hidden');
             $('#textPreview-bulkUpload-excel').text('');
             $('#textSize-bulkUpload-excel').text('');
@@ -71,8 +70,6 @@ $('#submit-button-bulkUpload-sub-bab').on('click', function (e) {
             $('#btnClose').on('click', function () {
                 $('#alertSuccess').remove();
             });
-
-            paginateSubBabManagement();
 
             isProcessing = false;
             btn.prop('disabled', false);

@@ -2,31 +2,25 @@
 
 namespace App\Imports\Syllabus\School;
 
-use App\Imports\Syllabus\School\SyllabusSubBabImport;
+use App\Imports\Syllabus\School\SchoolSyllabusImport;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class SyllabusSubBabSheetImport implements WithMultipleSheets
+class SchoolSyllabusSheetImport implements WithMultipleSheets
 {
     protected $userId;
     protected $schoolName;
     protected $schoolId;
     protected $curriculumId;
-    protected $kelasId;
-    protected $mapelId;
-    protected $babId;
     protected $faseId;
     protected $file;
 
-    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $kelasId, $mapelId, $babId, $file, $faseId)
+    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $file, $faseId)
     {
         $this->userId = $userId;
         $this->schoolName = $schoolName;
         $this->schoolId = $schoolId;
         $this->curriculumId = $curriculumId;
-        $this->kelasId = $kelasId;
-        $this->mapelId = $mapelId;
-        $this->babId = $babId;
         $this->faseId = $faseId;
         $this->file = $file;
     }
@@ -42,10 +36,9 @@ class SyllabusSubBabSheetImport implements WithMultipleSheets
         $spreadsheet = IOFactory::load($this->file->getPathName());
 
         foreach ($spreadsheet->getSheetNames() as $sheetName) {
-            // Buat instance SyllabusSubBabImport untuk tiap sheet. contoh:
-            // Sheet dengan nama 'Bulk_Upload_Math' akan di-handle oleh SyllabusSubBabImport($userId, 'Bulk_Upload_Math')
-            $sheets[$sheetName] = new SyllabusSubBabImport($this->userId, $this->schoolName, $this->schoolId, $this->curriculumId, $this->kelasId,
-            $this->mapelId, $this->babId, $sheetName, $this->faseId);
+            // Buat instance SchoolSyllabusImport untuk tiap sheet. contoh:
+            // Sheet dengan nama 'Bulk_Upload_Math' akan di-handle oleh SchoolSyllabusImport($userId, 'Bulk_Upload_Math')
+            $sheets[$sheetName] = new SchoolSyllabusImport($this->userId, $this->schoolName, $this->schoolId, $this->curriculumId, $sheetName, $this->faseId);
         }
 
         return $sheets;
