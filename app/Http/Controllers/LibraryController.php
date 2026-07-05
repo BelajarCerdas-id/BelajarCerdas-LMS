@@ -1236,20 +1236,52 @@ class LibraryController extends Controller
         ]);
     }
 
+    private function generateQuestionOrder($kelasId, $mapelId, $totalQuestion = 15)
+    {
+        // Base query (exclude ESSAY)
+        $baseQuery = LmsQuestionBank::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status_bank_soal', 'Publish')
+        ->where('question_category', 'TKA')->where('tipe_soal', '!=', 'ESSAY');
+
+        // Ambil seluruh tipe soal yang tersedia
+        $availableTypes = (clone $baseQuery)->select('tipe_soal')->distinct()->pluck('tipe_soal');
+
+        $selectedQuestionIds = collect();
+
+        // Ambil minimal 1 soal dari setiap tipe
+        foreach ($availableTypes as $type) {
+
+            $question = (clone $baseQuery)->where('tipe_soal', $type)->inRandomOrder()->first();
+
+            if ($question) {
+                $selectedQuestionIds->push($question->id);
+            }
+        }
+
+        // Hitung sisa soal
+        $remaining = max($totalQuestion - $selectedQuestionIds->count(), 0);
+
+        // Ambil soal random selain yang sudah dipilih
+        if ($remaining > 0) {
+
+            $randomQuestionIds = (clone $baseQuery)->whereNotIn('id', $selectedQuestionIds)->inRandomOrder()->limit($remaining)->pluck('id');
+
+            $selectedQuestionIds = $selectedQuestionIds->merge($randomQuestionIds);
+        }
+
+        // Acak kembali agar soal wajib tidak selalu muncul di awal
+        return $selectedQuestionIds->shuffle()->values()->toArray();
+    }
+
     public function studentTkaStartPractice(Request $request, $role, $kelasId, $mapelId)
     {
         $userId = Auth::id();
 
-        // Nonaktifkan attempt lama
         StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
             'status' => 'inactive'
         ]);
 
-        // Ambil 15 soal acak
-        $questionOrder = LmsQuestionBank::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status_bank_soal', 'Publish')->where('question_category', 'TKA')
-        ->inRandomOrder()->limit(15)->pluck('id')->toArray();
+        $questionOrder = $this->generateQuestionOrder($kelasId, $mapelId);
 
-        // Simpan attempt beserta urutan soal
         $attempt = StudentTkaAttempt::create([
             'student_id'     => $userId,
             'kelas_id'       => $kelasId,
@@ -1268,16 +1300,12 @@ class LibraryController extends Controller
     {
         $userId = Auth::id();
 
-        // Nonaktifkan attempt lama
         StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
             'status' => 'inactive'
         ]);
 
-        // Ambil 15 soal acak
-        $questionOrder = LmsQuestionBank::where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status_bank_soal', 'Publish')->where('question_category', 'TKA')
-        ->inRandomOrder()->limit(15)->pluck('id')->toArray();
+        $questionOrder = $this->generateQuestionOrder($kelasId, $mapelId);
 
-        // Simpan attempt baru
         $attempt = StudentTkaAttempt::create([
             'student_id'     => $userId,
             'kelas_id'       => $kelasId,
