@@ -1180,6 +1180,16 @@ window.addEventListener('beforeunload', function () {
     saveQuestionDuration();
 });
 
+// listener untuk matching
+$(document).off('click', '.matching-right').on('click', '.matching-right', function () {
+
+    if (!handleMatchingRightClick(this)) return;
+
+    const soalId = $('#assessment-test-submit-form input[name="school_assessment_question_id"]').val();
+
+    $(`#userAnswer${soalId}`).val(JSON.stringify(studentPairs));
+});
+
 function confirmStartExam() {
     if (examStarted) return;
 

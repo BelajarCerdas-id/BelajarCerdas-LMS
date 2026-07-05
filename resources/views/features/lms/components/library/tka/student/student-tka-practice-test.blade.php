@@ -450,3 +450,4 @@
 @endif
 
 <script src="{{ asset('assets/js/features/lms/student/library/tka/practice-test/student-form-tka-practice-test.js') }}"></script> <!--- student form tka practice test ---->
+<script src="{{ asset('assets/js/features/lms/student/components/question-types/matching-question-renderer.js') }}"></script> <!--- matching question renderer ---->

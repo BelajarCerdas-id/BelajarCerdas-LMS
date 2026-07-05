@@ -17,22 +17,18 @@ $(document).off('click', '.matching-left').on('click', '.matching-left', functio
     selectedLeft = $(this).data('key');
 });
 
-$(document).off('click', '.matching-right').on('click', '.matching-right', function () {
+function handleMatchingRightClick(element) {
 
     const status = $('#status_answer').val();
-    if (status === 'submitted') return;
+    if (status === 'submitted') return false;
 
-    if (!selectedLeft) return;
+    if (!selectedLeft) return false;
 
-    const rightKey = $(this).data('key');
+    const rightKey = $(element).data('key');
+    const rightLabel = $(element).find('.match-letter').text().trim().replace('.', '');
 
-    // Ambil huruf (A, B, C)
-    const rightLabel = $(this).find('.match-letter').text().trim().replace('.', '');
-
-    // Simpan pasangan
     studentPairs[selectedLeft] = rightKey;
 
-    // Update label di kiri
     const leftElement = $(`.matching-left[data-key="${selectedLeft}"]`);
     leftElement.find('.match-label').text(rightLabel);
 
@@ -42,11 +38,8 @@ $(document).off('click', '.matching-right').on('click', '.matching-right', funct
 
     drawStudentMatchingLines();
 
-    const soalId = $('#assessment-test-submit-form input[name="school_assessment_question_id"]').val();
-
-    // simpan sebagai JSON
-    $(`#userAnswer${soalId}`).val(JSON.stringify(studentPairs));
-});
+    return true;
+}
 
 function drawStudentMatchingLines() {
 

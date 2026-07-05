@@ -107,4 +107,4 @@
 
 <script src="{{ asset('assets/js/features/lms/student/assessment/student-form-assessment-test.js') }}"></script> <!--- student form assessment test ---->
 <script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test-by-question.js') }}"></script> <!--- start timer assessment test by question ---->
-<script src="{{ asset('assets/js/features/lms/student/assessment/student-assessment-matching-renderer.js') }}"></script> <!--- student assessment matching renderer ---->
+<script src="{{ asset('assets/js/features/lms/student/components/question-types/matching-question-renderer.js') }}"></script> <!--- matching question renderer ---->

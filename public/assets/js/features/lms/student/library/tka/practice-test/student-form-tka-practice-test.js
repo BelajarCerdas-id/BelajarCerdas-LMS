@@ -861,6 +861,16 @@ $(document).on('click', '#btn-restart-practice', function () {
     confirmRestartPractice();
 });
 
+// listener untuk matching
+$(document).off('click', '.matching-right').on('click', '.matching-right', function () {
+
+    if (!handleMatchingRightClick(this)) return;
+
+    const soalId = $('#tka-practice-test-submit-form input[name="question_id"]').val();
+
+    $(`#userAnswer${soalId}`).val(JSON.stringify(studentPairs));
+});
+
 function showGlobalLoading() {
     $('#practice-loading').removeClass('hidden');
 }
