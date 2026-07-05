@@ -25,14 +25,14 @@
                                 <div>
 
                                     <div class="flex items-center gap-3 mb-3">
-
-                                        <button onclick="window.history.back()" class="bg-white/15 hover:bg-white/25 transition px-4 py-2 rounded-xl text-sm
-                                            cursor-pointer">
-                                            
-                                            <i class="fa-solid fa-arrow-left mr-2"></i>
-                                            Kembali
-                                        </button>
-
+                                        <a href="{{ route('lms.finance.manage-contract.view', [$role]) }}">
+                                            <button class="bg-white/15 hover:bg-white/25 transition px-4 py-2 rounded-xl text-sm
+                                                cursor-pointer">
+                                                
+                                                <i class="fa-solid fa-arrow-left mr-2"></i>
+                                                Kembali
+                                            </button>
+                                        </a>
                                     </div>
 
                                     <h1 class="text-xl font-bold">

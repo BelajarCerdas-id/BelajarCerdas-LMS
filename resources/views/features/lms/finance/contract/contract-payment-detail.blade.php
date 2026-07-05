@@ -17,13 +17,14 @@
                             <div>
                                 <div class="flex items-start gap-3">
 
-                                    <button onclick="window.history.back()"
-                                        class="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition
-                                        cursor-pointer">
+                                    <a href="{{ route('lms.finance.manage-contract-detail.view', ['role' => Auth::user()->role, 'schoolId' => $schoolId]) }}">
+                                        <button onclick="window.history.back()"
+                                            class="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition
+                                            cursor-pointer">
 
-                                        <i class="fa-solid fa-arrow-left text-sm"></i>
-
-                                    </button>
+                                            <i class="fa-solid fa-arrow-left text-sm"></i>
+                                        </button>
+                                    </a>
 
                                     <div class="min-w-0">
 
