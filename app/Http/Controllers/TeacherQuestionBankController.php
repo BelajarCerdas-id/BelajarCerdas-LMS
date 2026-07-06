@@ -125,7 +125,18 @@ class TeacherQuestionBankController extends Controller
             });
         }
 
-        $rows = $questionCollection->groupBy(fn ($q) => $q->sub_bab_id.'-'.$q->tipe_soal.'-'.$q->school_partner_id)->values();
+        $rows = $questionCollection->groupBy(function ($q) {
+            return implode('-', [
+                $q->kurikulum_id ?? 'null',
+                $q->kelas_id ?? 'null',
+                $q->mapel_id ?? 'null',
+                $q->bab_id ?? 'null',
+                $q->sub_bab_id ?? 'null',
+                $q->tipe_soal,
+                $q->question_category,
+                $q->school_partner_id ?? 'null',
+            ]);
+        })->values();
 
         // Pagination manual
         $page = $request->get('page', 1);
@@ -157,25 +168,25 @@ class TeacherQuestionBankController extends Controller
             'selectedYear'  => $searchYear,
             'selectedClass' => $selectedClass,
             'className'     => $classLevels,
-            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/source/:source/review/question-type/:questionType/question-category/:questionCategory',
+            'lmsReviewQuestion' => '/lms/:role/:schoolName/:schoolId/teacher-question-bank-management/kurikulum/:kurikulumId/kelas/:kelasId/mapel/:mapelId/source/:source/review/question-type/:questionType/question-category/:questionCategory',
         ]);
     }
 
     // function teacher question bank management detail
-    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $babId = null, $subBabId = null)
+    public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId = null, $subBabId = null)
     {
-        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-detail', compact('role', 'schoolName', 'schoolId', 
-            'source', 'questionType', 'questionCategory', 'babId', 'subBabId'));
+        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-detail', compact('role', 'schoolName', 'schoolId', 'kurikulumId', 'kelasId', 
+            'mapelId', 'source', 'questionType', 'questionCategory', 'babId', 'subBabId'));
     }
 
     // function teacher question bank management edit
-    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $questionId, $babId = null, $subBabId = null)
+    public function teacherQuestionBankManagementEdit($role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $questionId, $babId = null, $subBabId = null)
     {
         // Mengambil data soal berdasarkan ID
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion || !$editQuestion->school_partner_id) {
-            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $source, $questionType, $questionCategory, $babId, $subBabId]);
+            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId, $subBabId]);
         }
 
         // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
@@ -184,7 +195,7 @@ class TeacherQuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-edit', compact('role', 'schoolId', 'schoolName', 
-        'source', 'babId', 'subBabId', 'questionId', 'questionType', 'questionCategory'));
+        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-edit', compact('role', 'schoolId', 'schoolName',
+        'kurikulumId', 'kelasId', 'mapelId', 'source', 'babId', 'subBabId', 'questionId', 'questionType', 'questionCategory'));
     }
 }

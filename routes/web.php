@@ -388,12 +388,12 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management', [QuestionBankController::class, 'lmsQuestionBankManagementView'])->name('lms.questionBankManagement.view.schoolPartner');
     
         // edit question bank no school partner & school partner
-        Route::get('/lms/{role}/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
-        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
+        Route::get('/lms/{role}/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.noSchoolPartner');
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementEditView'])->name('lms.questionBankManagementEdit.view.schoolPartner');
     
         // review question bank no school partner & school partner
-        Route::get('/lms/{role}/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
-        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
+        Route::get('/lms/{role}/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsDefaultQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.noSchoolPartner');
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [QuestionBankController::class, 'lmsSchoolQuestionBankManagementDetailView'])->name('lms.questionBankManagementDetail.view.schoolPartner');
     
         // form question bank edit no school partner & school partner
         Route::get('/lms/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{questionId}/edit/{subBabId?}', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.noSchoolPartner');
@@ -428,23 +428,23 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // NO SCHOOL PARTNER
         // no bab & no sub bab
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/without-bab', [QuestionBankController::class, 'paginateReviewQuestionBank']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/without-bab', [QuestionBankController::class, 'paginateReviewQuestionBank']);
     
         // bab only
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/bab/{babId?}', [QuestionBankController::class, 'paginateReviewQuestionBank']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/bab/{babId?}', [QuestionBankController::class, 'paginateReviewQuestionBank']);
     
         // bab + sub bab
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/bab/{babId?}/sub-bab/{subBabId?}', [QuestionBankController::class, 'paginateReviewQuestionBank']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/paginate/bab/{babId?}/sub-bab/{subBabId?}', [QuestionBankController::class, 'paginateReviewQuestionBank']);
     
         // SCHOOL PARTNER
         // no bab & no sub bab
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/without-bab', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/without-bab', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
     
         // bab only
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/bab/{babId?}', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/bab/{babId?}', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
     
         // bab + sub bab
-        Route::get('/lms/question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/bab/{babId?}/sub-bab/{subBabId?}', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
+        Route::get('/lms/question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/school-subscription/{schoolName}/{schoolId}/paginate/bab/{babId?}/sub-bab/{subBabId?}', [QuestionBankController::class, 'paginateReviewQuestionBankSchool']);
     
         // =========================================================
         // ROUTES CONTENT MANAGEMENT
@@ -695,8 +695,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // question bank management
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management', [TeacherQuestionBankController::class, 'teacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.view');
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementEdit'])->name('lms.teacherQuestionBankManagement.edit.view');
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementDetail'])->name('lms.teacherQuestionBankManagement.detail.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{questionId}/edit/{babId?}/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementEdit'])->name('lms.teacherQuestionBankManagement.edit.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/kurikulum/{kurikulumId}/kelas/{kelasId}/mapel/{mapelId}/source/{source}/review/question-type/{questionType}/question-category/{questionCategory}/{babId?}/{subBabId?}', [TeacherQuestionBankController::class, 'teacherQuestionBankManagementDetail'])->name('lms.teacherQuestionBankManagement.detail.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-management/paginate', [TeacherQuestionBankController::class, 'paginateTeacherQuestionBankManagement'])->name('lms.teacherQuestionBankManagement.paginate');
     
         // question bank for release

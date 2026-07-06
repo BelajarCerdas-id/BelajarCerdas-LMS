@@ -69,6 +69,7 @@ function paginateBankSoal(search_class = null, search_year = null, page = 1) {
                         let lmsReviewQuestion = '';
 
                         lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                            .replace(':kurikulumId', first.kurikulum_id).replace(':kelasId', first.kelas_id).replace(':mapelId', first.mapel_id)
                             .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
                         
                         if (first.bab_id) {

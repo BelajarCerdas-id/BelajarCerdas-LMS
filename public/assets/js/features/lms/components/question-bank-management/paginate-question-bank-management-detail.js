@@ -3,6 +3,9 @@ function paginateBankSoalDetail() {
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
+    const kurikulumId = container.dataset.kurikulumId;
+    const kelasId = container.dataset.kelasId;
+    const mapelId = container.dataset.mapelId;
     const babId = container.dataset.babId;
     const subBabId = container.dataset.subBabId;
     const source = container.dataset.source;
@@ -11,11 +14,14 @@ function paginateBankSoalDetail() {
 
     if (!container) return;
     if (!role) return;
+    if (!kurikulumId) return;
+    if (!kelasId) return;
+    if (!mapelId) return;
     if (!source) return;
     if (!questionType) return;
     if (!questionCategory) return;
 
-    fetchBankSoalDetail(schoolName, schoolId, babId, subBabId, questionType, questionCategory);
+    fetchBankSoalDetail(schoolName, schoolId, kurikulumId, kelasId, mapelId, source, babId, subBabId, questionType, questionCategory);
 
     function fetchBankSoalDetail() {
         let url = '';
@@ -25,17 +31,17 @@ function paginateBankSoalDetail() {
             // BAB + SUB BAB
             if (babId && subBabId) {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}/sub-bab/${subBabId}`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}/sub-bab/${subBabId}`;
 
                 // BAB ONLY
             } else if (babId) {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/bab/${babId}`;
 
                 // NO BAB & NO SUB BAB
             } else {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/without-bab`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/school-subscription/${schoolName}/${schoolId}/paginate/without-bab`;
             }
 
         } else {
@@ -43,17 +49,17 @@ function paginateBankSoalDetail() {
             // BAB + SUB BAB
             if (babId && subBabId) {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}/sub-bab/${subBabId}`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}/sub-bab/${subBabId}`;
 
                 // BAB ONLY
             } else if (babId) {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/bab/${babId}`;
 
                 // NO BAB & NO SUB BAB
             } else {
 
-                url = `/lms/question-bank-management/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/without-bab`;
+                url = `/lms/question-bank-management/kurikulum/${kurikulumId}/kelas/${kelasId}/mapel/${mapelId}/source/${source}/review/question-type/${questionType}/question-category/${questionCategory}/paginate/without-bab`;
             }
         }
 
@@ -188,7 +194,8 @@ function paginateBankSoalDetail() {
                         urlTemplate = response.lmsEditQuestion;
                     }
 
-                    lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '').replace(':source', source)
+                    lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '')
+                    .replace(':kurikulumId', kurikulumId).replace(':kelasId', kelasId).replace(':mapelId', mapelId).replace(':source', source)
                     .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
                         
                     if (babId) {

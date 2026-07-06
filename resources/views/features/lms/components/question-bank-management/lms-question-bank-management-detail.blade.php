@@ -5,7 +5,8 @@
         <h3 class="font-bold opacity-70 text-xl">Daftar Soal</h3>
 
         <!--- daftar list soal --->
-        <div id="container-bank-soal-detail" data-role="{{ Auth::user()->role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-source="{{ $source }}"
+        <div id="container-bank-soal-detail" data-role="{{ Auth::user()->role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
+            data-kurikulum-id="{{ $kurikulumId }}" data-kelas-id="{{ $kelasId }}" data-mapel-id="{{ $mapelId }}" data-source="{{ $source }}"
             data-question-type="{{ $questionType }}" data-question-category="{{ $questionCategory }}" data-bab-id="{{ $babId }}" data-sub-bab-id="{{ $subBabId }}">
             <div id="grid-list-soal" class="container-accordion mb-8">
                 <!-- show data in ajax -->

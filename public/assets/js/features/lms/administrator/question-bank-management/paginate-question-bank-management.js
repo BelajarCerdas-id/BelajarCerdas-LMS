@@ -92,6 +92,7 @@ function paginateBankSoal(page = 1) {
 
                         if (schoolId) {
                             lmsReviewQuestion = response.lmsReviewQuestionBySchool.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
+                                .replace(':kurikulumId', first.kurikulum_id).replace(':kelasId', first.kelas_id).replace(':mapelId', first.mapel_id)
                                 .replace(':source', first.question_source).replace(':questionType', first.tipe_soal).replace(':questionCategory', first.question_category);
                             
                             if (first.bab_id) {
@@ -102,7 +103,8 @@ function paginateBankSoal(page = 1) {
                                 }
                             }
                         } else {
-                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
+                            lmsReviewQuestion = response.lmsReviewQuestion.replace(':role', role).replace(':kurikulumId', first.kurikulum_id).replace(':kelasId', first.kelas_id)
+                                .replace(':mapelId', first.mapel_id).replace(':source', first.question_source).replace(':questionType', first.tipe_soal)
                                 .replace(':questionCategory', first.question_category);
 
                             if (first.bab_id) {
