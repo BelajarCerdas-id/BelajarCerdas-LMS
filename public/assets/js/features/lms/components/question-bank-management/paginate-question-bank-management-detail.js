@@ -399,7 +399,7 @@ function paginateBankSoalDetail() {
                                     <div class="toggleButton-questions w-full flex items-center justify-between bg-transparent border-none outline-none cursor-pointer py-3.75">
                                         <div class="flex gap-1 max-w-362.5">
                                             <span>${index + 1}.</span>
-                                            <span class="preview-text-only w-full" data-fulltext="${questionTextOnly}">${previewTextOnly}</span>
+                                            <span class="preview-text-only w-full">${previewTextOnly}</span>
                                         </div>
                                         <i class="fa-solid fa-chevron-up icon"></i>
                                     </div>
@@ -421,6 +421,11 @@ function paginateBankSoalDetail() {
                         `;
 
                         const $card = $(card); // ubah string jadi jQuery element
+                        const previewElement = $card.find('.preview-text-only')[0];
+
+                        previewElement.fullText = questionTextOnly;
+                        previewElement.shortText = previewTextOnly;
+
                         containerQuestion.append($card);
 
                         if (question.tipe_soal === 'MATCHING') {
@@ -517,8 +522,8 @@ function initAccordionQuestion() {
     //ini buat buka accordion nya
     for (let i = 0; i < toggles.length; i++) {
 
-        const fullText = previewTexts[i].dataset.fulltext;
-        const shortText = fullText.length > 350 ? fullText.slice(0, 350) + "..." : fullText;
+        const fullText = previewTexts[i].fullText;
+        const shortText = previewTexts[i].shortText;
 
         // set default
         previewTexts[i].innerHTML = shortText;
@@ -536,13 +541,7 @@ function initAccordionQuestion() {
                     icons[j].classList.add('fa-chevron-up');
 
                     // kembalikan shortText accordion lain
-                    const otherFullText = previewTexts[j].dataset.fulltext;
-                    const otherShortText =
-                        otherFullText.length > 350
-                            ? otherFullText.slice(0, 350) + "..."
-                            : otherFullText;
-
-                    previewTexts[j].innerHTML = otherShortText;
+                    previewTexts[j].innerHTML = previewTexts[j].shortText;
                 }
             }
 
