@@ -314,7 +314,7 @@ class HeadmasterController extends Controller
                 // --- PROSES MENGHITUNG MATERI (CONTENT) ---
                 $contents = \App\Models\LmsMeetingContent::with('LmsContent.LmsContentItem')
                     ->where('teacher_id', $targetUserId)
-                    ->where('subject_id', $mapel->mapel_id)
+                    ->where('mapel_id', $mapel->mapel_id)
                     ->get();
                     
                 $tercapaiMateri = $contents->count();
