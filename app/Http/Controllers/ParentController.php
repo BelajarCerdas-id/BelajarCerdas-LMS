@@ -51,9 +51,9 @@ class ParentController extends Controller
             }
 
             // Ambil Absen Hari Ini
-            $attendance = DB::table('attendances')
+            $attendance = DB::table('subject_attendances')
                 ->where('student_id', $studentUserId)
-                ->whereDate('date', now()->format('Y-m-d'))
+                ->whereDate('created_at', now()->format('Y-m-d'))
                 ->first();
             
             if ($attendance) {
@@ -73,11 +73,11 @@ class ParentController extends Controller
         // =========================================================
         $rataNilai = DB::table('class_task_submissions')->where('student_id', $studentUserId)->avg('score') ?? 0;
         
-        $totalHadir = DB::table('attendances')->where('student_id', $studentUserId)->whereIn('status', ['Hadir', 'hadir'])->count();
-        $totalCatatan = DB::table('attendances')->where('student_id', $studentUserId)->count();
+        $totalHadir = DB::table('subject_attendances')->where('student_id', $studentUserId)->whereIn('attendance_status', ['Hadir', 'hadir'])->count();
+        $totalCatatan = DB::table('subject_attendances')->where('student_id', $studentUserId)->count();
         $persentaseHadir = $totalCatatan > 0 ? round(($totalHadir / $totalCatatan) * 100) : 0; 
         
-        $alpaCount = DB::table('attendances')->where('student_id', $studentUserId)->whereIn('status', ['Alpa', 'alpa'])->count();
+        $alpaCount = DB::table('subject_attendances')->where('student_id', $studentUserId)->whereIn('attendance_status', ['Alpa', 'alpa'])->count();
 
         // Menghitung tugas
         $tugasKelas = [];
@@ -405,9 +405,9 @@ class ParentController extends Controller
         $anak = $this->getAnakInfo();
         abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
-        $absensi = DB::table('attendances')
+        $absensi = DB::table('subject_attendances')
             ->where('student_id', $anak->user_id)
-            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return view('features.lms.parents.kehadiran', compact('absensi'));

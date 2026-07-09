@@ -6,12 +6,12 @@
             @forelse($absensi as $absen)
                 <div class="p-5 border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between hover:border-emerald-200 transition">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ \Carbon\Carbon::parse($absen->date)->translatedFormat('l') }}</p>
-                        <p class="text-lg font-bold text-slate-700">{{ \Carbon\Carbon::parse($absen->date)->format('d M Y') }}</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ \Carbon\Carbon::parse($absen->created_at)->translatedFormat('l') }}</p>
+                        <p class="text-lg font-bold text-slate-700">{{ \Carbon\Carbon::parse($absen->created_at)->format('d M Y') }}</p>
                     </div>
                     <div class="px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm 
-                        {{ strtolower($absen->status) == 'hadir' ? 'bg-emerald-500' : (strtolower($absen->status) == 'izin' || strtolower($absen->status) == 'sakit' ? 'bg-amber-400' : 'bg-red-500') }}">
-                        {{ ucfirst($absen->status) }}
+                        {{ strtolower($absen->attendance_status) == 'hadir' ? 'bg-emerald-500' : (strtolower($absen->attendance_status) == 'izin' || strtolower($absen->attendance_status) == 'sakit' ? 'bg-amber-400' : 'bg-red-500') }}">
+                        {{ ucfirst($absen->attendance_status) }}
                     </div>
                 </div>
             @empty
