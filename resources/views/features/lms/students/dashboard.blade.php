@@ -407,20 +407,29 @@
 
                         <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
                             @forelse($pendingTasks ?? [] as $task)
-                                <div onclick="openTugasSiswaModal('{{ addslashes($task->judul_tugas) }}', '{{ addslashes($task->mapel) }}', '{{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->translatedFormat('l, d M Y - H:i') : 'Segera' }}', {{ $task->id }})" 
-                                     class="cursor-pointer flex items-center justify-between p-3 md:p-4 rounded-xl border border-blue-100 bg-white hover:border-blue-300 hover:shadow-md hover:-translate-x-1 transition-all group">
+                                <div
+                                    onclick="openTugasSiswaModal('{{ addslashes($task->judul_tugas) }}', '{{ addslashes($task->mapel) }}', '{{ addslashes($task->deadline) }}', {{ $task->id }}, '{{ $role }}', '{{ $schoolName }}', {{ $schoolId }}, {{ $task->curriculumId }}, {{ $task->mapelId }}, {{ $task->assessmentTypeId }}, '{{ $task->semester }}', '{{ $task->assessmentMode }}')"
+                                    class="cursor-pointer flex items-center justify-between p-3 md:p-4 rounded-xl border border-blue-100 bg-white hover:border-blue-300 hover:shadow-md hover:-translate-x-1 transition-all group">
                                     
                                     <div class="flex-1 min-w-0 pr-3">
                                         <div class="flex items-center gap-2 mb-1.5">
                                             <span class="text-[9px] md:text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200/60 truncate max-w-full">
                                                 {{ $task->mapel ?? 'Mata Pelajaran' }}
                                             </span>
+
+                                            <span class="text-[9px] md:text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md uppercase tracking-wider border border-blue-200/60 truncate max-w-full">
+                                                {{ $task->assessment_type ?? '-' }}
+                                            </span>
                                         </div>
                                         <h4 class="font-bold text-slate-800 text-xs md:text-sm group-hover:text-[#0071BC] transition-colors line-clamp-1 leading-tight mb-1">
                                             {{ $task->judul_tugas ?? 'Tugas Belum Dinamai' }}
                                         </h4>
                                         <p class="text-[9px] md:text-[10px] font-bold text-slate-500 flex items-center gap-1.5">
-                                            <i class="far fa-clock text-amber-500"></i> Bts: <span class="text-rose-500">{{ isset($task->deadline) ? \Carbon\Carbon::parse($task->deadline)->format('d M Y, H:i') : 'Segera' }}</span>
+                                            <i class="far fa-clock text-amber-500"></i> 
+                                            Batas Waktu: 
+                                            <span>
+                                                {{ isset($task->deadline) ? $task->deadline : 'Segera' }}
+                                            </span>
                                         </p>
                                     </div>
                                     
@@ -446,20 +455,55 @@
                             <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 font-bold text-lg">
                                 <i class="fas fa-stopwatch"></i>
                             </div>
-                            <h3 class="font-bold text-indigo-900 text-base md:text-lg leading-tight">Jadwal Ujian ⏰</h3>
+                            <h3 class="font-bold text-indigo-900 text-base md:text-lg leading-tight">Jadwal Ulangan & Ujian ⏰</h3>
                         </div>
 
                         <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
                             @forelse($jadwalUjian ?? [] as $ujian)
-                                <div onclick="openUjianSiswaModal('{{ addslashes($ujian->tipe) }}', '{{ addslashes($ujian->mapel) }}', '{{ $ujian->tanggal }}', '{{ $ujian->waktu }}', '{{ $ujian->h_min }}', {{ $ujian->id }})" class="cursor-pointer flex items-start gap-3 p-3 md:p-4 rounded-xl border border-indigo-100 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-x-1 transition-all group">
+                                <div onclick="openUjianSiswaModal('{{ addslashes($ujian->tipe) }}', '{{ addslashes($ujian->mapel) }}', '{{ $ujian->tanggalMulai }}', '{{ $ujian->waktuMulai }}', '{{ $ujian->tanggalAkhir }}', '{{ $ujian->waktuAkhir }}', '{{ $ujian->h_min }}', {{ $ujian->id }}, '{{ $role }}', '{{ $schoolName }}', {{ $schoolId }}, {{ $ujian->curriculumId }}, {{ $ujian->mapelId }}, {{ $ujian->assessmentTypeId }}, '{{ $ujian->semester }}')" class="cursor-pointer flex items-start gap-3 p-3 md:p-4 rounded-xl border border-indigo-100 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-x-1 transition-all group">
                                     <div class="flex-1 w-full">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <h4 class="font-bold text-slate-800 text-xs md:text-sm group-hover:text-indigo-600 transition-colors line-clamp-1 leading-tight">{{ $ujian->tipe }} {{ $ujian->mapel }}</h4>
-                                            <span class="text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider {{ $ujian->h_min == 'Hari Ini' || $ujian->h_min == 'Berlangsung' ? 'bg-amber-100 text-amber-600 border border-amber-200 shadow-sm' : 'bg-indigo-100 text-indigo-600 border border-indigo-200' }}">{{ $ujian->h_min }}</span>
+                                        <div class="flex justify-between items-start gap-2 mb-2">
+
+                                            <h4 class="font-bold text-slate-800 text-xs md:text-sm leading-tight group-hover:text-indigo-600 transition-colors">
+                                                {{ $ujian->tipe }} • {{ $ujian->mapel }}
+                                            </h4>
+
+                                            <span class="shrink-0 text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider
+                                                {{ $ujian->h_min == 'Hari Ini' || $ujian->h_min == 'Berlangsung'
+                                                    ? 'bg-amber-100 text-amber-600 border border-amber-200'
+                                                    : 'bg-indigo-100 text-indigo-600 border border-indigo-200' }}">
+                                                {{ $ujian->h_min }}
+                                            </span>
+
                                         </div>
-                                        <p class="text-[9px] md:text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mt-1">
-                                            <i class="far fa-calendar-alt text-indigo-400"></i> {{ $ujian->tanggal }} | {{ $ujian->waktu }} WIB
-                                        </p>
+
+                                        <div class="space-y-1">
+
+                                            <p class="text-[10px] md:text-[11px] text-slate-500 flex items-center gap-2">
+
+                                                <i class="fas fa-play-circle text-green-500 w-3"></i>
+
+                                                <span>
+                                                    Mulai :
+                                                    <span class="font-semibold text-slate-700">
+                                                        {{ $ujian->tanggalMulai }} • {{ $ujian->waktuMulai }}
+                                                    </span>
+                                                </span>
+
+                                            </p>
+
+                                            <p class="text-[10px] md:text-[11px] text-slate-500 flex items-center gap-2">
+
+                                                <i class="fas fa-flag-checkered text-red-500 w-3"></i>
+
+                                                <span>
+                                                    Berakhir :
+                                                    <span class="font-semibold text-slate-700">
+                                                        {{ $ujian->tanggalAkhir }} • {{ $ujian->waktuAkhir }}
+                                                    </span>
+                                                </span>
+                                            </p>
+                                        </div>
                                     </div>
                                     <i class="fas fa-chevron-right text-slate-300 group-hover:text-indigo-500 transition-colors mt-2"></i>
                                 </div>
@@ -683,40 +727,127 @@
 
         {{-- 5. MODAL DETAIL UJIAN SISWA (TEMA INDIGO) --}}
         <div id="modalSiswaUjian" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-300" id="modalSiswaUjianContent">
-                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 text-white flex justify-between items-start relative overflow-hidden">
-                    <div class="absolute -top-6 -right-6 text-indigo-400/30 text-8xl"><i class="fas fa-stopwatch"></i></div>
-                    <div class="relative z-10">
-                        <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider mb-2 inline-block shadow-sm" id="modalUjianTipe">Tipe Ujian</span>
-                        <h3 class="font-bold text-xl leading-tight" id="modalUjianMapel">Mata Pelajaran</h3>
+
+            <div id="modalSiswaUjianContent"
+                class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-300">
+
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-6 text-white relative overflow-hidden">
+
+                    <div class="absolute -top-6 -right-6 text-indigo-400/30 text-8xl">
+                        <i class="fas fa-stopwatch"></i>
                     </div>
-                    <button onclick="closeModalSiswa('modalSiswaUjian', 'modalSiswaUjianContent')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-inner">
-                            <i class="far fa-calendar-alt text-indigo-500 text-2xl mb-2"></i>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</p>
-                            <p class="text-sm font-bold text-slate-700 mt-0.5" id="modalUjianTanggal">-</p>
-                        </div>
-                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-inner">
-                            <i class="far fa-clock text-indigo-500 text-2xl mb-2"></i>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Waktu Mulai</p>
-                            <p class="text-sm font-bold text-slate-700 mt-0.5" id="modalUjianWaktu">-</p>
-                        </div>
-                    </div>
-                    
-                    <div id="ujianStatusContainer" class="text-center mb-6">
+
+                    <div class="relative z-10 flex justify-between items-start">
+
+                        <div>
+                            <span id="modalUjianTipe"
+                                class="bg-white/20 px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider">
+                                Tipe
+                            </span>
+
+                            <h3 id="modalUjianMapel"
+                                class="text-xl font-bold mt-2">
+                                Mata Pelajaran
+                            </h3>
                         </div>
 
-                    <div class="flex gap-3">
-                        <button onclick="closeModalSiswa('modalSiswaUjian', 'modalSiswaUjianContent')" class="flex-1 py-3 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Tutup</button>
-                        <a href="#" id="btnMulaiUjian" class="flex-1 py-3 px-4 bg-indigo-600 text-white text-center font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 pointer-events-none opacity-50">
-                            Masuk Ruang Ujian <i class="fas fa-sign-in-alt"></i>
-                        </a>
+                        <button
+                            onclick="closeModalSiswa('modalSiswaUjian','modalSiswaUjianContent')"
+                            class="hover:bg-white/20 w-9 h-9 rounded-full transition flex items-center justify-center">
+
+                            <i class="fas fa-times"></i>
+
+                        </button>
+
                     </div>
+
                 </div>
+
+                <!-- Body -->
+                <div class="p-6">
+
+                    <!-- Jadwal -->
+                    <div class="grid grid-cols-2 gap-4 mb-5">
+
+                        <!-- Mulai -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-200 p-4">
+
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-play-circle text-green-500"></i>
+                                <span class="text-xs font-bold text-slate-500 uppercase">
+                                    Mulai
+                                </span>
+                            </div>
+
+                            <p id="modalTanggalMulai"
+                                class="font-bold text-slate-800">
+                                -
+                            </p>
+
+                            <p id="modalWaktuMulai"
+                                class="text-sm text-slate-500 mt-1">
+                                -
+                            </p>
+
+                        </div>
+
+                        <!-- Berakhir -->
+                        <div class="bg-slate-50 rounded-xl border border-slate-200 p-4">
+
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-flag-checkered text-red-500"></i>
+                                <span class="text-xs font-bold text-slate-500 uppercase">
+                                    Berakhir
+                                </span>
+                            </div>
+
+                            <p id="modalTanggalAkhir"
+                                class="font-bold text-slate-800">
+                                -
+                            </p>
+
+                            <p id="modalWaktuAkhir"
+                                class="text-sm text-slate-500 mt-1">
+                                -
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Status -->
+                    <div id="ujianStatusContainer"
+                        class="flex justify-center mb-6">
+
+                    </div>
+
+                    <!-- Button -->
+                    <div class="flex gap-3">
+
+                        <button
+                            onclick="closeModalSiswa('modalSiswaUjian','modalSiswaUjianContent')"
+                            class="flex-1 py-3 rounded-xl bg-slate-100 font-bold hover:bg-slate-200">
+
+                            Tutup
+
+                        </button>
+
+                        <a id="btnMulaiUjian"
+                            href="#"
+                            class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold text-center flex justify-center items-center gap-2 opacity-50 pointer-events-none hover:bg-indigo-700 transition">
+
+                            Masuk Ruang Ujian
+                            <i class="fas fa-arrow-right"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
             </div>
+
         </div>
 
     </div>
@@ -954,12 +1085,17 @@
     }
 
     // ================= FUNGSI UNTUK MODAL SISWA (TUGAS & UJIAN) =================
-    function openTugasSiswaModal(judul, mapel, deadline, id) {
+    function openTugasSiswaModal(judul, mapel, deadline, id, role, schoolName, schoolId, curriculumId, mapelId, 
+        assessmentTypeId, semester, assessmentMode) {
         document.getElementById('modalTugasJudul').innerText = judul;
         document.getElementById('modalTugasMapel').innerText = mapel;
         document.getElementById('modalTugasDeadline').innerText = deadline;
         
-        document.getElementById('btnKerjakanTugas').href = `/lms/student/assessment/${id}/kerjakan`;
+        if (assessmentMode == 'project') {
+            document.getElementById('btnKerjakanTugas').href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
+        } else {
+            document.getElementById('btnKerjakanTugas').href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/test/${id}`;
+        }
 
         const modal = document.getElementById('modalSiswaTugas');
         const content = document.getElementById('modalSiswaTugasContent');
@@ -970,32 +1106,67 @@
         }, 10);
     }
 
-    function openUjianSiswaModal(tipe, mapel, tanggal, waktu, h_min, id) {
+    function openUjianSiswaModal(tipe, mapel, tanggalMulai, waktuMulai, tanggalAkhir, waktuAkhir, h_min, id, role, schoolName, schoolId, curriculumId, mapelId, 
+        assessmentTypeId, semester) {
+
         document.getElementById('modalUjianTipe').innerText = tipe;
         document.getElementById('modalUjianMapel').innerText = mapel;
-        document.getElementById('modalUjianTanggal').innerText = tanggal;
-        document.getElementById('modalUjianWaktu').innerText = waktu + ' WIB';
+
+        document.getElementById('modalTanggalMulai').innerText = tanggalMulai;
+        document.getElementById('modalWaktuMulai').innerText = waktuMulai;
+
+        document.getElementById('modalTanggalAkhir').innerText = tanggalAkhir;
+        document.getElementById('modalWaktuAkhir').innerText = waktuAkhir;
 
         const btnMulai = document.getElementById('btnMulaiUjian');
         const statusContainer = document.getElementById('ujianStatusContainer');
 
         if (h_min === 'Hari Ini' || h_min === 'Berlangsung') {
-            statusContainer.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-bold animate-pulse shadow-sm"><i class="fas fa-circle text-[8px]"></i> Ujian Tersedia Sekarang</span>`;
-            btnMulai.classList.remove('pointer-events-none', 'opacity-50');
-            btnMulai.href = `/lms/student/assessment/${id}/kerjakan`; 
+
+            statusContainer.innerHTML = `
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                    bg-green-50 text-green-600 border border-green-200 font-bold text-sm">
+
+                    <i class="fas fa-circle text-[8px] animate-pulse"></i>
+
+                    Ujian Sedang Tersedia
+
+                </span>
+            `;
+
+            btnMulai.classList.remove('opacity-50','pointer-events-none');
+            btnMulai.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/test/${id}`;
+
         } else {
-            statusContainer.innerHTML = `<span class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-lock text-[10px]"></i> Ujian Belum Tersedia</span>`;
-            btnMulai.classList.add('pointer-events-none', 'opacity-50');
+
+            statusContainer.innerHTML = `
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                    bg-slate-100 text-slate-500 border border-slate-200 font-bold text-sm">
+
+                    <i class="fas fa-lock"></i>
+
+                    Ujian Belum Tersedia (${h_min})
+
+                </span>
+            `;
+
+            btnMulai.classList.add('opacity-50','pointer-events-none');
             btnMulai.href = "#";
+
         }
 
         const modal = document.getElementById('modalSiswaUjian');
         const content = document.getElementById('modalSiswaUjianContent');
+
         modal.classList.remove('hidden');
-        setTimeout(() => { 
-            modal.classList.replace('opacity-0', 'opacity-100'); 
-            content.classList.replace('scale-95', 'scale-100'); 
+
+        setTimeout(() => {
+
+            modal.classList.replace('opacity-0', 'opacity-100');
+            content.classList.replace('scale-95', 'scale-100');
+
         }, 10);
+
     }
 
     function closeModalSiswa(modalId, contentId) {

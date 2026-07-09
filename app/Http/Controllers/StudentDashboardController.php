@@ -22,6 +22,8 @@ class StudentDashboardController extends Controller
     {
         $user = Auth::user();
 
+        $today = now()->format('Y-m-d');
+
         // 1. Validasi Akses
         if (!$user || $user->role !== 'Siswa') {
             abort(403, 'Akses Ditolak. Halaman ini khusus untuk Siswa.');
@@ -40,7 +42,7 @@ class StudentDashboardController extends Controller
         if ($schoolId) {
             $schoolRecord = DB::table('school_partners')->where('id', $schoolId)->first();
             if ($schoolRecord) {
-                $schoolName = $schoolRecord->school_name ?? $schoolRecord->name ?? 'Sekolah Mitra';
+                $schoolName = $schoolRecord->nama_sekolah ?? $schoolRecord->nama_sekolah ?? 'Sekolah Mitra';
             }
         }
 
@@ -210,11 +212,11 @@ class StudentDashboardController extends Controller
                 ->get();
 
             // A. TUGAS PENDING (Mode: project)
-            $tugasRaw = $semuaAsesmenSiswa->filter(function($item) {
-                return $item->SchoolAssessmentType 
-                    && $item->SchoolAssessmentType->AssessmentMode 
-                    && $item->SchoolAssessmentType->AssessmentMode->code === 'project';
-            })->sortBy('end_date');
+            $tugasRaw = $semuaAsesmenSiswa->filter(function ($item) use ($today) {
+                return $item->SchoolAssessmentType && $item->SchoolAssessmentType->AssessmentMode && $item->SchoolAssessmentType->AssessmentMode->code !== 'exam'
+                && Carbon::parse($item->start_date)->toDateString() <= $today
+                && Carbon::parse($item->end_date)->toDateString() >= $today;
+            })->sortByDesc('start_date');
 
             foreach ($tugasRaw as $tugas) {
                 $sudahKirim = \Illuminate\Support\Facades\DB::table('class_task_submissions')
@@ -227,17 +229,26 @@ class StudentDashboardController extends Controller
                         'id'          => $tugas->id,
                         'judul_tugas' => $tugas->title,
                         'mapel'       => $tugas->Mapel->mata_pelajaran ?? 'Mata Pelajaran',
-                        'deadline'    => $tugas->end_date
+                        'assessment_type' => $tugas->SchoolAssessmentType->name,
+                        'deadline' => Carbon::parse($tugas->start_date)->translatedFormat('d M Y H:i')
+                            . ' - ' . Carbon::parse($tugas->end_date)->translatedFormat('d M Y H:i'),
+                        'curriculumId' => $tugas->Mapel->Kurikulum->id,
+                        'mapelId' => $tugas->mapel_id,
+                        'assessmentTypeId' => $tugas->assessment_type_id,
+                        'semester' => $tugas->semester,
+                        'assessmentMode' => $tugas->SchoolAssessmentType->AssessmentMode->code
                     ]);
                 }
             }
 
             // B. JADWAL UJIAN (Mode: non-project)
-            $ujianRaw = $semuaAsesmenSiswa->filter(function($item) {
+            $ujianRaw = $semuaAsesmenSiswa->filter(function($item) use ($today) {
                 return $item->SchoolAssessmentType 
                     && $item->SchoolAssessmentType->AssessmentMode 
-                    && $item->SchoolAssessmentType->AssessmentMode->code !== 'project';
-            })->sortBy('start_date');
+                    && $item->SchoolAssessmentType->AssessmentMode->code === 'exam'
+                    && Carbon::parse($item->start_date)->toDateString() <= $today
+                    && Carbon::parse($item->end_date)->toDateString() >= $today;
+            })->sortByDesc('start_date');
 
             foreach ($ujianRaw as $ujian) {
                 if (\Carbon\Carbon::parse($ujian->end_date)->isPast() && !\Carbon\Carbon::parse($ujian->end_date)->isToday()) {
@@ -245,6 +256,7 @@ class StudentDashboardController extends Controller
                 }
 
                 $tglMulai = \Carbon\Carbon::parse($ujian->start_date);
+                $tglAkhir = \Carbon\Carbon::parse($ujian->end_date);
                 $selisihHari = now()->startOfDay()->diffInDays($tglMulai->copy()->startOfDay(), false); 
                 
                 $h_min = '';
@@ -260,9 +272,15 @@ class StudentDashboardController extends Controller
                     'id'      => $ujian->id,
                     'tipe'    => $ujian->SchoolAssessmentType->name ?? 'Ujian', 
                     'mapel'   => $ujian->Mapel->mata_pelajaran ?? 'Mata Pelajaran', 
-                    'tanggal' => $tglMulai->format('d M Y'),
-                    'waktu'   => $tglMulai->format('H:i'),
+                    'tanggalMulai' => $tglMulai->format('d M Y'),
+                    'waktuMulai'   => $tglMulai->format('H:i'),
+                    'tanggalAkhir' => $tglAkhir->format('d M Y'),
+                    'waktuAkhir'   => $tglAkhir->format('H:i'),
                     'h_min'   => $h_min,
+                    'curriculumId' => $ujian->Mapel->Kurikulum->id,
+                    'mapelId' => $ujian->mapel_id,
+                    'assessmentTypeId' => $ujian->assessment_type_id,
+                    'semester' => $ujian->semester,
                 ]);
             }
         }
