@@ -9,7 +9,7 @@
             <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div class="flex-1">
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                        Halo, Bapak/Ibu <span class="text-indigo-600">{{ Auth::user()->SchoolStaffProfile->nama_lengkap ?? Auth::user()->name ?? 'Guru' }}</span> 👋
+                        Halo, <span class="text-indigo-600">{{ Auth::user()->SchoolStaffProfile->nama_lengkap ?? Auth::user()->name ?? 'Guru' }}</span>
                     </h1>
                     <p class="text-gray-500 mt-1 text-sm">Selamat datang di ruang kendali kelas Anda hari ini.</p>
                 </div>

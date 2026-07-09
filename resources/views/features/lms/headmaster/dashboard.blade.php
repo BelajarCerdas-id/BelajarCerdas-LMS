@@ -28,7 +28,7 @@
                     @endphp
 
                     <h1 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                        Halo, {{ $sapaan }}{{ $namaLengkap }}!
+                        Halo, {{ $sapaan }}{{ $namaLengkap }}
                     </h1>
                     <p class="text-slate-500 mt-2 font-medium">Ringkasan operasional sekolah untuk <span class="text-slate-800 font-bold">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</span></p>
                 </div>

@@ -15,7 +15,7 @@
                 <div class="relative z-10 w-full md:w-2/3">
                     <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1.5">Portal Akademik</p>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
-                        Halo, {{ $profilOrangTua->nama_lengkap ?? 'Bapak/Ibu' }} 👋
+                        Halo, {{ $profilOrangTua->nama_lengkap ?? 'Bapak/Ibu' }}
                     </h1>
                     
                     <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-1.5 rounded-full mb-6 text-sm font-medium text-blue-50">
