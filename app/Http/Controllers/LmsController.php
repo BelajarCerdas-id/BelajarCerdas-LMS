@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\LmsSchoolSubscription;
+use App\Models\LessonScheduleItem;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolLmsSubscription;
 use App\Models\SchoolPartner;
@@ -302,7 +303,7 @@ class LmsController extends Controller
         ];
         $hariIni = $mapHari[$englishDaySekarang] ?? 'Senin';
 
-        $dbSchedules = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
+        $dbSchedules = LessonScheduleItem::with(['schedule.SchoolClass.TeacherMapel'])
             ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
             ->where('lesson_schedules.school_partner_id', $schoolId)
             ->where('lesson_schedule_items.teacher_id', $teacherId)
@@ -314,7 +315,9 @@ class LmsController extends Controller
                 'lesson_schedule_items.subject_name',
                 'lesson_schedule_items.start_time',
                 'lesson_schedule_items.end_time',
-                'lesson_schedules.class_name'
+                'lesson_schedules.class_name',
+                'lesson_schedule_items.lesson_schedule_id',
+                'lesson_schedule_items.mapel_id', 
             )
             ->get();
 
@@ -333,11 +336,16 @@ class LmsController extends Controller
                     $jadwalMengajar[] = $currentGroup;
                 }
 
+                $subjectTeacher = $schedule->schedule->SchoolClass->TeacherMapel->first(function ($item) use ($schedule, $teacherId) {
+                    return $item->user_id == $teacherId && $item->mapel_id == $schedule->mapel_id;
+                });
+
                 $currentGroup = (object)[
                     'ids'     => $schedule->id,
                     'mapel'   => $schedule->subject_name,
                     'kelas'   => $schedule->class_name,
                     'ruangan' => 'Ruang ' . $schedule->class_name,
+                    'subject_teacher_id' => $subjectTeacher?->id,
                     'details' => [
                         (object)[
                             'jam_mulai'   => substr($schedule->start_time, 0, 5),
