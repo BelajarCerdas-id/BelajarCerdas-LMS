@@ -209,6 +209,17 @@ class BankSoalWordImportService
                     }
                 }
 
+                // Skip tabel yang bukan tabel soal
+                if (!isset($dataSoal['QUESTION']) && !isset($dataSoal['TYPE']) && !isset($dataSoal['DIFFICULTY']) && !isset($dataSoal['ANSWER'])
+                    && !isset($dataSoal['EXPLANATION'])) {
+
+                    Log::info("[BankSoalImport] Skip table ke-" . ($index + 1) . " karena bukan tabel soal.", [
+                        'keys' => array_keys($dataSoal),
+                    ]);
+
+                    continue;
+                }
+
                 // Log isi mentah dataSoal sebelum divalidasi
                 Log::debug("[BankSoalImport] Data mentah Soal ke-$soalNumber:", ['data' => array_keys($dataSoal)]);
 
