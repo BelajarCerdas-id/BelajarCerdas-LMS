@@ -480,12 +480,40 @@
                         {{-- CONTENT TAB: KOTAK MASUK --}}
                         <div id="content-pengumuman-masuk" class="flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
                             @forelse($pengumumanDariSekolah ?? [] as $info)
-                                <div class="p-4 border border-slate-100 rounded-xl hover:border-amber-200 hover:bg-amber-50/30 transition-colors group cursor-pointer">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100"><i class="fas fa-building mr-1"></i> Sekolah</span>
-                                        <span class="text-[10px] font-medium text-slate-400">{{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}</span>
+                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group cursor-pointer">
+
+                                    <div class="flex items-start justify-between gap-3">
+
+                                        <div class="flex items-center gap-2">
+                                            <div class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                                                <i class="fas fa-building text-amber-600"></i>
+                                            </div>
+
+                                            <div>
+                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700">
+                                                    Sekolah
+                                                </span>
+
+                                                <p class="text-[11px] text-slate-400">
+                                                    {{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}
+                                                </p>
+                                            </div>
+                                        </div>
+
                                     </div>
-                                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition-colors">{{ $info->title ?? $info->judul }}</h4>
+
+                                    <div class="mt-4">
+
+                                        <h4 class="font-bold text-slate-800 text-sm group-hover:text-amber-700 transition-colors">
+                                            {{ $info->title ?? $info->judul }}
+                                        </h4>
+
+                                        <p class="mt-2 text-xs text-slate-600 leading-relaxed line-clamp-3">
+                                            {{ $info->content ?? '-' }}
+                                        </p>
+
+                                    </div>
+
                                 </div>
                             @empty
                                 <div class="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50">
@@ -505,15 +533,47 @@
                                         $namaKelasTujuan = $kelasObj ? 'Kelas ' . $kelasObj->class_name : 'Kelas Dihapus';
                                     }
                                 @endphp
-                                <div class="p-4 border border-slate-100 rounded-xl hover:border-[#0071BC]/30 hover:bg-blue-50/30 transition-colors group cursor-pointer flex flex-col">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div class="flex gap-1.5 flex-wrap">
-                                            <span class="text-[9px] font-bold text-white bg-[#0071BC] px-2 py-0.5 rounded uppercase tracking-wider shadow-sm"><i class="fas fa-paper-plane mr-1"></i> Terkirim</span>
-                                            <span class="text-[9px] font-bold text-[#0071BC] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-wider"><i class="fas fa-chalkboard-user mr-1"></i> {{ $namaKelasTujuan }}</span>
+                                <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all group cursor-pointer">
+
+                                    <div class="flex items-start justify-between gap-3">
+
+                                        <div class="flex items-center gap-3">
+
+                                            <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                                                <i class="fas fa-paper-plane text-[#0071BC]"></i>
+                                            </div>
+
+                                            <div>
+
+                                                <div class="flex flex-wrap gap-2">
+                                                    <span class="px-2 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-bold">
+                                                        TERKIRIM
+                                                    </span>
+
+                                                    <span class="px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-semibold">
+                                                        {{ $namaKelasTujuan }}
+                                                    </span>
+                                                </div>
+
+                                                <p class="text-[11px] text-slate-400 mt-1">
+                                                    {{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <span class="text-[10px] font-medium text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($info->created_at)->diffForHumans() }}</span>
                                     </div>
-                                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-[#0071BC] transition-colors mt-1 line-clamp-2 leading-snug">{{ $info->title ?? $info->judul }}</h4>
+
+                                    <div class="mt-4">
+
+                                        <h4 class="font-bold text-slate-800 text-sm group-hover:text-[#0071BC]">
+                                            {{ $info->title ?? $info->judul }}
+                                        </h4>
+
+                                        <p class="mt-2 text-xs text-slate-600 leading-relaxed line-clamp-3">
+                                            {{ $info->content ?? '-' }}
+                                        </p>
+
+                                    </div>
+
                                 </div>
                             @empty
                                 <div class="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50">
