@@ -3,7 +3,7 @@
 @if (in_array(Auth::user()->role, ['Kepala Sekolah', 'Wakil Kepala Sekolah']))
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-[#F1F5F9] min-h-screen pb-12">
 
-        <div class="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
+        <div class="p-6 md:p-10 space-y-8">
             
             <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
@@ -34,9 +34,6 @@
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <button class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2">
-                        <i class="fas fa-download"></i> Unduh Laporan
-                    </button>
                     {{-- TOMBOL TRIGGER MODAL PENGUMUMAN --}}
                     <button onclick="openModalPengumuman()" class="px-5 py-2.5 bg-[#0071BC] text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2">
                         <i class="fas fa-plus"></i> Buat Pengumuman
@@ -50,7 +47,6 @@
                         <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#0071BC] flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                             <i class="fas fa-users"></i>
                         </div>
-                        <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">+2.5%</span>
                     </div>
                     <h4 class="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Murid</h4>
                     <div class="flex items-baseline gap-2 mt-1">

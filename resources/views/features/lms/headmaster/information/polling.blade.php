@@ -22,7 +22,7 @@
             </button>
         </div>
 
-        <div class="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+        <div class="p-6 md:p-8 space-y-6">
 
             {{-- FORM FILTER --}}
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center gap-4">

@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <div class="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+        <div class="p-6 md:p-8 space-y-6">
 
             {{-- Indikator Kinerja Utama (KPI) JATAH UPLOAD --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">

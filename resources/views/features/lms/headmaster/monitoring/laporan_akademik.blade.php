@@ -32,13 +32,10 @@
                         <i class="fas fa-chevron-down text-xs"></i>
                     </div>
                 </div>
-                <button type="button" onclick="window.print()" class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center hover:bg-[#0071BC] hover:text-white transition-all shadow-sm tooltip" title="Cetak Laporan">
-                    <i class="fas fa-print"></i>
-                </button>
             </form>
         </div>
 
-        <div class="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
+        <div class="p-6 md:p-8 space-y-8">
 
             @php
                 $avgContentGlobal = count($chartDataContent ?? []) > 0 ? round(array_sum($chartDataContent) / count($chartDataContent)) : 0;
