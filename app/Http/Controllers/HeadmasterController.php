@@ -338,7 +338,7 @@ class HeadmasterController extends Controller
                 // --- PROSES MENGHITUNG ASSESSMENT ---
                 $assessments = \App\Models\SchoolAssessment::with('SchoolAssessmentType')
                     ->where('user_id', $targetUserId)
-                    ->where('subject_id', $mapel->mapel_id)
+                    ->where('mapel_id', $mapel->mapel_id)
                     ->get();
                     
                 $tercapaiAss = $assessments->count();
