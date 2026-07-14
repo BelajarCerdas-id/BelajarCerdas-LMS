@@ -274,20 +274,47 @@ class LmsController extends Controller
 
         $teacherId = $user->teacher_id ?? $user->id; 
         $userId = $user->id; 
-
+        
         // ========================================================
         // 0. AMBIL DAFTAR KELAS YANG DIAJAR GURU INI
         // (Hanya dari tabel teacher_mapels sesuai user yang login)
         // ========================================================
-        $daftarKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
-            ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
-            ->join('school_classes', 'lesson_schedules.class_id', '=', 'school_classes.id')
-            ->where('lesson_schedules.school_partner_id', $schoolId)
-            ->where('lesson_schedule_items.teacher_id', $teacherId)
-            ->select('school_classes.id', 'school_classes.class_name')
-            ->distinct() // Mencegah duplikasi nama kelas jika diajar 2 sesi
-            ->orderBy('school_classes.class_name', 'asc')
-            ->get();
+        $latestAcademicYear = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)
+        ->join('school_classes', 'teacher_mapels.school_class_id', '=', 'school_classes.id')->where('school_classes.school_partner_id', $schoolId)
+        ->max('school_classes.tahun_ajaran');
+        
+        $daftarKelas = TeacherMapel::where('user_id', $teacherId)
+        ->where('is_active', true)
+        ->whereHas('SchoolClass', function ($q) use ($schoolId, $latestAcademicYear) {
+            $q->where('school_partner_id', $schoolId)->where('tahun_ajaran', $latestAcademicYear);
+        })
+        ->whereHas('Mapel', function ($q) use ($schoolId) {
+            // MAPEL KHUSUS SEKOLAH
+            $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
+                $q1->where('school_partner_id', $schoolId)
+                    ->where('is_active', 1);
+            })
+
+            // ATAU MAPEL GLOBAL
+            ->orWhere(function ($q2) use ($schoolId) {
+                $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
+
+                    // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
+                    ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                        $sq->where('school_partner_id', $schoolId);
+                });
+            });
+        })->with(['Mapel', 'SchoolClass' => function ($q) {
+                $q->withCount(['StudentSchoolClass as student_school_class_count' => function ($q) {
+                    $q->where('student_class_status', 'active')
+                    ->where(function ($sub) {
+                        $sub->whereNull('academic_action')
+                            ->orWhere('academic_action', '');
+                    });
+                }]);
+            }
+        ])->get();
+
         // -- JADWAL & KELAS --
         $totalKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
             ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')

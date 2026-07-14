@@ -704,7 +704,12 @@
                         @forelse($daftarKelas ?? [] as $kelas)
                             <label class="flex items-center gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200">
                                 <input type="checkbox" name="class_id[]" value="{{ $kelas->id }}" class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500 class-checkbox" checked>
-                                <span class="text-sm font-semibold text-slate-700">Kelas {{ $kelas->class_name ?? $kelas->nama_kelas }}</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    Kelas 
+                                    {{ $kelas->SchoolClass->class_name ?? '-' }}
+                                    -
+                                    {{ $kelas->SchoolClass->tahun_ajaran ?? '-' }}
+                                </span>
                             </label>
                         @empty
                             <p class="text-xs text-slate-500 italic p-2">Data kelas belum tersedia.</p>
