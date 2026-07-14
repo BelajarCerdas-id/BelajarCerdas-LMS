@@ -9,6 +9,8 @@ use App\Models\ParentProfile;
 use App\Models\StudentProfile;
 use App\Models\AcademicCalendar;
 use App\Models\Poll;
+use App\Models\StudentAssessmentAttempt;
+use App\Models\UserAccount;
 use Carbon\Carbon;
 
 class ParentController extends Controller
@@ -57,7 +59,7 @@ class ParentController extends Controller
                 ->first();
             
             if ($attendance) {
-                $statusHadir = ucfirst($attendance->status);
+                $statusHadir = ucfirst($attendance->attendance_status);
             }
         }
 
@@ -289,10 +291,20 @@ class ParentController extends Controller
             ];
         }
 
+        $student = UserAccount::whereHas('StudentProfile', function ($query) use ($user) {
+            $query->where('parent_id', $user->id);
+        })->first();
+
+        // QUERY CHEATING
+        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
+            ->where('status', 'cheating')->where('student_id', $student->id);
+
+        $cheatingHistory = $query->latest()->get();
+
         return view('features.lms.parents.dashboard', compact(
             'role', 'schoolName', 'schoolId', 
             'profilOrangTua', 'dataAnak', 'agendaSekolah', 
-            'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak'
+            'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory'
         ));
     }
 

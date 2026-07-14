@@ -14,7 +14,7 @@
                 
                 <div class="relative z-10 w-full md:w-2/3">
                     <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1.5">Portal Akademik</p>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+                    <h1 class="text-2xl sm:text-xl font-extrabold tracking-tight mb-2">
                         Halo, {{ $profilOrangTua->nama_lengkap ?? 'Bapak/Ibu' }}
                     </h1>
                     
@@ -265,6 +265,96 @@
                                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Belum ada agenda bulan ini.</p>
                                     </div>
                                 @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- STUDENT ASSESSMENT CHEATING HISTORY --}}
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4 shrink-0">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-950 text-white rounded-xl flex items-center justify-center shadow-md font-bold text-lg border border-blue-900">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-blue-950 text-md leading-tight">Histori Pelanggaran Asesmen</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas anak selama pengerjaan asesmen</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="flex flex-col gap-4">
+                                @if ($cheatingHistory->isNotEmpty())
+                                    @foreach ($cheatingHistory as $item)
+                                        <div class="p-4 sm:p-5 lg:p-6 rounded-2xl border border-red-100 bg-white hover:shadow-md transition-all flex flex-col gap-4">
+
+                                            <!-- HEADER -->
+                                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+
+                                                <div class="min-w-0">
+                                                    <h4 class="font-bold text-gray-800 text-sm sm:text-base leading-tight truncate">
+                                                        {{ $item->UserAccount->StudentProfile->nama_lengkap ?? '-' }}
+                                                    </h4>
+                                                    <p class="text-[11px] text-red-500 font-semibold mt-0.5">
+                                                        Cheating: {{ $item->created_at ?? '-' }}
+                                                    </p>
+                                                </div>
+
+                                                <span class="w-fit text-[10px] font-bold text-white bg-red-500 px-2.5 py-1 rounded-md uppercase">
+                                                    {{ $item->status ?? '-' }}
+                                                </span>
+                                            </div>
+
+                                            <!-- CONTENT -->
+                                            <div class="text-xs sm:text-sm text-gray-600 space-y-1.5">
+                                                <p class="font-semibold text-gray-800 leading-snug wrap-break-word">
+                                                    {{ $item->SchoolAssessment->title ?? '-' }}
+                                                </p>
+                                                <p class="text-[11px] text-gray-400">
+                                                    {{ $item->SchoolAssessment->SchoolAssessmentType->name ?? '-' }}
+                                                </p>
+                                                <p class="text-[11px] text-gray-400">
+                                                    Waktu: 
+                                                    {{ \Carbon\Carbon::parse($item->SchoolAssessment->start_date)->locale('id')->translatedFormat('d-F-Y, H:i') }}
+                                                    - 
+                                                    {{ \Carbon\Carbon::parse($item->SchoolAssessment->end_date)->locale('id')->translatedFormat('d-F-Y, H:i') }}
+                                                </p>
+                                            </div>
+
+                                            <!-- TAG -->
+                                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                                                <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-semibold">
+                                                    {{ $item->SchoolAssessment->SchoolClass->class_name ?? '-' }} - {{ $item->SchoolAssessment->SchoolClass->tahun_ajaran ?? '-' }}
+                                                </span>
+                                                <span class="text-gray-500 text-[11px] wrap-break-word">
+                                                    {{ $item->SchoolAssessment->Mapel->mata_pelajaran ?? '-' }}
+                                                </span>
+                                            </div>
+
+                                            <!-- FOOTER -->
+                                            <div class="flex items-center justify-between pt-2 border-t border-red-50">
+                                                <span class="text-xs font-semibold text-red-600">
+                                                    Pelanggaran
+                                                </span>
+
+                                                <span class="text-xs font-bold text-white bg-red-500 px-3 py-1 rounded-lg">
+                                                    {{ $item->tab_switch_count ?? 0 }} <i class="fas fa-xmark"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                <div class="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-white">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <div class="w-14 h-14 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center text-2xl mb-3 border border-blue-100 shadow-sm">
+                                            <i class="fas fa-shield"></i>
+                                        </div>
+                                        <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
+                                        <p class="text-xs font-medium text-slate-500 mt-1">Tidak ada pelanggaran asesmen.</p>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
