@@ -69,4 +69,9 @@ class SchoolClass extends Model
     {
         return $this->hasMany(SchReflAnswer::class, 'school_class_id');
     }
+
+    public function LessonSchedule()
+    {
+        return $this->hasMany(LessonSchedule::class, 'class_id');
+    }
 }
