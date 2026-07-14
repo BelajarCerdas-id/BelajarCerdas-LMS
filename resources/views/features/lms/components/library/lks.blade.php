@@ -238,7 +238,7 @@ Semua LKPD {{ $mapel->mata_pelajaran }}
                 <option value="{{ $k->id }}"
                     {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
 
-                    Kelas {{ $k->kelas }}
+                    {{ $k->kelas }}
 
                 </option>
                 @endforeach

@@ -95,39 +95,40 @@
     </div>
     @endif
 
-    <script>
-        function selectKelas(kelasId) {
+<script>
+    const lksDetailUrl = "{{ url('/lms/student/library/lks') }}";
 
-    fetch(`/student/library/lks/mapel?kelas_id=${kelasId}`)
-        .then(res => res.json())
-        .then(data => {
+    function selectKelas(kelasId) {
+        fetch(`{{ route('student.library.lks.mapel') }}?kelas_id=${kelasId}`)
+            .then(res => res.json())
+            .then(data => {
 
-            const container = document.getElementById('mapel_container');
-            container.innerHTML = '';
+                const container = document.getElementById('mapel_container');
+                container.innerHTML = '';
 
-            data.forEach(mapel => {
+                data.forEach(mapel => {
 
-                container.innerHTML += `
-                    <a href="/student/library/lks/${mapel.id}" class="group">
-                        <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition overflow-hidden">
+                    container.innerHTML += `
+                        <a href="${lksDetailUrl}/${mapel.id}?kelas_id=${kelasId}" class="group">
+                            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition overflow-hidden">
 
-                            <div class="h-40 bg-blue-100 flex items-center justify-center">
-                                <i class="fa-solid fa-book text-5xl text-gray-600"></i>
+                                <div class="h-40 bg-blue-100 flex items-center justify-center">
+                                    <i class="fa-solid fa-book text-5xl text-gray-600"></i>
+                                </div>
+
+                                <div class="p-4">
+                                    <h2 class="font-semibold text-lg">
+                                        ${mapel.mata_pelajaran}
+                                    </h2>
+                                </div>
+
                             </div>
+                        </a>
+                    `;
+                });
 
-                            <div class="p-4">
-                                <h2 class="font-semibold text-lg">
-                                    ${mapel.mata_pelajaran}
-                                </h2>
-                            </div>
-
-                        </div>
-                    </a>
-                `;
+                document.getElementById('kelas_section').classList.add('hidden');
+                document.getElementById('mapel_section').classList.remove('hidden');
             });
-
-            document.getElementById('kelas_section').classList.add('hidden');
-            document.getElementById('mapel_section').classList.remove('hidden');
-        });
-}
-    </script>
+    }
+</script>
