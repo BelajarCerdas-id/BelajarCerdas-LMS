@@ -9,12 +9,9 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
-use App\Models\SchoolMapel;
-use App\Models\SchoolPartner;
 use App\Models\SubBab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -87,7 +84,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_kurikulum' => [
                 'required',
-                Rule::unique('kurikulums', 'nama_kurikulum')
+                Rule::unique('kurikulums', 'nama_kurikulum')->ignore($curriculum->id)
             ],
         ], [
             'nama_kurikulum.required' => 'Harap masukkan nama kurikulum.',
@@ -183,7 +180,7 @@ class SyllabusController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_fase' => [
                 'required',
-                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId)
+                Rule::unique('fases', 'nama_fase')->where('kurikulum_id', $curriculumId)->ignore($faseId)
         ],
         ], [
             'nama_fase.required' => 'Harap masukkan Fase.',
@@ -281,7 +278,7 @@ class SyllabusController extends Controller
 
         $validator = Validator::make($request->all(), [
             'kelas' => [
-                'required', Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
+                'required', Rule::unique('kelas', 'kelas')->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)->ignore($kelasId)
             ],
         ], [
             'kelas.required' => 'Harap masukkan kelas.',
@@ -382,7 +379,7 @@ class SyllabusController extends Controller
 
         $validator = Validator::make($request->all(), [
             'mata_pelajaran' => [
-                'required', Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)
+                'required', Rule::unique('mapels', 'mata_pelajaran')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)->ignore($mapelId)
             ],
         ], [
             'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
@@ -511,7 +508,7 @@ class SyllabusController extends Controller
             'nama_bab' => [
                 'required',
                 Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)
+                ->where('mapel_id', $mapelId)->ignore($babId)
             ],
             'semester' => 'required',
         ], [
@@ -637,7 +634,7 @@ class SyllabusController extends Controller
             'sub_bab' => [
                 'required',
                 Rule::unique('sub_babs', 'sub_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
-                ->where('mapel_id', $mapelId)->where('bab_id', $babId)
+                ->where('mapel_id', $mapelId)->where('bab_id', $babId)->ignore($subBabId)
             ],
         ], [
             'sub_bab.required' => 'Harap masukkan sub bab.',
