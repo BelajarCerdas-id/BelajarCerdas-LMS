@@ -67,4 +67,9 @@ class Bab extends Model
     {
         return $this->hasMany(LmsContent::class, 'bab_id');
     }
+
+    public function SchoolBab()
+    {
+        return $this->hasMany(SchoolBab::class, 'bab_id');
+    }
 }

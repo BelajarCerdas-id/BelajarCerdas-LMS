@@ -9,6 +9,7 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
+use App\Models\SchoolBab;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
 use App\Models\SubBab;
@@ -325,23 +326,45 @@ class SchoolSyllabusController extends Controller
     // function paginate bab
     public function paginateBab($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
-        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
-            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId);
-            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId);
-            });
-        })->get();
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])
+            ->where(function ($query) use ($schoolId) {
+                $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId);
+                })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId);
+                });
+            })
+            ->get();
 
         $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->where('id', $schoolId)->first();
 
-        $getBab = Bab::with(['UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'SchoolPartner'])->where('fase_id', $faseId)
-        ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
-        ->orderBy('created_at', 'asc')->paginate(20);
+        // Ambil seluruh Bab custom milik sekolah pada mapel ini
+        $customBabIds = Bab::where('school_partner_id', $schoolId)->where('kurikulum_id', $curriculumId)->where('fase_id', $faseId)->where('kelas_id', $kelasId)
+        ->where('mapel_id', $mapelId)->pluck('id');
+
+        $getBab = Bab::with(['UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'SchoolPartner', 'SchoolBab' => function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            }])->where('kurikulum_id', $curriculumId)->where('fase_id', $faseId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
+            ->where(function ($query) use ($schoolId, $customBabIds) {
+
+            // Bab custom milik sekolah
+            $query->where('school_partner_id', $schoolId);
+
+            // Bab default
+            $query->orWhere(function ($q) use ($customBabIds) {
+
+                $q->whereNull('school_partner_id');
+
+                if ($customBabIds->isNotEmpty()) {
+                    $q->whereNotIn('id', $customBabIds);
+                }
+            });
+
+        })->orderByRaw('school_partner_id IS NULL')->orderBy('created_at', 'asc')->paginate(20);
 
         $countUsers = $users->count();
 
-        $mapel = Mapel::where('id', $mapelId)->first();
+        $mapel = Mapel::find($mapelId);
 
         return response()->json([
             'data' => $getBab->items(),
@@ -352,7 +375,7 @@ class SchoolSyllabusController extends Controller
             'subBabDetail' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/:curriculumName/:curriculumId/:faseId/:kelasId/:mapelId/:babId/sub-bab',
         ]);
     }
-
+    
     // function bab store
     public function babStore(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
@@ -395,6 +418,11 @@ class SchoolSyllabusController extends Controller
             'mapel_id' => $mapelId,
             'kurikulum_id' => $curriculumId,
             'school_partner_id' => $schoolId
+        ]);
+
+        SchoolBab::create([
+            'school_partner_id' => $schoolId,
+            'bab_id' => $data->id,
         ]);
 
         broadcast(new SyllabusCrud('bab', 'store', $data))->toOthers();
@@ -455,16 +483,34 @@ class SchoolSyllabusController extends Controller
     // function bab activate
     public function babActivate(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        $data = Bab::where('id', $babId)->update([
-            'status_bab' => $request->status_bab,
-        ]);
+        $isEnable = $request->action === 'enable';
 
-        broadcast(new SyllabusCrud('bab', 'activate', $data))->toOthers();
+        Bab::findOrFail($babId);
+
+        if ($schoolId) {
+            $affected = SchoolBab::updateOrCreate(
+                [
+                    'bab_id' => $babId,
+                    'school_partner_id' => $schoolId,
+                ],
+                [
+                    'is_active' => $isEnable,
+                ]
+            );
+        } else {
+            $status = $isEnable ? 'active' : 'inactive';
+
+            Bab::where('id', $babId)->update([
+                'status_bab' => $status,
+            ]);
+        }
+
+        broadcast(new SyllabusCrud('bab', 'activate', $affected))->toOthers();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status Mata Pelajaran Berhasil Diubah.',
-            'data' => $data
+            'data' => $affected
         ]);
     }
 

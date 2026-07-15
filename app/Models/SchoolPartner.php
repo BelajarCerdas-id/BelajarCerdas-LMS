@@ -131,4 +131,9 @@ class SchoolPartner extends Model
     public function SchContract() {
         return $this->hasMany(SchContract::class, 'school_partner_id');
     }
+
+    public function SchoolBab()
+    {
+        return $this->hasMany(SchoolBab::class, 'school_partner_id');
+    }
 }
