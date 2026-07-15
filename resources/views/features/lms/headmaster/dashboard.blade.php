@@ -159,7 +159,7 @@
                         </div>
                         
                         <div class="p-6 bg-slate-50/80">
-                            <button class="w-full py-3 rounded-2xl bg-white border border-slate-200 text-xs font-black text-slate-600 hover:bg-[#0071BC] hover:text-white hover:border-[#0071BC] transition-all uppercase tracking-widest">
+                            <button class="cursor-pointer w-full py-3 rounded-2xl bg-white border border-slate-200 text-xs font-black text-slate-600 hover:bg-[#0071BC] hover:text-white hover:border-[#0071BC] transition-all uppercase tracking-widest">
                                 Lihat Semua Arsip
                             </button>
                         </div>
@@ -172,45 +172,134 @@
 
     {{-- MODAL PENGUMUMAN --}}
     <div id="pengumumanModal" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-all duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden transform scale-95 transition-all duration-300 flex flex-col">
             <div class="bg-[#0071BC] p-6 text-white flex justify-between items-center">
                 <h3 class="font-bold text-lg"><i class="fas fa-bullhorn mr-2"></i> Buat Pengumuman ke Guru</h3>
                 <button onclick="closeModalPengumuman()" class="hover:rotate-90 transition-transform"><i class="fas fa-times"></i></button>
             </div>
-            <form id="formPengumumanKepsek" onsubmit="submitPengumumanKepsek(event)" class="p-6 space-y-4">
+            <form id="formPengumumanKepsek" onsubmit="submitPengumumanKepsek(event)" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+
+                @csrf
+
                 <input type="hidden" name="school_id" value="{{ $schoolId ?? '' }}">
-                <input type="hidden" name="target" value="Guru">
 
+                {{-- TARGET --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Penerima Pengumuman</label>
-                    <div class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 text-sm font-bold flex items-center gap-3 cursor-not-allowed shadow-inner">
-                        <div class="w-6 h-6 rounded-full bg-blue-100 text-[#0071BC] flex items-center justify-center">
-                            <i class="fas fa-user-tie text-[10px]"></i>
-                        </div>
-                        Khusus Seluruh Jajaran Guru
+                    <label class="block text-sm font-bold text-slate-700 mb-3">
+                        Penerima Pengumuman
+                    </label>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-[#0071BC] hover:bg-blue-50 transition cursor-pointer">
+                            <input type="checkbox" name="target[]" value="Guru" class="w-5 h-5 rounded border-slate-300 text-[#0071BC]">
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+
+                                <div>
+                                    <p class="font-semibold text-slate-800">
+                                        Guru
+                                    </p>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50 transition cursor-pointer">
+                            <input type="checkbox" name="target[]" value="Siswa" class="w-5 h-5 rounded border-slate-300 text-amber-500">
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+
+                                <div>
+                                    <p class="font-semibold text-slate-800">
+                                        Siswa
+                                    </p>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-green-500 hover:bg-green-50 transition cursor-pointer">
+                            <input type="checkbox" name="target[]" value="Orang Tua" class="w-5 h-5 rounded border-slate-300 text-green-600">
+
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                    <i class="fas fa-people-roof"></i>
+                                </div>
+
+                                <div>
+                                    <p class="font-semibold text-slate-800">
+                                        Orang Tua
+                                    </p>
+                                </div>
+                            </div>
+                        </label>
                     </div>
+
+                    <span id="error-target" class="text-red-500 text-xs font-medium mt-2 block"></span>
+
+                    <p class="mt-2 text-xs text-slate-500">
+                        <i class="fas fa-circle-info mr-1"></i>
+                        Anda dapat memilih lebih dari satu penerima.
+                    </p>
                 </div>
 
+                {{-- JUDUL --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Judul Pengumuman</label>
-                    <input type="text" name="title" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none" placeholder="Contoh: Rapat Evaluasi Mingguan">
+
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        Judul Pengumuman
+                    </label>
+
+                    <input id="title" type="text" name="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] 
+                    outline-none" placeholder="Contoh: Rapat Evaluasi Mingguan">
+
+                    <span id="error-title" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
+
+                {{-- JENIS --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Jenis Pengumuman</label>
-                    <select name="type" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none bg-white text-sm text-slate-700">
+
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        Jenis Pengumuman
+                    </label>
+
+                    <select id="type" name="type" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none">
+                        <option value="">Pilih Jenis Pengumuman</option>
                         <option value="info">Info Biasa</option>
                         <option value="penting">Penting / Urgent</option>
                     </select>
+                    <span id="error-type" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
+
+                {{-- CONTENT --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Isi Pengumuman</label>
-                    <textarea name="content" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none custom-scrollbar text-sm" rows="4" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
+
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        Isi Pengumuman
+                    </label>
+
+                    <textarea id="content" name="content" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] 
+                    outline-none custom-scrollbar" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
+
+                    <span id="error-content" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
-                <button type="submit" class="w-full py-3 bg-[#0071BC] text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all btn-submit-pengumuman">Kirim Pengumuman</button>
+
+                <button type="submit" class="cursor-pointer btn-submit-pengumuman w-full py-3 rounded-xl bg-[#0071BC] hover:bg-blue-700 transition text-white font-bold">
+                    Kirim Pengumuman
+                </button>
+
             </form>
         </div>
     </div>
 @endif
+
+<!--- COMPONENTS ---->
+<script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
 <style>
     /* Custom Scrollbar for better UI */
@@ -248,34 +337,103 @@
 
     async function submitPengumumanKepsek(event) {
         event.preventDefault();
+
         const form = event.target;
         const btn = form.querySelector('.btn-submit-pengumuman');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Mengirim...`; 
-        btn.disabled = true;
 
-        let csrfToken = document.querySelector('meta[name="csrf-token"]');
-        let token = csrfToken ? csrfToken.getAttribute('content') : '';
+        const originalText = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML =
+            `<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...`;
+
+        const token = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute('content');
 
         try {
-            // Pastikan kamu punya route ini di web.php untuk HeadmasterController
-            const response = await fetch("{{ route('lms.kepsek.pengumuman.store', ['role' => Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '0']) }}", {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                body: new FormData(form) 
-            });
+
+            const response = await fetch(
+                "{{ route('lms.kepsek.pengumuman.store', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}",
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": token,
+                        "Accept": "application/json"
+                    },
+                    body: new FormData(form)
+                }
+            );
+
             const result = await response.json();
-            
-            if(result.success || response.ok) {
-                closeModalPengumuman();
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: result.message || 'Pengumuman ke Guru berhasil dikirim.', timer: 1500, showConfirmButton: false }).then(() => { window.location.reload(); });
-            } else {
-                Swal.fire({ icon: 'error', title: 'Gagal', text: result.message || 'Terjadi kesalahan' });
-                btn.innerHTML = originalText; btn.disabled = false;
+
+            // reset semua error
+            document.querySelectorAll("[id^='error-']").forEach(el => el.innerHTML = "");
+
+            if (response.status === 422) {
+
+                Object.keys(result.errors).forEach(function(key){
+
+                    let id = key.replace('.', '-').replace('[]','');
+
+                    if(key === 'target'){
+                        id = 'target';
+                    }
+
+                    const error = document.getElementById('error-' + id);
+
+                    if(error){
+                        error.innerHTML = result.errors[key][0];
+                    }
+
+                });
+
+                document.querySelectorAll('input[name="target[]"]').forEach(function (checkbox) {
+                    checkbox.addEventListener('change', function () {
+
+                        const errorTarget = document.getElementById('error-target');
+
+                        if (document.querySelectorAll('input[name="target[]"]:checked').length > 0) {
+                            errorTarget.innerHTML = '';
+                        }
+
+                    });
+                });
+
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
             }
+
+            if (!response.ok) {
+                throw new Error(result.message ?? 'Terjadi kesalahan');
+            }
+
+            closeModalPengumuman();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: result.message,
+                timer: 1800,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
+
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error', text: "Terjadi kesalahan jaringan." });
-            btn.innerHTML = originalText; btn.disabled = false;
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.message
+            });
+
+        } finally {
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+
         }
     }
 </script>

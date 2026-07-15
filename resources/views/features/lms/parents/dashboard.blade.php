@@ -232,6 +232,127 @@
                         </div>
                     </div>
 
+                    <!-- PENGUMUMAN SEKOLAH -->
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 h-[580px] flex flex-col">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center justify-between mb-6 shrink-0">
+                            <div class="flex items-center gap-3">
+
+                                <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-sm">
+                                    <i class="fas fa-bullhorn text-xl"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800">
+                                        Pengumuman Sekolah
+                                    </h3>
+
+                                    <p class="text-sm text-slate-500">
+                                        Informasi terbaru dari sekolah
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIST -->
+                        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+
+                            @forelse ($announcements as $announcement)
+
+                                @php
+                                    switch (strtolower($announcement->type)) {
+                                        case 'penting':
+                                            $color = 'red';
+                                            $icon = 'fa-circle-exclamation';
+                                            break;
+
+                                        case 'info':
+                                            $color = 'blue';
+                                            $icon = 'fa-calendar-days';
+                                            break;
+
+                                        default:
+                                            $color = 'amber';
+                                            $icon = 'fa-bullhorn';
+                                            break;
+                                    }
+                                @endphp
+
+                                <div
+                                    class="group  border border-{{ $color }}-100 rounded-2xl p-5 hover:border-{{ $color }}-300 hover:shadow-md transition">
+
+                                    <div class="flex items-start justify-between">
+
+                                        <div class="flex gap-3">
+
+                                            <div
+                                                class="w-12 h-12 rounded-xl bg-{{ $color }}-100 text-{{ $color }}-600 flex items-center justify-center shrink-0">
+                                                <i class="fas {{ $icon }}"></i>
+                                            </div>
+
+                                            <div>
+
+                                                <div class="flex items-center gap-2 flex-wrap">
+
+                                                    <span
+                                                        class="px-2 py-1 rounded-md bg-{{ $color }}-100 text-{{ $color }}-600 text-[10px] font-bold uppercase">
+                                                        {{ $announcement->type }}
+                                                    </span>
+
+                                                    <span class="text-xs text-slate-400">
+                                                        {{ $announcement->created_at->diffForHumans() }}
+                                                    </span>
+
+                                                </div>
+
+                                                <h4
+                                                    class="mt-2 font-bold text-slate-800 group-hover:text-{{ $color }}-600 transition">
+                                                    {{ $announcement->title }}
+                                                </h4>
+
+                                                <p class="mt-2 text-sm text-slate-600 leading-relaxed line-clamp-2">
+                                                    {{ Str::limit(strip_tags($announcement->content), 120) }}
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+
+                                        <span class="text-xs text-slate-500 flex items-center gap-1">
+                                            <div class="">
+                                                <i class="fas fa-user mr-1"></i>
+                                                {{ $announcement->author_role }}
+                                            </div>
+
+                                            @if($announcement->author_role === 'Guru')
+                                                <i class="fas fa-circle mr-1 text-slate-400 text-[4px]"></i>
+                                                {{ $announcement->SchoolClass?->class_name ?? '-' }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="flex flex-col items-center justify-center h-full text-center py-12">
+
+                                    <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                        <i class="fas fa-bullhorn text-3xl text-slate-400"></i>
+                                    </div>
+
+                                    <h4 class="font-semibold text-slate-700">
+                                        Belum ada pengumuman
+                                    </h4>
+
+                                    <p class="text-sm text-slate-500 mt-1">
+                                        Tidak ada pengumuman dari sekolah.
+                                    </p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
 
                 {{-- KOLOM KANAN (SEMPIT) --}}

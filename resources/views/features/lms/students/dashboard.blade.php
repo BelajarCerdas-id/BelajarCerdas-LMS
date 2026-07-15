@@ -179,7 +179,13 @@
                                             @if(($info->type ?? 'info') == 'penting')
                                                 <span class="text-[9px] md:text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md border border-amber-200 uppercase tracking-wider">Penting</span>
                                             @else
-                                                <span class="text-[9px] md:text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-200 uppercase tracking-wider">Info Kelas</span>
+                                                <span class="text-[9px] md:text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-200 uppercase tracking-wider">
+                                                    @if ($info->author_role === 'Guru')
+                                                        Info Kelas
+                                                    @else
+                                                        Info Sekolah
+                                                    @endif
+                                                </span>
                                             @endif
                                             
                                             {{-- Badge Baru --}}
@@ -195,7 +201,7 @@
                                     
                                     {{-- Menampilkan Nama Guru Pengirim --}}
                                     <p class="text-[9px] text-blue-500 font-bold mb-2 flex items-center gap-1">
-                                        <i class="fas fa-user-chalkboard"></i> {{ $info->nama_pengirim ?? 'Guru' }}
+                                        <i class="fas fa-user-chalkboard"></i> {{ $info->author_role ?? 'Guru' }}
                                     </p>
 
                                     <p class="text-[11px] md:text-xs text-slate-500 mb-4 line-clamp-2 flex-1">{{ $info->content ?? 'Isi pengumuman tidak tersedia.' }}</p>

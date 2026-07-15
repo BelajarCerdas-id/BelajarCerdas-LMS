@@ -19,6 +19,7 @@ use App\Models\StudentSchoolClass;
 use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentProfile;
+use Illuminate\Support\Facades\Validator;
 
 class HeadmasterController extends Controller
 {
@@ -1078,47 +1079,71 @@ class HeadmasterController extends Controller
     
     public function storePengumuman(Request $request)
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
 
-        $staffProfile = \App\Models\SchoolStaffProfile::where('user_id', $user->id)->first();
+        $staffProfile = SchoolStaffProfile::where('user_id', $user->id)->first();
 
         if (!$staffProfile) {
             return response()->json([
                 'success' => false,
-                'message' => 'Profil staff tidak ditemukan'
+                'message' => 'Profil staff tidak ditemukan.'
             ], 403);
         }
 
-        $request->validate([
-            'title'   => 'required|string|max:255',
-            'type'    => 'required|in:info,penting',
-            'content' => 'required|string',
+        $validator = Validator::make($request->all(), [
+            'target'     => 'required|array|min:1',
+            'target.*'   => 'in:Guru,Orang Tua,Siswa',
+            'title'      => 'required|string',
+            'type'       => 'required|in:info,penting',
+            'content'    => 'required|string',
+        ], [
+            'target.required'   => 'Pilih minimal satu penerima pengumuman.',
+            'target.array'      => 'Format penerima tidak valid.',
+            'target.min'        => 'Pilih minimal satu penerima pengumuman.',
+            'title.required'    => 'Judul pengumuman wajib diisi.',
+            'type.required'     => 'Jenis pengumuman wajib dipilih.',
+            'content.required'  => 'Isi pengumuman wajib diisi.',
         ]);
 
-        try {
-            \Illuminate\Support\Facades\DB::table('announcements')->insert([
-                // ✅ FIX DI SINI
-                'school_partner_id' => $staffProfile->school_partner_id,
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-                'author_id'   => $user->id,
-                'author_role' => $user->role,
-                'target'      => 'Guru',
-                'title'       => $request->title,
-                'type'        => $request->type,
-                'content'     => $request->content,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
+        try {
+
+            DB::beginTransaction();
+
+            foreach ($request->target as $target) {
+                DB::table('announcements')->insert([
+                    'school_partner_id' => $staffProfile->school_partner_id,
+                    'author_id'         => $user->id,
+                    'author_role'       => $user->role,
+                    'target'            => $target,
+                    'title'             => $request->title,
+                    'type'              => $request->type,
+                    'content'           => $request->input('content'),
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
+            }
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pengumuman berhasil dikirim ke seluruh Guru!'
+                'message' => 'Pengumuman berhasil dikirim.'
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ParentProfile;
 use App\Models\StudentProfile;
 use App\Models\AcademicCalendar;
+use App\Models\Announcement;
 use App\Models\Poll;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\UserAccount;
@@ -301,10 +302,22 @@ class ParentController extends Controller
 
         $cheatingHistory = $query->latest()->get();
 
+        // ANNOUNCEMENT
+        $announcements = Announcement::query()->with('author')->where('school_partner_id', $schoolId)->where(function ($query) {
+
+            // Pengumuman untuk Orang Tua atau guru yang ditujukan ke siswa
+            $query->where('target', 'Orang Tua')->orWhere(function ($q) {
+                $q->where('author_role', 'Guru')->where('target', 'Siswa');
+            });
+
+        })->where(function ($query) use ($studentClassId) {
+            $query->whereNull('target_class_id')->orWhere('target_class_id', $studentClassId);
+        })->latest()->take(8)->get();
+
         return view('features.lms.parents.dashboard', compact(
             'role', 'schoolName', 'schoolId', 
             'profilOrangTua', 'dataAnak', 'agendaSekolah', 
-            'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory'
+            'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory', 'announcements'
         ));
     }
 

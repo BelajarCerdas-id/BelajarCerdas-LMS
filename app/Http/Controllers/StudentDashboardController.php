@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\DailyReflectionAnswered;
 use App\Events\DailyReflectionLivePreview;
+use App\Models\Announcement;
 use App\Models\SchoolClass;
 use App\Models\SchReflAnswer;
 use App\Models\SchReflQuestion;
@@ -363,24 +364,15 @@ class StudentDashboardController extends Controller
         }
 
         // Bagian 9 di StudentDashboardController
-    $pengumumanTerkini = [];
-    if ($schoolId) {
-        $pengumumanTerkini = DB::table('announcements')
-            ->leftJoin('users', 'announcements.author_id', '=', 'users.id')
-            ->where('announcements.school_partner_id', $schoolId)
-            ->where('announcements.target', 'Siswa') // Wajib target Siswa
-            ->where('announcements.author_role', 'Guru') // Hierarki: Murid hanya terima dari Guru
-            ->where(function ($query) use ($studentClassId) {
-                $query->where('announcements.target_class_id', $studentClassId)
-                    ->orWhereNull('announcements.target_class_id');
-            })
-            ->select('announcements.*', 'users.name as nama_pengirim')
-            // Cek status baca
-            ->selectRaw('(EXISTS (SELECT 1 FROM announcement_views WHERE announcement_views.announcement_id = announcements.id AND announcement_views.user_id = ?)) as is_read', [$studentUserId])
-            ->orderBy('announcements.created_at', 'desc')
-            ->take(4)
-            ->get();
-    }
+        $pengumumanTerkini = Announcement::query()->with('author')->where('school_partner_id', $schoolId)->where('target', 'Siswa')
+        ->where(function ($query) use ($studentClassId) {
+            $query->whereNull('target_class_id')->orWhere('target_class_id', $studentClassId);
+        })->withExists([
+            'views as is_read' => function ($query) use ($studentUserId) {
+                $query->where('user_id', $studentUserId);
+            }
+        ])->latest()->take(4)->get();
+            
         return view('features.lms.students.dashboard', compact(
             'dataSiswa', 'role', 'schoolName', 'schoolId', 'agendaSekolah', 'selectedDate', 
             'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',

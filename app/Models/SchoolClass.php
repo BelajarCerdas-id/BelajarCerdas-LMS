@@ -74,4 +74,9 @@ class SchoolClass extends Model
     {
         return $this->hasMany(LessonSchedule::class, 'class_id');
     }
+
+    public function Announcement()
+    {
+        return $this->hasMany(Announcement::class, 'target_class_id');
+    }
 }

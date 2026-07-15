@@ -283,9 +283,7 @@ class LmsController extends Controller
         ->join('school_classes', 'teacher_mapels.school_class_id', '=', 'school_classes.id')->where('school_classes.school_partner_id', $schoolId)
         ->max('school_classes.tahun_ajaran');
         
-        $daftarKelas = TeacherMapel::where('user_id', $teacherId)
-        ->where('is_active', true)
-        ->whereHas('SchoolClass', function ($q) use ($schoolId, $latestAcademicYear) {
+        $daftarKelas = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)->whereHas('SchoolClass', function ($q) use ($schoolId, $latestAcademicYear) {
             $q->where('school_partner_id', $schoolId)->where('tahun_ajaran', $latestAcademicYear);
         })
         ->whereHas('Mapel', function ($q) use ($schoolId) {
@@ -770,20 +768,41 @@ class LmsController extends Controller
 
         try {
 
-            $classId = $request->class_id;
+            $classIds = $request->class_id ?? [];
 
-            DB::table('announcements')->insert([
-                'school_partner_id' => $request->school_id,
-                'target_class_id'   => $classId,
-                'author_id'         => $user->id,
-                'author_role'       => 'Guru',
-                'target'            => 'Siswa',
-                'title'             => $request->title,
-                'type'              => $request->type,
-                'content'           => $request->input('content'),
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ]);
+            if (empty($classIds)) {
+                // Global
+                DB::table('announcements')->insert([
+                    'school_partner_id' => $request->school_id,
+                    'target_class_id'   => null,
+                    'author_id'         => $user->id,
+                    'author_role'       => 'Guru',
+                    'target'            => 'Siswa',
+                    'title'             => $request->title,
+                    'type'              => $request->type,
+                    'content'           => $request->input('content'),
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
+            } else {
+
+                foreach ($classIds as $classId) {
+
+                    DB::table('announcements')->insert([
+                        'school_partner_id' => $request->school_id,
+                        'target_class_id'   => $classId,
+                        'author_id'         => $user->id,
+                        'author_role'       => 'Guru',
+                        'target'            => 'Siswa',
+                        'title'             => $request->title,
+                        'type'              => $request->type,
+                        'content'           => $request->input('content'),
+                        'created_at'        => now(),
+                        'updated_at'        => now(),
+                    ]);
+
+                }
+            }
 
             return response()->json([
                 'success' => true,

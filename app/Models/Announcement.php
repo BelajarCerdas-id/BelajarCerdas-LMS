@@ -43,4 +43,9 @@ class Announcement extends Model
     {
         return $this->views()->where('user_id', $userId)->exists();
     }
+
+    public function SchoolClass()
+    {
+        return $this->belongsTo(SchoolClass::class, 'target_class_id');
+    }
 }
