@@ -252,7 +252,7 @@ class SchoolSyllabusController extends Controller
                                 $q->where('school_partner_id', $schoolId)
                                     ->orWhereNull('school_partner_id');
                             });
-                    }),
+                    })->ignore($mapelId),
             ],
         ], [
             'mata_pelajaran.required' => 'Harap masukkan nama mata pelajaran.',
@@ -447,7 +447,7 @@ class SchoolSyllabusController extends Controller
                         ->where(function ($q) use ($schoolId) {
                         $q->where('school_partner_id', $schoolId)->orWhereNull('school_partner_id');
                     });
-                }),
+                })->ignore($babId),
             ],
             'semester' => 'required',
         ], [
@@ -667,7 +667,7 @@ class SchoolSyllabusController extends Controller
                                 $q->where('school_partner_id', $schoolId)
                                     ->orWhereNull('school_partner_id');
                             });
-                    }),
+                    })->ignore($subBabId),
             ],
         ], [
             'sub_bab.required' => 'Harap masukkan sub bab.',
