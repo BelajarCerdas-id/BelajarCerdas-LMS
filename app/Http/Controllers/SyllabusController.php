@@ -444,7 +444,7 @@ class SyllabusController extends Controller
     public function paginateSyllabusBab($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
         // Query dengan filter lengkap
-        $getSyllabusBab = Bab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)
+        $getSyllabusBab = Bab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->whereNull('school_partner_id')->where('fase_id', $faseId)
         ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)
         ->orderBy('created_at', 'asc')->paginate(20);
 
@@ -571,8 +571,8 @@ class SyllabusController extends Controller
     public function paginateSyllabusSubBab($curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
         // Query dengan filter lengkap
-        $getSyllabusSubBab = SubBab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->where('fase_id', $faseId)->where('kurikulum_id', $curriculumId)
-            ->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
+        $getSyllabusSubBab = SubBab::with(['UserAccount.OfficeProfile', 'Kurikulum'])->whereNull('school_partner_id')->where('fase_id', $faseId)
+            ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
             ->orderBy('created_at', 'asc')
             ->paginate(20);
 
