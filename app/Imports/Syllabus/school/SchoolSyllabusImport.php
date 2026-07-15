@@ -6,8 +6,10 @@ use App\Events\SyllabusCrud;
 use App\Models\Bab;
 use App\Models\Kelas;
 use App\Models\Mapel;
+use App\Models\SchoolBab;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
+use App\Models\SchoolSubBab;
 use App\Models\SubBab;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -184,6 +186,11 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
 
             }
 
+            SchoolBab::firstOrCreate([
+                'school_partner_id' => $this->schoolId,
+                'bab_id' => $bab->id,
+            ]);
+
             // SUB BAB
 
             // Cari sub bab default
@@ -216,6 +223,11 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
                 ]);
 
             }
+
+            SchoolSubBab::firstOrCreate([
+                'school_partner_id' => $this->schoolId,
+                'sub_bab_id' => $subBab->id,
+            ]);
 
             // EVENT
             broadcast(new SyllabusCrud('subBab', 'import', [$subBab]))->toOthers();
