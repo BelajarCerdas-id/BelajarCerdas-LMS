@@ -300,10 +300,10 @@ class SchoolSyllabusController extends Controller
                 ]
             );
         } else {
-            $status = $isEnable ? 1 : 0;
+            $status = $isEnable ? 'active' : 'inactive';
 
             $affected = Mapel::where('id', $mapelId)->update([
-                'is_active' => $status,
+                'status_mata_pelajaran' => $status,
             ]);
         }
 
