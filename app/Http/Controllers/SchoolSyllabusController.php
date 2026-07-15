@@ -12,6 +12,7 @@ use App\Models\Mapel;
 use App\Models\SchoolBab;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
+use App\Models\SchoolSubBab;
 use App\Models\SubBab;
 use App\Models\UserAccount;
 use Illuminate\Http\Request;
@@ -524,23 +525,65 @@ class SchoolSyllabusController extends Controller
     // function paginate sub bab
     public function paginateSubBab($schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])->where(function ($query) use ($schoolId) {
-            $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId);
-            })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId);
-            });
-        })->get();
+        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile'])
+            ->where(function ($query) use ($schoolId) {
+                $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId);
+                })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId);
+                });
+            })
+            ->get();
 
-        $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])->where('id', $schoolId)->first();
+        $getSchool = SchoolPartner::with(['UserAccount.SchoolStaffProfile'])
+            ->where('id', $schoolId)
+            ->first();
 
-        $getSubBab = SubBab::with(['UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'SchoolPartner'])->where('fase_id', $faseId)
-        ->where('kurikulum_id', $curriculumId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('bab_id', $babId)
-        ->orderBy('created_at', 'asc')->paginate(20);
+        // Ambil seluruh Sub Bab custom milik sekolah pada Bab ini
+        $customSubBabIds = SubBab::where('school_partner_id', $schoolId)
+            ->where('kurikulum_id', $curriculumId)
+            ->where('fase_id', $faseId)
+            ->where('kelas_id', $kelasId)
+            ->where('mapel_id', $mapelId)
+            ->where('bab_id', $babId)
+            ->pluck('id');
+
+        $getSubBab = SubBab::with([
+                'UserAccount.OfficeProfile',
+                'UserAccount.SchoolStaffProfile',
+                'SchoolPartner',
+                'SchoolSubBab' => function ($q) use ($schoolId) {
+                    $q->where('school_partner_id', $schoolId);
+                }
+            ])
+            ->where('kurikulum_id', $curriculumId)
+            ->where('fase_id', $faseId)
+            ->where('kelas_id', $kelasId)
+            ->where('mapel_id', $mapelId)
+            ->where('bab_id', $babId)
+            ->where(function ($query) use ($schoolId, $customSubBabIds) {
+
+                // Sub Bab custom sekolah
+                $query->where('school_partner_id', $schoolId);
+
+                // Sub Bab default
+                $query->orWhere(function ($q) use ($customSubBabIds) {
+
+                    $q->whereNull('school_partner_id');
+
+                    if ($customSubBabIds->isNotEmpty()) {
+                        $q->whereNotIn('id', $customSubBabIds);
+                    }
+                });
+
+            })
+            ->orderByRaw('school_partner_id IS NULL')
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
 
         $countUsers = $users->count();
 
-        $bab = Bab::where('id', $babId)->first();
+        $bab = Bab::find($babId);
 
         return response()->json([
             'data' => $getSubBab->items(),
@@ -592,6 +635,11 @@ class SchoolSyllabusController extends Controller
             'bab_id' => $babId,
             'kurikulum_id' => $curriculumId,
             'school_partner_id' => $schoolId
+        ]);
+
+        SchoolSubBab::create([
+            'school_partner_id' => $schoolId,
+            'sub_bab_id' => $data->id,
         ]);
 
         broadcast(new SyllabusCrud('subBab', 'store', $data))->toOthers();
@@ -653,16 +701,34 @@ class SchoolSyllabusController extends Controller
     // function sub bab activate
     public function subBabActivate(Request $request, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId, $subBabId)
     {
-        $data = SubBab::where('id', $subBabId)->update([
-            'status_sub_bab' => $request->status_sub_bab,
-        ]);
+        $isEnable = $request->action === 'enable';
 
-        broadcast(new SyllabusCrud('subBab', 'activate', $data))->toOthers();
+        SubBab::findOrFail($subBabId);
+
+        if ($schoolId) {
+            $affected = SchoolSubBab::updateOrCreate(
+                [
+                    'sub_bab_id' => $subBabId,
+                    'school_partner_id' => $schoolId,
+                ],
+                [
+                    'is_active' => $isEnable,
+                ]
+            );
+        } else {
+            $status = $isEnable ? 'active' : 'inactive';
+
+            SubBab::where('id', $subBabId)->update([
+                'status_sub_bab' => $status,
+            ]);
+        }
+
+        broadcast(new SyllabusCrud('subBab', 'activate', $affected))->toOthers();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status Berhasil Diubah.',
-            'data' => $data
+            'data' => $affected
         ]);
     }
 

@@ -38,12 +38,10 @@ function paginateSubBabManagement(page = 1) {
                     $('.thead-action').removeClass('hidden');
                     $('.tbody-action').removeClass('hidden');
                 } else {
-                    $('#container-create-sub-bab').hide();
-                    $('.thead-action').addClass('hidden');
-                    $('.tbody-action').addClass('hidden');
+                    $('#container-create-sub-bab').show();
+                    $('.thead-action').removeClass('hidden');
+                    $('.tbody-action').removeClass('hidden');
                 }
-
-                const hiddenClass = response.bab && response.bab.school_partner_id !== null ? '' : 'hidden';
 
                 const schoolDetailCard = document.getElementById('school-detail-card');
                 const schoolIdentity = response.schoolIdentity;
@@ -109,44 +107,83 @@ function paginateSubBabManagement(page = 1) {
 
                         const updatedAt = item.updated_at ? `${formatDate(item.updated_at)}` : '-';
 
+                        // STATUS TOGGLE
+                        const isGlobalActive = item.status_sub_bab === 'active';
+
+                        const hasSchoolOverride = item.school_sub_bab.length > 0;
+
+                        const isChecked = hasSchoolOverride ? !!item.school_sub_bab[0].is_active : isGlobalActive;
+
+                        let btnEditSubBab = '';
+
+                        if (item.school_partner_id) {
+
+                            btnEditSubBab = `
+                                <li>
+                                    <a href="#" class="btn-edit-sub-bab" data-school-name="${schoolName}" data-school-id="${schoolId}" 
+                                        data-curriculum-id="${curriculumId}" data-fase-id="${faseId}" data-kelas-id="${kelasId}" data-mapel-id="${mapelId}" 
+                                        data-bab-id="${babId}" data-sub-bab-id="${item.id}" data-sub-bab-name="${item.sub_bab}">
+
+                                        <i class="fa-solid fa-pen text-[#0071BC]"></i>
+                                        Edit Sub Bab
+
+                                    </a>
+                                </li>
+                            `;
+                        }
+
                         $('#tbody-sub-bab-management').append(`
+
                             <tr class="text-xs">
+
                                 <td class="border border-gray-300 px-3 py-2">
                                     ${item.sub_bab ?? '-'}
                                 </td>
-                                <td class="tbody-action border border-gray-300 px-3 py-2 text-center ${hiddenClass}">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="hidden peer toggle-sub-bab"
-                                            data-id="${item.id}"
-                                            ${item.status_sub_bab === 'active' ? 'checked' : ''} />
-                                        <div
-                                            class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
-                                        </div>
-                                            <div
-                                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5">
-                                        </div>
-                                    </label>
-                                </td>
+
                                 <td class="border border-gray-300 px-3 py-2 text-center">
+                                    ${item.school_partner_id ? schoolName : 'belajarcerdas.id'}
+                                </td>
+
+                                <td class="tbody-action border border-gray-300 px-3 py-2 text-center">
+
+                                    <label class="relative inline-flex items-center cursor-pointer">
+
+                                        <input type="checkbox" class="hidden peer toggle-sub-bab" data-id="${item.id}" 
+                                            data-global-active="${isGlobalActive ? 1 : 0}" ${isChecked ? 'checked' : ''}>
+
+                                        <div
+                                            class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300">
+                                        </div>
+
+                                        <div
+                                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-5">
+                                        </div>
+
+                                    </label>
+
+                                </td>
+
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+
                                     <div class="dropdown dropdown-left">
+
                                         <div tabindex="0" role="button">
                                             <i class="fa-solid fa-ellipsis-vertical cursor-pointer"></i>
                                         </div>
+
                                         <ul tabindex="0"
                                             class="dropdown-content menu bg-base-100 rounded-box w-max p-2 shadow-sm z-9999">
-                                            <li class="${hiddenClass}">
-                                                <a href="#" class="btn-edit-sub-bab" data-school-name="${schoolName}" data-school-id="${schoolId}" data-curriculum-id="${curriculumId}" 
-                                                    data-fase-id="${faseId}" data-kelas-id="${kelasId}" data-mapel-id="${mapelId}" data-bab-id="${babId}" 
-                                                    data-sub-bab-id="${item.id}" data-sub-bab-name="${item.sub_bab}">
-                                                    <i class="fa-solid fa-pen text-[#0071BC]"></i>
-                                                    Edit Sub Bab
-                                                </a>
-                                            </li>
-                                            <li onclick="historySubBab(this)"
-                                                class="cursor-pointer"
+
+                                            ${btnEditSubBab}
+
+                                            <li onclick="historySubBab(this)" class="cursor-pointer"
+
                                                 data-nama_lengkap="${item.user_account?.office_profile?.nama_lengkap || item.user_account?.school_staff_profile?.nama_lengkap}"
                                                 data-role="${item.user_account?.role ?? '-'}"
                                                 data-updated_at="${updatedAt}"
+                                                data-global_status="${item.status_sub_bab}"
+                                                data-school_status="${item.school_sub_bab?.[0]?.is_active ? true : false}"
+                                                data-has-school-override="${item.school_sub_bab?.length ? 'true' : 'false'}"
                                                 data-school_name="${item.school_partner?.nama_sekolah ?? ''}"
                                                 data-is_default="${item.school_partner_id ? 'false' : 'true'}">
                                                 <span>
@@ -194,14 +231,21 @@ $(document).ready(function () {
 
 // open modal history sub bab
 function historySubBab(element) {
+
+    const container = document.getElementById('container-sub-bab-management');
+    const schoolId = container.dataset.schoolId;
+
     const namaLengkap = element.dataset.nama_lengkap;
     const role = element.dataset.role;
     const updatedAt = element.dataset.updated_at;
 
+    const globalStatus = element.dataset.global_status === 'active';
+    const hasSchoolOverride = element.dataset.hasSchoolOverride === 'true';
+    const schoolStatusRaw = element.dataset.school_status === 'true';
+
     const schoolName = element.dataset.school_name;
     const isDefault = element.dataset.is_default === "true";
 
-    // BASIC INFO
     document.getElementById('text-nama_lengkap').innerText = namaLengkap;
     document.getElementById('text-role').innerText = role;
     document.getElementById('text-updated_at').innerText =
@@ -209,12 +253,102 @@ function historySubBab(element) {
 
     // PUBLISHER
     const publisherEl = document.getElementById('text-publisher');
+
     if (isDefault) {
-        publisherEl.innerHTML = '<i class="fa-solid fa-building-columns mr-1"></i> belajarcerdas.id';
-        publisherEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700';
+
+        publisherEl.innerHTML =
+            '<i class="fa-solid fa-building-columns mr-1"></i> belajarcerdas.id';
+
+        publisherEl.className =
+            'text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700';
+
     } else {
-        publisherEl.innerHTML = `<i class="fa-solid fa-school mr-1"></i> ${schoolName}`;
-        publisherEl.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+
+        publisherEl.innerHTML =
+            `<i class="fa-solid fa-school mr-1"></i> ${schoolName}`;
+
+        publisherEl.className =
+            'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+    }
+
+    // STATUS GLOBAL
+    const badgeGlobal = document.getElementById('badge-global');
+
+    if (globalStatus) {
+
+        badgeGlobal.innerText = 'AKTIF';
+
+        badgeGlobal.className =
+            'text-xs font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700';
+
+    } else {
+
+        badgeGlobal.innerText = 'NONAKTIF';
+
+        badgeGlobal.className =
+            'text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700';
+    }
+
+    if (schoolId) {
+
+        // STATUS SEKOLAH
+        const badgeSchool = document.getElementById('badge-school');
+
+        if (!hasSchoolOverride) {
+
+            badgeSchool.innerText = '-';
+            badgeSchool.className = '';
+
+        } else if (schoolStatusRaw) {
+
+            badgeSchool.innerText = 'AKTIF';
+
+            badgeSchool.className =
+                'text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700';
+
+        } else {
+
+            badgeSchool.innerText = 'NONAKTIF';
+
+            badgeSchool.className =
+                'text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-600';
+        }
+
+        // INFO
+        const infoEl = document.getElementById('text-info');
+
+        if (!globalStatus) {
+
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-red-500"></i> Sub Bab ini dinonaktifkan oleh platform dan tidak dapat digunakan oleh sekolah.';
+
+            infoEl.className =
+                'mt-5 text-sm px-4 py-3 rounded-lg bg-red-50 text-red-700';
+
+        } else if (!hasSchoolOverride) {
+
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Sub Bab mengikuti status global dan dapat digunakan.';
+
+            infoEl.className =
+                'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+        } else if (schoolStatusRaw) {
+
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-circle-check text-green-500"></i> Sub Bab aktif dan dapat digunakan oleh guru dan siswa.';
+
+            infoEl.className =
+                'mt-5 text-sm px-4 py-3 rounded-lg bg-green-50 text-green-700';
+
+        } else {
+
+            infoEl.innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Sub Bab ini dinonaktifkan oleh sekolah.';
+
+            infoEl.className =
+                'mt-5 text-sm px-4 py-3 rounded-lg bg-yellow-50 text-yellow-700';
+        }
     }
 
     document.getElementById('my_modal_2').showModal();
@@ -462,6 +596,7 @@ $('#submit-button-edit-sub-bab').on('click', function (e) {
 // function activate sub bab
 $(document).ready(function () {
     $(document).on('change', '.toggle-sub-bab', function () {
+        const checkbox = $(this);
         let subBabId = $(this).data('id'); // Ambil ID sub bab dari atribut data-id di checkbox
         let status = $(this).is(':checked') ? 'active' : 'inactive'; // Jika toggle ON maka active, kalau OFF maka inactive
 
@@ -485,15 +620,15 @@ $(document).ready(function () {
         if (!mapelId) return;
         if (!babId) return;
 
+        const action = checkbox.is(':checked') ? 'enable' : 'disable';
+
         $.ajax({
             url: `/lms/school-subscription/${schoolName}/${schoolId}/${curriculumName}/${curriculumId}/${faseId}/${kelasId}/${mapelId}/${babId}/sub-bab/${subBabId}/activate`, // Endpoint ke server
             method: 'PUT', // Method HTTP PUT untuk update data
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            data: {
-                status_sub_bab: status // Kirim status baru (active / inactive)
-            },
+            data: { action },
             success: function (response) {
                 // Memanggil fungsi untuk memuat ulang data
                 paginateSubBabManagement();

@@ -57,6 +57,9 @@
                                         <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs w-[85%]">
                                             Sub Bab
                                         </th>
+                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs w-[85%]">
+                                            Sumber Sub Bab
+                                        </th>
                                         <th class="thead-action border border-gray-300 px-3 py-2 opacity-70 text-xs hidden">
                                             Action
                                         </th>
@@ -123,36 +126,82 @@
             <!---- modal history sub bab ---->
             <dialog id="my_modal_2" class="modal">
                 <div class="modal-box bg-white max-w-md">
-                    <h3 class="font-bold text-lg mb-6 text-center">Histori Sub Bab</h3>
 
-                    <!-- USER / PUBLISHER -->
+                    <h3 class="font-bold text-lg mb-6 text-center">
+                        Histori Sub Bab
+                    </h3>
+
+                    <!-- PUBLISHER -->
                     <div class="flex items-center gap-4 mb-5">
+
                         <i class="fa-solid fa-circle-user text-5xl text-gray-400"></i>
 
                         <div class="flex flex-col gap-1 flex-1">
+
                             <span id="text-nama_lengkap" class="font-semibold text-gray-800"></span>
+
                             <span id="text-role" class="text-sm text-gray-500"></span>
+
                             <span id="text-updated_at" class="text-xs text-gray-400"></span>
                         </div>
 
-                        <div class="">
-                            <span class="text-[#0071BC] font-bold text-sm">Publisher</span>
+                        <div>
+                            <span class="text-[#0071BC] font-bold text-sm">
+                                Publisher
+                            </span>
                         </div>
+
                     </div>
 
                     <hr class="my-4 opacity-30">
 
                     <!-- INFO -->
                     <div class="flex flex-col gap-3">
-                        
+
                         <!-- SOURCE -->
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-bold opacity-70">Source</span>
+
+                            <span class="text-sm font-bold opacity-70">
+                                Source
+                            </span>
+
                             <span id="text-publisher"
                                 class="text-xs font-semibold px-3 py-1 rounded-full">
                             </span>
                         </div>
+
+                        <!-- STATUS GLOBAL -->
+                        <div class="flex items-center justify-between">
+
+                            <span class="text-sm font-bold opacity-70">
+                                Status Global
+                            </span>
+
+                            <span id="badge-global"
+                                class="text-xs font-semibold px-3 py-1 rounded-full">
+                            </span>
+                        </div>
+
+                        <!-- STATUS SEKOLAH -->
+                        <div class="flex items-center justify-between">
+
+                            <span class="text-sm font-bold opacity-70">
+                                Status Sekolah
+                            </span>
+
+                            <span id="badge-school"
+                                class="text-xs font-semibold px-3 py-1 rounded-full">
+                            </span>
+                        </div>
+
                     </div>
+
+                    <!-- INFO -->
+                    <div
+                        id="text-info"
+                        class="mt-5 text-sm px-4 py-3 rounded-lg">
+                    </div>
+
                 </div>
 
                 <form method="dialog" class="modal-backdrop">
