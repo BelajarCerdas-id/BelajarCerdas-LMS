@@ -1,8 +1,17 @@
     {{-- SIDEBAR --}}
     @include('components/sidebar-beranda', [
-        'headerSideNav' => 'Library',
+        'headerSideNav' => 'LKPD Library',
     ])
 
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)]">
+    <div class="mx-7.5 mt-6 mb-4">
+        <a href="{{ url()->previous() }}"
+            class="inline-flex items-center gap-2 text-lg font-semibold hover:text-blue-600 transition">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+            <span>kembali</span>
+        </a>
+    </div>
+</div>
     @if (Auth::check() && in_array(Auth::user()->role, ['Siswa', 'Guru']))
 
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
@@ -16,29 +25,119 @@
                     <hr class="border-gray-300 mt-4 w-60">
                 </section>
 
-                <section id="kelas_section">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <section id="kelas_section" class="space-y-10">
 
-                        @foreach($kelas as $k)
-                            <div 
-                                class="kelas-card cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 text-center"
-                                onclick="selectKelas({{ $k->id }})">
+    @php
+    $sd = $kelas->filter(function($k){
+        $no = (int) filter_var($k->kelas, FILTER_SANITIZE_NUMBER_INT);
+        return $no >= 1 && $no <= 6;
+    });
 
-                                <div class="text-3xl mb-3">🏫</div>
+    $smp = $kelas->filter(function($k){
+        $no = (int) filter_var($k->kelas, FILTER_SANITIZE_NUMBER_INT);
+        return $no >= 7 && $no <= 9;
+    });
 
-                                <h2 class="font-semibold text-lg">
-                                    {{ $k->kelas }}
-                                </h2>
+    $sma = $kelas->filter(function($k){
+        $no = (int) filter_var($k->kelas, FILTER_SANITIZE_NUMBER_INT);
+        return $no >= 10 && $no <= 12;
+    });
+@endphp
 
-                                <p class="text-sm text-gray-500 mt-2">
-                                    Klik untuk lihat mata pelajaran
-                                </p>
+    {{-- SD --}}
+    <div>
+        <h2 class="text-2xl font-bold mb-5 border-l-4 border-blue-500 pl-3">
+            SD
+        </h2>
 
-                            </div>
-                        @endforeach
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
-                    </div>
-                </section>
+            @foreach($sd as $k)
+
+            <div
+                class="kelas-card cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 text-center"
+                onclick="selectKelas({{ $k->id }})">
+
+                <div class="text-3xl mb-3">🏫</div>
+
+                <h2 class="font-semibold text-lg">
+                    Kelas {{ $k->kelas }}
+                </h2>
+
+                <p class="text-sm text-gray-500 mt-2">
+                    Klik untuk lihat mata pelajaran
+                </p>
+
+            </div>
+
+            @endforeach
+
+        </div>
+    </div>
+
+    {{-- SMP --}}
+    <div>
+        <h2 class="text-2xl font-bold mb-5 border-l-4 border-green-500 pl-3">
+            SMP
+        </h2>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6">
+
+            @foreach($smp as $k)
+
+            <div
+                class="kelas-card cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 text-center"
+                onclick="selectKelas({{ $k->id }})">
+
+                <div class="text-3xl mb-3">🏫</div>
+
+                <h2 class="font-semibold text-lg">
+                    Kelas {{ $k->kelas }}
+                </h2>
+
+                <p class="text-sm text-gray-500 mt-2">
+                    Klik untuk lihat mata pelajaran
+                </p>
+
+            </div>
+
+            @endforeach
+
+        </div>
+    </div>
+
+    {{-- SMA/SMK --}}
+    <div>
+        <h2 class="text-2xl font-bold mb-5 border-l-4 border-purple-500 pl-3">
+            SMA / SMK
+        </h2>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6">
+
+            @foreach($sma as $k)
+
+            <div
+                class="kelas-card cursor-pointer bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 text-center"
+                onclick="selectKelas({{ $k->id }})">
+
+                <div class="text-3xl mb-3">🏫</div>
+
+                <h2 class="font-semibold text-lg">
+                    Kelas {{ $k->kelas }}
+                </h2>
+
+                <p class="text-sm text-gray-500 mt-2">
+                    Klik untuk lihat mata pelajaran
+                </p>
+
+            </div>
+
+            @endforeach
+
+        </div>
+    </div>
+
+</section>
                 <!-- GRID MAPEL -->
                 <section id="mapel_section" class="hidden mt-10">
                     <div id="mapel_container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">

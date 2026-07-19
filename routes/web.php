@@ -88,43 +88,70 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     // DASHBOARD
     Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
 
-     // =========================================================
-    // ROUTES LIBRARY (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/administrator/library', [LibraryController::class, 'administrator'])
-        ->name('library.administrator');
+// =========================================================================
+// 1. ADMINISTRATOR LIBRARY ROUTES
+// =========================================================================
+Route::prefix('administrator')->group(function () {
+    
+    // Main & Basic Management
+    Route::get('/library', [LibraryController::class, 'administrator'])->name('library.administrator');
+    Route::post('/library/store', [LibraryController::class, 'store'])->name('library.store');
+    Route::post('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
+    Route::put('/library/update/{id}', [LibraryController::class, 'update']); // Fallback method
+    Route::get('/library/row/{id}', [LibraryController::class, 'row'])
+    ->name('library.row');
 
-    Route::post('/administrator/library/store', [LibraryController::class, 'store'])
-        ->name('library.store');
+    // PPT Management
+    Route::post('/library/ppt/store', [LibraryController::class, 'storePpt'])->name('ppt.store');
+    Route::put('/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])->name('ppt.update');
+    Route::delete('/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])->name('ppt.delete');
 
-    Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])
-        ->name('library.update');
+    // Chapter & Topik Management
+    Route::post('/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
+    Route::post('/library/topik/store', [LibraryController::class, 'storeTopik'])->name('library.topik.store');
+    Route::put('/library/topik/update/{id}', [LibraryController::class, 'updateTopik'])->name('library.topik.update');
+    Route::get('/library/get-topik', [LibraryController::class, 'getTopikByMapel']);
+    Route::get('/library/get-series/{topikId}', [LibraryController::class, 'getSeries']);
+    
+    Route::get('/topik-management', [LibraryController::class, 'topikManagement'])->name('topik.management');
 
-    Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update']);
+    // ================= VIDEO CHUNK UPLOAD =================
 
-    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])
-        ->name('library.delete');
+// Membuat session upload
+// ================= VIDEO CHUNK UPLOAD =================
 
-    Route::post('/administrator/library/ppt/store', [LibraryController::class, 'storePpt'])
-        ->name('ppt.store');
+// Membuat session upload
+Route::post('/library/video/init', [
+    LibraryController::class,
+    'initVideoUpload'
+])->name('library.video.init');
 
-    Route::put('/administrator/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])
-        ->name('ppt.update');
+// Upload setiap chunk
+Route::post('/library/video/chunk', [
+    LibraryController::class,
+    'uploadVideoChunk'
+])->name('library.video.chunk');
 
-    Route::delete('/administrator/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])
-        ->name('ppt.delete');
+// Merge semua chunk menjadi satu file
+Route::post('/library/video/finish', [
+    LibraryController::class,
+    'finishVideoUpload'
+])->name('library.video.finish');
 
-    Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])
-        ->name('library.chapter.store');
+// (Opsional) Cek progress upload
+Route::get('/library/video/status/{upload_id}', [
+    LibraryController::class,
+    'uploadStatus'
+])->name('library.video.status');
 
-    Route::post('/administrator/library/topik/store',[LibraryController::class, 'storeTopik'])
-    ->name('library.topik.store');
+});
 
-    Route::get('/administrator/library/get-topik',[LibraryController::class, 'getTopikByMapel']);
+// Global delete (di luar prefix administrator karena URL aslinya tidak pakai /administrator)
+Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])->name('library.delete');
 
-    Route::get('/administrator/library/get-series/{topikId}', [LibraryController::class, 'getSeries']);
 
-    // =========================================================
+
+ // =========================================================
 // STUDENT LIBRARY
 // =========================================================
 
@@ -187,56 +214,6 @@ Route::get('/lms/teacher/library/read/{id}', [LibraryController::class, 'readBoo
 Route::get('/lms/teacher/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
     ->where('mapel', '[0-9]+')
     ->name('teacher.library.mapel');
-
-    // =========================================================
-    // ROUTES LIBRARY (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/administrator/library', [LibraryController::class, 'administrator'])
-        ->name('library.administrator');
-
-    Route::post('/administrator/library/store', [LibraryController::class, 'store'])
-        ->name('library.store');
-
-    Route::post('/administrator/library/update/{id}', [LibraryController::class, 'update'])
-        ->name('library.update');
-
-    Route::put('/administrator/library/update/{id}', [LibraryController::class, 'update']);
-
-    Route::delete('/library/delete/{id}', [LibraryController::class, 'delete'])
-        ->name('library.delete');
-
-    Route::post('/administrator/library/ppt/store', [LibraryController::class, 'storePpt'])
-        ->name('ppt.store');
-
-    Route::put('/administrator/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])
-        ->name('ppt.update');
-
-    Route::delete('/administrator/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])
-        ->name('ppt.delete');
-
-    Route::post('/administrator/library/chapter/store', [LibraryController::class, 'storeChapter'])
-        ->name('library.chapter.store');
-
-    // =========================================================
-    // ROUTES LIBRARY STUDENT (HARUS DI ATAS ROUTE WILDCARD LMS!)
-    // =========================================================
-    Route::get('/lms/student/library', [LibraryController::class, 'studentLibrary'])
-        ->name('student.library');
-
-    Route::get('/lms/student/library/ppt', [LibraryController::class, 'pptLibrary'])
-        ->name('student.library.ppt');
-
-    Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])
-        ->name('student.library.read');
-
-    Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])
-        ->name('student.library.submit');
-
-    Route::get('/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])
-        ->where('mapel', '[0-9]+')
-        ->name('student.library.mapel');
-
-    Route::get('/get-bab/{mapel_id}', [LibraryController::class, 'getBab']);
 
     // =========================================================
     // ROUTES SYLLABUS-SERVICES

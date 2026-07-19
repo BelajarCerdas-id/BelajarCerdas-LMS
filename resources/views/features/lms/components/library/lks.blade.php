@@ -1,8 +1,16 @@
 {{-- SIDEBAR --}}
 @include('components/sidebar-beranda', [
-'headerSideNav' => 'Library',
+'headerSideNav' => 'LKPD Library',
 ])
-
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)]">
+    <div class="mx-7.5 mt-6 mb-4">
+        <a href="{{ url()->previous() }}"
+            class="inline-flex items-center gap-2 text-lg font-semibold hover:text-blue-600 transition">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+            <span>kembali</span>
+        </a>
+    </div>
+</div>
 @if (Auth::check() && in_array(Auth::user()->role, ['Siswa', 'Guru']))
 
 <style>
@@ -88,103 +96,6 @@ font-size:12px;
 color:#6b7280;
 }
 
-/* FILTER STYLE */
-.filter-section{
-background: linear-gradient(90deg,#eff6ff,#eef2ff);
-border-radius:16px;
-padding:25px;
-margin-bottom:40px;
-border:1px solid #dbeafe;
-box-shadow:0 4px 12px rgba(0,0,0,0.05);
-}
-
-.filter-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:15px;
-}
-
-.filter-title{
-font-size:18px;
-font-weight:600;
-color:#374151;
-display:flex;
-align-items:center;
-gap:8px;
-}
-
-.filter-form{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:20px;
-align-items:end;
-}
-
-.filter-group{
-display:flex;
-flex-direction:column;
-}
-
-.filter-group label{
-font-size:12px;
-font-weight:600;
-color:#6b7280;
-margin-bottom:5px;
-}
-
-.filter-select{
-position:relative;
-}
-
-.filter-select i{
-position:absolute;
-left:12px;
-top:50%;
-transform:translateY(-50%);
-color:#9ca3af;
-font-size:13px;
-}
-
-.filter-select select{
-width:100%;
-padding:10px 12px 10px 35px;
-border-radius:10px;
-border:1px solid #d1d5db;
-font-size:14px;
-background:#fff;
-transition:0.2s;
-}
-
-.filter-select select:focus{
-outline:none;
-border-color:#3b82f6;
-box-shadow:0 0 0 2px rgba(59,130,246,.2);
-}
-
-.filter-button button{
-background:linear-gradient(90deg,#2563eb,#4f46e5);
-color:#fff;
-border:none;
-padding:10px 22px;
-border-radius:10px;
-font-size:14px;
-font-weight:600;
-cursor:pointer;
-display:flex;
-align-items:center;
-justify-content:center;
-gap:8px;
-transition:0.25s;
-box-shadow:0 3px 8px rgba(0,0,0,.1);
-width:100%;
-}
-
-.filter-button button:hover{
-transform:translateY(-1px);
-box-shadow:0 6px 12px rgba(0,0,0,.15);
-}
-
 </style>
 
 
@@ -209,90 +120,40 @@ Semua LKPD {{ $mapel->mata_pelajaran }}
 
 
 <!-- LIST LKS -->
-<section class="filter-section">
+<!-- FILTER -->
+<section class="section-card">
 
-<div class="filter-header">
+<form method="GET" class="flex gap-3 flex-wrap">
 
-    <div class="filter-title">
-        <i class="fa-solid fa-filter"></i>
-        Filter LKPD
-    </div>
+<select name="kelas_id" class="border rounded px-3 py-2">
 
-</div>
+<option value="">Semua Kelas</option>
 
-<form method="GET" class="filter-form">
+@foreach($kelas as $k)
+<option value="{{ $k->id }}" 
+@if(request('kelas_id')==$k->id) selected @endif>
+Kelas {{ $k->kelas }}
+</option>
+@endforeach
 
-    <!-- KELAS -->
-    <div class="filter-group">
+</select>
 
-        <label>Kelas</label>
+<select name="bab_id" class="border rounded px-3 py-2">
 
-        <div class="filter-select">
-            <i class="fa-solid fa-school"></i>
+<option value="">Semua Bab</option>
 
-            <select name="kelas_id">
+@foreach($babs as $bab)
+<option value="{{ $bab->id }}"
+@if(request('bab_id')==$bab->id) selected @endif>
+{{ $bab->nama_bab }}
+</option>
+@endforeach
 
-                <option value="">Semua Kelas</option>
+</select>
 
-                @foreach($kelas as $k)
-                <option value="{{ $k->id }}"
-                    {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
-
-                    Kelas {{ $k->kelas }}
-
-                </option>
-                @endforeach
-
-            </select>
-
-        </div>
-
-    </div>
-
-
-    <!-- BAB -->
-    <div class="filter-group">
-
-        <label>Bab</label>
-
-        <div class="filter-select">
-
-            <i class="fa-solid fa-book-open"></i>
-
-            <select name="bab_id">
-
-                <option value="">Semua Bab</option>
-
-                @foreach($babs as $bab)
-
-                <option value="{{ $bab->id }}"
-                    {{ request('bab_id') == $bab->id ? 'selected' : '' }}>
-
-                    {{ $bab->nama_bab }}
-
-                </option>
-
-                @endforeach
-
-            </select>
-
-        </div>
-
-    </div>
-
-
-    <!-- BUTTON -->
-    <div class="filter-button">
-
-        <button type="submit">
-
-            <i class="fa-solid fa-magnifying-glass"></i>
-            Filter
-
-        </button>
-
-    </div>
-
+<button class="bg-blue-600 text-white px-4 rounded">
+Filter
+</button>
 
 </form>
 

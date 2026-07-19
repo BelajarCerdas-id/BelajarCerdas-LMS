@@ -1,8 +1,17 @@
-s{{-- SIDEBAR --}}
+{{-- SIDEBAR --}}
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'PPT Library',
 ])
 
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)]">
+    <div class="mx-7.5 mt-6 mb-4">
+        <a href="{{ url()->previous() }}"
+            class="inline-flex items-center gap-2 text-lg font-semibold hover:text-blue-600 transition">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+            <span>kembali</span>
+        </a>
+    </div>
+</div>
 @if (Auth::check() && in_array(Auth::user()->role, ['Siswa', 'Guru']))
 
 <style>
@@ -293,6 +302,31 @@ background:linear-gradient(90deg,#1d4ed8,#4338ca);
     {{-- FORM --}}
     <form method="GET" class="filter-form">
 
+        {{-- KELAS --}}
+        <div class="filter-group">
+
+            <label>Kelas</label>
+
+            <div class="filter-select">
+
+                <i class="fa-solid fa-school"></i>
+
+                <select name="kelas_id">
+
+                    <option value="">Semua Kelas</option>
+
+                    @foreach($kelas as $k)
+                        <option value="{{ $k->id }}"
+                        {{ request('kelas_id') == $k->id ? 'selected' : '' }}>
+                            {{ $k->kelas }}
+                        </option>
+                    @endforeach
+
+                </select>
+
+            </div>
+
+        </div>
 
 
         {{-- MAPEL --}}
@@ -304,7 +338,7 @@ background:linear-gradient(90deg,#1d4ed8,#4338ca);
 
                 <i class="fa-solid fa-book"></i>
 
-                <select name="mapel_id" id="filter_mapel">
+                <select name="mapel_id">
 
                     <option value="">Semua Mapel</option>
 
@@ -325,22 +359,21 @@ background:linear-gradient(90deg,#1d4ed8,#4338ca);
         {{-- BAB --}}
         <div class="filter-group">
 
-            <label>topik</label>
+            <label>Bab</label>
 
             <div class="filter-select">
 
                 <i class="fa-solid fa-book-open"></i>
 
-                <select name="topik_materi_id" id="filter_topik">
-                    <option value="">Semua Topik</option>
+                <select name="bab_id">
 
-                   @foreach($topiks as $topik)
-                    <option
-                        value="{{ $topik->id }}"
-                        data-mapel="{{ $topik->mapel_id }}"
-                        {{ request('topik_materi_id') == $topik->id ? 'selected' : '' }}>
-                        {{ $topik->nama_topik }}
-                    </option>
+                    <option value="">Semua Bab</option>
+
+                    @foreach($babs as $b)
+                        <option value="{{ $b->id }}"
+                        {{ request('bab_id') == $b->id ? 'selected' : '' }}>
+                            {{ $b->nama_bab }}
+                        </option>
                     @endforeach
 
                 </select>
@@ -433,36 +466,3 @@ background:linear-gradient(90deg,#1d4ed8,#4338ca);
 </div>
 
 @endif
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-    const mapel = document.getElementById("filter_mapel");
-    const topik = document.getElementById("filter_topik");
-
-    function filterTopik() {
-
-        const mapelId = mapel.value;
-
-        topik.querySelectorAll("option").forEach(option => {
-
-            if (!option.dataset.mapel) return;
-
-            if (mapelId === "" || option.dataset.mapel === mapelId) {
-                option.style.display = "block";
-            } else {
-                option.style.display = "none";
-            }
-
-        });
-
-        topik.value = "";
-    }
-
-    mapel.addEventListener("change", filterTopik);
-
-    // jalankan saat halaman pertama kali dibuka
-    filterTopik();
-
-});
-</script>
