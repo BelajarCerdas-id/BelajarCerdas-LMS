@@ -1060,12 +1060,22 @@
         let csrfToken = document.querySelector('meta[name="csrf-token"]');
         let token = csrfToken ? csrfToken.getAttribute('content') : '';
 
+        const formData = new FormData(form);
+
+        // Jika "Semua Kelas" dicentang, hapus class_id agar dianggap global
+        if (document.getElementById('checkAllClasses').checked) {
+            formData.delete('class_id[]');
+        }
+
         try {
             // Sesuaikan URL ini dengan routing yang sudah dibuat di web.php (TeacherInformationController@storePengumuman)
             const response = await fetch("{{ route('lms.teacher.pengumuman.store', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}", {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                body: new FormData(form) 
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: formData
             });
             
             const result = await response.json();
@@ -1084,25 +1094,35 @@
     }
 
     // ================= LOGIKA CHECKBOX KELAS =================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const checkAll = document.getElementById('checkAllClasses');
         const classCheckboxes = document.querySelectorAll('.class-checkbox');
 
-        if(checkAll) {
-            // Jika "Semua Kelas" dicentang/dihapus centangnya
-            checkAll.addEventListener('change', function() {
-                classCheckboxes.forEach(cb => {
-                    cb.checked = this.checked;
-                });
-            });
+        if (!checkAll) return;
 
-            // Jika salah satu kelas dihapus centangnya, hapus juga centang "Semua Kelas"
+        // Kondisi awal (karena default "Semua Kelas" sudah dicentang)
+        if (checkAll.checked) {
             classCheckboxes.forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const allChecked = Array.from(classCheckboxes).every(c => c.checked);
-                    checkAll.checked = allChecked;
-                });
+                cb.checked = true;
             });
         }
+
+        // Saat klik "Semua Kelas"
+        checkAll.addEventListener('change', function () {
+            classCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+        });
+
+        // Saat user memilih salah satu kelas
+        classCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function () {
+
+                // Kalau ada satu saja yang tidak dicentang,
+                // maka "Semua Kelas" ikut tidak dicentang
+                const allChecked = Array.from(classCheckboxes).every(c => c.checked);
+                checkAll.checked = allChecked;
+            });
+        });
     });
 </script>
