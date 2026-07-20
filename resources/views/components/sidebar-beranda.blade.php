@@ -1282,6 +1282,15 @@
                                     ]) }}" class="link-href block py-2 text-[12px]">
                                     Presensi Mata Pelajaran
                                 </a>
+
+                                <a href="{{ route('lms.teacherDailyAgenda.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    Agenda Harian
+                                </a>
+
                                 <a href="{{ route('lms.teacherClassList.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
@@ -1669,6 +1678,14 @@
                                             'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                         ]) }}" class="link-href block py-2 text-[12px]">
                                         Presensi Mata Pelajaran
+                                    </a>
+
+                                    <a href="{{ route('lms.teacherDailyAgenda.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Agenda Harian
                                     </a>
 
                                     <a href="{{ route('lms.teacherClassList.view', [
@@ -2198,6 +2215,15 @@
                                 ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Aktivitas Guru
                                 </a>
+                                @if (Auth::user()->role == 'Kepala Sekolah')
+                                    <a href="{{ route('lms.headmaster.teacherDailyAgernda.monitoring', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                        Agenda Harian Guru
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -2489,6 +2515,15 @@
                                     ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Aktivitas Guru
                                     </a>
+                                    @if (Auth::user()->role == 'Kepala Sekolah')
+                                        <a href="{{ route('lms.headmaster.teacherDailyAgernda.monitoring', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                            Agenda Harian Guru
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         </div>

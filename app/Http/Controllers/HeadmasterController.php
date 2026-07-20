@@ -19,6 +19,10 @@ use App\Models\StudentSchoolClass;
 use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentProfile;
+use App\Models\SubjectAttendance;
+use App\Models\TeacherDailyAgenda;
+use App\Models\TeacherMapel;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Validator;
 
 class HeadmasterController extends Controller
@@ -1146,5 +1150,368 @@ class HeadmasterController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    // MONITORING TEACHER DAILY AGENDA
+    public function teacherDailyAgendaManagement($role, $schoolName, $schoolId)
+    {
+        return view('features.lms.headmaster.monitoring.teacher-daily-agenda.teacher-daily-agenda-management', compact('role', 'schoolName', 'schoolId'));
+    }
+
+    public function paginateTeacherDailyAgendaManagement(Request $request, $role, $schoolName, $schoolId)
+    {
+        $searchDate = $request->search_date ?? now()->toDateString();
+
+        // Query Meeting
+        $meetings = LmsMeetingContent::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'SchoolClass'])->where('school_partner_id', $schoolId)
+        ->whereDate('meeting_date', $searchDate);
+
+        // Data guru untuk filter
+        $teachers = (clone $meetings)->select('teacher_id')->distinct()->get()->map(function ($meeting) {
+            return [
+                'id'   => $meeting->teacher_id,
+                'name' => $meeting->UserAccount->SchoolStaffProfile->nama_lengkap ?? '-',
+            ];
+        })->sortBy('name')->values();
+
+        // Filter guru
+        if ($request->filled('search_teacher')) {
+            $meetings->where('teacher_id', $request->search_teacher);
+        }
+
+        // Ambil meeting kemudian group menjadi 1 per hari per guru per mapel per kelas
+        $meetings = $meetings->orderBy('meeting_date')->orderBy('teacher_id')->orderBy('school_class_id')->orderBy('mapel_id')->get()->groupBy(function ($item) {
+            return implode('-', [$item->meeting_date, $item->teacher_id, $item->school_class_id, $item->mapel_id]);
+        });
+
+        // Ambil seluruh agenda hari tersebut sekali
+        $agendas = TeacherDailyAgenda::where('school_partner_id', $schoolId)->whereDate('agenda_date', $searchDate)->get();
+
+        $result = [];
+
+        foreach ($meetings as $meetingGroup) {
+
+            $meeting = $meetingGroup->first();
+
+            $dayMap = [
+                'Monday'    => 'Senin',
+                'Tuesday'   => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday'  => 'Kamis',
+                'Friday'    => 'Jumat',
+                'Saturday'  => 'Sabtu',
+                'Sunday'    => 'Minggu',
+            ];
+
+            $dayOfWeek = $dayMap[
+                Carbon::parse($meeting->meeting_date)->format('l')
+            ];
+
+            $scheduleItems = LessonScheduleItem::where('teacher_id', $meeting->teacher_id)->where('mapel_id', $meeting->mapel_id)
+            ->where('day_of_week', $dayOfWeek)->whereHas('schedule', function ($query) use ($meeting) {
+                    $query->where('class_id', $meeting->school_class_id);
+            })->get();
+
+            $startTime = $scheduleItems->isNotEmpty() ? substr($scheduleItems->min('start_time'), 0, 5) : '-';
+
+            $endTime = $scheduleItems->isNotEmpty() ? substr($scheduleItems->max('end_time'), 0, 5) : '-';
+
+            // Cari agenda dari collection
+            $agenda = $agendas->first(function ($agenda) use ($meeting) {
+                return
+                    $agenda->teacher_id == $meeting->teacher_id &&
+                    $agenda->school_class_id == $meeting->school_class_id &&
+                    $agenda->mapel_id == $meeting->mapel_id;
+            });
+
+            $teacherMapel = TeacherMapel::where('user_id', $meeting->teacher_id)->where('mapel_id', $meeting->mapel_id)
+            ->where('school_class_id', $meeting->school_class_id)->first();
+
+            $attendance = false;
+
+            if ($teacherMapel) {
+                $attendance = SubjectAttendance::where('subject_teacher_id', $teacherMapel->id)->where('meeting_number', $meeting->meeting_number)
+                ->where('semester', $meeting->semester)->exists();
+            }
+
+            $result[] = [
+                'teacher_agenda_id' => $agenda?->id,
+                'teacher_id'        => $meeting->teacher_id,
+                'teacher_name'      => $meeting->UserAccount->SchoolStaffProfile->nama_lengkap,
+                'subject'           => $meeting->Mapel->mata_pelajaran,
+                'school_class_name' => $meeting->SchoolClass->class_name,
+                'agenda'            => $agenda,
+                'learning_activity' => $agenda?->learning_activity,
+                'feedback'          => $agenda?->feedback,
+                'meeting_number'    => $meeting->meeting_number,
+                'semester'          => $meeting->semester,
+                'attendance'        => $attendance,
+                'time'              => $startTime . ' - ' . $endTime,
+            ];
+        }
+
+        $result = collect($result)
+            ->sortBy(function ($item) {
+                return strtolower($item['teacher_name']);
+            })
+            ->sortBy(function ($item) {
+                return $item['agenda'] ? 1 : 0;
+            })
+            ->values();
+
+        // Filter Status Agenda
+        if ($request->filled('search_status')) {
+
+            if ($request->search_status === 'submitted') {
+                $result = $result->whereNotNull('agenda');
+            }
+
+            if ($request->search_status === 'pending') {
+                $result = $result->whereNull('agenda');
+            }
+        }
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        $perPage = 10;
+
+        $paginatedResult = new LengthAwarePaginator(
+            $result->forPage($page, $perPage)->values(),
+            $result->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
+
+        $totalTeachingTeachers = $result->count();
+
+        $totalSubmittedAgenda = $result->whereNotNull('agenda')->count();
+
+        $totalPendingAgenda = $result->whereNull('agenda')->count();
+
+        $complianceRate = $totalTeachingTeachers > 0 ? round(($totalSubmittedAgenda / $totalTeachingTeachers) * 100) : 0;
+
+        return response()->json([
+            'data' => $paginatedResult->items(),
+            'links' => (string) $paginatedResult->links(),
+            'teachers' => $teachers,
+
+            'summary' => [
+                'totalTeachingTeachers' => $totalTeachingTeachers,
+                'totalSubmittedAgenda'  => $totalSubmittedAgenda,
+                'totalPendingAgenda'    => $totalPendingAgenda,
+                'complianceRate'        => $complianceRate,
+            ],
+        ]);
+    }
+
+    public function teacherDailyAgendaHistory($role, $schoolName, $schoolId)
+    {
+        return view('features.lms.headmaster.monitoring.teacher-daily-agenda.teacher-daily-agenda-history', compact('role', 'schoolName', 'schoolId'));
+    }
+
+    public function paginateTeacherDailyAgendaHistory(Request $request, $role, $schoolName, $schoolId)
+    {
+        $searchDate = $request->search_date ?? now()->toDateString();
+
+        // Query Meeting
+        $meetings = LmsMeetingContent::with(['UserAccount.SchoolStaffProfile', 'Mapel', 'SchoolClass'])->where('school_partner_id', $schoolId);
+
+        // Filter tanggal
+        if ($request->filled('search_date')) {
+            $meetings->whereDate('meeting_date', $searchDate);
+        }
+
+        // Data guru untuk filter
+        $teachers = (clone $meetings)->select('teacher_id')->distinct()->get()->map(function ($meeting) {
+            return [
+                'id'   => $meeting->teacher_id,
+                'name' => $meeting->UserAccount->SchoolStaffProfile->nama_lengkap ?? '-',
+            ];
+        })->sortBy('name')->values();
+
+        // Filter guru
+        if ($request->filled('search_teacher')) {
+            $meetings->where('teacher_id', $request->search_teacher);
+        }
+
+        // Group meeting menjadi 1 data per hari
+        $meetings = $meetings->orderByDesc('meeting_date')->orderBy('teacher_id')->orderBy('school_class_id')->orderBy('mapel_id')->get()->groupBy(function ($item) {
+            return implode('-', [$item->meeting_date, $item->teacher_id, $item->school_class_id, $item->mapel_id]);
+        });
+
+        $result = [];
+
+        foreach ($meetings as $meetingGroup) {
+
+            $meeting = $meetingGroup->first();
+
+            $dayMap = [
+                'Monday'    => 'Senin',
+                'Tuesday'   => 'Selasa',
+                'Wednesday' => 'Rabu',
+                'Thursday'  => 'Kamis',
+                'Friday'    => 'Jumat',
+                'Saturday'  => 'Sabtu',
+                'Sunday'    => 'Minggu',
+            ];
+
+            $dayOfWeek = $dayMap[
+                Carbon::parse($meeting->meeting_date)->format('l')
+            ];
+
+            $scheduleItems = LessonScheduleItem::where('teacher_id', $meeting->teacher_id)->where('mapel_id', $meeting->mapel_id)->where('day_of_week', $dayOfWeek)
+            ->whereHas('schedule', function ($query) use ($meeting) {
+                $query->where('class_id', $meeting->school_class_id);
+            })->get();
+
+            $startTime = $scheduleItems->isNotEmpty() ? substr($scheduleItems->min('start_time'), 0, 5) : '-';
+
+            $endTime = $scheduleItems->isNotEmpty() ? substr($scheduleItems->max('end_time'), 0, 5) : '-';
+
+            // Cari agenda
+            $agenda = TeacherDailyAgenda::where('teacher_id', $meeting->teacher_id)->where('school_partner_id', $schoolId)->where('school_class_id', $meeting->school_class_id)
+            ->where('mapel_id', $meeting->mapel_id)->whereDate('agenda_date', $meeting->meeting_date)->first();
+
+            $teacherMapel = TeacherMapel::where('user_id', $meeting->teacher_id)->where('mapel_id', $meeting->mapel_id)
+            ->where('school_class_id', $meeting->school_class_id)->first();
+
+            $attendance = false;
+
+            if ($teacherMapel) {
+                $attendance = SubjectAttendance::where('subject_teacher_id', $teacherMapel->id)->where('meeting_number', $meeting->meeting_number)
+                ->where('semester', $meeting->semester)->exists();
+            }
+
+            $result[] = [
+                'teacher_agenda_id' => $agenda?->id,
+                'teacher_id'        => $meeting->teacher_id,
+                'teacher_name'      => $meeting->UserAccount->SchoolStaffProfile->nama_lengkap,
+                'subject'           => $meeting->Mapel->mata_pelajaran,
+                'school_class_name' => $meeting->SchoolClass->class_name,
+                'school_year'       => $meeting->SchoolClass->tahun_ajaran,
+                'meeting_date'      => $meeting->meeting_date,
+                'agenda'            => $agenda,
+                'learning_activity' => $agenda?->learning_activity,
+                'feedback'          => $agenda?->feedback,
+                'meeting_number'    => $meeting->meeting_number,
+                'semester'          => $meeting->semester,
+                'attendance'        => $attendance,
+                'time'              => $startTime . ' - ' . $endTime,
+            ];
+        }
+
+        $result = collect($result)
+            ->sortBy(function ($item) {
+                return strtolower($item['teacher_name']);
+            })
+            ->sortByDesc(function ($item) {
+                return $item['meeting_date'];
+            })
+            ->values();
+
+        // Filter Status Agenda
+        if ($request->filled('search_status')) {
+
+            if ($request->search_status === 'submitted') {
+                $result = $result->whereNotNull('agenda');
+            }
+
+            if ($request->search_status === 'pending') {
+                $result = $result->whereNull('agenda');
+            }
+        }
+
+        if ($request->filled('search_feedback')) {
+
+            if ($request->search_feedback === 'given') {
+                $result = $result->filter(function ($item) {
+                    return !empty($item['feedback']);
+                });
+            }
+
+            if ($request->search_feedback === 'pending') {
+                $result = $result->filter(function ($item) {
+                    return empty($item['feedback']);
+                });
+            }
+
+            $result = $result->values();
+        }
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        $perPage = 20;
+
+        $paginatedResult = new LengthAwarePaginator(
+            $result->forPage($page, $perPage)->values(),
+            $result->count(),
+            $perPage,
+            $page,
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]
+        );
+
+        // Summary KPI
+        $totalTeachingTeachers = $result->count();
+
+        $totalSubmittedAgenda = $result->whereNotNull('agenda')->count();
+
+        $totalPendingAgenda = $result->whereNull('agenda')->count();
+
+        $complianceRate = $totalTeachingTeachers > 0 ? round(($totalSubmittedAgenda / $totalTeachingTeachers) * 100) : 0;
+
+        return response()->json([
+            'data' => $paginatedResult->items(),
+            'links' => (string) $paginatedResult->links(),
+            'teachers' => $teachers,
+
+            'summary' => [
+                'totalTeachingTeachers' => $totalTeachingTeachers,
+                'totalSubmittedAgenda'  => $totalSubmittedAgenda,
+                'totalPendingAgenda'    => $totalPendingAgenda,
+                'complianceRate'        => $complianceRate,
+            ],
+        ]);
+    }
+
+    public function teacherDailyAgendaHistoryFeedbackStore(Request $request, $role, $schoolName, $schoolId)
+    {
+        $validator = Validator::make($request->all(), [
+            'feedback' => 'required',
+        ], [
+            'feedback.required' => 'Harap isi feedback.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $teacherAgenda = TeacherDailyAgenda::find($request->teacher_daily_agenda_id);
+
+        if (!$teacherAgenda) {
+            return response()->json([
+                'status' => 'error',
+                'flag' => 'AGENDA_NOT_FOUND',
+                'message' => 'Feedback hanya dapat diberikan setelah guru mengisi agenda.',
+            ], 422);
+        }
+
+        $teacherAgenda->update([
+            'feedback' => $request->feedback,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Feedback berhasil disimpan!',
+        ]);
     }
 }

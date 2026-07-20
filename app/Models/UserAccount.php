@@ -163,4 +163,9 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(StudentTkaAttempt::class, 'student_id');
     }
+
+    public function TeacherDailyAgenda()
+    {
+        return $this->hasMany(TeacherDailyAgenda::class, 'teacher_id');
+    }
 }

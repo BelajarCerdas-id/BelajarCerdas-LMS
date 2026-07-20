@@ -141,4 +141,9 @@ class SchoolPartner extends Model
     {
         return $this->hasMany(SchoolSubBab::class, 'school_partner_id');
     }
+
+    public function TeacherDailyAgenda()
+    {
+        return $this->hasMany(TeacherDailyAgenda::class, 'school_partner_id');
+    }
 }

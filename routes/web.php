@@ -50,6 +50,7 @@ use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\OfficeManagementController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\StudentVicePrincipalController;
+use App\Http\Controllers\TeacherDailyAgendaController;
 
 // ROUTE FALLBACK
 Route::fallback(function () {
@@ -744,6 +745,21 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/assessment/paginate', [SubjectAttendanceController::class, 'paginateAssessmentList'])->name('lms.teacherSubjectAttendanceMeetingManagement.assessment.paginate');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/student-attendance/paginate', [SubjectAttendanceController::class, 'paginateStudentAttendance'])->name('lms.studentAttendance.paginate');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/chart', [SubjectAttendanceController::class, 'getAttendanceChart']);
+
+        // TEACHER DAILY AGENDA
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda', [TeacherDailyAgendaController::class, 'index'])->name('lms.teacherDailyAgenda.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/{dayOfWeek}/class/{classId}/subject-teacher/{subjectId}/form', [TeacherDailyAgendaController::class, 'teacherDailyAgendaForm'])->name('lms.teacherDailyAgendaForm.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/history', [TeacherDailyAgendaController::class, 'teacherDailyAgendaHistory'])->name('lms.teacherDailyAgenda.history.view');
+
+        // load detail data
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/{dayOfWeek}/class/{classId}/subject-teacher/{subjectId}/form-detail', [TeacherDailyAgendaController::class, 'teacherDailyAgendaFormDetail'])->name('lms.teacherDailyAgendaForm.detail');
+
+        // crud
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/{dayOfWeek}/class/{classId}/subject-teacher/{subjectId}/form-detail/submit', [TeacherDailyAgendaController::class, 'teacherDailyAgendaSubmitForm'])->name('lms.teacherDailyAgendaForm.store');
+
+        // paginate
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/paginate', [TeacherDailyAgendaController::class, 'paginateTeacherDailyAgenda'])->name('lms.teacherDailyAgenda.paginate');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/daily-agenda/history/paginate', [TeacherDailyAgendaController::class, 'paginateTeacherDailyAgendaHistory'])->name('lms.teacherDailyAgenda.history.paginate');
     
         // TEACHER GRADEBOOK MANAGEMENT
         // views
@@ -839,6 +855,18 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         Route::get('/{role}/{schoolName}/{schoolId}/calendar', [HeadmasterController::class, 'CalendarView'])->name('lms.headmaster.calendar.view'); 
         Route::post('/{role}/{schoolName}/{schoolId}/calendar/save', [HeadmasterController::class, 'saveCalendarData'])->name('lms.headmaster.calendar.save');
+
+        // Agenda Harian Guru
+        Route::get('/{role}/{schoolName}/{schoolId}/headmaster/agenda-harian-guru', [HeadmasterController::class, 'teacherDailyAgendaManagement'])->name('lms.headmaster.teacherDailyAgernda.monitoring');
+        Route::get('/{role}/{schoolName}/{schoolId}/headmaster/agenda-harian-guru/histori', [HeadmasterController::class, 'teacherDailyAgendaHistory'])->name('lms.headmaster.teacherDailyAgernda.monitoring.history');
+
+        // crud
+        Route::post('/{role}/{schoolName}/{schoolId}/headmaster/agenda-harian-guru/histori/feedback-store', [HeadmasterController::class, 'teacherDailyAgendaHistoryFeedbackStore'])->name('lms.headmaster.teacherDailyAgernda.monitoring.history.feedback-store');
+
+        // paginate agenda harian guru
+        Route::get('/{role}/{schoolName}/{schoolId}/headmaster/agenda-harian-guru/paginate', [HeadmasterController::class, 'paginateTeacherDailyAgendaManagement'])->name('lms.headmaster.teacherDailyAgernda.monitoring.paginate');
+        Route::get('/{role}/{schoolName}/{schoolId}/headmaster/agenda-harian-guru/histori/paginate', [HeadmasterController::class, 'paginateTeacherDailyAgendaHistory'])->name('lms.headmaster.teacherDailyAgernda.monitoring.history.paginate');
+
     
         // =========================================================
         // POLLING MANAGEMENT (KEPALA SEKOLAH)
