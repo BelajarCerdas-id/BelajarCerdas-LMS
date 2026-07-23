@@ -11,18 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop FK lama
+        // 1. Drop existing custom foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->dropForeign('lms_question_banks_FK_6_0');
         });
 
-        // Ubah kolom menjadi nullable
+        // 2. Modify column and create new foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->unsignedBigInteger('bab_id')->nullable()->change();
-        });
-
-        // Pasang FK lagi
-        Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->foreign('bab_id')->references('id')->on('babs');
         });
     }
@@ -32,19 +28,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop FK yang baru dibuat
+        // 1. Drop the new default-named foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->dropForeign(['bab_id']);
         });
 
-        // Kembalikan menjadi NOT NULL
+        // 2. Revert column to NOT NULL and restore the ORIGINAL custom foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->unsignedBigInteger('bab_id')->nullable(false)->change();
-        });
-
-        // Pasang FK lagi
-        Schema::table('lms_question_banks', function (Blueprint $table) {
-            $table->foreign('bab_id')->references('id')->on('babs');
+            $table->foreign('bab_id', 'lms_question_banks_FK_6_0')->references('id')->on('babs');
         });
     }
 };

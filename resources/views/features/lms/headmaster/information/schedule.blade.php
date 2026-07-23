@@ -53,17 +53,13 @@
                     
                     {{-- PANEL DAFTAR MAPEL --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 h-fit flex flex-col">
-
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 shrink-0">
                             <h3 class="font-extrabold text-slate-800 text-[15px] flex items-center gap-2">
                                 <i class="fas fa-layer-group text-[#0071BC]"></i> Tarik Mapel
-
-                                <span id="mapel-count"
-                                    class="bg-blue-100 text-[#0071BC] text-[10px] font-bold px-2 py-1 rounded-md hidden">
+                                <span id="mapel-count" class="bg-blue-100 text-[#0071BC] text-[10px] font-bold px-2 py-1 rounded-md hidden">
                                     0 Guru
                                 </span>
                             </h3>
-
                             <span class="bg-red-50 text-red-500 text-[9px] font-bold px-2 py-1 rounded-md border border-red-100 uppercase tracking-wider">
                                 Max 3 Sesi/Hari
                             </span>
@@ -74,11 +70,8 @@
                             <span class="text-xs font-bold">Memuat Guru...</span>
                         </div>
 
-                        <div id="sidebar-mapel"
-                            class="flex flex-col gap-2.5 overflow-y-auto pr-2 custom-scrollbar pb-2 max-h-[240px] xl:max-h-[500px]">
-
+                        <div id="sidebar-mapel" class="flex flex-col gap-2.5 overflow-y-auto pr-2 custom-scrollbar pb-2 max-h-[240px] xl:max-h-[500px]">
                             {{-- Daftar mapel akan dimuat via AJAX --}}
-
                         </div>
                     </div>
 
@@ -109,13 +102,11 @@
                                 <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">
                                     Istirahat 1
                                 </label>
-
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Setelah Sesi Ke-</span>
                                         <input type="number" id="set_ist1_setelah" value="4" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
                                     </div>
-
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Durasi (Menit)</span>
                                         <input type="number" id="set_ist1_durasi" value="15" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
@@ -127,13 +118,11 @@
                                 <label class="block text-[10px] font-extrabold text-orange-800 uppercase tracking-wider border-b border-orange-200/60 mb-2 pb-1">
                                     Istirahat 2 (Opsional)
                                 </label>
-
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Setelah Sesi Ke-</span>
                                         <input type="number" id="set_ist2_setelah" value="8" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
                                     </div>
-
                                     <div>
                                         <span class="text-[10px] font-bold text-orange-600 block mb-1">Durasi (Menit)</span>
                                         <input type="number" id="set_ist2_durasi" value="15" class="w-full px-2 py-1.5 text-sm font-bold border-2 border-orange-200 rounded-lg outline-none focus:border-orange-500">
@@ -150,7 +139,6 @@
 
                 {{-- KANAN: TABEL JADWAL --}}
                 <div class="flex-1 w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 lg:p-8 relative max-h-[360px] xl:max-h-[800px] overflow-y-auto order-1 xl:order-2">
-                    
                     <div class="flex justify-between items-center mb-5 shrink-0 border-b border-slate-100 pb-4">
                         <div>
                             <h2 class="font-extrabold text-lg text-slate-800">Papan Jadwal Kelas</h2>
@@ -158,7 +146,6 @@
                                 Area Drag & Drop
                             </p>
                         </div>
-
                         <button onclick="clearSchedule()" class="px-4 py-2 bg-red-50 text-red-500 border border-red-200 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-sm">
                             <i class="fas fa-trash-alt mr-1"></i> Kosongkan Papan
                         </button>
@@ -166,15 +153,12 @@
 
                     <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-inner custom-scrollbar pb-2 relative">
                         <table class="w-full min-w-[800px] lg:min-w-full border-collapse bg-white text-left">
-                            
                             <thead id="thead-jadwal" class="bg-gradient-to-r from-[#005B94] to-[#0071BC]">
                                 {{-- Header Kolom Hari akan digenerate otomatis --}}
                             </thead>
-
                             <tbody id="tbody-jadwal" class="divide-y divide-slate-100 text-sm">
                                 {{-- Baris Waktu akan digenerate otomatis --}}
                             </tbody>
-
                         </table>
                     </div>
 
@@ -218,16 +202,26 @@
     let currentClassId = null;
     let className = "";
     let timeConfig = []; 
-    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']; // Tambah 'Sabtu' jika perlu
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
     let allOtherSchedules = @json($allSchedules ?? []);
     let globalSchedules = [];
+    let draggedData = null;
+
+    // Mapping ID Kelas ke Nama Kelas langsung via Blade
+    const classMapping = {
+        @foreach($classes as $cls)
+            "{{ $cls->id }}": "{{ $cls->class_name }}",
+        @endforeach
+    };
 
     const classSelector = document.getElementById('class-selector');
     const overlay = document.getElementById('schedule-overlay');
     const workspace = document.getElementById('workspace-jadwal');
     const sidebar = document.getElementById('sidebar-mapel');
 
-    // 1. Handle Ganti Kelas
+    // ==========================================
+    // 1. HANDLE GANTI KELAS
+    // ==========================================
     classSelector.addEventListener('change', async function() {
         currentClassId = this.value;
         className = this.options[this.selectedIndex].getAttribute('data-name');
@@ -236,14 +230,14 @@
         workspace.classList.remove('hidden');
         workspace.classList.add('flex');
         
-        loadGuruMapel(currentClassId);
+        generateGrid();
     });
 
     // ==========================================
     // 2. GENERATOR TABEL WAKTU DINAMIS
     // ==========================================
     function generateGrid() {
-        const startStr = document.getElementById('set_jam_mulai').value; // "07:00"
+        const startStr = document.getElementById('set_jam_mulai').value;
         const durasiSesi = parseInt(document.getElementById('set_durasi_sesi').value);
         const totalSesi = parseInt(document.getElementById('set_total_sesi').value);
         
@@ -287,7 +281,10 @@
         }
 
         renderTableGrid();
-        if(currentClassId) loadGuruMapel(currentClassId); // Reload jadwal masuk slot
+
+        if (currentClassId) {
+            loadGuruMapel(currentClassId);
+        }
     }
 
     function formatTime(dateObj) {
@@ -298,7 +295,6 @@
         const thead = document.getElementById('thead-jadwal');
         const tbody = document.getElementById('tbody-jadwal');
         
-        // MENGGAMBAR HEADER (HARI)
         let thHtml = `<tr>
             <th class="p-3 sm:p-4 border-r border-[#005B94]/30 text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider w-20 sm:w-24 text-center sticky left-0 bg-gradient-to-r from-[#005B94] to-[#00609a] shadow-[2px_0_5px_rgba(0,0,0,0.1)] z-30">Waktu</th>`;
         
@@ -308,11 +304,10 @@
         thHtml += `</tr>`;
         thead.innerHTML = thHtml;
 
-        // MENGGAMBAR BARIS (WAKTU & SLOT)
         let tbHtml = '';
         timeConfig.forEach(slot => {
             if (slot.type === 'break') {
-                tbHtml += `<tr class="bg-[#FFF8ED] border-b border-amber-200 z">
+                tbHtml += `<tr class="bg-[#FFF8ED] border-b border-amber-200">
                     <td class="p-2 sm:p-3 border-r border-amber-200 text-center text-[10px] sm:text-[11px] font-bold text-amber-700 bg-[#FFF3D6] sticky left-0 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                         <span class="block text-[8px] uppercase tracking-widest opacity-50 mb-0.5"><i class="fas fa-mug-hot"></i></span>
                         ${slot.start} <br> <span class="opacity-50 text-[9px] mt-0.5">${slot.end}</span>
@@ -345,20 +340,17 @@
     }
 
     // ==========================================
-    // 3. MUAT DATA GURU & JADWAL (AJAX) - TELAH DIPERBAIKI (URL ABSOLUT)
+    // 3. MUAT DATA GURU & JADWAL (AJAX)
     // ==========================================
     async function loadGuruMapel(classId) {
         document.getElementById('loading-guru').classList.remove('hidden');
         sidebar.innerHTML = '';
 
         try {
-            // URL Absolut sesuai dengan di web.php
             const url = `/lms/{{ $schoolId }}/teacher-schedule/get-data/${classId}`;
             const response = await fetch(url);
             
-            // Cek jika server tidak mengembalikan status 200 OK (contoh: 404 atau 500)
             if (!response.ok) {
-                const errHtml = await response.text();
                 throw new Error(`Server Error (${response.status})`);
             }
             
@@ -388,21 +380,23 @@
                         </div>`;
                 });
 
-                // Masukkan jadwal yang ada di database ke Global Memori
-                if(res.data) {
+                if (res.data) {
                     globalSchedules = allOtherSchedules.filter(x => x.class_id != classId); 
                     
                     res.data.forEach(item => {
                         globalSchedules.push({
                             class_id: classId,
+                            class_name: classMapping[classId] || className,
                             day_of_week: item.day_of_week,
                             start_time: item.start_time,
                             subject_id: item.subject_id,
                             teacher_id: item.teacher_id
                         });
 
-                        const zone = document.querySelector(`.drop-zone[data-day="${item.day_of_week}"][data-start="${item.start_time}"]`);
-                        if(zone) {
+                        const formattedDbTime = item.start_time.substring(0, 5); 
+                        const zone = document.querySelector(`.drop-zone[data-day="${item.day_of_week}"][data-start="${formattedDbTime}"]`);
+                        
+                        if (zone) {
                             renderItemToSlot(zone.querySelector('.slot-content'), {
                                 teacher_id: item.teacher_id, teacher_name: item.teacher_name,
                                 subject_id: item.subject_id, subject_name: item.subject_name,
@@ -446,22 +440,35 @@
     function drop(e) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
-        if(!draggedData) return;
+        if (!draggedData) return;
 
         const dayTarget = e.currentTarget.dataset.day;
         const timeTarget = e.currentTarget.dataset.start;
         const subjectId = draggedData.sid.toString();
         const teacherId = draggedData.tid.toString();
-        const currClass = classSelector.value.toString();
+        const currClass = currentClassId.toString();
 
-        // VALIDASI 1: BENTROK GURU LINTAS KELAS
-        const isTeacherBusy = globalSchedules.some(s => s.day_of_week === dayTarget && s.start_time === timeTarget && s.teacher_id.toString() === teacherId && s.class_id.toString() !== currClass);
-        if (isTeacherBusy) {
-            Swal.fire({ icon: 'warning', title: 'Guru Bentrok!', text: `Bpk/Ibu ${draggedData.tname} sudah mengajar di kelas lain pada hari ${dayTarget} jam ${timeTarget}.`, confirmButtonColor: '#d33' });
+        // VALIDASI BENTROK KELAS LAIN
+        const conflictSchedule = globalSchedules.find(s => {
+            return s.day_of_week === dayTarget && 
+                   s.start_time.substring(0, 5) === timeTarget && 
+                   s.teacher_id.toString() === teacherId && 
+                   s.class_id.toString() !== currClass;
+        });
+
+        if (conflictSchedule) {
+            const targetClassName = conflictSchedule.class_name || classMapping[conflictSchedule.class_id] || `ID: ${conflictSchedule.class_id}`;
+            
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Guru Sudah Mengajar!', 
+                html: `Bpk/Ibu <b>${draggedData.tname}</b> sudah memiliki jadwal mengajar di <b>Kelas ${targetClassName}</b> pada hari ${dayTarget} jam ${timeTarget}.`, 
+                confirmButtonColor: '#d33' 
+            });
             return;
         }
 
-        // VALIDASI 2: MAX 3 SESI MAPEL YANG SAMA / HARI
+        // VALIDASI MAKSIMAL 3 SESI
         let countSubjectToday = 0;
         document.querySelectorAll(`.drop-zone[data-day="${dayTarget}"] .slot-content[data-saved="true"]`).forEach(slot => {
             if (slot.dataset.sid === subjectId && slot.closest('.drop-zone').dataset.start !== timeTarget) countSubjectToday++;
@@ -472,16 +479,24 @@
             return;
         }
 
-        // SUKSES RENDER
         const currentSlot = e.currentTarget.querySelector('.slot-content');
         renderItemToSlot(currentSlot, {
             teacher_id: draggedData.tid, teacher_name: draggedData.tname,
             subject_id: draggedData.sid, subject_name: draggedData.sname, color: draggedData.color
         });
 
-        // UPDATE MEMORI JADWAL
-        globalSchedules = globalSchedules.filter(s => !(s.day_of_week === dayTarget && s.start_time === timeTarget && s.class_id.toString() === currClass));
-        globalSchedules.push({ class_id: currClass, day_of_week: dayTarget, start_time: timeTarget, subject_id: subjectId, teacher_id: teacherId });
+        globalSchedules = globalSchedules.filter(s => !(s.day_of_week === dayTarget && s.start_time.substring(0, 5) === timeTarget && s.class_id.toString() === currClass));
+        globalSchedules.push({ 
+            class_id: currClass, 
+            class_name: className,
+            day_of_week: dayTarget, 
+            start_time: timeTarget, 
+            subject_id: subjectId, 
+            teacher_id: teacherId,
+            teacher_name: draggedData.tname,
+            subject_name: draggedData.sname,
+            color: draggedData.color
+        });
     }
 
     function renderItemToSlot(slot, data) {
@@ -507,11 +522,13 @@
     }
 
     function clearSlot(btn, e) {
-        e.stopPropagation();
+        if (e) e.stopPropagation();
         const slot = btn.closest('.slot-content');
         const zone = slot.closest('.drop-zone');
         
-        globalSchedules = globalSchedules.filter(s => !(s.day_of_week === zone.dataset.day && s.start_time === zone.dataset.start && s.class_id.toString() === currentClassId));
+        if (currentClassId) {
+            globalSchedules = globalSchedules.filter(s => !(s.day_of_week === zone.dataset.day && s.start_time.substring(0, 5) === zone.dataset.start && s.class_id.toString() === currentClassId.toString()));
+        }
 
         slot.innerHTML = '<i class="fas fa-plus opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100"></i>';
         slot.className = 'slot-content group w-full h-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-300 hover:bg-blue-50 hover:border-[#0071BC] hover:text-[#0071BC] transition-all duration-200 cursor-pointer relative';
@@ -523,16 +540,20 @@
         Swal.fire({ title: 'Kosongkan Papan?', text: "Semua mapel di layar akan dihapus.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Bersihkan' })
         .then((res) => {
             if (res.isConfirmed) {
-                globalSchedules = globalSchedules.filter(s => s.class_id.toString() !== currentClassId);
-                document.querySelectorAll('.cell-content, .slot-content').forEach(cell => {
-                    if(cell.dataset.saved === "true") clearSlot(cell.querySelector('button'), new Event('click'));
+                if (currentClassId) {
+                    globalSchedules = globalSchedules.filter(s => s.class_id.toString() !== currentClassId.toString());
+                }
+                document.querySelectorAll('.slot-content').forEach(cell => {
+                    if (cell.dataset.saved === "true") {
+                        clearSlot(cell.querySelector('button'), null);
+                    }
                 });
             }
         });
     }
 
     // ==========================================
-    // 5. PENYIMPANAN DATA (AJAX) - URL ABSOLUT
+    // 5. PENYIMPANAN DATA (AJAX)
     // ==========================================
     async function saveScheduleData(status) {
         if (!currentClassId) return;
@@ -555,7 +576,6 @@
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            // URL Absolut sesuai dengan di web.php
             const url = `/lms/{{ $role }}/{{ $schoolName }}/{{ $schoolId }}/teacher-schedule/save`;
             const response = await fetch(url, {
                 method: 'POST', 
@@ -573,7 +593,6 @@
             });
 
             if (!response.ok) {
-                const errHtml = await response.text();
                 throw new Error(`Server Error (${response.status})`);
             }
 
@@ -590,6 +609,5 @@
         }
     }
 
-    // Auto-generate saat load pertama kali
     generateGrid();
 </script>
