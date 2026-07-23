@@ -158,7 +158,7 @@ function studentDailyReflectionForm(page = 1) {
 
                         <form id="answer-daily-reflection-form">
 
-                            <input type="text" name="sch_refl_id" value="${item.id}" class="hidden">
+                            <input type="text" name="sch_refl_question_id" value="${item.id}" class="hidden">
 
                             <!-- EMOTION -->
                             <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm mt-5">
