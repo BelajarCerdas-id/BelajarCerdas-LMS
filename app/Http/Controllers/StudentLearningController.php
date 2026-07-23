@@ -8,6 +8,7 @@ use App\Models\SchoolAssessmentType;
 use App\Models\Service;
 use App\Models\StudentSchoolClass;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request; // Added for Request injection
 
 class StudentLearningController extends Controller
 {
@@ -160,16 +161,31 @@ class StudentLearningController extends Controller
         }
 
         $extension = pathinfo($contentItem->value_file, PATHINFO_EXTENSION);
+        $mime = $this->guessMime($extension);
+
+        // UPDATE: Route through the controller so Octane can inject strict headers
+        // We append '?inline=1' so the controller knows to stream it inside the modal
+        $fileUrl = route('lms.studentContent.download', [
+            'role' => $role,
+            'schoolName' => $schoolName,
+            'schoolId' => $schoolId,
+            'curriculumId' => $curriculumId,
+            'mapelId' => $mapelId,
+            'serviceId' => $serviceId,
+            'meetingContentId' => $meetingId,
+            'inline' => 1 
+        ]);
 
         return response()->json([
             'type' => 'file',
             'service_name' => $serviceName,
-            'file_url' => asset('lms-contents/' . $contentItem->value_file),
-            'mime' => $this->guessMime($extension)
+            'file_url' => $fileUrl,
+            'mime' => $mime
         ]);
     }
 
-    public function downloadStudentContent($role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId, $meetingContentId)
+    // UPDATE: Added Request injection to check for the 'inline' query parameter
+    public function downloadStudentContent(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId, $meetingContentId)
     {
         $item = LmsMeetingContent::with('LmsContent.LmsContentItem')
             ->findOrFail($meetingContentId);
@@ -192,14 +208,38 @@ class StudentLearningController extends Controller
         }
 
         clearstatcache(true, $filePath);
-        if ((int) filesize($filePath) <= 0) {
+        $fileSize = (int) filesize($filePath);
+        
+        if ($fileSize <= 0) {
             abort(404, 'File kosong atau rusak di server');
         }
 
         $downloadName = $contentItem->original_filename ?: $safeFilename;
+        $mimeType = $this->guessMime(pathinfo($filePath, PATHINFO_EXTENSION));
 
+        // =========================================================
+        // OCTANE FIX: RAW MEMORY RESPONSE FOR INLINE PDF
+        // =========================================================
+        if ($request->query('inline') && $mimeType === 'application/pdf') {
+            
+            // Read file directly into memory to bypass Octane chunking
+            $fileContent = file_get_contents($filePath);
+
+            return response($fileContent, 200, [
+                'Content-Type'           => 'application/pdf',
+                'Content-Length'         => $fileSize, // Forces browser to load the PDF properly
+                'Content-Disposition'    => 'inline; filename="' . $downloadName . '"',
+                'Cache-Control'          => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma'                 => 'no-cache',
+                'Expires'                => '0',
+                'X-Frame-Options'        => 'SAMEORIGIN', // Explicitly allow inside your modal
+            ]);
+        }
+
+        // Standard download for everything else
         return response()->download($filePath, $downloadName, [
             'X-Accel-Buffering' => 'no',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate'
         ]);
     }
 }

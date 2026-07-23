@@ -1,4 +1,5 @@
 let selectedSemester = 1;
+
 function changeSemester(semester) {
     selectedSemester = semester;
 
@@ -84,7 +85,6 @@ function changeSemester(semester) {
 
                                 </div>
                             </div>
-
                         `;
 
                         containerMeetingList.append(card);
@@ -155,10 +155,24 @@ function openReviewModal(meetingId) {
                     `);
                 }
 
+                // ==========================================
+                // PDF FIX FOR LARAVEL OCTANE
+                // ==========================================
                 else if (response.mime === 'application/pdf') {
+                    // Create cache-buster timestamp
+                    const timestamp = new Date().getTime();
+                    const separator = response.file_url.includes('?') ? '&' : '?';
+                    const cacheBustedUrl = `${response.file_url}${separator}t=${timestamp}`;
+
                     container.append(`
-                        <iframe src="${response.file_url}"
-                            class="w-full h-[70vh] rounded-xl border"></iframe>
+                        <object data="${cacheBustedUrl}" type="application/pdf" class="w-full h-[70vh] rounded-xl border">
+                            <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-xl p-6 text-center">
+                                <p class="text-gray-700 mb-4 font-medium">Preview PDF tidak didukung oleh browser Anda saat ini.</p>
+                                <a href="${response.file_url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                                    Buka PDF di Tab Baru
+                                </a>
+                            </div>
+                        </object>
                     `);
                 }
 
@@ -180,8 +194,8 @@ function openReviewModal(meetingId) {
 }
 
 function closeModal() {
-    const iframe = document.getElementById('video-frame');
-    if (iframe) {
-        iframe.src = ''; // remove the video after close modal
+    const video = document.getElementById('video-frame');
+    if (video) {
+        video.src = ''; // stop the video from playing in background after close modal
     }
 }
