@@ -131,6 +131,12 @@ class QuestionBankController extends Controller
         ]);
     }
 
+    // function validate question bank
+    public function lmsQuestionBankManagementValidate(Request $request)
+    {
+        return app(BankSoalWordImportService::class)->validateBankSoalImport($request);
+    }
+
     // function bank soal store UH, ASTS, ASAS
     public function lmsQuestionBankManagementStore(Request $request)
     {

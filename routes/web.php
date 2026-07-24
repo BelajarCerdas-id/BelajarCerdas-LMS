@@ -401,6 +401,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/school-subscription/question-bank-management/bank-soal/form/source/{source}/review/question-type/{questionType}/{questionId}/{schoolName}/{schoolId}/edit/{subBabId?}', [QuestionBankController::class, 'formEditQuestion'])->name('lms.bankSoal.form.edit.question.schoolPartner');
     
         // crud bank soal
+        // validate bank soal no school partner & school partner
+        Route::post('/lms/question-bank-management/validate', [QuestionBankController::class, 'lmsQuestionBankManagementValidate'])->name('lms.questionBankManagement.validate.noSchoolPartner');
+        Route::post('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/validate', [QuestionBankController::class, 'lmsQuestionBankManagementValidate'])->name('lms.questionBankManagement.validate.schoolPartner');
+
         // upload bank soal no school partner & school partner
         Route::post('/lms/question-bank-management/store', [QuestionBankController::class, 'lmsQuestionBankManagementStore'])->name('lms.questionBankManagement.store.noSchoolPartner');
         Route::post('/lms/school-subscription/{schoolName}/{schoolId}/question-bank-management/store', [QuestionBankController::class, 'lmsQuestionBankManagementStore'])->name('lms.questionBankManagement.store.schoolPartner');

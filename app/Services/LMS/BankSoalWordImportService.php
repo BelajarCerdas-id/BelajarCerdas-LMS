@@ -16,7 +16,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class BankSoalWordImportService
 {
-    public function bankSoalImportService(Request $request)
+    private function parseAndValidate(Request $request)
     {
         $userId = Auth::id();
         Log::info("[BankSoalImport] Memulai proses import bank soal.", [
@@ -360,6 +360,47 @@ class BankSoalWordImportService
                 ],
             ], 422);
         }
+
+        return [
+            'user_id'            => $userId,
+            'extractor'          => $extractor,
+            'normalize_answers'  => $normalizeAnswers ?? null,
+            'valid_soal_data'    => $validSoalData,
+            'docx_path'          => $docxPath,
+            'output_html_path'   => $outputHtmlPath,
+            'media_images'       => $mediaImages,
+        ];
+    }
+
+    public function validateBankSoalImport(Request $request)
+    {
+        $result = $this->parseAndValidate($request);
+
+        // kalau parseAndValidate mengembalikan Response berarti gagal validasi
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Validasi berhasil.',
+        ]);
+    }
+
+    public function bankSoalImportService(Request $request)
+    {
+        $result = $this->parseAndValidate($request);
+
+        if ($result instanceof \Illuminate\Http\JsonResponse) {
+            return $result;
+        }
+
+        $userId = $result['user_id'];
+        $extractor = $result['extractor'];
+        $normalizeAnswers = $result['normalize_answers'];
+        $validSoalData = $result['valid_soal_data'];
+        $docxPath = $result['docx_path'];
+        $outputHtmlPath = $result['output_html_path'];
 
         Log::info("[BankSoalImport] Memulai transaksi insert ke database. Total soal valid: " . count($validSoalData));
         $createBankSoal = null;
