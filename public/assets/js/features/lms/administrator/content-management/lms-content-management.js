@@ -446,12 +446,17 @@ function startUpload(formData, schoolName, schoolId, btn, defaultButtonHtml) {
             
             $('#id_sub_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
                 .addClass('opacity-50 cursor-default');
-            s
+            
             $('#id_service').html('<option disabled selected>Pilih Service</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
                 .addClass('opacity-50 cursor-default');
 
             $('#content-management-form')[0].reset();
             $('#dynamic-form').empty();
+
+            btn.html(`
+                <i class="fa-solid fa-circle-plus"></i>
+                Simpan
+            `);
 
             isProcessing = false;
             currentUploadRequest = null;
