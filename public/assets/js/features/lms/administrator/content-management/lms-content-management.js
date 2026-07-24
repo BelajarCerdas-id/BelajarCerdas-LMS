@@ -1,3 +1,6 @@
+let isProcessing = false;
+let currentUploadRequest = null;
+
 function paginateContentManagemet(page = 1) {
     const container = document.getElementById('container');
     const role = container.dataset.role;
@@ -303,28 +306,73 @@ $(document).on('change', '.toggle-activate-content', function () {
     });
 });
 
-let isProcessing = false;
-
 // Form Action create content
 $('#submit-button-create-content').on('click', function (e) {
     e.preventDefault();
 
     const container = document.getElementById('container');
-    const schoolName = container.dataset.schoolName;
-    const schoolId = container.dataset.schoolId;
-
     if (!container) return;
 
-    const form = $('#content-management-form')[0]; // ambil DOM Form-nya
-    const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+    const form = $('#content-management-form')[0];
+    const formData = new FormData(form);
 
     if (isProcessing) return;
+
     isProcessing = true;
 
     const btn = $(this);
     btn.prop('disabled', true);
 
+    const defaultButtonHtml = btn.html();
+
+    btn.prop('disabled', true).html(`
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Sedang Memvalidasi...
+    `);
+
     $.ajax({
+        url: schoolId
+            ? `/lms/school-subscription/${schoolName}/${schoolId}/content-management/validate`
+            : `/lms/content-management/validate`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function () {
+            btn.html(`
+                <i class="fa-solid fa-cloud-arrow-up fa-bounce"></i>
+                Mengunggah...
+            `);
+
+            startUpload(formData, schoolName, schoolId, btn, defaultButtonHtml);
+        },
+        error: function (xhr) {
+            if (xhr.status === 422) {
+                showValidationError(xhr.responseJSON.errors);
+            } else {
+                alert('Terjadi kesalahan saat validasi.');
+            }
+
+            isProcessing = false;
+            btn.prop('disabled', false).html(defaultButtonHtml);
+        }
+    });
+});
+
+
+function startUpload(formData, schoolName, schoolId, btn, defaultButtonHtml) {
+    const startTime = Date.now();
+
+    setUploadFileInfo(formData);
+
+    document.getElementById('upload-progress-modal').showModal();
+
+    currentUploadRequest = $.ajax({
         url: schoolId
             ? `/lms/school-subscription/${schoolName}/${schoolId}/content-management/store`
             : `/lms/content-management/store`,
@@ -335,7 +383,32 @@ $('#submit-button-create-content').on('click', function (e) {
         data: formData,
         processData: false,
         contentType: false,
+        xhr: function () {
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function (e) {
+                if (!e.lengthComputable) return;
+
+                const percent = Math.round((e.loaded / e.total) * 100);
+                const elapsed = (Date.now() - startTime) / 1000;
+                const speed = e.loaded / elapsed;
+                const remain = speed > 0 ? (e.total - e.loaded) / speed : 0;
+
+                $('#upload-progress-bar').css('width', percent + '%');
+                $('#upload-percent').text(percent + '%');
+                $('#upload-size').text(`${formatFileSize(e.loaded)} / ${formatFileSize(e.total)}`);
+                $('#upload-speed').text(`${formatFileSize(speed)}/s`);
+                $('#upload-remaining').text(formatRemainingTime(remain));
+            });
+
+            return xhr;
+        },
         success: function (response) {
+            $('#upload-progress-bar').css('width', '100%');
+            $('#upload-percent').text('100%');
+            $('#upload-status').text('Content berhasil diupload.');
+
+            document.getElementById('upload-progress-modal').close();
 
             $('#alert-success-create-content').html(`
                     <div class=" w-full flex justify-center">
@@ -354,7 +427,7 @@ $('#submit-button-create-content').on('click', function (e) {
                 </div>
             `);
 
-            setTimeout(function () {
+            setTimeout(() => {
                 $('#alertSuccess').remove();
             }, 3000);
 
@@ -362,61 +435,86 @@ $('#submit-button-create-content').on('click', function (e) {
                 $('#alertSuccess').remove();
             });
 
-            $('#id_kelas').html('<option disabled selected>Pilih Kelas</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
-            $('#id_mapel').html('<option disabled selected>Pilih Mata Pelajaran</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
-            $('#id_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
-            $('#id_sub_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
-            $('#id_service').html('<option disabled selected>Pilih Service</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
+            $('#id_kelas').html('<option disabled selected>Pilih Kelas</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
+            
+            $('#id_mapel').html('<option disabled selected>Pilih Mata Pelajaran</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
+            
+            $('#id_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
+            
+            $('#id_sub_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
+            s
+            $('#id_service').html('<option disabled selected>Pilih Service</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
 
-            // RESET SEMUA
             $('#content-management-form')[0].reset();
             $('#dynamic-form').empty();
 
             isProcessing = false;
-            btn.prop('disabled', false);
+            currentUploadRequest = null;
+            btn.prop('disabled', false).html(defaultButtonHtml);
 
             paginateContentManagemet();
         },
         error: function (xhr) {
+            document.getElementById('upload-progress-modal').close();
+
             if (xhr.status === 422) {
-                const errors = xhr.responseJSON.errors;
-
-                $.each(errors, function (field, messages) {
-                    // Tampilkan pesan error
-                    $('#content-management-form').find(`#error-${field}`).text(messages[0]);
-
-                    // Tambahkan style error ke input (jika ada)
-                    $('#content-management-form').find(`[name="${field}"]`).addClass('border-red-400 border');
-                });
-
-                Object.keys(errors).forEach(key => {
-                    if (key.startsWith('files.')) {
-                        const index = key.split('.')[1];
-
-                        $(`[data-error-file="${index}"]`)
-                            .text(errors[key][0]);
-                    }
-                });
-
-                Object.keys(errors).forEach(key => {
-                    if (key.startsWith('text.')) {
-                        const parts = key.split('.'); // text.0.1
-                        const ruleIndex = parts[1];
-                        const rowIndex = parts[2];
-
-                        const container = $(`[data-repeatable="${ruleIndex}"]`);
-
-                        const row = container.find('.repeatable-item').eq(rowIndex);
-
-                        row.find('.error-text').removeClass('hidden').text(errors[key][0]);
-                    }
-                });
+                showValidationError(xhr.responseJSON.errors);
             } else {
-                alert('Terjadi kesalahan saat mengirim data.');
+                alert('Terjadi kesalahan saat upload.');
             }
 
             isProcessing = false;
-            btn.prop('disabled', false);
+            currentUploadRequest = null;
+            btn.prop('disabled', false).html(defaultButtonHtml);
         }
     });
+}
+
+function showValidationError(errors) {
+    $.each(errors, function (field, messages) {
+        $('#content-management-form')
+            .find(`#error-${field}`)
+            .text(messages[0]);
+
+        $('#content-management-form')
+            .find(`[name="${field}"]`)
+            .addClass('border-red-400 border');
+    });
+
+    Object.keys(errors).forEach(key => {
+        if (key.startsWith('files.')) {
+            const index = key.split('.')[1];
+
+            $(`[data-error-file="${index}"]`)
+                .text(errors[key][0]);
+        }
+
+        if (key.startsWith('text.')) {
+            const parts = key.split('.');
+            const ruleIndex = parts[1];
+            const rowIndex = parts[2];
+
+            const container = $(`[data-repeatable="${ruleIndex}"]`);
+            const row = container.find('.repeatable-item').eq(rowIndex);
+
+            row.find('.error-text')
+                .removeClass('hidden')
+                .text(errors[key][0]);
+        }
+    });
+}
+
+window.addEventListener("beforeunload", function (e) {
+
+    if (!isProcessing) return;
+
+    e.preventDefault();
+
+    e.returnValue = "";
+
 });

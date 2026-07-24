@@ -446,3 +446,123 @@ function hydrateEditData(items) {
         updateRemoveVisibility(ruleId);
     });
 }
+
+function formatFileSize(bytes) {
+
+    if (bytes === 0) return "0 B";
+
+    const k = 1024;
+
+    const sizes = ["B", "KB", "MB", "GB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return (bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i];
+
+}
+
+function setUploadFileInfo(formData) {
+
+    let file = null;
+
+    for (const pair of formData.entries()) {
+
+        if (pair[1] instanceof File && pair[1].size > 0) {
+            file = pair[1];
+            break;
+        }
+
+    }
+
+    if (!file) return;
+
+    $('#upload-file-name').text(file.name);
+
+    $('#upload-file-type').text(getFileType(file));
+
+    $('#upload-size').text(
+        `0 MB / ${formatFileSize(file.size)}`
+    );
+
+    $('#upload-speed').text('-');
+
+    $('#upload-percent').text('0%');
+
+    $('#upload-progress-bar').css('width', '0%');
+
+    $('#upload-remaining').text('-');
+
+    const icon = $('#upload-file-icon');
+
+    icon.removeClass();
+
+    if (file.type === 'application/pdf') {
+
+        icon.addClass('fa-solid fa-file-pdf text-red-500 text-3xl');
+
+    } else if (file.type.startsWith('video/')) {
+
+        icon.addClass('fa-solid fa-file-video text-blue-500 text-3xl');
+
+    } else if (file.type.startsWith('image/')) {
+
+        icon.addClass('fa-solid fa-file-image text-green-500 text-3xl');
+
+    } else {
+
+        icon.addClass('fa-solid fa-file text-slate-500 text-3xl');
+
+    }
+
+}
+
+function getFileType(file) {
+
+    if (file.type === 'application/pdf')
+        return 'PDF Document';
+
+    if (file.type.startsWith('video/'))
+        return 'Video File';
+
+    if (file.type.startsWith('image/'))
+        return 'Image File';
+
+    if (file.type.includes('word'))
+        return 'Microsoft Word';
+
+    if (file.type.includes('excel'))
+        return 'Microsoft Excel';
+
+    if (file.type.includes('powerpoint'))
+        return 'Microsoft PowerPoint';
+
+    return 'Document';
+
+}
+
+function formatRemainingTime(seconds) {
+
+    seconds = Math.ceil(seconds);
+
+    if (seconds <= 0)
+        return "Selesai";
+
+    const hours = Math.floor(seconds / 3600);
+
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    const secs = seconds % 60;
+
+    let result = [];
+
+    if (hours > 0)
+        result.push(`${hours} jam`);
+
+    if (minutes > 0)
+        result.push(`${minutes} menit`);
+
+    if (secs > 0 || result.length === 0)
+        result.push(`${secs} detik`);
+
+    return result.join(" ");
+}

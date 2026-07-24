@@ -465,6 +465,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/content-management/{contentId}/form/edit', [ContentBankController::class, 'lmsContentManagementFormEdit'])->name('lms.contentManagementForm.edit');
     
         // crud
+        // validation content management no school partner & school partner
+        Route::post('/lms/content-management/validate', [ContentBankController::class, 'lmsContentManagementValidate'])->name('lms.contentManagement.validate');
+        Route::post('/lms/school-subscription/{schoolName}/{schoolId}/content-management/validate', [ContentBankController::class, 'lmsContentManagementValidate'])->name('lms.contentManagement.validate.schoolPartner');
+    
         // create content management no school partner & school partner
         Route::post('/lms/content-management/store', [ContentBankController::class, 'lmsContentManagementStore'])->name('lms.contentManagement.store.noSchoolPartner');
         Route::post('/lms/school-subscription/{schoolName}/{schoolId}/content-management/store', [ContentBankController::class, 'lmsContentManagementStore'])->name('lms.contentManagement.store.schoolPartner');

@@ -84,9 +84,9 @@ class ContentBankController extends Controller
             'editContentBySchool' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/content-management/:contentId/edit',
         ]);
     }
-    
-    // function content management store
-    public function lmsContentManagementStore(Request $request, LmsContentService $service, $schoolName = null, $schoolId = null)
+
+    // function validation content management
+    public function lmsContentManagementValidate(Request $request, LmsContentService $service, $schoolName = null, $schoolId = null)
     {
         // base validation
         $rules = [
@@ -146,9 +146,17 @@ class ContentBankController extends Controller
             ], 422);
         }
 
+        return response()->json([
+            'status' => 'success'
+        ]);
+    }
+    
+    // function content management store
+    public function lmsContentManagementStore(Request $request, LmsContentService $service, $schoolName = null, $schoolId = null)
+    {
         // store via service
         $content = $service->store(
-            $validator->validated(),
+            $request->all(),
             Auth::id(),
             $schoolId ?? null
         );
