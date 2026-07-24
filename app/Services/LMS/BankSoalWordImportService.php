@@ -275,6 +275,12 @@ class BankSoalWordImportService
                         }
     
                         $isMatrix = $type === 'pg_kompleks';
+
+                        if ($isMatrix) {
+                            if ($isEmpty($dataSoal['HEADER_ITEM'] ?? null)) {
+                                $validationErrors[] = "Soal ke-$soalNumber: HEADER_ITEM wajib diisi.";
+                            }
+                        }
                         
                         $leftKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) => str_starts_with($k,'LEFT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH)));
                         $rightKeys = array_map('strtoupper', array_keys(array_filter($dataSoal, fn($v,$k) => str_starts_with($k,'RIGHT') && !$isEmpty($v), ARRAY_FILTER_USE_BOTH)));
