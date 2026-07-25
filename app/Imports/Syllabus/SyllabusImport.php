@@ -8,15 +8,12 @@ use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\Mapel;
-use App\Models\SchoolMapel;
-use App\Models\SchoolPartner;
 use App\Models\SubBab;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
@@ -27,11 +24,13 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
     */
     protected $userId;
     protected $sheetTitle = '';
+    protected bool $onlyValidate;
 
-    public function __construct($userId, $sheetTitle = '')
+    public function __construct($userId, $sheetTitle = '', $onlyValidate = false)
     {
         $this->userId = $userId;
         $this->sheetTitle = $sheetTitle;
+        $this->onlyValidate = $onlyValidate;
     }
 
     public function title(): string
@@ -49,6 +48,15 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
     }
 
     public function collection(Collection $rows)
+    {
+        $this->validateRows($rows);
+        
+        if (!$this->onlyValidate) {
+            $this->importRows($rows);
+        }
+    }
+
+    private function validateRows(Collection $rows)
     {
         // Jika sheet kosong → langsung lempar error
         if ($rows->isEmpty() || $rows->every(fn($r) => $r->filter()->isEmpty())) {
@@ -85,7 +93,18 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 $errors = array_merge($errors, $validator->errors()->all());
                 continue;
             }
+        }
 
+        // Handle error
+        if (!empty($errors)) {
+            throw ValidationException::withMessages(['import' => $errors]);
+        }
+    }
+
+    private function importRows(Collection $rows)
+    {
+        foreach ($rows as $index => $row) {
+            
             // 1. Kurikulum
             $kurikulum = Kurikulum::firstOrCreate([
                 'nama_kurikulum' => $row['kurikulum'],
@@ -155,11 +174,5 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 broadcast(new SyllabusCrud('subBab', 'import', [$subBab]))->toOthers();
             }
         }
-
-        // Handle error
-        if (!empty($errors)) {
-            throw ValidationException::withMessages(['import' => $errors]);
-        }
     }
-
 }

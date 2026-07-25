@@ -255,6 +255,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/paginate-syllabus-service-sub-bab/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}', [SyllabusController::class, 'paginateSyllabusSubBab'])->name('syllabus.subBab');
     
         // BULKUPLOAD SYLLABUS
+        // validate
+        Route::post('/syllabus/bulkupload/syllabus/validate', [SyllabusController::class, 'bulkUploadSyllabusValidate'])->name('syllabus.bulkupload.validate');
+        
+        // store
         Route::post('/syllabus/bulkupload/syllabus', [SyllabusController::class, 'bulkUploadSyllabus'])->name('syllabus.bulkupload');
     
         // =========================================================

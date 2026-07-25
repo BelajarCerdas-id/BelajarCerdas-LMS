@@ -682,6 +682,45 @@ class SyllabusController extends Controller
         return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
+    // function validate bulkUpload syllabus
+    public function bulkUploadSyllabusValidate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulkUpload-syllabus' => 'required|file|mimes:xlsx,xls,csv|max:100000',
+        ], [
+            'bulkUpload-syllabus.required' => 'File tidak boleh kosong.',
+            'bulkUpload-syllabus.mimes' => 'Format file harus .xlsx.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => $validator->errors(),
+                    'excel_validation_errors' => [],
+                ]
+            ], 422);
+        }
+
+        try {
+
+            Excel::import(new SyllabusSheetImport(Auth::id(), $request->file('bulkUpload-syllabus'), true), $request->file('bulkUpload-syllabus'));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Validasi berhasil.',
+            ]);
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                'errors' => [
+                    'form_errors' => [],
+                    'excel_validation_errors' => $e->errors()['import'] ?? [],
+                ]
+            ],422);
+        }
+    }
+
     // function bulkUpload syllabus (EXCEL)
     public function bulkUploadSyllabus(Request $request)
     {
@@ -703,7 +742,7 @@ class SyllabusController extends Controller
 
         try {
             $userId = Auth::id();
-            Excel::import(new SyllabusSheetImport($userId, $request->file('bulkUpload-syllabus')), $request->file('bulkUpload-syllabus'));
+            Excel::import(new SyllabusSheetImport($userId, $request->file('bulkUpload-syllabus'), false), $request->file('bulkUpload-syllabus'));
 
             return response()->json([
                 'status' => 'success',
