@@ -15,12 +15,14 @@ class SchoolPartnerUsersImport implements ToCollection, WithHeadingRow, WithStar
 {
     protected $userId;
     protected $sheetTitle = '';
+    protected $onlyValidate;
 
     // Konstruktor: akan dijalankan saat class diinisialisasi
-    public function __construct($userId, $sheetTitle = '')
+    public function __construct($userId, $sheetTitle = '', $onlyValidate = false)
     {
         $this->userId = $userId;          // Simpan userId dari parameter
         $this->sheetTitle = $sheetTitle;  // Simpan nama sheet
+        $this->onlyValidate = $onlyValidate;
     }
 
     // Daftar handler yang digunakan untuk setiap fitur

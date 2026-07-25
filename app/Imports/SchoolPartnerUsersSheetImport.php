@@ -9,11 +9,13 @@ class SchoolPartnerUsersSheetImport implements WithMultipleSheets
 {
     protected $userId;
     protected $file;
+    protected $onlyValidate;
 
-    public function __construct($userId, $file)
+    public function __construct($userId, $file, $onlyValidate = false)
     {
         $this->userId = $userId;
         $this->file = $file;
+        $this->onlyValidate = $onlyValidate;
     }
 
     public function sheets(): array
@@ -29,7 +31,7 @@ class SchoolPartnerUsersSheetImport implements WithMultipleSheets
         foreach ($spreadsheet->getSheetNames() as $sheetName) {
             // Buat instance SyllabusImport untuk tiap sheet. contoh:
             // Sheet dengan nama 'Bulk_Upload_Math' akan di-handle oleh SyllabusImport($userId, 'Bulk_Upload_Math')
-            $sheets[$sheetName] = new SchoolPartnerUsersImport($this->userId, $sheetName);
+            $sheets[$sheetName] = new SchoolPartnerUsersImport($this->userId, $sheetName, $this->onlyValidate);
         }
 
         return $sheets;

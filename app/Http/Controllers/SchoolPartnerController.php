@@ -49,6 +49,43 @@ class SchoolPartnerController extends Controller
         }
     }
 
+    // function untuk bulk upload school partner validate
+    public function bulkUploadAddUsersValidate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulkUpload-add-users' => 'required|file|mimes:xlsx,xls,csv|max:100000',
+        ], [
+            'bulkUpload-add-users.required' => 'File tidak boleh kosong.',
+            'bulkUpload-add-users.mimes' => 'Format file harus .xlsx.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => $validator->errors(),
+                    'excel_validation_errors' => [],
+                ]
+            ], 422);
+        }
+
+        try {
+            $userId = Auth::id();
+            Excel::import(new SchoolPartnerUsersSheetImport($userId, $request->file('bulkUpload-add-users'), true), $request->file('bulkUpload-add-users'));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Import users berhasil.',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => [],
+                    'excel_validation_errors' => $e->errors()['import'] ?? [],
+                ]
+            ], 422);
+        }
+    }
+
     // function untuk bulk upload school partner
     public function bulkUploadAddUsers(Request $request)
     {
@@ -70,7 +107,7 @@ class SchoolPartnerController extends Controller
 
         try {
             $userId = Auth::id();
-            Excel::import(new SchoolPartnerUsersSheetImport($userId, $request->file('bulkUpload-add-users')), $request->file('bulkUpload-add-users'));
+            Excel::import(new SchoolPartnerUsersSheetImport($userId, $request->file('bulkUpload-add-users'), false), $request->file('bulkUpload-add-users'));
 
             return response()->json([
                 'status' => 'success',

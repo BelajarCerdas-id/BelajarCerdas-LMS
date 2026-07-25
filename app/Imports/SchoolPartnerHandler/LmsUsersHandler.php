@@ -22,11 +22,13 @@ class LmsUsersHandler
 {
     protected $userId;
     protected $sheetTitle;
+    protected $onlyValidate;
 
-    public function __construct($userId, $sheetTitle = '')
+    public function __construct($userId, $sheetTitle = '', $onlyValidate = false)
     {
         $this->userId = $userId;
         $this->sheetTitle = $sheetTitle;
+        $this->onlyValidate = $onlyValidate;
     }
 
     public function headingRow(): int
@@ -41,15 +43,22 @@ class LmsUsersHandler
 
     public function handle(Collection $rows)
     {
-        // 1. DAPATKAN SEMUA ERROR VALIDASI AWAL
-        $validationErrors = $this->getBulkValidationErrors($rows->toArray());
+        $this->validateRows($rows);
 
-        $errors = [];
-        $emailsInFile = [];
+        $this->importRows($rows);
+
+        return [
+            'status' => 'success',
+            'message' => 'Data imported successfully.',
+        ];
+    }
+
+    private function importRows(Collection $rows)
+    {
         $usersToBroadcast = [];
-        $passwordCache = []; 
+        $passwordCache = [];
 
-        // 2. PRE-FETCH DATA UNTUK MENCEGAH N+1 QUERIES
+        // preload data
         $npsns = $rows->pluck('npsn')->filter()->unique();
         $schoolPartners = SchoolPartner::whereIn('npsn', $npsns)->get()->keyBy('npsn');
 
@@ -59,211 +68,306 @@ class LmsUsersHandler
         $kelasNames = $rows->pluck('kelas')->filter()->unique();
         $kelasModels = Kelas::whereIn('kelas', $kelasNames)->get()->keyBy('kelas');
 
-        $emails = $rows->pluck('email_akun')
-            ->merge($rows->pluck('email_akun_orang_tua'))
-            ->merge($rows->pluck('akun_wali_kelas'))
-            ->filter()->unique();
-        $existingUsers = UserAccount::whereIn('email', $emails)->get()->keyBy('email');
-        $sheetTitle = $this->sheetTitle;
-																	   
+        $emails = $rows->pluck('email_akun')->merge($rows->pluck('email_akun_orang_tua'))->merge($rows->pluck('akun_wali_kelas'))->filter()->unique();
 
-        // 3. MATIKAN EVENT ELOQUENT & JALANKAN GLOBAL TRANSACTION
-        UserAccount::withoutEvents(function () use ($rows, $schoolPartners, $fases, $kelasModels, &$existingUsers, &$emailsInFile, &$passwordCache, &$errors, &$usersToBroadcast, $validationErrors, $sheetTitle) {
+        $existingUsers = UserAccount::whereIn('email', $emails)->get()->keyBy('email');
+
+        UserAccount::withoutEvents(function () use ($rows, $schoolPartners, $fases, $kelasModels, &$existingUsers, &$passwordCache, &$usersToBroadcast) {
+
             DB::beginTransaction();
-            foreach ($rows as $index => $row) {
-                $rowNumber = $index + 3;
-                try {
-                    // Cek jika baris ini gagal pada bulk validator
-                    if (isset($validationErrors[$index])) {
-                        throw new \Exception($validationErrors[$index]);
-                    }
+
+            try {
+
+                foreach ($rows as $row) {
+
                     $roleAccount = $row['role_account'] ?? null;
                     $roleOrangTua = $row['role_account_orang_tua'] ?? null;
-                   
-                    // Validasi Bisnis: Duplikasi Email dalam File
-                    $emailAkun = strtolower($row['email_akun']);
-                    if (in_array($emailAkun, $emailsInFile)) {
-                        throw new \Exception("Email akun {$row['email_akun']} duplikat dalam file.");
-                    }
-                    $emailsInFile[] = $emailAkun;
 
-                    // Validasi Bisnis: Pengecekan Nomor HP Akun Utama
-                    $existingUserByEmail = $existingUsers->get($row['email_akun']);
-                    if ($existingUserByEmail && $existingUserByEmail->no_hp !== $row['no_hp']) {
-                        throw new \Exception("Email akun {$row['email_akun']} sudah digunakan oleh nomor HP berbeda.");
-                    }
-
-                    // Validasi Bisnis: Pengecekan Nomor HP Akun Orang Tua
-                    $existingParentUser = null;
-                    if ($roleOrangTua === 'Orang Tua' && $roleAccount === 'Siswa') {
-                        $existingParentUser = $existingUsers->get($row['email_akun_orang_tua']);
-                        if ($existingParentUser && $existingParentUser->no_hp !== $row['no_hp_orang_tua']) {
-                            throw new \Exception("Email akun orang tua {$row['email_akun_orang_tua']} sudah digunakan oleh nomor HP berbeda.");
-                        }
-                    }
-
-                    // Validasi Bisnis: Ketersediaan NPSN
                     $schoolPartner = $schoolPartners->get($row['npsn']);
-                    if (!$schoolPartner) {
-                        throw new \Exception("NPSN {$row['npsn']} tidak terdaftar.");
+
+                    // Cache Password
+                    $plainPassword = $row['password_akun'] ?? '';
+
+                    if ($plainPassword && !isset($passwordCache[$plainPassword])) {
+                        $passwordCache[$plainPassword] = bcrypt($plainPassword);
                     }
 
-                    // Optimasi Bcrypt: Caching Password Identik
-                    $plainPasswordAkun = $row['password_akun'] ?? '';
-                    if ($plainPasswordAkun && !isset($passwordCache[$plainPasswordAkun])) {
-                        $passwordCache[$plainPasswordAkun] = bcrypt($plainPasswordAkun);										   
-                    }
-				 
+                    $plainParentPassword = $row['password_akun_orang_tua'] ?? '';
 
-                    $plainPasswordParent = $row['password_akun_orang_tua'] ?? '';
-                    if ($plainPasswordParent && !isset($passwordCache[$plainPasswordParent])) {
-                        $passwordCache[$plainPasswordParent] = bcrypt($plainPasswordParent);	  
+                    if ($plainParentPassword && !isset($passwordCache[$plainParentPassword])) {
+                        $passwordCache[$plainParentPassword] = bcrypt($plainParentPassword);
                     }
 
-                    // USER ACCOUNT UTAMA
-																					 
+                    // User Account
                     $user = UserAccount::updateOrCreate(
-                        ['email' => $row['email_akun']],
                         [
-                            'password' => $passwordCache[$plainPasswordAkun] ?? '',
+                            'email' => $row['email_akun']
+                        ],
+                        [
+                            'password' => $passwordCache[$plainPassword] ?? '',
                             'no_hp' => $row['no_hp'],
                             'role' => $roleAccount,
                             'status_akun' => 'aktif',
                         ]
                     );
+
                     $existingUsers->put($user->email, $user);
 
-                    // AKUN ORANG TUA
+                    // Parent Account
                     $parent = null;
-                    if ($roleOrangTua === 'Orang Tua' && $roleAccount === 'Siswa') {
+
+                    if ($roleAccount === 'Siswa' && $roleOrangTua === 'Orang Tua') {
+
                         $parent = UserAccount::updateOrCreate(
-                            ['email' => $row['email_akun_orang_tua']],
                             [
-                                'password' => $passwordCache[$plainPasswordParent] ?? '',
+                                'email' => $row['email_akun_orang_tua']
+                            ],
+                            [
+                                'password' => $passwordCache[$plainParentPassword] ?? '',
                                 'no_hp' => $row['no_hp_orang_tua'],
                                 'role' => $roleOrangTua,
                                 'status_akun' => 'aktif',
                             ]
                         );
+
                         $existingUsers->put($parent->email, $parent);
                     }
 
-                    // PENANGANAN BERDASARKAN ROLE
+                    // Student
                     if ($roleAccount === 'Siswa') {
-                        
-                        $getFase = $fases->get($row['fase']);
-                        $getKelas = $kelasModels->get($row['kelas']);
-                        $getWaliKelas = $existingUsers->get($row['akun_wali_kelas']);
 
-                        if (!$getFase) throw new \Exception("Fase tidak boleh kosong atau tidak terdaftar.");
-                        if (!$getKelas) throw new \Exception("Kelas tidak boleh kosong atau tidak terdaftar.");
-											 
-                        if ($getKelas->fase_id !== $getFase->id) throw new \Exception("{$row['kelas']} tidak terdaftar pada {$row['fase']}.");
-                        if (!$getWaliKelas) throw new \Exception("Wali Kelas tidak terdaftar.");
-					 
+                        $fase = $fases->get($row['fase']);
+                        $kelas = $kelasModels->get($row['kelas']);
+                        $waliKelas = $existingUsers->get($row['akun_wali_kelas']);
 
-                        StudentProfile::withoutEvents(fn() => StudentProfile::updateOrCreate(
-                            ['user_id' => $user->id],
-                            [
-                                'personal_email' => $row['email_user'],
-                                'nama_lengkap' => $row['nama_user'],
-                                'enrollment_type' => $row['enrollment_type'],
-                                'school_partner_id' => $schoolPartner->id,
-                            ]
-                        ));
-
-                        $schoolMajorId = null;
-                        if (in_array($row['jenjang_sekolah'] ?? '', ['SMA', 'SMK'])) {
-                            $schoolMajors = SchoolMajor::withoutEvents(fn() => SchoolMajor::updateOrCreate(
+                        StudentProfile::withoutEvents(fn() =>
+                            StudentProfile::updateOrCreate(
+                                ['user_id' => $user->id],
                                 [
+                                    'personal_email' => $row['email_user'],
+                                    'nama_lengkap' => $row['nama_user'],
+                                    'enrollment_type' => $row['enrollment_type'],
                                     'school_partner_id' => $schoolPartner->id,
-						  
-						 
-                                    'major_name' => $row['nama_jurusan'],
-                                ],
-                                ['major_code' => $row['kode_jurusan']]
-                            ));
-                            $schoolMajorId = $schoolMajors->id;
+                                ]
+                            )
+                        );
+
+                        $majorId = null;
+
+                        if (in_array($row['jenjang_sekolah'], ['SMA', 'SMK'])) {
+
+                            $major = SchoolMajor::withoutEvents(fn() =>
+                                SchoolMajor::updateOrCreate(
+                                    [
+                                        'school_partner_id' => $schoolPartner->id,
+                                        'major_name' => $row['nama_jurusan'],
+                                    ],
+                                    [
+                                        'major_code' => $row['kode_jurusan']
+                                    ]
+                                )
+                            );
+
+                            $majorId = $major->id;
                         }
 
-                        $schoolClass = SchoolClass::withoutEvents(fn() => SchoolClass::updateOrCreate(										
-                            [
-                                'school_partner_id' => $schoolPartner->id,
-                                'class_name' => $row['tipe_kelas'],
-                                'tahun_ajaran' => $row['tahun_ajaran'],
-                            ],
-                            [
-                                'fase_id' => $getFase->id,
-                                'kelas_id' => $getKelas->id,
-                                'major_id' => $schoolMajorId,
-                                'wali_kelas_id' => $getWaliKelas->id,
-                            ]
-                        ));
-                        StudentSchoolClass::withoutEvents(fn() => StudentSchoolClass::updateOrCreate(
-                            [
-                                'student_id' => $user->id,
-                                'school_class_id' => $schoolClass->id,
-                            ]
-                        ));
-                        if ($roleOrangTua === 'Orang Tua' && $parent) {
-                            $existingParentProfile = ParentProfile::where('user_id', $parent->id)->first();
-                            
-                            if ($existingParentProfile && $existingParentProfile->school_partner_id != $schoolPartner->id) {
-                                throw new \Exception("Akun orang tua {$row['email_akun_orang_tua']} sudah terdaftar pada sekolah lain.");
-                            }
-                            ParentProfile::withoutEvents(fn() => ParentProfile::firstOrCreate(
-                                ['user_id' => $parent->id],
+                        $schoolClass = SchoolClass::withoutEvents(fn() =>
+                            SchoolClass::updateOrCreate(
                                 [
                                     'school_partner_id' => $schoolPartner->id,
-                                    'nama_lengkap' => $row['nama_orang_tua_siswa'],
+                                    'class_name' => $row['tipe_kelas'],
+                                    'tahun_ajaran' => $row['tahun_ajaran'],
+                                ],
+                                [
+                                    'fase_id' => $fase->id,
+                                    'kelas_id' => $kelas->id,
+                                    'major_id' => $majorId,
+                                    'wali_kelas_id' => $waliKelas->id,
                                 ]
-                            ));
-                            StudentProfile::withoutEvents(fn() => StudentProfile::where('user_id', $user->id)->update(['parent_id' => $parent->id]));  
+                            )
+                        );
+
+                        StudentSchoolClass::withoutEvents(fn() =>
+                            StudentSchoolClass::updateOrCreate(
+                                [
+                                    'student_id' => $user->id,
+                                    'school_class_id' => $schoolClass->id,
+                                ]
+                            )
+                        );
+
+                        if ($parent) {
+
+                            ParentProfile::withoutEvents(fn() =>
+                                ParentProfile::firstOrCreate(
+                                    [
+                                        'user_id' => $parent->id,
+                                    ],
+                                    [
+                                        'school_partner_id' => $schoolPartner->id,
+                                        'nama_lengkap' => $row['nama_orang_tua_siswa'],
+                                    ]
+                                )
+                            );
+
+                            StudentProfile::withoutEvents(fn() =>
+                                StudentProfile::where('user_id', $user->id)
+                                    ->update([
+                                        'parent_id' => $parent->id
+                                    ])
+                            );
                         }
 
                     } else {
-                        // PENANGANAN STAFF
-                        SchoolStaffProfile::withoutEvents(fn() => SchoolStaffProfile::updateOrCreate(
-                            ['user_id' => $user->id],
-                            [
-                                'school_partner_id' => $schoolPartner->id,
-                                'enrollment_type' => $row['enrollment_type'],
-                                'nama_lengkap' => $row['nama_user'],
-                                'nik' => $row['nik_user'],
-                                'personal_email' => $row['email_user'],
-                            ]
-                        ));   
-                    }
-                    $usersToBroadcast[] = $user;
-                } catch (\Throwable $e) {
-                    $errors[] = "Sheet {$sheetTitle} - Baris {$rowNumber}: {$e->getMessage()}";
-                }
-            }
 
-            if (!empty($errors)) {
-                DB::rollBack();
-                // Exception ditangkap di luar callback withoutEvents
-            } else {
+                        // Staff
+                        SchoolStaffProfile::withoutEvents(fn() =>
+                            SchoolStaffProfile::updateOrCreate(
+                                [
+                                    'user_id' => $user->id,
+                                ],
+                                [
+                                    'school_partner_id' => $schoolPartner->id,
+                                    'enrollment_type' => $row['enrollment_type'],
+                                    'nama_lengkap' => $row['nama_user'],
+                                    'nik' => $row['nik_user'],
+                                    'personal_email' => $row['email_user'],
+                                ]
+                            )
+                        );
+                    }
+
+                    $usersToBroadcast[] = $user;
+                }
+
                 DB::commit();
+
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                throw $e;
             }
         });
 
-        // Lempar error keseluruhan ke frontend jika ada
-        if (!empty($errors)) {
-            throw ValidationException::withMessages(['import' => $errors]);
+        foreach ($usersToBroadcast as $user) {
+            broadcast(new BulkUploadCreateAccount($user))->toOthers();
         }
-
-        // 4. BULK BROADCAST
-        foreach ($usersToBroadcast as $broadcastUser) {
-            broadcast(new BulkUploadCreateAccount($broadcastUser))->toOthers();
-        }
-
-        return ['status' => 'success', 'message' => 'Data imported successfully.'];
     }
 
-    /**
-     * Helper Method: Mengembalikan array error validasi berdasarkan index baris
-     */
+    private function validateRows(Collection $rows)
+    {
+        // Validasi struktur kolom (required, regex, dll)
+        $validationErrors = $this->getBulkValidationErrors($rows->toArray());
+
+        $errors = [];
+        $emailsInFile = [];
+
+        // Preload data untuk validasi
+        $npsns = $rows->pluck('npsn')->filter()->unique();
+        $schoolPartners = SchoolPartner::whereIn('npsn', $npsns)->get()->keyBy('npsn');
+
+        $faseNames = $rows->pluck('fase')->filter()->unique();
+        $fases = Fase::whereIn('nama_fase', $faseNames)->get()->keyBy('nama_fase');
+
+        $kelasNames = $rows->pluck('kelas')->filter()->unique();
+        $kelasModels = Kelas::whereIn('kelas', $kelasNames)->get()->keyBy('kelas');
+
+        $emails = $rows->pluck('email_akun')->merge($rows->pluck('email_akun_orang_tua'))->merge($rows->pluck('akun_wali_kelas'))->filter()->unique();
+
+        $existingUsers = UserAccount::whereIn('email', $emails)->get()->keyBy('email');
+
+        foreach ($rows as $index => $row) {
+
+            $rowNumber = $index + 3;
+
+            try {
+
+                // Error dari Validator
+                if (isset($validationErrors[$index])) {
+                    throw new \Exception($validationErrors[$index]);
+                }
+
+                $roleAccount   = $row['role_account'] ?? null;
+                $roleOrangTua  = $row['role_account_orang_tua'] ?? null;
+
+                // Email duplikat dalam file
+                $emailAkun = strtolower($row['email_akun']);
+
+                if (in_array($emailAkun, $emailsInFile)) {
+                    throw new \Exception("Email akun {$row['email_akun']} duplikat dalam file.");
+                }
+
+                $emailsInFile[] = $emailAkun;
+
+                // Email sudah ada tetapi nomor HP berbeda
+                $existingUser = $existingUsers->get($row['email_akun']);
+
+                if ($existingUser && $existingUser->no_hp !== $row['no_hp']) {
+                    throw new \Exception("Email akun {$row['email_akun']} sudah digunakan oleh nomor HP berbeda.");
+                }
+
+                // Validasi akun orang tua
+                if ($roleAccount === 'Siswa' && $roleOrangTua === 'Orang Tua') {
+
+                    $existingParent = $existingUsers->get($row['email_akun_orang_tua']);
+
+                    if ($existingParent && $existingParent->no_hp !== $row['no_hp_orang_tua']) {
+                        throw new \Exception("Email akun orang tua {$row['email_akun_orang_tua']} sudah digunakan oleh nomor HP berbeda.");
+                    }
+
+                    $existingParentProfile = ParentProfile::where('user_id', $existingParent?->id)->first();
+
+                    if (
+                        $existingParentProfile &&
+                        $existingParentProfile->school_partner_id != optional($schoolPartners->get($row['npsn']))->id
+                    ) {
+                        throw new \Exception("Akun orang tua {$row['email_akun_orang_tua']} sudah terdaftar pada sekolah lain.");
+                    }
+                }
+
+                // NPSN
+                $schoolPartner = $schoolPartners->get($row['npsn']);
+
+                if (!$schoolPartner) {
+                    throw new \Exception("NPSN {$row['npsn']} tidak terdaftar.");
+                }
+
+                // Validasi khusus siswa
+                if ($roleAccount === 'Siswa') {
+
+                    $fase = $fases->get($row['fase']);
+                    $kelas = $kelasModels->get($row['kelas']);
+                    $waliKelas = $existingUsers->get($row['akun_wali_kelas']);
+
+                    if (!$fase) {
+                        throw new \Exception("Fase tidak boleh kosong atau tidak terdaftar.");
+                    }
+
+                    if (!$kelas) {
+                        throw new \Exception("Kelas tidak boleh kosong atau tidak terdaftar.");
+                    }
+
+                    if ($kelas->fase_id != $fase->id) {
+                        throw new \Exception("{$row['kelas']} tidak terdaftar pada {$row['fase']}.");
+                    }
+
+                    if (!$waliKelas) {
+                        throw new \Exception("Wali Kelas tidak terdaftar.");
+                    }
+                }
+
+            } catch (\Throwable $e) {
+                $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$e->getMessage()}";
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages([
+                'import' => $errors,
+            ]);
+        }
+    }
+
+    // Mengembalikan array error validasi berdasarkan index baris
     private function getBulkValidationErrors(array $rowsArray): array
     {
         $rules = [
@@ -276,7 +380,6 @@ class LmsUsersHandler
             '*.pembelian_fitur' => 'required',
         ];
 
-        // Menerapkan logika kondisional untuk rule array
         foreach ($rowsArray as $index => $row) {
             if (($row['role_account_orang_tua'] ?? null) === 'Orang Tua' && ($row['role_account'] ?? null) === 'Siswa') {
                 $rules["{$index}.nama_orang_tua_siswa"] = 'required';
@@ -306,7 +409,6 @@ class LmsUsersHandler
             }
         }
 
-        // Pesan kustom mengikuti kode asli
         $messages = [
             '*.nama_user.required' => 'Nama tidak boleh kosong.',
             '*.nik_user.required' => 'NIK tidak boleh kosong.',
@@ -347,6 +449,7 @@ class LmsUsersHandler
             foreach ($validator->errors()->messages() as $key => $message) {
                 // Ekstrak index (misalnya dari key "99.email_akun")
                 preg_match('/^(\d+)\./', $key, $matches);
+                
                 if (isset($matches[1])) {
                     $index = (int)$matches[1];
                     // Hanya simpan error pertama yang ditemukan per baris
