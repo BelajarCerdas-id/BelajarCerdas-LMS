@@ -14,8 +14,9 @@ class SchoolSyllabusSheetImport implements WithMultipleSheets
     protected $curriculumId;
     protected $faseId;
     protected $file;
+    protected $onlyValidate;
 
-    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $file, $faseId)
+    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $file, $onlyValidate = false, $faseId)
     {
         $this->userId = $userId;
         $this->schoolName = $schoolName;
@@ -23,6 +24,7 @@ class SchoolSyllabusSheetImport implements WithMultipleSheets
         $this->curriculumId = $curriculumId;
         $this->faseId = $faseId;
         $this->file = $file;
+        $this->onlyValidate = $onlyValidate;
     }
 
     public function sheets(): array
@@ -38,7 +40,7 @@ class SchoolSyllabusSheetImport implements WithMultipleSheets
         foreach ($spreadsheet->getSheetNames() as $sheetName) {
             // Buat instance SchoolSyllabusImport untuk tiap sheet. contoh:
             // Sheet dengan nama 'Bulk_Upload_Math' akan di-handle oleh SchoolSyllabusImport($userId, 'Bulk_Upload_Math')
-            $sheets[$sheetName] = new SchoolSyllabusImport($this->userId, $this->schoolName, $this->schoolId, $this->curriculumId, $sheetName, $this->faseId);
+            $sheets[$sheetName] = new SchoolSyllabusImport($this->userId, $this->schoolName, $this->schoolId, $this->curriculumId, $sheetName, $this->onlyValidate, $this->faseId);
         }
 
         return $sheets;

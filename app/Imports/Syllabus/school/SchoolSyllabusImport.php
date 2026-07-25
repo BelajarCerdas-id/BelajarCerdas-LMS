@@ -30,8 +30,9 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
     protected $curriculumId;
     protected $sheetTitle = '';
     protected $faseId;
+    protected $onlyValidate;
 
-    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $sheetTitle = '', $faseId)
+    public function __construct($userId, $schoolName, $schoolId, $curriculumId, $sheetTitle = '', $onlyValidate = false, $faseId)
     {
         $this->userId = $userId;
         $this->schoolName = $schoolName;
@@ -39,6 +40,7 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
         $this->curriculumId = $curriculumId;
         $this->faseId = $faseId;
         $this->sheetTitle = $sheetTitle;
+        $this->onlyValidate = $onlyValidate;
     }
 
     public function title(): string
@@ -57,6 +59,15 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
 
     public function collection(Collection $rows)
     {
+        $this->validateRows($rows);
+        
+        if (!$this->onlyValidate) {
+            $this->importRows($rows);
+        }
+    }
+
+    private function validateRows(Collection $rows)
+    {
         // Jika sheet kosong -> langsung lempar error
         if ($rows->isEmpty() || $rows->every(fn($r) => $r->filter()->isEmpty())) {
             throw ValidationException::withMessages([
@@ -67,7 +78,6 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
         $errors = [];
 
         foreach ($rows as $index => $row) {
-
             $rowNumber = $index + 3;
 
             // Validasi
@@ -98,8 +108,6 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
                 continue;
             }
 
-            $faseId = $kelas->fase_id;
-
             $allowedClass = [
                 'SD'  => ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
                 'SMP' => ['Kelas 7', 'Kelas 8', 'Kelas 9'],
@@ -114,6 +122,22 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
                 $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$row['kelas']} tidak sesuai dengan jenjang {$school->jenjang_sekolah}.";
                 continue;
             }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages([
+                'import' => $errors
+            ]);
+        }
+    }
+
+    public function importRows(Collection $rows) 
+    {
+        foreach ($rows as $index => $row) {
+
+            $kelas = Kelas::where('kelas', $row['kelas'])->where('kurikulum_id', $this->curriculumId)->first();
+
+            $faseId = $kelas->fase_id;
 
             // MAPEL
 
@@ -231,12 +255,6 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
 
             // EVENT
             broadcast(new SyllabusCrud('subBab', 'import', [$subBab]))->toOthers();
-        }
-
-        if (!empty($errors)) {
-            throw ValidationException::withMessages([
-                'import' => $errors
-            ]);
         }
     }
 }

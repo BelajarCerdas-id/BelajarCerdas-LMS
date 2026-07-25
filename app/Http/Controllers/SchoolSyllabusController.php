@@ -732,6 +732,46 @@ class SchoolSyllabusController extends Controller
         ]);
     }
 
+    // function validate school bulkUpload syllabus
+    public function bulkUploadSchoolSyllabusValidate(Request $request, $role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId = null)
+    {
+        $validator = Validator::make($request->all(), [
+            'bulkUpload-syllabus' => 'required|file|mimes:xlsx,xls,csv|max:100000',
+        ], [
+            'bulkUpload-syllabus.required' => 'File tidak boleh kosong.',
+            'bulkUpload-syllabus.mimes' => 'Format file harus .xlsx.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => [
+                    'form_errors' => $validator->errors(),
+                    'excel_validation_errors' => [],
+                ]
+            ], 422);
+        }
+
+        try {
+
+            Excel::import(new SchoolSyllabusSheetImport(Auth::id(), $schoolName, $schoolId, $curriculumId,
+            $request->file('bulkUpload-syllabus'), true, $faseId), $request->file('bulkUpload-syllabus'));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Validasi berhasil.',
+            ]);
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                'errors' => [
+                    'form_errors' => [],
+                    'excel_validation_errors' => $e->errors()['import'] ?? [],
+                ]
+            ],422);
+        }
+    }
+
     // function bulkUpload school syllabus (EXCEL)
     public function bulkUploadSchoolSyllabus(Request $request, $role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId = null)
     {
@@ -754,7 +794,7 @@ class SchoolSyllabusController extends Controller
         try {
             $userId = Auth::id();
             Excel::import(new SchoolSyllabusSheetImport($userId, $schoolName, $schoolId, $curriculumId,
-            $request->file('bulkUpload-syllabus'), $faseId), $request->file('bulkUpload-syllabus'));
+            $request->file('bulkUpload-syllabus'), false, $faseId), $request->file('bulkUpload-syllabus'));
 
             return response()->json([
                 'status' => 'success',

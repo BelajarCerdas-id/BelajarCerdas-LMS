@@ -257,7 +257,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // BULKUPLOAD SYLLABUS
         // validate
         Route::post('/syllabus/bulkupload/syllabus/validate', [SyllabusController::class, 'bulkUploadSyllabusValidate'])->name('syllabus.bulkupload.validate');
-        
+
         // store
         Route::post('/syllabus/bulkupload/syllabus', [SyllabusController::class, 'bulkUploadSyllabus'])->name('syllabus.bulkupload');
     
@@ -296,6 +296,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/school-subscription/{schoolName}/{schoolId}/{curriculumName}/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/paginate', [SchoolSyllabusController::class, 'paginateSubBab'])->name('schoolSubBabManagement.paginate');
     
         // bulkupload
+        // validate
+        Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/bulkupload-silabus/validate', [SchoolSyllabusController::class, 'bulkUploadSchoolSyllabusValidate'])->name('SchoolKelasManagement.bulkupload.validate');
+
+        // store
         Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/{curriculumName}/{curriculumId}/{faseId}/bulkupload-silabus', [SchoolSyllabusController::class, 'bulkUploadSchoolSyllabus'])->name('SchoolKelasManagement.bulkupload');
     
         // =========================================================
