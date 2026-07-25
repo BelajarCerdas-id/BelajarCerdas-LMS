@@ -931,7 +931,11 @@ Route::middleware([AuthMiddleware::class])->group(function () {
          
         
         // ROUTES SCHOOL PARTNER
-        Route::post('/school-subcsription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
+        // validate
+        Route::post('/school-subscription/validate', [SchoolPartnerController::class, 'bulkUploadSchoolPartnerValidate'])->name('bulkUploadSchoolPartner.validate');
+
+        // store
+        Route::post('/school-subscription/store', [SchoolPartnerController::class, 'bulkUploadSchoolPartner'])->name('bulkUploadSchoolPartner.store');
 
         // validate
         Route::post('/school-subscription/add-users/validate', [SchoolPartnerController::class, 'bulkUploadAddUsersValidate'])->name('bulkUploadAddUsers.validate');

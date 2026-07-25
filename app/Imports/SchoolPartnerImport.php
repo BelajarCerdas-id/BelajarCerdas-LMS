@@ -15,12 +15,14 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
 {
     protected $userId;
     protected $sheetTitle = '';
+    protected $onlyValidate;
 
     // Konstruktor: akan dijalankan saat class diinisialisasi
-    public function __construct($userId, $sheetTitle = '')
+    public function __construct($userId, $sheetTitle = '', $onlyValidate = false)
     {
         $this->userId = $userId;          // Simpan userId dari parameter
         $this->sheetTitle = $sheetTitle;  // Simpan nama sheet
+        $this->onlyValidate = $onlyValidate;
     }
 
     // Daftar handler yang digunakan untuk setiap fitur
@@ -123,7 +125,7 @@ class SchoolPartnerImport implements ToCollection, WithHeadingRow, WithStartRow,
         // Jalankan handler yang sesuai dengan fitur yang ditemukan
         foreach ($rowsByHandler as $featureKey => $featureRows) {
             $handlerClass = $this->handlers[$featureKey];         // Ambil nama class handler
-            $handler = new $handlerClass($this->userId, $this->sheetTitle); // Buat instance handler
+            $handler = new $handlerClass($this->userId, $this->sheetTitle, $this->onlyValidate); // Buat instance handler
 
             // Pastikan handler memiliki metode 'handle'
             if (!method_exists($handler, 'handle')) {

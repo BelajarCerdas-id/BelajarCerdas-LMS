@@ -45,7 +45,9 @@ class LmsUsersHandler
     {
         $this->validateRows($rows);
 
-        $this->importRows($rows);
+        if (!$this->onlyValidate) {
+            $this->importRows($rows);
+        }
 
         return [
             'status' => 'success',

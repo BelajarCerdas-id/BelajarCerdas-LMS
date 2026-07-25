@@ -556,6 +556,137 @@
                     <button>close</button>
                 </form>
             </dialog>
+            
+            <dialog id="upload-progress-modal" class="modal">
+                <div class="modal-box bg-white max-w-2xl p-0 overflow-hidden rounded-2xl">
+
+                    <!-- HEADER -->
+                    <div class="px-7 py-6 border-b border-gray-300">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+                                <i
+                                    class="fa-solid fa-cloud-arrow-up text-blue-600 text-2xl">
+                                </i>
+                            </div>
+
+                            <div>
+                                <h3 class="font-bold text-xl text-slate-800">
+                                    Sedang Mengunggah Content
+                                </h3>
+
+                                <p class="text-sm text-slate-500 mt-1">
+                                    Mohon tunggu. Jangan menutup halaman sampai proses selesai.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="p-7">
+
+                        <!-- FILE CARD -->
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                            <div class="flex gap-4">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-white border border-gray-300 flex items-center justify-center shrink-0">
+                                    <i
+                                        id="upload-file-icon"
+                                        class="fa-solid fa-file text-4xl text-slate-500">
+                                    </i>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div id="upload-file-name" class="font-semibold text-slate-800 truncate">
+                                        Belum ada file dipilih
+                                    </div>
+
+                                    <div id="upload-file-type" class="text-sm text-slate-500 mt-1">
+                                        Menunggu file...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PROGRESS -->
+                        <div class="mt-8">
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-slate-700">
+                                    Progress Upload
+                                </span>
+
+                                <span id="upload-percent" class="font-bold text-blue-600">
+                                    0%
+                                </span>
+                            </div>
+
+                            <div class="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
+                                <div
+                                    id="upload-progress-bar"
+                                    class="h-full rounded-full bg-blue-600 transition-all duration-300"
+                                    style="width:0%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STATS -->
+                        <div class="grid grid-cols-2 gap-4 mt-7">
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <div
+                                    class="text-xs uppercase tracking-wide text-slate-400">
+                                    <i class="fa-solid fa-arrow-up mr-1"></i>
+                                    Data Terkirim
+                                </div>
+
+                                <div id="upload-size" class="mt-2 text-sm font-bold text-slate-800">
+                                    0 / 0
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <div class="text-xs uppercase tracking-wide text-slate-400">
+                                    <i class="fa-solid fa-gauge-high mr-1"></i>
+                                    Kecepatan
+                                </div>
+
+                                <div id="upload-speed" class="mt-2 text-sm font-bold text-slate-800">
+                                    -
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl border border-slate-200 p-4">
+                                <div class="text-xs uppercase tracking-wide text-slate-400">
+                                    <i class="fa-solid fa-clock mr-1"></i>
+                                    Estimasi Selesai
+                                </div>
+
+                                <div id="upload-remaining" class="mt-2 text-sm font-bold text-slate-800">
+                                    Menghitung...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- INFO -->
+                        <div class="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="flex gap-3">
+                                <i
+                                    class="fa-solid fa-triangle-exclamation text-amber-500 mt-1">
+                                </i>
+
+                                <div>
+                                    <div class="font-semibold text-amber-700">
+                                        Jangan menutup halaman
+                                    </div>
+
+                                    <div class="text-sm text-amber-600 mt-1">
+                                        Selama proses upload berlangsung, mohon jangan
+                                        menutup, me-refresh, berpindah halaman agar tidak menghentikan proses upload
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </dialog>
         </div>
     </div>
 @endif

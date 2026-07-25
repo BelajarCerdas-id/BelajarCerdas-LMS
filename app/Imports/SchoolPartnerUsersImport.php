@@ -125,7 +125,7 @@ class SchoolPartnerUsersImport implements ToCollection, WithHeadingRow, WithStar
         // Jalankan handler yang sesuai dengan fitur yang ditemukan
         foreach ($rowsByHandler as $featureKey => $featureRows) {
             $handlerClass = $this->handlers[$featureKey];         // Ambil nama class handler
-            $handler = new $handlerClass($this->userId, $this->sheetTitle); // Buat instance handler
+            $handler = new $handlerClass($this->userId, $this->sheetTitle, $this->onlyValidate); // Buat instance handler
 
             // Pastikan handler memiliki metode 'handle'
             if (!method_exists($handler, 'handle')) {
