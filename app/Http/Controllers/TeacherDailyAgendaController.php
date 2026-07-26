@@ -118,7 +118,7 @@ class TeacherDailyAgendaController extends Controller
         $first = $items->first();
 
         $agenda = TeacherDailyAgenda::where('teacher_id', $user->id)->where('school_partner_id', $schoolId)->where('school_class_id', $classId)
-        ->where('mapel_id', $subjectId)->first();
+        ->where('mapel_id', $subjectId)->whereDate('agenda_date', today())->first();
 
         return response()->json([
             'data' => [
