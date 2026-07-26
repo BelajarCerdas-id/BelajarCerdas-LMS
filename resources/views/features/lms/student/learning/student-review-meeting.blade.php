@@ -82,10 +82,25 @@
                         </div>
 
                         <!-- BODY -->
-                        <div id="modal-content-container"
-                            class="p-6 overflow-y-auto max-h-[75vh] space-y-5">
-                        </div>
+                        <div class="p-6">
+                            <div id="modal-content-container"
+                                class="overflow-y-auto max-h-[70vh] space-y-5">
+                            </div>
 
+                            <div class="border-t border-gray-300 mt-6 pt-4 flex justify-end gap-3">
+
+                                <form method="dialog">
+                                    <button onclick="closeModal()" class="btn bg-[#0071BC] border border-gray-300 text-white font-bold">
+                                        Tutup
+                                    </button>
+                                </form>
+
+                                <button id="btn-mark-read" class="btn bg-green-600 hover:bg-green-700 text-white">
+                                    <i class="fa-solid fa-check mr-2"></i>
+                                    Tandai Telah Dibaca
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <form method="dialog" onclick="closeModal()" class="modal-backdrop">

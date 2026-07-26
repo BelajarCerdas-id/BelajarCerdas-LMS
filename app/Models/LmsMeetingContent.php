@@ -51,4 +51,9 @@ class LmsMeetingContent extends Model
     {
         return $this->belongsTo(Service::class, 'service_id');
     }
+
+    public function LmsContentRead()
+    {
+        return $this->hasMany(LmsContentRead::class, 'lms_meeting_content_id');
+    }
 }

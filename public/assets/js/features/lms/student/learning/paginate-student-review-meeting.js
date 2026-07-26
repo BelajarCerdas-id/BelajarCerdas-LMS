@@ -1,4 +1,5 @@
 let selectedSemester = 1;
+let currentMeetingId = null;
 
 function changeSemester(semester) {
     selectedSemester = semester;
@@ -108,6 +109,8 @@ $(document).ready(function () {
 
 
 function openReviewModal(meetingId) {
+    currentMeetingId = meetingId;
+
     const container = document.getElementById('container-review-meeting');
     const role = container.dataset.role;
     const schoolName = container.dataset.schoolName;
@@ -123,7 +126,7 @@ function openReviewModal(meetingId) {
     if (!curriculumId) return;
     if (!mapelId) return;
     if (!serviceId) return;
-    
+
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/service/${serviceId}/show-content/${meetingId}`,
         method: 'GET',
@@ -131,6 +134,19 @@ function openReviewModal(meetingId) {
 
             const container = $('#modal-content-container');
             container.empty();
+
+            // RESET BUTTON STATE
+            const btn = $('#btn-mark-read');
+
+            btn.prop('disabled', false);
+
+            btn.removeClass('bg-green-500');
+            btn.addClass('bg-green-600');
+
+            btn.html(`
+                <i class="fa-solid fa-check mr-2"></i>
+                Tandai Telah Dibaca
+            `);
 
             if (response.type === 'text') {
                 container.append(`
@@ -155,11 +171,8 @@ function openReviewModal(meetingId) {
                     `);
                 }
 
-                // ==========================================
-                // PDF FIX FOR LARAVEL OCTANE
-                // ==========================================
                 else if (response.mime === 'application/pdf') {
-                    // Create cache-buster timestamp
+
                     const timestamp = new Date().getTime();
                     const separator = response.file_url.includes('?') ? '&' : '?';
                     const cacheBustedUrl = `${response.file_url}${separator}t=${timestamp}`;
@@ -167,8 +180,13 @@ function openReviewModal(meetingId) {
                     container.append(`
                         <object data="${cacheBustedUrl}" type="application/pdf" class="w-full h-[70vh] rounded-xl border">
                             <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-xl p-6 text-center">
-                                <p class="text-gray-700 mb-4 font-medium">Preview PDF tidak didukung oleh browser Anda saat ini.</p>
-                                <a href="${response.file_url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                                <p class="text-gray-700 mb-4 font-medium">
+                                    Preview PDF tidak didukung oleh browser Anda saat ini.
+                                </p>
+
+                                <a href="${response.file_url}"
+                                    target="_blank"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
                                     Buka PDF di Tab Baru
                                 </a>
                             </div>
@@ -188,6 +206,20 @@ function openReviewModal(meetingId) {
                 }
             }
 
+            // SUDAH DIBACA
+            if (response.read_status === 'completed') {
+
+                btn.prop('disabled', true);
+
+                btn.removeClass('bg-amber-500 bg-green-600');
+                btn.addClass('bg-gray-500');
+
+                btn.html(`
+                    <i class="fa-solid fa-circle-check mr-2"></i>
+                    Sudah Dibaca
+                `);
+            }
+
             document.getElementById('reviewModal').showModal();
         }
     });
@@ -199,3 +231,82 @@ function closeModal() {
         video.src = ''; // stop the video from playing in background after close modal
     }
 }
+
+$('#btn-mark-read').on('click', function (e) {
+
+    e.preventDefault();
+
+    if (!currentMeetingId) return;
+
+    const button = $(this);
+
+    const container = document.getElementById('container-review-meeting');
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+    const curriculumId = container.dataset.curriculumId;
+    const mapelId = container.dataset.mapelId;
+    const serviceId = container.dataset.serviceId;
+
+    if (!container) return;
+    if (!role) return;
+    if (!schoolName) return;
+    if (!schoolId) return;
+    if (!curriculumId) return;
+    if (!mapelId) return;
+    if (!serviceId) return;
+
+    // LOADING
+    button.removeClass('bg-green-600');
+    button.addClass('bg-amber-500');
+    button.prop('disabled', true);
+
+    button.html(`
+        <span class="loading loading-spinner loading-sm"></span>
+        Menyimpan...
+    `);
+
+    $.ajax({
+        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/service/${serviceId}/read-content/${currentMeetingId}`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+
+        success: function () {
+
+            button.removeClass('bg-amber-500 bg-green-600');
+            button.addClass('bg-gray-500');
+
+            button.html(`
+                <i class="fa-solid fa-circle-check mr-2"></i>
+                Sudah Dibaca
+            `);
+
+            button.prop('disabled', true);
+        },
+
+        error: function (xhr) {
+            const modal = document.getElementById('reviewModal');
+            if (modal) modal.close();
+
+            button.prop('disabled', false);
+
+            button.removeClass('bg-amber-500 bg-gray-500');
+            button.addClass('bg-green-600 hover:bg-green-700');
+
+            button.html(`
+                <i class="fa-solid fa-check mr-2"></i>
+                Tandai Telah Dibaca
+            `);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Status baca gagal disimpan. Silakan coba lagi nanti.',
+                confirmButtonColor: '#0071BC'
+            });
+
+        }
+    });
+});

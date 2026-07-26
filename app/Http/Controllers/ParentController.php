@@ -163,57 +163,77 @@ class ParentController extends Controller
                 'color'    => $ev->color ?? '#0071BC'
             ]);
 
-        $kumpulanMapel = [];
-        if ($studentClassId && $studentUserId) {
-            $semuaTugas = \App\Models\SchoolAssessment::with('Mapel')
-                ->where('school_class_id', $studentClassId)
-                ->get();
+            $kumpulanMapel = [];
 
-            $tugasSiswaSelesai = DB::table('class_task_submissions')
-                ->where('student_id', $studentUserId)
-                ->pluck('task_id')
-                ->toArray();
+            if ($studentClassId && $studentUserId) {
 
-            $semuaMateri = \App\Models\LmsMeetingContent::with('Mapel')
-                ->where('school_class_id', $studentClassId)
-                ->where('is_active', 1)
-                ->get();
+                // SEMUA ASESMEN
+                $semuaTugas = \App\Models\SchoolAssessment::with('Mapel')->where('school_class_id', $studentClassId)->get();
 
-            $materiDibacaSiswa = []; 
+                // ASESMEN YANG SUDAH DIKERJAKAN SISWA
+                $tugasSiswaSelesai = \App\Models\StudentAssessmentSummary::where('student_id', $studentUserId)->pluck('root_assessment_id')->toArray();
 
-            foreach ($semuaTugas as $tugas) {
-                $namaMapel = $tugas->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
-                if (!isset($kumpulanMapel[$namaMapel])) {
-                    $kumpulanMapel[$namaMapel] = ['tugas_total' => 0, 'tugas_selesai' => 0, 'materi_total' => 0, 'materi_dibaca' => 0];
+                // SEMUA MATERI
+                $semuaMateri = \App\Models\LmsMeetingContent::with('Mapel')->where('school_class_id', $studentClassId)->where('is_active', 1)->get();
+
+                // MATERI YANG SUDAH DIBACA
+                $materiDibacaSiswa = \App\Models\LmsContentRead::where('student_id', $studentUserId)->where('status', 'completed')->pluck('lms_meeting_content_id')->toArray();
+
+                // HITUNG TUGAS
+                foreach ($semuaTugas as $tugas) {
+
+                    $namaMapel = $tugas->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
+
+                    if (!isset($kumpulanMapel[$namaMapel])) {
+                        $kumpulanMapel[$namaMapel] = [
+                            'tugas_total'   => 0,
+                            'tugas_selesai' => 0,
+                            'materi_total'  => 0,
+                            'materi_dibaca' => 0,
+                        ];
+                    }
+
+                    $kumpulanMapel[$namaMapel]['tugas_total']++;
+
+                    if (in_array($tugas->id, $tugasSiswaSelesai)) {
+                        $kumpulanMapel[$namaMapel]['tugas_selesai']++;
+                    }
                 }
-                $kumpulanMapel[$namaMapel]['tugas_total']++;
-                if (in_array($tugas->id, $tugasSiswaSelesai)) {
-                    $kumpulanMapel[$namaMapel]['tugas_selesai']++;
+
+                // HITUNG MATERI
+                foreach ($semuaMateri as $materi) {
+
+                    $namaMapel = $materi->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
+
+                    if (!isset($kumpulanMapel[$namaMapel])) {
+                        $kumpulanMapel[$namaMapel] = [
+                            'tugas_total'   => 0,
+                            'tugas_selesai' => 0,
+                            'materi_total'  => 0,
+                            'materi_dibaca' => 0,
+                        ];
+                    }
+
+                    $kumpulanMapel[$namaMapel]['materi_total']++;
+
+                    if (in_array($materi->id, $materiDibacaSiswa)) {
+                        $kumpulanMapel[$namaMapel]['materi_dibaca']++;
+                    }
                 }
             }
 
-            foreach ($semuaMateri as $materi) {
-                $namaMapel = $materi->Mapel->mata_pelajaran ?? 'Mata Pelajaran Lainnya';
-                if (!isset($kumpulanMapel[$namaMapel])) {
-                    $kumpulanMapel[$namaMapel] = ['tugas_total' => 0, 'tugas_selesai' => 0, 'materi_total' => 0, 'materi_dibaca' => 0];
-                }
-                $kumpulanMapel[$namaMapel]['materi_total']++;
-                if (in_array($materi->id, $materiDibacaSiswa)) {
-                    $kumpulanMapel[$namaMapel]['materi_dibaca']++;
-                }
-            }
-        }
+            $statistikMapel = collect();
 
-        $statistikMapel = collect();
-        foreach ($kumpulanMapel as $mapel => $data) {
-            $statistikMapel->push((object)[
-                'mapel'         => $mapel,
-                'tugas_total'   => $data['tugas_total'],
-                'tugas_selesai' => $data['tugas_selesai'],
-                'materi_total'  => $data['materi_total'],
-                'materi_dibaca' => $data['materi_dibaca'],
-            ]);
-        }
+            foreach ($kumpulanMapel as $mapel => $data) {
+
+                $statistikMapel->push((object) [
+                    'mapel'         => $mapel,
+                    'tugas_total'   => $data['tugas_total'],
+                    'tugas_selesai' => $data['tugas_selesai'],
+                    'materi_total'  => $data['materi_total'],
+                    'materi_dibaca' => $data['materi_dibaca'],
+                ]);
+            }
 
         // =========================================================
         // 7. POLLING ORANG TUA (DIFILTER BERDASARKAN KELAS & TARGET)
@@ -407,19 +427,42 @@ class ParentController extends Controller
     public function laporanNilai()
     {
         $anak = $this->getAnakInfo();
+
         abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
-        $nilaiTugas = DB::table('school_assessments')
-            ->where('school_assessments.school_class_id', $anak->class_id)
-            ->leftJoin('class_task_submissions', function($join) use ($anak) {
-                $join->on('school_assessments.id', '=', 'class_task_submissions.task_id')
-                     ->where('class_task_submissions.student_id', '=', $anak->user_id);
-            })
-            ->select('school_assessments.title as judul', 'school_assessments.end_date', 'class_task_submissions.score as nilai', 'class_task_submissions.created_at as tanggal_kumpul')
-            ->orderBy('school_assessments.created_at', 'desc')
-            ->get();
+        $nilaiTugas = \App\Models\StudentAssessmentSummary::with([
+            'SchoolAssessment.Mapel',
+            'SchoolAssessment.SchoolClass',
+            'SchoolAssessment.SchoolAssessmentType',
+        ])
+        ->where('student_id', $anak->user_id)
+        ->whereHas('SchoolAssessment', function ($query) use ($anak) {
+            $query->where('school_class_id', $anak->class_id);
+        })
+        ->orderByDesc('updated_at')
+        ->get()
+        ->map(function ($item) {
 
-        return view('features.lms.parents.laporan-nilai', compact('nilaiTugas'));
+            $assessment = $item->SchoolAssessment;
+
+            return (object) [
+                'judul'             => $assessment->title ?? '-',
+                'mapel'             => $assessment->Mapel->mata_pelajaran ?? '-',
+                'kelas'             => $assessment->SchoolClass->class_name ?? '-',
+                'tipe'              => $assessment->SchoolAssessmentType->name ?? '-',
+                'kategori'          => $assessment->assessment_category ?? '-',
+                'deadline'          => $assessment->end_date,
+                'nilai'             => $item->final_score,
+                'status'            => $item->final_score !== null ? 'Selesai' : 'Belum Dinilai',
+                'score_source'      => $item->score_source,
+                'tanggal_update'    => $item->updated_at,
+            ];
+        });
+
+        return view(
+            'features.lms.parents.laporan-nilai',
+            compact('nilaiTugas')
+        );
     }
 
     // ========================================================

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LmsContentRead;
 use App\Models\LmsMeetingContent;
 use App\Models\Mapel;
 use App\Models\SchoolAssessmentType;
@@ -146,6 +147,8 @@ class StudentLearningController extends Controller
     // function show review meeting
     public function showStudentReviewContent($role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId, $meetingId)
     {
+        $user = Auth::user();
+
         $item = LmsMeetingContent::with('LmsContent.LmsContentItem.ServiceRule', 'LmsContent.Service')
             ->findOrFail($meetingId);
 
@@ -176,11 +179,35 @@ class StudentLearningController extends Controller
             'inline' => 1 
         ]);
 
+        $contentRead = LmsContentRead::firstOrCreate([
+            'student_id' => $user->id,
+            'lms_meeting_content_id' => $item->id,
+        ], [
+            'status' => 'opened',
+        ]);
+
         return response()->json([
             'type' => 'file',
             'service_name' => $serviceName,
             'file_url' => $fileUrl,
-            'mime' => $mime
+            'mime' => $mime,
+            'read_status' => $contentRead->status,
+        ]);
+    }
+
+    public function readStudentReviewContent(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId, $meetingId) 
+    {
+        $user = Auth::user();
+
+        $contentRead = LmsContentRead::where('student_id', $user->id)->where('lms_meeting_content_id', $meetingId)->firstOrFail();
+
+        $contentRead->update([
+            'status' => 'completed',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Materi berhasil ditandai telah dibaca.',
         ]);
     }
 

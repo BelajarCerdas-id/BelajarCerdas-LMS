@@ -467,7 +467,7 @@ class HeadmasterController extends Controller
                 $aktualBaca = 0;
 
                 if ($materiIds->isNotEmpty() && class_exists('\App\Models\LmsContentRead')) {
-                    $aktualBaca = \App\Models\LmsContentRead::whereIn('content_id', $materiIds)->whereIn('student_id', $siswaIds)->count();
+                    $aktualBaca = \App\Models\LmsContentRead::whereIn('lms_meeting_content_id', $materiIds)->where('status', 'completed')->whereIn('student_id', $siswaIds)->count();
                 }
                 $persenMateri = $targetBaca > 0 ? round(($aktualBaca / $targetBaca) * 100) : 0;
 
