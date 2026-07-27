@@ -858,6 +858,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // submit form daily reflection
         Route::post('/lms/{role}/{schoolName}/{schoolId}/student/daily-reflection/store', [StudentDashboardController::class, 'dailyReflectionStore'])->name('lms.student.daily-reflection.store');
+
+        // show & read student content
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/student/content/{meetingId}', [StudentDashboardController::class, 'showStudentContent'])->name('student.dashboard.content');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/student/content/{meetingId}/mark-read', [StudentDashboardController::class, 'markStudentContentRead'])->name('student.dashboard.content.mark-read');
     
         // BLOK KEPALA SEKOLAH
         Route::get('/lms/{role}/{schoolName}/{schoolId}/headmaster/dashboard', [HeadmasterController::class, 'index'])->name('lms.headmaster.dashboard.view');

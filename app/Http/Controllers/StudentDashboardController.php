@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\DailyReflectionAnswered;
 use App\Events\DailyReflectionLivePreview;
 use App\Models\Announcement;
+use App\Models\LmsContentRead;
+use App\Models\LmsMeetingContent;
 use App\Models\SchoolClass;
 use App\Models\SchReflAnswer;
 use App\Models\SchReflQuestion;
@@ -19,6 +20,17 @@ use Illuminate\Support\Facades\Validator;
 
 class StudentDashboardController extends Controller
 {
+    // private function guessMime
+    private function guessMime($ext)
+    {
+        return match (strtolower($ext)) {
+            'mp4', 'webm', 'ogg' => 'video/' . $ext,
+            'pdf'               => 'application/pdf',
+            'jpg', 'jpeg', 'png', 'webp' => 'image/' . $ext,
+            default             => 'application/octet-stream',
+        };
+    }
+
     public function index(Request $request, $role, $schoolName, $schoolId)
     {
         $user = Auth::user();
@@ -166,9 +178,19 @@ class StudentDashboardController extends Controller
         // =========================================================
         $unreadModules = collect();
         if ($studentClassId) {
-            $materiSiswaRaw = \App\Models\LmsMeetingContent::with(['LmsContent.LmsContentItem', 'Mapel'])
+            $materiSiswaRaw = \App\Models\LmsMeetingContent::with([
+                    'LmsContent.LmsContentItem',
+                    'Mapel'
+                ])
                 ->where('school_class_id', $studentClassId)
                 ->where('is_active', 1)
+
+                // hanya materi yang belum dibaca
+                ->whereDoesntHave('LmsContentRead', function ($query) use ($studentUserId) {
+                    $query->where('student_id', $studentUserId)
+                        ->where('status', 'completed');
+                })
+
                 ->orderBy('meeting_date', 'desc')
                 ->take(6)
                 ->get();
@@ -379,6 +401,88 @@ class StudentDashboardController extends Controller
             'jadwalHariIni', 'hariIni', 'selectedJadwalDate', 'hariDipilih',
             'unreadModules', 'pendingTasks'
         ));
+    }
+
+    public function showStudentContent($role, $schoolName, $schoolId, $meetingId)
+    {
+        $user = Auth::user();
+
+        $meeting = LmsMeetingContent::with([
+            'LmsContent.Service',
+            'LmsContent.LmsContentItem'
+        ])
+        ->where('school_partner_id', $schoolId)
+        ->findOrFail($meetingId);
+
+        $contentItem = $meeting->LmsContent?->LmsContentItem?->first();
+
+        if (!$contentItem) {
+            return response()->json([
+                'message' => 'Konten tidak ditemukan.'
+            ], 404);
+        }
+
+        $serviceName = $meeting->LmsContent?->Service?->name;
+
+        $contentRead = LmsContentRead::firstOrCreate(
+            [
+                'student_id' => $user->id,
+                'lms_meeting_content_id' => $meeting->id,
+            ],
+            [
+                'status' => 'opened',
+            ]
+        );
+
+        // TEXT
+        if (empty($contentItem->value_file)) {
+
+            return response()->json([
+                'type'         => 'text',
+                'service_name' => $serviceName,
+                'value_text'   => $contentItem->value_text,
+                'read_status'  => $contentRead->status,
+            ]);
+
+        }
+
+        // FILE
+        $extension = pathinfo($contentItem->value_file, PATHINFO_EXTENSION);
+
+        $mime = $this->guessMime($extension);
+
+        $fileUrl = asset('lms-contents/' . $contentItem->value_file);
+
+        return response()->json([
+            'type'         => 'file',
+            'service_name' => $serviceName,
+            'file_url'     => $fileUrl,
+            'mime'         => $mime,
+            'read_status'  => $contentRead->status,
+        ]);
+    }
+
+    public function markStudentContentRead($role, $schoolName, $schoolId, $meetingId)
+    {
+        $user = Auth::user();
+
+        $meeting = LmsMeetingContent::where('school_partner_id', $schoolId)
+            ->findOrFail($meetingId);
+
+        $contentRead = LmsContentRead::firstOrCreate(
+            [
+                'student_id' => $user->id,
+                'lms_meeting_content_id' => $meeting->id,
+            ]
+        );
+
+        $contentRead->update([
+            'status' => 'completed'
+        ]);
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 
     public function submitVote(Request $request)

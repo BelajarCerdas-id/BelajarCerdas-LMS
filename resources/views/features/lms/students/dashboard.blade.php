@@ -123,30 +123,61 @@
                         <div class="w-full overflow-hidden">
                             <div id="moduleSlider" class="flex transition-transform duration-500 ease-out w-full">
                                 @forelse($unreadModules ?? [] as $modul)
-                                    <div class="w-full shrink-0 px-1">
-                                        <div onclick="window.location.href='/lms/student/materi/{{ $modul->id ?? 0 }}'" class="cursor-pointer relative bg-white rounded-2xl p-4 md:p-5 border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 hover:-translate-y-1 transition-all flex flex-col sm:flex-row gap-4 md:gap-5 items-start sm:items-center group">
+                                    <div class="module-item w-full shrink-0 px-1">
+
+                                        <div
+                                            onclick="openReviewModal({{ $modul->id }})"
+                                            class="cursor-pointer relative bg-white rounded-2xl p-4 md:p-5 border border-sky-100 shadow-sm hover:shadow-md hover:border-sky-300 hover:-translate-y-1 transition-all flex flex-col sm:flex-row gap-4 md:gap-5 items-start sm:items-center group">
+
                                             <div class="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-sky-50 to-white border border-sky-100 rounded-xl flex items-center justify-center text-sky-500 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
                                                 <i class="fas fa-file-pdf text-xl md:text-2xl"></i>
                                             </div>
+
                                             <div class="flex-1 min-w-0 w-full">
+
                                                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                                                    <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 uppercase tracking-wider">{{ $modul->mapel ?? 'Mata Pelajaran' }}</span>
+                                                    <span class="text-[10px] font-bold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 uppercase tracking-wider">
+                                                        {{ $modul->mapel ?? 'Mata Pelajaran' }}
+                                                    </span>
                                                 </div>
-                                                <h4 class="font-bold text-slate-800 text-sm md:text-base leading-snug group-hover:text-sky-700 transition-colors line-clamp-1">{{ $modul->judul ?? 'Judul Modul Materi' }}</h4>
-                                                <p class="text-[11px] md:text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ $modul->deskripsi ?? 'Silakan baca modul ini untuk mempersiapkan materi pembelajaran selanjutnya.' }}</p>
+
+                                                <h4 class="font-bold text-slate-800 text-sm md:text-base leading-snug group-hover:text-sky-700 transition-colors line-clamp-1">
+                                                    {{ $modul->judul ?? 'Judul Modul Materi' }}
+                                                </h4>
+
+                                                <p class="text-[11px] md:text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                                                    {{ $modul->deskripsi ?? 'Silakan baca modul ini untuk mempersiapkan materi pembelajaran selanjutnya.' }}
+                                                </p>
+
                                             </div>
-                                            <button class="mt-2 sm:mt-0 w-full sm:w-auto text-center py-2 px-5 md:py-2.5 md:px-6 bg-gradient-to-r from-sky-500 to-sky-600 text-white text-xs md:text-sm font-bold rounded-xl shadow-md shadow-sky-200 transition-all shrink-0 pointer-events-none group-hover:from-sky-600 group-hover:to-sky-700">
-                                                Buka Materi <i class="fas fa-external-link-alt ml-1"></i>
+
+                                            <button
+                                                type="button"
+                                                class="mt-2 sm:mt-0 w-full sm:w-auto text-center py-2 px-5 md:py-2.5 md:px-6 bg-gradient-to-r from-sky-500 to-sky-600 text-white text-xs md:text-sm font-bold rounded-xl shadow-md shadow-sky-200 transition-all shrink-0 pointer-events-none group-hover:from-sky-600 group-hover:to-sky-700">
+
+                                                Buka Materi
+                                                <i class="fas fa-external-link-alt ml-1"></i>
+
                                             </button>
+
                                         </div>
+
                                     </div>
                                 @empty
-                                    <div class="w-full shrink-0 flex flex-col items-center justify-center py-6 md:py-8 text-center bg-white/50 rounded-2xl border-2 border-dashed border-sky-200">
+                                    <div id="moduleEmptyState" class="w-full shrink-0 flex flex-col items-center justify-center py-6 md:py-8 text-center bg-white/50 rounded-2xl border-2 border-dashed border-sky-200">
+
                                         <div class="w-12 h-12 md:w-14 md:h-14 bg-sky-50 shadow-inner border border-sky-100 rounded-full flex items-center justify-center mb-3 text-sky-500">
                                             <i class="fas fa-check-circle text-xl md:text-2xl"></i>
                                         </div>
-                                        <h4 class="text-sm md:text-base font-bold text-sky-800 mb-1">Hebat!</h4>
-                                        <p class="text-[11px] md:text-sm text-sky-600/70 font-medium">Semua modul pembelajaran sudah dibaca.</p>
+
+                                        <h4 class="text-sm md:text-base font-bold text-sky-800 mb-1">
+                                            Hebat!
+                                        </h4>
+
+                                        <p class="text-[11px] md:text-sm text-sky-600/70 font-medium">
+                                            Semua modul pembelajaran sudah dibaca.
+                                        </p>
+
                                     </div>
                                 @endforelse
                             </div>
@@ -855,7 +886,50 @@
             </div>
 
         </div>
+        
+        <!-- 6. MODAL REVIEW CONTENT -->
+        <dialog id="reviewModal" class="modal">
+            <div class="modal-box bg-white max-w-7xl max-h-[90vh] p-0 rounded-2xl overflow-hidden">
 
+                <!-- HEADER -->
+                <div class="bg-linear-to-r from-[#0071BC] to-[#29ABE2] px-6 py-4 flex justify-between items-center">
+                    <h3 class="text-white font-semibold text-lg">
+                        Review Content
+                    </h3>
+
+                    <form method="dialog">
+                        <button onclick="closeModal()" class="text-white text-xl hover:scale-110 transition cursor-pointer outline-none">
+                            ✕
+                        </button>
+                    </form>
+                </div>
+
+                <!-- BODY -->
+                <div class="p-6">
+                    <div id="modal-content-container"
+                        class="overflow-y-auto max-h-[70vh] space-y-5">
+                    </div>
+
+                    <div class="border-t border-gray-300 mt-6 pt-4 flex justify-end gap-3">
+
+                        <form method="dialog">
+                            <button onclick="closeModal()" class="btn bg-[#0071BC] border border-gray-300 text-white font-bold">
+                                Tutup
+                            </button>
+                        </form>
+
+                        <button id="btn-mark-read" class="btn bg-green-600 hover:bg-green-700 text-white">
+                            <i class="fa-solid fa-check mr-2"></i>
+                            Tandai Telah Dibaca
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <form method="dialog" onclick="closeModal()" class="modal-backdrop">
+                <button>Close</button>
+            </form>
+        </dialog>
     </div>
 @else
     <div class="flex flex-col min-h-screen items-center justify-center bg-slate-50">
@@ -872,7 +946,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/daily-reflection/daily-reflection-form.js') }}"></script>
-
+s
 <!--- PUSHER LISTENER ---->
 <script src="{{ asset('assets/js/pusher-listener/student/daily-reflection/daily-reflection-form-listener.js') }}"></script> <!--- pusher listener student daily reflection form ---->
 
@@ -1246,4 +1320,278 @@
             btn.disabled = false;
         }
     }
+</script>
+
+<!-- script for show & read content (materi) -->
+<script>
+let currentMeetingId = null;
+
+function openReviewModal(meetingId) {
+
+    currentMeetingId = meetingId;
+    const container = document.getElementById('container');
+
+    if (!container) return;
+
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+
+    if (!role) return;
+    if (!schoolName) return;
+    if (!schoolId) return;
+
+    $.ajax({
+        url: `/lms/${role}/${schoolName}/${schoolId}/student/content/${meetingId}`,
+        method: 'GET',
+
+        success: function (response) {
+            const modalContainer = $('#modal-content-container');
+            modalContainer.empty();
+
+            // RESET BUTTON
+            const button = $('#btn-mark-read');
+
+            button.prop('disabled', false);
+            button.removeClass('bg-gray-500 bg-amber-500');
+            button.addClass('bg-green-600 hover:bg-green-700');
+
+            button.html(`
+                <i class="fa-solid fa-check mr-2"></i>
+                Tandai Telah Dibaca
+            `);
+
+            // TEXT CONTENT
+            if (response.type === 'text') {
+                modalContainer.append(`
+                    <div class="bg-gray-50 border rounded-xl p-5 shadow-sm">
+
+                        <p class="text-sm font-semibold text-blue-600 mb-3 uppercase">
+                            ${response.service_name ?? ''}
+                        </p>
+
+                        <div class="text-gray-700 leading-relaxed whitespace-pre-line">
+                            ${response.value_text ?? 'Tidak ada konten'}
+                        </div>
+
+                    </div>
+                `);
+            }
+
+            // FILE CONTENT
+            if (response.type === 'file') {
+
+                // VIDEO
+                if (response.mime.startsWith('video/')) {
+
+                    modalContainer.append(`
+                        <div class="rounded-xl overflow-hidden shadow h-[70vh]">
+
+                            <video
+                                id="video-frame"
+                                src="${response.file_url}"
+                                controls
+                                class="w-full h-[70vh] rounded-lg">
+                            </video>
+
+                        </div>
+                    `);
+                }
+
+                // PDF
+                else if (response.mime === 'application/pdf') {
+                    const timestamp = new Date().getTime();
+                    const separator = response.file_url.includes('?') ? '&' : '?';
+
+                    const cacheBustedUrl = `${response.file_url}${separator}t=${timestamp}`;
+
+                    modalContainer.append(`
+
+                        <object data="${cacheBustedUrl}" type="application/pdf" class="w-full h-[70vh] rounded-xl border">
+                            <div class="flex flex-col items-center justify-center h-full bg-gray-50 rounded-xl p-6 text-center">
+                                <p class="text-gray-700 mb-4 font-medium">
+                                    Preview PDF tidak didukung oleh browser Anda saat ini.
+                                </p>
+
+                                <a href="${response.file_url}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow">
+                                    Buka PDF di Tab Baru
+                                </a>
+                            </div>
+                        </object>
+                    `);
+                }
+
+                // FILE
+                else {
+                    modalContainer.append(`
+                        <div class="text-center">
+                            <a href="${response.file_url}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow">
+                                Download File
+                            </a>
+                        </div>
+                    `);
+                }
+            }
+
+            // SUDAH DIBACA
+            if (response.read_status === 'completed') {
+                button.prop('disabled', true);
+                button.removeClass('bg-green-600 hover:bg-green-700 bg-amber-500');
+                button.addClass('bg-gray-500');
+
+                button.html(`
+                    <i class="fa-solid fa-circle-check mr-2"></i>
+                    Sudah Dibaca
+                `);
+            }
+            document.getElementById('reviewModal').showModal();
+        },
+
+        error: function () {
+            alert('Gagal memuat materi.');
+        }
+    });
+}
+
+function closeModal() {
+    const video = document.getElementById('video-frame');
+
+    if (video) {
+        video.pause();
+        video.currentTime = 0;
+        video.src = '';
+    }
+}
+
+function renderEmptyModuleState() {
+
+    $('#moduleSlider').html(`
+        <div id="moduleEmptyState"
+            class="w-full shrink-0 flex flex-col items-center justify-center py-6 md:py-8 text-center bg-white/50 rounded-2xl border-2 border-dashed border-sky-200">
+
+            <div class="w-12 h-12 md:w-14 md:h-14 bg-sky-50 shadow-inner border border-sky-100 rounded-full flex items-center justify-center mb-3 text-sky-500">
+                <i class="fas fa-check-circle text-xl md:text-2xl"></i>
+            </div>
+
+            <h4 class="text-sm md:text-base font-bold text-sky-800 mb-1">
+                Hebat!
+            </h4>
+
+            <p class="text-[11px] md:text-sm text-sky-600/70 font-medium">
+                Semua modul pembelajaran sudah dibaca.
+            </p>
+
+        </div>
+    `);
+
+}
+
+$('#btn-mark-read').on('click', function (e) {
+    e.preventDefault();
+
+    if (!currentMeetingId) return;
+
+    const button = $(this);
+
+    const container = document.getElementById('container');
+
+    if (!container) return;
+
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+
+    if (!role) return;
+    if (!schoolName) return;
+    if (!schoolId) return;
+
+    // LOADING
+    button.prop('disabled', true);
+    button.removeClass('bg-green-600 hover:bg-green-700');
+    button.addClass('bg-amber-500');
+
+    button.html(`
+        <span class="loading loading-spinner loading-sm"></span>
+        Menyimpan...
+    `);
+
+    $.ajax({
+        url: `/lms/${role}/${schoolName}/${schoolId}/student/content/${currentMeetingId}/mark-read`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+
+        success: function () {
+            button.removeClass('bg-green-600 hover:bg-green-700 bg-amber-500');
+            button.addClass('bg-gray-500');
+
+            button.html(`
+                <i class="fa-solid fa-circle-check mr-2"></i>
+                Sudah Dibaca
+            `);
+
+            button.prop('disabled', true);
+
+            const currentCard = $(`[onclick="openReviewModal(${currentMeetingId})"]`).closest('.module-item');
+
+            currentCard.fadeOut(300, function () {
+                $(this).remove();
+                refreshModuleSlider();
+            });
+        },
+
+        error: function () {
+            button.prop('disabled', false);
+            button.removeClass('bg-amber-500 bg-gray-500');
+            button.addClass('bg-green-600 hover:bg-green-700');
+
+            button.html(`
+                <i class="fa-solid fa-check mr-2"></i>
+                Tandai Telah Dibaca
+            `);
+
+            alert('Terjadi kesalahan saat menyimpan status baca.');
+        }
+    });
+});
+
+function refreshModuleSlider() {
+
+    const totalModule = $('#moduleSlider .module-item').length;
+
+    // Jika index belum ada / undefined
+    if (typeof moduleIndex === 'undefined') {
+        moduleIndex = 0;
+    }
+
+    // Jika jumlah modul berubah dan index melebihi batas
+    if (moduleIndex >= totalModule) {
+        moduleIndex = Math.max(totalModule - 1, 0);
+    }
+
+    // Jika semua modul sudah dibaca
+    if (totalModule === 0) {
+        moduleIndex = 0;
+
+        renderEmptyModuleState();
+
+        $('#btnPrevModule').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+        $('#btnNextModule').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+
+        return;
+    }
+
+    // posisi slider
+    $('#moduleSlider').css(
+        'transform',
+        `translateX(-${moduleIndex * 100}%)`
+    );
+
+    // Update tombol prev
+    $('#btnPrevModule').prop('disabled', moduleIndex === 0).toggleClass('opacity-50 cursor-not-allowed', moduleIndex === 0);
+
+    // Update tombol next
+    $('#btnNextModule').prop('disabled', moduleIndex >= totalModule - 1).toggleClass('opacity-50 cursor-not-allowed', moduleIndex >= totalModule - 1);
+}
 </script>
