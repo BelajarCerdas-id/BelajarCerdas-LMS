@@ -3,21 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\LibraryBook;
 use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\TopikMateri;
 use App\Models\Bab;
-use App\Models\Kurikulum;
 use App\Models\LmsQuestionBank;
 use App\Models\StudentSchoolClass;
 use App\Models\StudentTkaAnswer;
 use App\Models\StudentTkaAttempt;
 use App\Models\UserAccount;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\UploadSession;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class LibraryController extends Controller
@@ -25,18 +26,57 @@ class LibraryController extends Controller
 
     /* ================= ADMIN LIBRARY ================= */
 
-    public function administrator()
+    public function administrator(Request $request)
     {
-        Log::debug('Administrator library page accessed.');
+       Log::debug('Administrator library page accessed.');
 
-        $books = LibraryBook::with([
-            'kelas',
-            'mapel',
-            'bab',
-            'topik' 
-        ])->get();
+    $books = LibraryBook::with([
+        'kelas',
+        'mapel',
+        'bab',
+        'topik'
+    ]);
 
-        $getCurriculum = Kurikulum::orderBy('nama_kurikulum')->get();
+    if ($request->filled('search')) {
+
+        $search = $request->search;
+
+        $books->where(function ($q) use ($search) {
+
+            $q->where('title', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('tipe', 'like', "%{$search}%")
+
+              ->orWhereHas('mapel', function ($m) use ($search) {
+                    $m->where('mata_pelajaran', 'like', "%{$search}%");
+              })
+
+              ->orWhereHas('bab', function ($b) use ($search) {
+                    $b->where('nama_bab', 'like', "%{$search}%");
+              })
+
+              ->orWhereHas('topik', function ($t) use ($search) {
+                    $t->where('nama_topik', 'like', "%{$search}%")
+                      ->orWhere('deskripsi', 'like', "%{$search}%");
+              })
+
+              ->orWhereHas('kelas', function ($k) use ($search) {
+                    $k->where('kelas', 'like', "%{$search}%");
+              });
+
+        });
+
+    }
+
+    $books = $books->get();
+
+    $uploadingVideos = UploadSession::where('status', 'uploading')
+        ->latest()
+        ->get();
+
+    $uploadingVideos = UploadSession::where('status', 'uploading')
+        ->orderByDesc('created_at')
+        ->get();
 
         $topiks = TopikMateri::with(['kelas','mapel'])
             ->orderBy('nama_topik')
@@ -45,6 +85,7 @@ class LibraryController extends Controller
         $mapels = Mapel::selectRaw('MIN(id) as id, mata_pelajaran')
             ->groupBy('mata_pelajaran')
             ->orderBy('mata_pelajaran')
+            ->where('school_partner_id', null)
             ->get();
 
         $babs = Bab::orderBy('nama_bab')->get();
@@ -57,11 +98,11 @@ class LibraryController extends Controller
             'features.lms.administrator.library',
             compact(
                 'books',
+                'uploadingVideos',
                 'mapels',
                 'babs',
                 'kelas',
-                'topiks',
-                'getCurriculum'
+                'topiks'
             )
         );
     }
@@ -183,6 +224,7 @@ class LibraryController extends Controller
         })
         ->distinct()
         ->orderBy('mata_pelajaran')
+        ->where('school_partner_id', null)
         ->get();
 
         $kelas = Kelas::all();
@@ -345,158 +387,220 @@ class LibraryController extends Controller
     /* ================= STORE ================= */
 
     public function store(Request $request)
-    {
+{
 
-        $request->validate([
-        'title' => 'required',
-        'description' => 'nullable|string',
-        'kelas_id' => 'nullable|exists:kelas,id',
-        'mapel_id' => 'required',
-        'bab_id' => 'nullable',
-        'topik_materi_id' => 'nullable',
-        'tipe' => 'required|in:buku,ppt,lks,video',
-        'file' => 'nullable|mimes:pdf,ppt,pptx|max:20480',
-        'video_url' => 'nullable|string',
-        'auto_cover' => 'nullable|string'
-    ]);
+    Log::debug('LibraryController@store initiated', $request->all());
 
-        $exists = LibraryBook::where('mapel_id', $request->mapel_id)
-        ->where('bab_id', $request->bab_id)
-        ->where('topik_materi_id', $request->topik_materi_id) // <-- ADD THIS LINE
-        ->where('tipe', $request->tipe)
-        ->when($request->kelas_id, function ($q) use ($request) {
-            $q->where('kelas_id', $request->kelas_id);
-        })
-        ->when(in_array($request->tipe, ['buku', 'ppt']), function ($q) use ($request) {
-            $q->where('title', $request->title);
-        })
-        ->exists();
-        if ($exists) {
-            return back()->with('error','File untuk kelas, mapel, bab dan tipe ini sudah ada');
+    $validator = Validator::make($request->all(), [
+    'title' => 'required',
+    'description' => 'nullable|string',
+    'kelas_id' => 'nullable|exists:kelas,id',
+    'mapel_id' => 'required',
+    'bab_id' => 'nullable',
+    'topik_materi_id' => 'nullable',
+
+    'tipe' => 'required|in:buku,ppt,lks,video',
+
+    'file' => 'nullable|mimes:pdf,ppt,pptx|max:20480',
+
+    'video_url' => 'nullable|string',
+
+    'video_file' => 'nullable|file|mimes:mp4,mov,avi,webm|max:512000',
+
+    'uploaded_video_path' => 'nullable|string',
+
+    'uploaded_video_cover' => 'nullable|string',
+
+    'auto_cover' => 'nullable|string'
+]);
+
+if ($validator->fails()) {
+
+    if ($request->expectsJson()) {
+
+        return response()->json([
+            'success' => false,
+            'finished' => false,
+            'message' => 'Validasi gagal',
+            'errors' => $validator->errors()
+        ], 422);
+
+    }
+
+    return back()
+        ->withErrors($validator)
+        ->withInput();
+}
+
+    /* ================= FOLDER SAFETY ================= */
+    $videoPath = public_path('library/video');
+    $filePath  = public_path('library/file');
+    $coverPath = public_path('library/sampul');
+
+    if (!file_exists($videoPath)) mkdir($videoPath, 0777, true);
+    if (!file_exists($filePath)) mkdir($filePath, 0777, true);
+    if (!file_exists($coverPath)) mkdir($coverPath, 0777, true);
+
+    /* ================= INIT ================= */
+    $fileName  = null;
+    $coverName = null;
+
+    /* =====================================================
+        COVER HANDLING (PRIORITY: upload > auto > default)
+    ===================================================== */
+
+    if ($request->hasFile('cover')) {
+
+        $cover = $request->file('cover');
+        $coverName = time().'_cover.'.$cover->getClientOriginalExtension();
+        $cover->move($coverPath, $coverName);
+
+    } elseif ($request->auto_cover) {
+
+        $image = str_replace('data:image/jpeg;base64,', '', $request->auto_cover);
+        $image = base64_decode($image);
+
+        $coverName = time().'_cover.jpg';
+
+        file_put_contents(
+            $coverPath.'/'.$coverName,
+            $image
+        );
+    }
+
+    /* =====================================================
+        FILE HANDLING (BUKU / PPT / LKS)
+    ===================================================== */
+    if ($request->tipe !== 'video' && $request->hasFile('file')) {
+
+        $file = $request->file('file');
+
+        $fileName = time().'_'.$file->getClientOriginalName();
+
+        $file->move($filePath, $fileName);
+    }
+
+    /* =====================================================
+        VIDEO HANDLING (UPLOAD / URL)
+    ===================================================== */
+
+    if ($request->tipe === 'video') {
+
+    $url = $request->video_url ?? null;
+
+    /*
+    |--------------------------------------------
+    | VIDEO SUDAH DIUPLOAD VIA AJAX
+    |--------------------------------------------
+    */
+    if ($request->uploaded_video_path) {
+
+        $fileName = basename($request->uploaded_video_path);
+
+        if ($request->uploaded_video_cover) {
+            $coverName = $request->uploaded_video_cover;
         }
 
-        $fileName = null;
-        $coverName = null;
-
-        /* ================= COVER ================= */
-        if ($request->hasFile('cover')) {
-
-            $cover = $request->file('cover');
-            $coverName = time().'_cover.'.$cover->getClientOriginalExtension();
-            $cover->move(public_path('library/sampul'), $coverName);
-
-        } elseif ($request->auto_cover) {
-
-            $image = str_replace('data:image/jpeg;base64,', '', $request->auto_cover);
-            $image = base64_decode($image);
-
-            $coverName = time().'_cover.jpg';
-
-            file_put_contents(
-                public_path('library/sampul/'.$coverName),
-                $image
-            );
-        }
-
-        /* ================= DEFAULT COVER (SAFE) ================= */
         if (!$coverName) {
-            $coverName = asset('images/default-video.jpg');
+            $coverName = 'images/default-video.jpg';
         }
+    }
 
-        /* =====================================================
-            FILE HANDLING (BUKU / PPT / LKS)
-        ===================================================== */
-        if ($request->tipe !== 'video') {
+    /*
+    |--------------------------------------------
+    | FALLBACK UPLOAD BIASA
+    |--------------------------------------------
+    */
+    elseif ($request->hasFile('video_file')) {
 
-            if ($request->hasFile('file')) {
+        $video = $request->file('video_file');
 
-                $file = $request->file('file');
+        $fileName = time().'_'.$video->getClientOriginalName();
 
-                $fileName = time().'_'.$file->getClientOriginalName();
+        $video->move($videoPath,$fileName);
 
-                $file->move(public_path('library/file'), $fileName);
-            }
+        if (!$coverName) {
+            $coverName = 'images/default-video.jpg';
         }
+    }
 
-        /* =====================================================
-            VIDEO HANDLING (YOUTUBE + DRIVE + FILE VIDEO)
-        ===================================================== */
-        if ($request->tipe === 'video') {
+    /*
+    |--------------------------------------------
+    | VIDEO URL
+    |--------------------------------------------
+    */
+    elseif ($url) {
 
-            $url = $request->video_url;
-            $videoId = null;
+        $videoId = null;
 
-            // ================= YOUTUBE =================
-            if ($url && str_contains($url, 'youtube.com')) {
+        if (str_contains($url,'youtube.com')) {
 
-                parse_str(parse_url($url, PHP_URL_QUERY), $query);
-                $videoId = $query['v'] ?? null;
+            parse_str(parse_url($url,PHP_URL_QUERY),$query);
 
-                $fileName = $url;
-            }
+            $videoId = $query['v'] ?? null;
 
-            elseif ($url && str_contains($url, 'youtu.be/')) {
+            $fileName = $url;
 
-                $videoId = last(explode('/', $url));
-
-                $fileName = $url;
-            }
-
-            // ================= GOOGLE DRIVE =================
-            elseif ($url && str_contains($url, 'drive.google.com')) {
-
-                preg_match('/\/d\/(.*?)\//', $url, $match);
-                $videoId = $match[1] ?? null;
-
-                $fileName = $url;
-
-                $coverName = 'https://drive.google.com/thumbnail?id='.$videoId.'&sz=w1000';
-            }
-
-            // ================= YOUTUBE COVER =================
-            if ($videoId && str_contains($url, 'youtube')) {
-
+            if (!$coverName && $videoId) {
                 $coverName = 'https://img.youtube.com/vi/'.$videoId.'/hqdefault.jpg';
             }
 
-            // ================= UPLOAD VIDEO FILE =================
-            if ($request->hasFile('video_file')) {
+        }
+        elseif (str_contains($url,'youtu.be/')) {
 
-                $video = $request->file('video_file');
+            $videoId = last(explode('/',$url));
 
-                $fileName = time().'_'.$video->getClientOriginalName();
+            $fileName = $url;
 
-                $video->move(public_path('library/video'), $fileName);
-
-                $coverName = asset('images/default-video.jpg');
+            if (!$coverName) {
+                $coverName = 'https://img.youtube.com/vi/'.$videoId.'/hqdefault.jpg';
             }
+
+        }
+        elseif (str_contains($url,'drive.google.com')) {
+
+            preg_match('/\/d\/(.*?)\//',$url,$match);
+
+            $videoId = $match[1] ?? null;
+
+            $fileName = $url;
+
+            if (!$coverName && $videoId) {
+                $coverName = 'https://drive.google.com/thumbnail?id='.$videoId.'&sz=w1000';
+            }
+
+        }
+        elseif (filter_var($url,FILTER_VALIDATE_URL)) {
+
+            $fileName = $url;
+
         }
 
-        $seriesNo = 0;
-
-        if (
-            in_array(
-                $request->tipe,
-                ['buku','ppt']
-            )
-            &&
-            $request->topik_materi_id
-        ) {
-
-            $seriesNo =
-                LibraryBook::where(
-                    'topik_materi_id',
-                    $request->topik_materi_id
-                )->count() + 1;
-
-            
+        if (!$coverName) {
+            $coverName = 'images/default-video.jpg';
         }
 
-        $finalDescription = $request->description;
+    }
 
-    // kalau buku / ppt ambil dari topik
+}
+
+    /* ================= SERIES ================= */
+    $seriesNo = 0;
+
     if (
-        in_array($request->tipe, ['buku', 'ppt']) &&
+        in_array($request->tipe, ['buku','ppt']) &&
+        $request->topik_materi_id
+    ) {
+        $seriesNo = LibraryBook::where('topik_materi_id', $request->topik_materi_id)
+            ->where('tipe', $request->tipe)
+            ->count() + 1;
+    }
+
+    /* ================= DESCRIPTION ================= */
+    $finalDescription = $request->description;
+
+    if (
+        in_array($request->tipe, ['buku','ppt']) &&
         $request->topik_materi_id
     ) {
         $topik = TopikMateri::find($request->topik_materi_id);
@@ -506,35 +610,68 @@ class LibraryController extends Controller
         }
     }
 
-        /* ================= SAVE DATABASE ================= */
-        LibraryBook::create([
-        'title' => $request->title,
-        'description' => $finalDescription ?? $request->description ?? '',
-        'kelas_id' => $request->kelas_id,
-        'mapel_id' => $request->mapel_id,
-        'bab_id' => $request->bab_id,
-        'topik_materi_id' => $request->topik_materi_id,
-        'series_no' => $seriesNo ?? 0,
-        'file' => $fileName,
-        'cover' => $coverName,
-        'tipe' => $request->tipe
+    /* ================= SAVE ================= */
+    $book = LibraryBook::create([
+    'title' => $request->title,
+    'description' => $finalDescription ?? '',
+    'kelas_id' => $request->kelas_id,
+    'mapel_id' => $request->mapel_id,
+    'bab_id' => $request->bab_id,
+    'topik_materi_id' => $request->topik_materi_id,
+    'series_no' => $seriesNo,
+    'file' => $fileName,
+    'cover' => $coverName,
+    'tipe' => $request->tipe
     ]);
 
-        return back()->with('success','File berhasil diupload');
-    }
+    if ($request->expectsJson()) {
+
+    $book->load([
+        'kelas',
+        'mapel',
+        'bab',
+        'topik'
+    ]);
+
+    $row = view(
+    'features.lms.administrator.video-row',
+    compact('book')
+)->render();
+
+return response()->json([
+    'success'  => true,
+    'finished' => true,
+    'message'  => 'Upload selesai',
+
+    // HTML row yang akan menggantikan row sementara
+    'row' => $row,
+
+    // (opsional) tetap kirim data book kalau nanti diperlukan JS lain
+    'book' => [
+        'id'     => $book->id,
+        'title'  => $book->title,
+        'cover'  => $book->cover,
+        'file'   => $book->file,
+        'kelas'  => optional($book->kelas)->kelas,
+        'mapel'  => optional($book->mapel)->mata_pelajaran,
+        'bab'    => optional($book->bab)->nama_bab,
+        'tipe'   => $book->tipe,
+    ]
+]);
+}
+
+    Log::debug('LibraryBook created', ['id' => $book->id]);
+
+    return back()->with('success', 'File berhasil diupload');
+}
 
     /* ================= GET BAB ================= */
 
-    public function getBab(Request $request)
+    public function getBab($mapel_id)
     {
-        $kelas_id = $request->query('kelas_id');
-        $mapel_id = $request->query('mapel_id');
-
-        $babs = Bab::where('kelas_id', $kelas_id)
-                ->where('mapel_id', $mapel_id)
-                ->get();
-
-        return response()->json($babs);
+        return response()->json(
+            Bab::where('mapel_id',$mapel_id)->get()
+        );
     }
 
 
@@ -724,6 +861,7 @@ class LibraryController extends Controller
             $q->where('tipe', 'video');
         })
         ->orderBy('mata_pelajaran')
+        ->where('school_partner_id', null)
         ->get();
 
         return view(
@@ -772,11 +910,12 @@ class LibraryController extends Controller
 
         $topiks = $query->get();
 
-    $mapels = \App\Models\Mapel::query()
-        ->selectRaw('MIN(id) as id, mata_pelajaran')
-        ->groupBy('mata_pelajaran')
-        ->orderBy('mata_pelajaran')
-        ->get();
+        $mapels = \App\Models\Mapel::query()
+            ->selectRaw('MIN(id) as id, mata_pelajaran')
+            ->groupBy('mata_pelajaran')
+            ->orderBy('mata_pelajaran')
+            ->where('school_partner_id', null)
+            ->get();
 
         return view('features.lms.administrator.topik-management', compact('topiks', 'mapels'));
     }
@@ -800,6 +939,333 @@ class LibraryController extends Controller
         return back()
             ->with('success', 'Topik berhasil diperbarui');
     }
+
+public function deleteTopik($id)
+{
+    $topik = TopikMateri::findOrFail($id);
+
+    $jumlahDipakai = LibraryBook::where('topik_materi_id', $id)->count();
+
+    if ($jumlahDipakai > 0) {
+        return redirect()->back()->with([
+            'error' => "Topik \"{$topik->nama_topik}\" sedang digunakan oleh {$jumlahDipakai} materi dan tidak dapat dihapus."
+        ]);
+    }
+
+    $topik->delete();
+
+    return redirect()->back()->with([
+        'success' => 'Topik berhasil dihapus.'
+    ]);
+}   
+
+    public function initVideoUpload(Request $request)
+        {
+            $uploadId = Str::uuid()->toString();
+
+            $session = UploadSession::create([
+                'upload_id' => $uploadId,
+                'file_name' => $request->file_name,
+                'total_chunks' => $request->total_chunks,
+                'uploaded_chunks' => 0,
+                'status' => 'uploading'
+            ]);
+
+            return response()->json($session);
+        }
+
+    public function uploadVideoChunk(Request $request)
+    {
+    $request->validate([
+        'upload_id' => 'required',
+        'chunk_index' => 'required',
+        'file' => 'required|file'
+    ]);
+
+    $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
+
+    $dir = storage_path("app/video_chunks/{$request->upload_id}");
+
+    if (!file_exists($dir)) {
+        mkdir($dir, 0777, true);
+    }
+
+    $request->file('file')->move($dir, $request->chunk_index);
+
+    $session->increment('uploaded_chunks');
+
+    $session->refresh();
+
+    $progress = round(
+        ($session->uploaded_chunks / $session->total_chunks) * 100
+    );
+
+    return response()->json([
+        'progress' => $progress,
+        'uploaded' => $session->uploaded_chunks,
+        'upload_id' => $session->upload_id
+    ]);
+
+    }
+
+    public function completeVideoUpload(Request $request)
+    {
+    $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
+
+    $dir = storage_path("app/video_chunks/{$session->upload_id}");
+
+    $fileName = time() . "_" . $session->file_name;
+    $finalPath = public_path("library/video/" . $fileName);
+
+    if (!file_exists(public_path("library/video"))) {
+        mkdir(public_path("library/video"), 0777, true);
+    }
+
+    $out = fopen($finalPath, "ab");
+
+    for ($i = 0; $i < $session->total_chunks; $i++) {
+
+        $chunkPath = $dir . "/" . $i;
+
+        if (!file_exists($chunkPath)) continue;
+
+        $in = fopen($chunkPath, "rb");
+        stream_copy_to_stream($in, $out);
+        fclose($in);
+    }
+
+    fclose($out);
+
+    // cleanup
+    array_map('unlink', glob("$dir/*"));
+    @rmdir($dir);
+
+    $session->update([
+        'path' => "library/video/" . $fileName,
+        'status' => 'done'
+    ]);
+
+    return response()->json([
+    'status' => true,
+    'finished' => true,
+    'upload_id' => $session->upload_id,
+    'path' => "library/video/".$fileName
+    ]);
+    }
+
+    public function row($id)
+{
+    $video = LibraryBook::with([
+        'kelas',
+        'mapel',
+        'bab',
+        'topik'
+    ])->findOrFail($id);
+
+    return view(
+        'features.lms.administrator.partials.video_row',
+        compact('video')
+    );
+}
+
+public function startUpload(Request $request)
+{
+    $request->validate([
+        'file_name'     => 'required|string',
+        'file_size'     => 'required|integer',
+        'chunk_size'    => 'required|integer',
+        'total_chunks'  => 'required|integer',
+        'title'         => 'required|string',
+        'kelas_id'      => 'nullable',
+        'mapel_id'      => 'required',
+        'bab_id'        => 'nullable',
+        'description'   => 'nullable',
+        'cover'         => 'nullable|string',
+    ]);
+
+    $upload = UploadSession::create([
+        'upload_id'        => (string) Str::uuid(),
+        'file_name'        => $request->file_name,
+        'file_size'        => $request->file_size,
+        'chunk_size'       => $request->chunk_size,
+        'total_chunks'     => $request->total_chunks,
+        'uploaded_chunks'  => 0,
+        'status'           => 'uploading',
+
+        'title'            => $request->title,
+        'description'      => $request->description,
+        'kelas_id'         => $request->kelas_id,
+        'mapel_id'         => $request->mapel_id,
+        'bab_id'           => $request->bab_id,
+        'cover'            => $request->cover,
+    ]);
+
+    Storage::makeDirectory("uploads/{$upload->upload_id}");
+
+    return response()->json([
+        'success'   => true,
+        'upload_id' => $upload->upload_id
+    ]);
+}
+
+public function uploadChunk(Request $request)
+{
+    $request->validate([
+        'upload_id' => 'required',
+        'chunk' => 'required|file',
+        'index' => 'required|integer'
+    ]);
+
+    $upload = UploadSession::where(
+        'upload_id',
+        $request->upload_id
+    )->firstOrFail();
+
+    $dir = storage_path(
+        'app/uploads/'.$upload->upload_id
+    );
+
+    if (!file_exists($dir)) {
+        mkdir($dir,0777,true);
+    }
+
+    $chunkName = "chunk_".$request->index;
+
+    move_uploaded_file(
+        $request->file('chunk')->getPathname(),
+        $dir.'/'.$chunkName
+    );
+
+    $upload->uploaded_chunks = max(
+        $upload->uploaded_chunks,
+        $request->index + 1
+    );
+
+    $upload->save();
+
+    return response()->json([
+        'success'=>true,
+        'uploaded'=>$upload->uploaded_chunks,
+        'total'=>$upload->total_chunks
+    ]);
+}
+
+public function finishUpload(Request $request)
+{
+    $request->validate([
+        'upload_id'=>'required'
+    ]);
+
+    $upload = UploadSession::where(
+        'upload_id',
+        $request->upload_id
+    )->firstOrFail();
+
+    if($upload->uploaded_chunks < $upload->total_chunks){
+
+        return response()->json([
+            'success'=>false,
+            'message'=>'Chunk belum lengkap.'
+        ],422);
+
+    }
+
+    $fileName = $this->mergeChunks($upload);
+
+    $book = LibraryBook::create([
+        'title'=>$upload->title,
+        'description'=>$upload->description,
+        'kelas_id'=>$upload->kelas_id,
+        'mapel_id'=>$upload->mapel_id,
+        'bab_id'=>$upload->bab_id,
+        'cover'=>$upload->cover,
+        'file'=>$fileName,
+        'tipe'=>'video'
+    ]);
+
+    $upload->status='finished';
+    $upload->save();
+
+    return response()->json([
+        'success'=>true,
+        'book'=>$book
+    ]);
+}
+
+public function uploadStatus($uploadId)
+{
+    $upload = UploadSession::where(
+        'upload_id',
+        $uploadId
+    )->first();
+
+    if(!$upload){
+
+        return response()->json([
+            'success'=>false
+        ],404);
+
+    }
+
+    return response()->json([
+
+        'success'=>true,
+
+        'uploaded_chunks'=>$upload->uploaded_chunks,
+
+        'total_chunks'=>$upload->total_chunks,
+
+        'status'=>$upload->status,
+
+        'progress'=>round(
+            ($upload->uploaded_chunks/$upload->total_chunks)*100
+        )
+
+    ]);
+}
+
+private function mergeChunks(UploadSession $upload)
+{
+    $folder = storage_path(
+        'app/uploads/'.$upload->upload_id
+    );
+
+    $extension = pathinfo(
+        $upload->file_name,
+        PATHINFO_EXTENSION
+    );
+
+    $finalName =
+        time().'_'.$upload->file_name;
+
+    $output =
+        public_path('library/video/'.$finalName);
+
+    $dest = fopen($output,'ab');
+
+    for($i=0;$i<$upload->total_chunks;$i++){
+
+        $chunk = $folder."/chunk_".$i;
+
+        $source = fopen($chunk,'rb');
+
+        stream_copy_to_stream(
+            $source,
+            $dest
+        );
+
+        fclose($source);
+
+        unlink($chunk);
+
+    }
+
+    fclose($dest);
+
+    @rmdir($folder);
+
+    return $finalName;
+}
 
     // STUDENT TKA PRACTICE TEST
     public function studentTKASubjectList($role)

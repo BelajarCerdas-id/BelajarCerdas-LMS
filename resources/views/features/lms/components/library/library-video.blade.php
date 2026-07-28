@@ -4,6 +4,16 @@
 'headerSideNav' => 'Video Library',
 ])
 
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)]">
+    <div class="mx-7.5 mt-6 mb-4">
+        <a href="{{ url()->previous() }}"
+            class="inline-flex items-center gap-2 text-lg font-semibold hover:text-blue-600 transition">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+            <span>kembali</span>
+        </a>
+    </div>
+</div>
+
 @if (Auth::check() && in_array(Auth::user()->role, ['Siswa', 'Guru']))
 
 <style>
@@ -178,7 +188,7 @@
              data-title="{{ strtolower($video->title) }}"
              data-bab="{{ $video->bab_id }}"
              data-mapel="{{ $video->mapel_id }}"
-             onclick="playVideo('{{ $video->id }}','{{ $video->file }}','{{ $video->title }}')">
+             onclick="playVideo('{{ $video->id }}','{{ $video->video_url ?? $video->file }}','{{ $video->title }}')">
 
             <div class="video-thumb">
 
@@ -224,7 +234,7 @@
 
 let activeMapel = 'all';
 
-function playVideo(id, file, title){
+function playVideo(id, source, title) {
 
     document.getElementById("homeMode").style.display = "none";
     document.getElementById("watchMode").style.display = "flex";
@@ -233,30 +243,66 @@ function playVideo(id, file, title){
 
     let html = "";
 
-    if(file.includes("drive.google.com")){
-        let match = file.match(/\/d\/(.*?)\//);
-        let idFile = match ? match[1] : null;
+    // ================= GOOGLE DRIVE =================
+    if (source && source.includes("drive.google.com")) {
 
-        html = `<iframe class="w-full h-full"
-            src="https://drive.google.com/file/d/${idFile}/preview"
-            allow="autoplay"></iframe>`;
+        let match = source.match(/\/d\/(.*?)\//);
+        let fileId = match ? match[1] : null;
+
+        if (fileId) {
+            html = `
+                <iframe class="w-full h-full"
+                    src="https://drive.google.com/file/d/${fileId}/preview"
+                    allow="autoplay"
+                    allowfullscreen>
+                </iframe>
+            `;
+        }
+
     }
-    else if(file.includes("youtube.com") || file.includes("youtu.be")){
-        let embed = file.replace("watch?v=", "embed/");
-        html = `<iframe class="w-full h-full"
-            src="${embed}"
-            allowfullscreen></iframe>`;
+
+    // ================= YOUTUBE =================
+    else if (source && (source.includes("youtube.com") || source.includes("youtu.be"))) {
+
+        let videoId = "";
+
+        if (source.includes("watch?v=")) {
+            videoId = source.split("v=")[1].split("&")[0];
+        } 
+        else if (source.includes("youtu.be/")) {
+            videoId = source.split("youtu.be/")[1].split("?")[0];
+        }
+
+        html = `
+            <iframe class="w-full h-full"
+                src="https://www.youtube.com/embed/${videoId}"
+                allowfullscreen>
+            </iframe>
+        `;
     }
+
+    // ================= LOCAL VIDEO =================
     else {
-        html = `<video controls autoplay class="w-full h-full">
-            <source src="/library/file/${file}" type="video/mp4">
-        </video>`;
+
+        let fileUrl = source;
+
+        // kalau hanya nama file (dari DB)
+        if (source && !source.startsWith("http")) {
+            fileUrl = `/library/video/${source}`;
+        }
+
+        html = `
+            <video class="w-full h-full" controls autoplay muted>
+                <source src="${fileUrl}" type="video/mp4">
+                Browser tidak support video
+            </video>
+        `;
     }
 
     document.getElementById("player").innerHTML = html;
-    window.scrollTo({top:0, behavior:"smooth"});
-}
 
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 // SEARCH + MAPEL FILTER COMBINE
 function filterVideos() {

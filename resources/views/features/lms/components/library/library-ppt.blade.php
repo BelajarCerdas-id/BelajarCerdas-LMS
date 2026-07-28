@@ -3,6 +3,15 @@ s{{-- SIDEBAR --}}
     'headerSideNav' => 'PPT Library',
 ])
 
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)]">
+    <div class="mx-7.5 mt-6 mb-4">
+        <a href="{{ url()->previous() }}"
+            class="inline-flex items-center gap-2 text-lg font-semibold hover:text-blue-600 transition">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+            <span>kembali</span>
+        </a>
+    </div>
+</div>
 @if (Auth::check() && in_array(Auth::user()->role, ['Siswa', 'Guru']))
 
 <style>
