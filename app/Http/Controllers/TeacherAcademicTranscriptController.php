@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AcademicTranscriptExport;
+use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentType;
@@ -209,13 +210,22 @@ class TeacherAcademicTranscriptController extends Controller
         $classList = array_keys($classLevelsFromData);
         sort($classList);
 
-        // default selected class
-        $selectedClass = $request->class_level ?? (count($classList) ? min($classList) : $defaultLevel);
+        // default selected class (10, 11, 12, dst)
+        $selectedClass = $this->resolveClassLevel(
+            $request->class_level ?? (count($classList) ? min($classList) : $defaultLevel)
+        );
 
-            // ambil mapel default dan custom by school
-        $allMapels = Mapel::with(['TeacherMapel' => function ($q) use ($classId) {
-            $q->where('is_active', 1)->where('school_class_id', $classId);
-        },
+        // Ambil semua id pada tabel kelas yang merepresentasikan level ini
+        $selectedKelasIds = Kelas::query()->get()->filter(function ($item) use ($selectedClass) {
+            return $this->extractClassLevel($item->kelas) == $selectedClass;
+        })->pluck('id')->toArray();
+
+        // ambil mapel default dan custom by school
+        $allMapels = Mapel::with([
+            'TeacherMapel' => function ($q) use ($classId) {
+                $q->where('is_active', 1)
+                ->where('school_class_id', $classId);
+            },
             'TeacherMapel.UserAccount.SchoolStaffProfile'
         ])
         ->where('status_mata_pelajaran', 'active')
@@ -224,17 +234,23 @@ class TeacherAcademicTranscriptController extends Controller
             $q->where(function ($qGlobal) use ($schoolId) {
                 $qGlobal->whereNull('school_partner_id')
                     ->whereDoesntHave('SchoolMapel', function ($qSM) use ($schoolId) {
-                        $qSM->where('school_partner_id', $schoolId)->where('is_active', 0);
+                        $qSM->where('school_partner_id', $schoolId)
+                            ->where('is_active', 0);
                     });
             })
             ->orWhere(function ($q2) use ($schoolId) {
                 $q2->where('school_partner_id', $schoolId)
                     ->whereHas('SchoolMapel', function ($q3) use ($schoolId) {
-                        $q3->where('school_partner_id', $schoolId)->where('is_active', 1);
+                        $q3->where('school_partner_id', $schoolId)
+                            ->where('is_active', 1);
                     });
             });
 
-        })->where('kelas_id', $selectedClass)->get();
+        })
+        ->when(!empty($selectedKelasIds), function ($q) use ($selectedKelasIds) {
+            $q->whereIn('kelas_id', $selectedKelasIds);
+        })
+        ->get();
 
         // Ambil tahun ajaran
         $years = $assessments->filter(function ($a) use ($selectedClass) {
