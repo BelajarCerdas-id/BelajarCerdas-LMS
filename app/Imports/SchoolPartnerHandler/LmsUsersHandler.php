@@ -277,6 +277,10 @@ class LmsUsersHandler
 
         $existingUsers = UserAccount::whereIn('email', $emails)->get()->keyBy('email');
 
+        $fileStaffEmails = $rows->filter(function ($row) {
+            return ($row['role_account'] ?? null) !== 'Siswa';
+        })->pluck('email_akun')->map(fn($email) => strtolower(trim($email)))->unique();
+
         foreach ($rows as $index => $row) {
 
             $rowNumber = $index + 3;
@@ -338,7 +342,7 @@ class LmsUsersHandler
 
                     $fase = $fases->get($row['fase']);
                     $kelas = $kelasModels->get($row['kelas']);
-                    $waliKelas = $existingUsers->get($row['akun_wali_kelas']);
+                    $waliKelasEmail = strtolower(trim($row['akun_wali_kelas']));
 
                     if (!$fase) {
                         throw new \Exception("Fase tidak boleh kosong atau tidak terdaftar.");
@@ -352,7 +356,9 @@ class LmsUsersHandler
                         throw new \Exception("{$row['kelas']} tidak terdaftar pada {$row['fase']}.");
                     }
 
-                    if (!$waliKelas) {
+                    $exists = $existingUsers->has($waliKelasEmail) || $fileStaffEmails->contains($waliKelasEmail);
+
+                    if (!$exists) {
                         throw new \Exception("Wali Kelas tidak terdaftar.");
                     }
                 }
