@@ -273,7 +273,7 @@
                     </label>
                 </header>
 
-            <!-- CARD SEKOLAH -->
+                <!-- CARD SEKOLAH -->
                 <div class="relative flex flex-col items-center">
 
                     <div class="mx-4 mt-4 p-4 flex flex-col items-center">
@@ -310,121 +310,124 @@
 
                 <div class="border border-gray-200"></div>
 
-            <!-- MENU -->
-            <ul class="flex-1 px-3 py-2 space-y-1 text-sm mt-6 flex flex-col gap-4">
-                <li class="list-menu-sidebar-mobile-student">
-                    <a href="{{ route('lms.student.dashboard', [
-                        'role'       => Auth::user()->role,
-                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
-                        'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
-                    ]) }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
-                        <i class="fa-solid fa-home"></i>
-                        <span>Beranda</span>
-                    </a>
-                </li>
-
-                <li class="list-menu-sidebar-mobile-student">
-                    <a href="{{ route('lms.student.view', [ 
-                        'role' => Auth::user()->role,
-                        'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
-                        'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
-                    ]) }}"
-                    class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
-                        <i class="fa-solid fa-school-flag"></i>
-                        <span>LMS</span>
-                    </a>
-                </li>
-                <li class="list-menu-sidebar-dekstop-student">
-                    <div class="flex flex-col">
-
-                        <!-- MENU LIBRARY -->
-                        <a href="{{ route('student.library') }}" 
-                        class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-                        
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-book"></i>
-                                <span>Library</span>
-                            </div>
-
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                <!-- MENU -->
+                <ul class="px-3 py-2 space-y-1 text-sm mt-6 flex flex-col gap-4">
+                    <li class="list-menu-sidebar-mobile-student">
+                        <a href="{{ route('lms.student.dashboard', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                        ]) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+                            <i class="fa-solid fa-home"></i>
+                            <span>Beranda</span>
                         </a>
-                    <!-- LIBRARY -->
-                    <li class="list-item">
+                    </li>
 
+                    <li class="list-menu-sidebar-mobile-student">
+                        <a href="{{ route('lms.student.view', [ 
+                            'role' => Auth::user()->role,
+                            'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
+                        ]) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+                            <i class="fa-solid fa-school-flag"></i>
+                            <span>LMS</span>
+                        </a>
+                    </li>
+                    <li class="list-menu-sidebar-dekstop-student">
                         <div class="flex flex-col">
 
-                            @php
-                                $isLibraryActive =
-                                    request()->routeIs('teacher.library') ||
-                                    request()->routeIs('teacher.library.ppt') ||
-                                    request()->routeIs('teacher.library.lks') ||
-                                    request()->routeIs('teacher.library.video') ||
-                                    request()->routeIs('student.tka-subject-list.view');
-                            @endphp
-
-                            <!-- MAIN MENU -->
-                            <a href="{{ route('teacher.library') }}"
+                            <!-- MENU LIBRARY -->
+                            <a href="{{ route('student.library') }}" 
                             class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-
+                            
                                 <div class="flex items-center gap-3">
                                     <i class="fa-solid fa-book"></i>
                                     <span>Library</span>
                                 </div>
 
-                                <i class="fa-solid fa-chevron-down text-xs
-                                    {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
-
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
                             </a>
+                        <!-- LIBRARY -->
+                        <li class="list-item">
 
-                            <!-- DROPDOWN -->
-                            <div class="{{ $isLibraryActive
-                                    ? 'ml-7 mt-1 flex flex-col gap-1'
-                                    : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+                            <div class="flex flex-col">
 
-                                <a href="{{ route('teacher.library.ppt') }}"
-                                class="{{ request()->routeIs('teacher.library.ppt')
-                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                    Power Point
+                                @php
+                                    $isLibraryActive =
+                                        request()->routeIs('teacher.library') ||
+                                        request()->routeIs('teacher.library.ppt') ||
+                                        request()->routeIs('teacher.library.lks') ||
+                                        request()->routeIs('teacher.library.video') ||
+                                        request()->routeIs('student.tka-subject-list.view');
+                                @endphp
+
+                                <!-- MAIN MENU -->
+                                <a href="{{ route('teacher.library') }}"
+                                class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-book"></i>
+                                        <span>Library</span>
+                                    </div>
+
+                                    <i class="fa-solid fa-chevron-down text-xs
+                                        {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
+
                                 </a>
 
-                                <a href="{{ route('teacher.library.lks') }}"
-                                class="{{ request()->routeIs('teacher.library.lks')
-                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                    LKPD
-                                </a>
+                                <!-- DROPDOWN -->
+                                <div class="{{ $isLibraryActive
+                                        ? 'ml-7 mt-1 flex flex-col gap-1'
+                                        : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
 
-                                <a href="{{ route('teacher.library.video') }}"
-                                class="{{ request()->routeIs('teacher.library.video')
-                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                    Video
-                                </a>
+                                    <a href="{{ route('teacher.library.ppt') }}"
+                                    class="{{ request()->routeIs('teacher.library.ppt')
+                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                        Power Point
+                                    </a>
 
-                                <a href="{{ route('student.tka-subject-list.view', [
-                                        'role' => Auth::user()->role,
-                                    ]) }}"
-                                class="{{ request()->routeIs('student.tka-subject-list.view')
-                                        ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                        : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                    Simulasi Soal TKA
-                                </a>
+                                    <a href="{{ route('teacher.library.lks') }}"
+                                    class="{{ request()->routeIs('teacher.library.lks')
+                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                        LKPD
+                                    </a>
+
+                                    <a href="{{ route('teacher.library.video') }}"
+                                    class="{{ request()->routeIs('teacher.library.video')
+                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                        Video
+                                    </a>
+
+                                    <a href="{{ route('student.tka-subject-list.view', [
+                                            'role' => Auth::user()->role,
+                                        ]) }}"
+                                    class="{{ request()->routeIs('student.tka-subject-list.view')
+                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
+                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                        Simulasi Soal TKA
+                                    </a>
                             </div>
                         </div>
-                    </div>
-                </li>
-            </ul>
+                    </li>
+                </ul>
 
-                <div class="p-4 border-t border-gray-300">
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
-                        </button>
-                    </form>
-                </div>
+            <div class="p-4 border-t border-gray-300">
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+
+                    <button
+                        class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        Keluar
+                    </button>
+                </form>
+            </div>
+
             </div>
         </div>
     </div>
@@ -1532,7 +1535,7 @@
         <div class="drawer-side">
             <label for="my-drawer-1" class="drawer-overlay"></label>
 
-            <div class="bg-gray-50 min-h-full min-w-[65vw] flex flex-col">
+            <div class="bg-gray-50 h-full min-w-[65vw] flex flex-col">
 
                 <header class="h-20 px-4 bg-[#0071BC] flex items-center justify-between shadow-sm">
                     <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" class="h-9 object-contain" alt="Belajar Cerdas">
