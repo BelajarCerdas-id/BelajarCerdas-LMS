@@ -941,12 +941,12 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // =========================================================
         // ROUTES ORANG TUA
         // =========================================================
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/dashboard', [\App\Http\Controllers\ParentController::class, 'index'])->name('lms.parent.dashboard.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/dashboard/student/{studentId?}', [\App\Http\Controllers\ParentController::class, 'index'])->name('lms.parent.dashboard.view');
         Route::post('/lms/parent/polling/{id}/vote', [\App\Http\Controllers\ParentController::class, 'submitPoll'])->name('lms.parent.poll.vote');
-        Route::get('/ortu/laporan-nilai', [ParentController::class, 'laporanNilai'])->name('ortu.laporan-nilai');
-        Route::get('/ortu/kehadiran', [ParentController::class, 'kehadiran'])->name('ortu.kehadiran');
-        Route::get('/ortu/jadwal-pelajaran', [ParentController::class, 'jadwalPelajaran'])->name('ortu.jadwal-pelajaran');
-        Route::get('/ortu/kalender-akademik', [ParentController::class, 'kalenderAkademik'])->name('ortu.kalender-akademik');
+        Route::get('/ortu/laporan-nilai/student/{studentId?}', [ParentController::class, 'laporanNilai'])->name('ortu.laporan-nilai');
+        Route::get('/ortu/kehadiran/student/{studentId?}', [ParentController::class, 'kehadiran'])->name('ortu.kehadiran');
+        Route::get('/ortu/jadwal-pelajaran/student/{studentId?}', [ParentController::class, 'jadwalPelajaran'])->name('ortu.jadwal-pelajaran');
+        Route::get('/ortu/kalender-akademik/student/{studentId?}', [ParentController::class, 'kalenderAkademik'])->name('ortu.kalender-akademik');
         
         
         // ROUTES SCHOOL PARTNER

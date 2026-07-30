@@ -98,6 +98,10 @@ class DashboardController extends Controller
                 abort(403, 'Profil Orang Tua Anda belum terdaftar di sistem.');
             }
 
+            $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
+
+            $studentUserId = $studentProfile?->user_id;
+
             $schoolId = $profilOrangTua->school_partner_id;
             $school = DB::table('school_partners')->where('id', $schoolId)->first();
             $schoolName = $school ? $school->nama_sekolah : 'sekolah';
@@ -106,7 +110,8 @@ class DashboardController extends Controller
             return redirect()->route('lms.parent.dashboard.view', [
                 'role'       => 'Orang Tua', 
                 'schoolName' => $schoolName,
-                'schoolId'   => $schoolId
+                'schoolId'   => $schoolId,
+                'studentId'  => $studentUserId
             ]);
         }
         

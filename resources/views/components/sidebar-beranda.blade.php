@@ -2926,6 +2926,14 @@
         </div>
     </div>
 @elseif (in_array(Auth::user()->role, ['Orang Tua']))
+    @php
+        $studentId = request()->route('studentId');
+
+        if (!$studentId) {
+            $studentId = Auth::user()->ParentChildren()->value('user_id');
+        }
+    @endphp
+
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
         <!-- HEADER PUTIH (MAIN LOGO) -->
@@ -2959,7 +2967,8 @@
                         <a href="{{ route('lms.parent.dashboard.view', [
                                 'role' => Auth::user()->role,
                                 'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                'studentId' => $studentId
                             ]) }}" class="link-href text-[14px]">
                             Beranda
                         </a>
@@ -2976,10 +2985,14 @@
 
                         <div class="content-dropdown pl-6 pr-3.5 w-full">
                             <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('ortu.laporan-nilai') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                <a href="{{ route('ortu.laporan-nilai', [
+                                    'studentId' => $studentId
+                                ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Laporan Nilai
                                 </a>
-                                <a href="{{ route('ortu.kehadiran') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                <a href="{{ route('ortu.kehadiran', [
+                                    'studentId' => $studentId
+                                ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Kehadiran & Presensi
                                 </a>
                             </div>
@@ -2997,10 +3010,14 @@
 
                         <div class="content-dropdown pl-6 pr-3.5 w-full">
                             <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('ortu.jadwal-pelajaran') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                <a href="{{ route('ortu.jadwal-pelajaran', [
+                                    'studentId' => $studentId
+                                ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Jadwal Pelajaran
                                 </a>
-                                <a href="{{ route('ortu.kalender-akademik') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                <a href="{{ route('ortu.kalender-akademik', [
+                                    'studentId' => $studentId
+                                ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Kalender Akademik
                                 </a>
                             </div>
@@ -3070,7 +3087,8 @@
                                 <a href="{{ route('lms.parent.dashboard.view', [
                                     'role' => Auth::user()->role,
                                     'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                    'studentId' => $studentId
                                 ]) }}">
                                     <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
                                         <i class="fa-solid fa-house"></i>
@@ -3101,7 +3119,8 @@
                             <a href="{{ route('lms.parent.dashboard.view', [
                                     'role' => Auth::user()->role,
                                     'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                    'studentId' => $studentId
                                 ]) }}">
                                 <div
                                     class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
@@ -3133,7 +3152,8 @@
             <a href="{{ route('lms.parent.dashboard.view', [
                     'role' => Auth::user()->role,
                     'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                    'studentId' => $studentId
                 ]) }}">
                 <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="" class="w-30 ml-4">
             </a>
@@ -3149,7 +3169,8 @@
                         <a href="{{ route('lms.parent.dashboard.view', [
                                 'role' => Auth::user()->role,
                                 'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                'studentId' => $studentId
                             ]) }}">
                             <div
                                 class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
@@ -3232,7 +3253,8 @@
                             <a href="{{ route('lms.parent.dashboard.view', [
                                 'role' => Auth::user()->role,
                                 'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
-                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id
+                                'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                'studentId' => $studentId
                             ]) }}" class="link-href text-[14px]">
                                 Beranda
                             </a>
@@ -3249,10 +3271,14 @@
 
                             <div class="content-dropdown pl-6 pr-3.5 w-full">
                                 <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('ortu.laporan-nilai') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    <a href="{{ route('ortu.laporan-nilai', [
+                                        'studentId' => $studentId
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Laporan Nilai
                                     </a>
-                                    <a href="{{ route('ortu.kehadiran') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    <a href="{{ route('ortu.kehadiran', [
+                                        'studentId' => $studentId
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Kehadiran & Presensi
                                     </a>
                                 </div>
@@ -3270,10 +3296,14 @@
 
                             <div class="content-dropdown pl-6 pr-3.5 w-full">
                                 <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('ortu.jadwal-pelajaran') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    <a href="{{ route('ortu.jadwal-pelajaran', [
+                                        'studentId' => $studentId
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Jadwal Pelajaran
                                     </a>
-                                    <a href="{{ route('ortu.kalender-akademik') }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    <a href="{{ route('ortu.kalender-akademik', [
+                                        'studentId' => $studentId
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Kalender Akademik
                                     </a>
                                 </div>

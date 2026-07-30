@@ -11,12 +11,11 @@ use App\Models\AcademicCalendar;
 use App\Models\Announcement;
 use App\Models\Poll;
 use App\Models\StudentAssessmentAttempt;
-use App\Models\UserAccount;
 use Carbon\Carbon;
 
 class ParentController extends Controller
 {
-    public function index($role, $schoolName, $schoolId)
+    public function index($role, $schoolName, $schoolId, $studentId = null)
     {
         $user = Auth::user();
 
@@ -31,7 +30,14 @@ class ParentController extends Controller
         }
 
         // logika pencarian anak
-        $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
+        if ($studentId) {
+            $studentProfile = StudentProfile::where('user_id', $studentId)->first();
+        } else {
+            $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
+        }
+
+        // ambil seluruh anak yang memiliki parent_id yang sesuai dengan user yang sedang login
+        $childrens = StudentProfile::where('parent_id', $user->id)->orderBy('nama_lengkap')->get();
 
         $studentUserId = $studentProfile?->user_id;
 
@@ -312,13 +318,9 @@ class ParentController extends Controller
             ];
         }
 
-        $student = UserAccount::whereHas('StudentProfile', function ($query) use ($user) {
-            $query->where('parent_id', $user->id);
-        })->first();
-
         // QUERY CHEATING
         $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
-            ->where('status', 'cheating')->where('student_id', $student->id);
+        ->where('status', 'cheating')->where('student_id', $studentUserId);
 
         $cheatingHistory = $query->latest()->get();
 
@@ -335,7 +337,7 @@ class ParentController extends Controller
         })->latest()->take(8)->get();
 
         return view('features.lms.parents.dashboard', compact(
-            'role', 'schoolName', 'schoolId', 
+            'role', 'schoolName', 'schoolId', 'studentId', 'childrens',
             'profilOrangTua', 'dataAnak', 'agendaSekolah', 
             'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory', 'announcements'
         ));
@@ -389,7 +391,7 @@ class ParentController extends Controller
     // ========================================================
     // FUNGSI BANTUAN: Mencari Data Anak yang Terhubung
     // ========================================================
-    private function getAnakInfo()
+    private function getAnakInfo($studentId = null)
     {
         $user = Auth::user();
 
@@ -399,23 +401,22 @@ class ParentController extends Controller
             return null;
         }
 
-        // Cari siswa berdasarkan parent_id (user_id orang tua)
-        $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
+        $studentQuery = StudentProfile::where('parent_id', $user->id);
+
+        if ($studentId) {
+            $studentQuery->where('user_id', $studentId);
+        }
+
+        $studentProfile = $studentQuery->orderBy('nama_lengkap')->first();
 
         if (!$studentProfile) {
             return null;
         }
 
-        $studentUserId = $studentProfile->user_id;
+        $classRecord = DB::table('student_school_classes')->where('student_id', $studentProfile->user_id)->where('student_class_status', 'active')->first();
 
-        // Ambil kelas aktif siswa
-        $classRecord = DB::table('student_school_classes')
-            ->where('student_id', $studentUserId)
-            ->where('student_class_status', 'active')
-            ->first();
-
-        return (object) [
-            'user_id'   => $studentUserId,
+        return (object)[
+            'user_id'   => $studentProfile->user_id,
             'class_id'  => $classRecord->school_class_id ?? null,
             'school_id' => $profilOrangTua->school_partner_id,
         ];
@@ -424,9 +425,9 @@ class ParentController extends Controller
     // ========================================================
     // 1. HALAMAN LAPORAN NILAI
     // ========================================================
-    public function laporanNilai()
+    public function laporanNilai($studentId = null)
     {
-        $anak = $this->getAnakInfo();
+        $anak = $this->getAnakInfo($studentId);
 
         abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
@@ -468,9 +469,9 @@ class ParentController extends Controller
     // ========================================================
     // 2. HALAMAN KEHADIRAN
     // ========================================================
-    public function kehadiran()
+    public function kehadiran($studentId = null)
     {
-        $anak = $this->getAnakInfo();
+        $anak = $this->getAnakInfo($studentId);
         abort_if(!$anak || !$anak->user_id, 404, 'Data Siswa tidak ditemukan.');
 
         $absensi = DB::table('subject_attendances')
@@ -484,9 +485,9 @@ class ParentController extends Controller
     // ========================================================
     // 3. HALAMAN JADWAL PELAJARAN
     // ========================================================
-    public function jadwalPelajaran()
+    public function jadwalPelajaran($studentId = null)
     {
-        $anak = $this->getAnakInfo();
+        $anak = $this->getAnakInfo($studentId);
         abort_if(!$anak || !$anak->class_id, 404, 'Data Kelas Siswa tidak ditemukan.');
 
         $jadwalRaw = DB::table('lesson_schedule_items')
@@ -507,9 +508,9 @@ class ParentController extends Controller
     // ========================================================
     // 4. HALAMAN KALENDER AKADEMIK
     // ========================================================
-    public function kalenderAkademik()
+    public function kalenderAkademik($studentId = null)
     {
-        $anak = $this->getAnakInfo();
+        $anak = $this->getAnakInfo($studentId);
         abort_if(!$anak || !$anak->school_id, 404, 'Data Sekolah tidak ditemukan.');
 
         $kalender = AcademicCalendar::where('school_partner_id', $anak->school_id)

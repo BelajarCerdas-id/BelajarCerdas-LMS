@@ -7,44 +7,113 @@
         
         <div class="pt-6 sm:pt-8 mx-4 sm:mx-6 lg:mx-10">
             
-            <div class="bg-gradient-to-r from-[#0071BC] to-[#005B94] rounded-3xl p-6 sm:p-8 shadow-lg mb-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+            <div class="bg-linear-to-r from-[#0071BC] to-[#005B94] rounded-3xl p-6 sm:p-8 shadow-lg mb-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-visible">
+
                 <div class="absolute right-0 top-0 opacity-10 pointer-events-none transform translate-x-1/4 -translate-y-1/4">
                     <i class="fas fa-users text-[15rem]"></i>
                 </div>
-                
-                <div class="relative z-10 w-full md:w-2/3">
-                    <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1.5">Portal Akademik</p>
+
+                {{-- BAGIAN KIRI --}}
+                <div class="relative z-50 w-full md:w-2/3">
+
+                    <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mb-1.5">
+                        Portal Akademik
+                    </p>
+
                     <h1 class="text-2xl sm:text-xl font-extrabold tracking-tight mb-2">
                         Halo, {{ $profilOrangTua->nama_lengkap ?? 'Bapak/Ibu' }}
                     </h1>
-                    
-                    <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-1.5 rounded-full mb-6 text-sm font-medium text-blue-50">
-                        <i class="fas fa-child text-amber-300"></i>
-                        <span>Orang Tua / Wali dari <strong class="text-white ml-1">{{ $dataAnak->nama_lengkap ?? 'Siswa Belum Terhubung' }}</strong></span>
+
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+                        <div class="relative z-9999 inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-full text-sm font-medium text-blue-50">
+                            <i class="fas fa-child text-amber-300"></i>
+
+                            <span>Melihat data :</span>
+
+                            <div class="dropdown dropdown-end">
+
+                                <label tabindex="0"
+                                    class="dropdown-toggle cursor-pointer inline-flex items-center gap-2 font-semibold text-white hover:text-amber-300 transition">
+
+                                    {{ $dataAnak->nama_lengkap ?? 'Pilih Anak' }}
+
+                                    <i id="dropdownChevron"
+                                    class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+
+                                </label>
+
+                                <ul tabindex="0" class="dropdown-content absolute right-0 mt-2 w-72 rounded-xl bg-white shadow-2xl border p-2 z-99999">
+
+                                    @foreach ($childrens as $child)
+                                        <li>
+                                            <a href="{{ route('lms.parent.dashboard.view', [
+                                                    'role' => $role,
+                                                    'schoolName' => $schoolName,
+                                                    'schoolId' => $schoolId,
+                                                    'studentId' => $child->user_id,
+                                                ]) }}"
+                                                class="flex items-center justify-between rounded-lg px-3 py-3 hover:bg-blue-50 transition">
+
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                        <i class="fas fa-user-graduate text-blue-600"></i>
+                                                    </div>
+
+                                                    <div>
+                                                        <p class="font-semibold text-gray-800">
+                                                            {{ $child->nama_lengkap }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                @if($studentId == $child->user_id)
+                                                    <i class="fas fa-check-circle text-green-500"></i>
+                                                @endif
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center gap-4">
+                    {{-- STATUS SISWA --}}
+                    <div class="relative z-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center gap-4">
                         <div class="w-12 h-12 bg-white text-[#0071BC] rounded-full flex items-center justify-center text-xl font-bold shadow-sm shrink-0">
                             <i class="fas fa-school"></i>
                         </div>
+
                         <div>
-                            <p class="text-xs text-blue-100 font-medium uppercase tracking-wider mb-0.5">Status Siswa:</p>
-                            <h3 class="font-bold text-lg leading-tight">Kelas {{ $dataAnak->kelas ?? '-' }}</h3>
+                            <p class="text-xs text-blue-100 font-medium uppercase tracking-wider mb-0.5">
+                                Status Siswa:
+                            </p>
+
+                            <h3 class="font-bold text-lg">
+                                Kelas {{ $dataAnak->kelas ?? '-' }}
+                            </h3>
                         </div>
-                        
+
                         <div class="ml-auto text-right pl-4 border-l border-white/20 hidden sm:block">
-                            <p class="text-xs text-blue-100 font-medium uppercase tracking-wider mb-0.5">Kehadiran Hari Ini:</p>
+                            <p class="text-xs text-blue-100 font-medium uppercase tracking-wider mb-0.5">
+                                Kehadiran Hari Ini:
+                            </p>
+
                             @if(strtolower($dataAnak->kehadiran_hari_ini ?? '') === 'hadir')
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold bg-emerald-400/20 text-emerald-100 border border-emerald-400/30">
-                                    <i class="fas fa-check-circle"></i> Hadir
+                                    <i class="fas fa-check-circle"></i>
+                                    Hadir
                                 </span>
+
                             @elseif(strtolower($dataAnak->kehadiran_hari_ini ?? '') === 'alpa')
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold bg-red-400/20 text-red-100 border border-red-400/30">
-                                    <i class="fas fa-times-circle"></i> Alpa
+                                    <i class="fas fa-times-circle"></i>
+                                    Alpa
                                 </span>
+
                             @else
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold bg-slate-400/20 text-slate-100 border border-slate-400/30">
-                                    <i class="fas fa-clock"></i> {{ $dataAnak->kehadiran_hari_ini }}
+                                    <i class="fas fa-clock"></i>
+                                    {{ $dataAnak->kehadiran_hari_ini }}
                                 </span>
                             @endif
                         </div>
@@ -610,6 +679,36 @@
     .custom-scrollbar-light::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const dropdown = document.querySelector(".dropdown");
+        const chevron = document.getElementById("dropdownChevron");
+
+        if (!dropdown || !chevron) return;
+
+        dropdown.addEventListener("click", function () {
+            setTimeout(() => {
+                if (dropdown.matches(":focus-within")) {
+                    chevron.classList.add("rotate-180");
+                } else {
+                    chevron.classList.remove("rotate-180");
+                }
+            }, 0);
+        });
+
+        document.addEventListener("click", function(e) {
+
+            if (!dropdown.contains(e.target)) {
+                chevron.classList.remove("rotate-180");
+            }
+
+        });
+
+    });
+</script>
+
 <script>
     async function submitParentVote(event, pollId) {
         event.preventDefault(); 
