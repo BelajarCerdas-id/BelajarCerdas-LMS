@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\OfficeManagementController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\ProfileAccountContorller;
 use App\Http\Controllers\StudentVicePrincipalController;
 use App\Http\Controllers\TeacherDailyAgendaController;
 
@@ -114,6 +115,25 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
         // DASHBOARD
         Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('beranda');
+
+        // PROFILE USER
+        // school partner & non school partner views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/profile-account', [ProfileAccountContorller::class, 'index'])->name('profile-account-school-partner.view');
+        Route::get('/lms/{role}/profile-account', [ProfileAccountContorller::class, 'index'])->name('profile-account-office.view');
+
+        // update personal information
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/profile-account/personal-information-student/update/{userId}', [ProfileAccountContorller::class, 'updatePersonalInformationStudent'])->name('profile-account-school-partner.personal-information-student.update');
+        Route::post('/lms/{role}/profile-account/personal-information-office/update/{userId}', [ProfileAccountContorller::class, 'updatePersonalInformationOffice'])->name('profile-account-school-partner.personal-information-office.update');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/profile-account/personal-information-school-staff/update/{userId}', [ProfileAccountContorller::class, 'updatePersonalInformationSchoolStaff'])->name('profile-account-school-partner.personal-information-schoolStaff.update');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/profile-account/personal-information-parent/update/{userId}', [ProfileAccountContorller::class, 'updatePersonalInformationParent'])->name('profile-account-school-partner.personal-information-parent.update');
+
+        // school partner & non school partner reset password views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/profile-account/reset-password', [ProfileAccountContorller::class, 'resetPasswordView'])->name('profile-account-school-partner.reset-password.view');
+        Route::get('/lms/{role}/profile-account/reset-password', [ProfileAccountContorller::class, 'resetPasswordView'])->name('profile-account-office.reset-password.view');
+
+        // reset password update
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/profile-account/reset-password/update', [ProfileAccountContorller::class, 'resetPasswordUpdate'])->name('profile-account-school-partner.reset-password.update');
+        Route::post('/lms/{role}/profile-account/reset-password/update', [ProfileAccountContorller::class, 'resetPasswordUpdate'])->name('profile-account-office.reset-password.update');
     
         // =========================================================================
         // 1. ADMINISTRATOR LIBRARY ROUTES

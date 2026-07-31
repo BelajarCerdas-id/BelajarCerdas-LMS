@@ -178,10 +178,19 @@
                                         <i class="fa-solid fa-house"></i> Beranda
                                     </div>
                                 </a>
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar
+                                    <button class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i> Keluar
                                     </button>
                                 </form>
                             </div>
@@ -205,10 +214,19 @@
                                     <i class="fa-solid fa-house"></i> Beranda
                                 </div>
                             </a>
+                            <a href="{{ route('profile-account-school-partner.view', [
+                                'role'       => Auth::user()->role,
+                                'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                                'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i> Keluar
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i> Keluar
                                 </button>
                             </form>
                         </div>
@@ -247,10 +265,19 @@
                                 <i class="fa-solid fa-house"></i> Beranda
                             </div>
                         </a>
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i> Keluar
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i> Keluar
                             </button>
                         </form>
                     </div>
@@ -421,8 +448,8 @@
                     @csrf
 
                     <button
-                        class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                         Keluar
                     </button>
                 </form>
@@ -622,11 +649,19 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-office.view', [
+                                'role' => Auth::user()->role,
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -649,11 +684,19 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-office.view', [
+                                'role' => Auth::user()->role,
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -688,12 +731,20 @@
                                 Beranda
                             </div>
                         </a>
+                        
+                        <a href="{{ route('profile-account-office.view', [
+                            'role' => Auth::user()->role,
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -985,11 +1036,19 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-office.view', [
+                                'role' => Auth::user()->role,
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -1012,11 +1071,19 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-office.view', [
+                                'role' => Auth::user()->role,
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -1052,11 +1119,19 @@
                             </div>
                         </a>
 
+                        <a href="{{ route('profile-account-office.view', [
+                            'role' => Auth::user()->role,
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
+
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -1435,11 +1510,21 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
-                                        class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                                         Keluar
                                     </button>
                                 </form>
@@ -1466,12 +1551,22 @@
                                     Beranda
                                 </div>
                             </a>
+                            
+                            <a href="{{ route('profile-account-school-partner.view', [
+                                'role'       => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
 
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -1514,12 +1609,22 @@
                                 Beranda
                             </div>
                         </a>
+                        
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -1766,8 +1871,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
                     </form>
@@ -1910,11 +2015,21 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
-                                        class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                                         Keluar
                                     </button>
                                 </form>
@@ -1943,11 +2058,21 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-school-partner.view', [
+                                'role'       => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -1993,11 +2118,21 @@
                             </div>
                         </a>
 
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
+
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -2102,8 +2237,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
                     </form>
@@ -2354,11 +2489,21 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
-                                        class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                                         Keluar
                                     </button>
                                 </form>
@@ -2378,11 +2523,20 @@
                                     'role' => Auth::user()->role,
                                     'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                     'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                                ]) }}" class="link-href text-[14px]">
-                                <div
-                                    class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
+                                ]) }}">
+                                <div class="flex items-center pl-2 py-3.75 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
                                     <i class="fa-solid fa-house"></i>
                                     Beranda
+                                </div>
+                            </a>
+                            
+                            <a href="{{ route('profile-account-school-partner.view', [
+                                'role'       => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
                                 </div>
                             </a>
 
@@ -2390,7 +2544,7 @@
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -2426,11 +2580,20 @@
                                 'role' => Auth::user()->role,
                                 'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                                 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
-                            ]) }}" class="link-href text-[14px]">
-                            <div
-                                class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
+                            ]) }}">
+                            <div class="flex items-center pl-2 py-3.75 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
                                 <i class="fa-solid fa-house"></i>
                                 Beranda
+                            </div>
+                        </a>
+                        
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
                             </div>
                         </a>
 
@@ -2438,7 +2601,7 @@
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -2589,8 +2752,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
                     </form>
@@ -2731,11 +2894,21 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
-                                        class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                                         Keluar
                                     </button>
                                 </form>
@@ -2763,11 +2936,21 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('profile-account-school-partner.view', [
+                                'role'       => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                </div>
+                            </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -2810,12 +2993,22 @@
                                 Beranda
                             </div>
                         </a>
+                        
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -2919,8 +3112,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
                     </form>
@@ -3099,11 +3292,21 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->ParentProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
-                                        class="w-full flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
+                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                                         Keluar
                                     </button>
                                 </form>
@@ -3132,11 +3335,21 @@
                                 </div>
                             </a>
 
+                                <a href="{{ route('profile-account-school-partner.view', [
+                                    'role'       => Auth::user()->role,
+                                    'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId'   => Auth::user()->ParentProfile->SchoolPartner->id
+                                ]) }}">
+                                    <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button
                                     class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                     Keluar
                                 </button>
                             </form>
@@ -3181,12 +3394,22 @@
                                 Beranda
                             </div>
                         </a>
+                        
+                        <a href="{{ route('profile-account-school-partner.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->ParentProfile->SchoolPartner->id
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button
                                 class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-lg ml-0.75"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
                                 Keluar
                             </button>
                         </form>
@@ -3319,8 +3542,8 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
                     </form>
@@ -3337,8 +3560,8 @@
             
             <form action="{{ route('logout') }}" method="POST" class="w-full">
                 @csrf
-                <button type="submit" class="w-full flex items-center justify-center py-3 bg-red-50 text-red-600 font-bold rounded-xl gap-2 cursor-pointer transition-all duration-300 hover:bg-red-500 hover:text-white border border-red-100">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <button type="submit" class="w-full fle3.5 items-center justify-center py-3 bg-red-50 text-red-600 font-bold rounded-xl gap-2 cursor-pointer transition-all duration-300 hover:bg-red-500 hover:text-white border border-red-100">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                     Kembali & Keluar
                 </button>
             </form>
