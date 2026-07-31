@@ -395,11 +395,9 @@ class SchoolSyllabusController extends Controller
                             });
                     }),
             ],
-            'semester' => 'required',
         ], [
             'nama_bab.required' => 'Harap masukkan bab.',
             'nama_bab.unique' => 'Bab telah terdaftar.',
-            'semester.required' => 'Harap pilih semester.',
         ]);
 
         if ($validator->fails()) {
@@ -449,11 +447,9 @@ class SchoolSyllabusController extends Controller
                     });
                 })->ignore($babId),
             ],
-            'semester' => 'required',
         ], [
             'nama_bab.required' => 'Harap masukkan bab.',
             'nama_bab.unique' => 'Bab telah terdaftar.',
-            'semester.required' => 'Harap pilih semester.',
         ]);
 
         if ($validator->fails()) {

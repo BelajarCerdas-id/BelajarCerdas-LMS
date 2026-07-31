@@ -73,7 +73,6 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
             // Validasi awal jika ingin diaktifkan kembali
             $validator = Validator::make($row->toArray(), [
                 'kurikulum' => 'required',
-                'semester' => 'required',
                 'fase' => 'required',
                 'kelas' => 'required',
                 'mata_pelajaran' => 'required',
@@ -81,7 +80,6 @@ class SyllabusImport implements ToCollection, WithHeadingRow, WithStartRow, With
                 'sub_bab' => 'required',
             ], [
                 "kurikulum.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Kurikulum wajib diisi.",
-                "semester.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Semester wajib diisi.",
                 "fase.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Fase wajib diisi.",
                 "kelas.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Kelas wajib diisi.",
                 "mata_pelajaran.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Mata Pelajaran wajib diisi.",

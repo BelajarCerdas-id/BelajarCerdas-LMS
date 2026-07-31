@@ -37,7 +37,6 @@
                                 <div class="w-full">
                                     <label class="text-sm">
                                         Semester
-                                        <sup class="text-red-500">&#42;</sup>
                                     </label>
                                     <div class="flex flex-col lg:flex-row gap-6">
                                         <div class="w-full">
@@ -135,7 +134,6 @@
                         <div class="mt-4 w-80">
                             <label class="text-sm">
                                 Semester
-                                <sup class="text-red-500">&#42;</sup>
                             </label>
                             <select id="edit-semester" name="semester"
                                 class="w-full bg-white shadow-lg h-12 border-gray-200 border outline-none rounded-full px-2 text-xs cursor-pointer">

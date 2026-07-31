@@ -83,13 +83,11 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
             // Validasi
             $validator = Validator::make($row->toArray(), [
                 'kelas' => 'required',
-                'semester' => 'required',
                 'mata_pelajaran' => 'required',
                 'bab' => 'required',
                 'sub_bab' => 'required',
             ], [
                 "kelas.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Kelas wajib diisi.",
-                "semester.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Semester wajib diisi.",
                 "mata_pelajaran.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Mata Pelajaran wajib diisi.",
                 "bab.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Bab wajib diisi.",
                 "sub_bab.required" => "Sheet {$this->sheetTitle} - Baris $rowNumber: Kolom Sub Bab wajib diisi.",
@@ -180,17 +178,31 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
             // BAB
 
             // Cari bab default
-            $bab = Bab::where('nama_bab', $row['bab'])->where('semester', $row['semester'])->where('kelas_id', $kelas->id)->where('mapel_id', $mapel->id)
-            ->where('kurikulum_id', $this->curriculumId)->when(!is_null($faseId), function ($query) use ($faseId) {
+            $bab = Bab::where('nama_bab', $row['bab'])->where('kelas_id', $kelas->id)->where('mapel_id', $mapel->id)->where('kurikulum_id', $this->curriculumId)
+            ->when(!is_null($faseId), function ($query) use ($faseId) {
                 $query->where('fase_id', $faseId);
-            })->whereNull('school_partner_id')->first();
+            })->when(filled($row['semester'] ?? null),
+                function ($query) use ($row) {
+                    $query->where('semester', $row['semester']);
+                },
+                function ($query) {
+                    $query->whereNull('semester');
+                }
+            )->whereNull('school_partner_id')->first();
 
             // Cari bab sekolah
             if (!$bab) {
-                $bab = Bab::where('nama_bab', $row['bab'])->where('semester', $row['semester'])->where('kelas_id', $kelas->id)->where('mapel_id', $mapel->id)
-                ->where('kurikulum_id', $this->curriculumId)->when(!is_null($faseId), function ($query) use ($faseId) {
+                $bab = Bab::where('nama_bab', $row['bab'])->where('kelas_id', $kelas->id)->where('mapel_id', $mapel->id)->where('kurikulum_id', $this->curriculumId)
+                ->when(!is_null($faseId), function ($query) use ($faseId) {
                     $query->where('fase_id', $faseId);
-                })->where('school_partner_id', $this->schoolId)->first();
+                })->when(filled($row['semester'] ?? null),
+                    function ($query) use ($row) {
+                        $query->where('semester', $row['semester']);
+                    },
+                    function ($query) {
+                        $query->whereNull('semester');
+                    }
+                )->where('school_partner_id', $this->schoolId)->first();
             }
 
             // Buat bab sekolah

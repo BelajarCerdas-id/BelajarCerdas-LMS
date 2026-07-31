@@ -463,11 +463,9 @@ class SyllabusController extends Controller
                 Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
                 ->where('mapel_id', $mapelId)
             ],
-            'semester' => 'required',
         ], [
             'nama_bab.required' => 'Harap masukkan bab.',
             'nama_bab.unique' => 'Bab telah terdaftar.',
-            'semester.required' => 'Harap pilih semester.',
         ]);
 
         if ($validator->fails()) {
@@ -510,11 +508,9 @@ class SyllabusController extends Controller
                 Rule::unique('babs', 'nama_bab')->where('kelas_id', $kelasId)->where('kurikulum_id', $curriculumId)
                 ->where('mapel_id', $mapelId)->ignore($babId)
             ],
-            'semester' => 'required',
         ], [
             'nama_bab.required' => 'Harap masukkan bab.',
             'nama_bab.unique' => 'Bab telah terdaftar.',
-            'semester.required' => 'Harap pilih semester.',
         ]);
 
         if ($validator->fails()) {
