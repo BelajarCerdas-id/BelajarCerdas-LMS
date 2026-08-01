@@ -4,6 +4,7 @@ namespace App\Imports\Syllabus\School;
 
 use App\Events\SyllabusCrud;
 use App\Models\Bab;
+use App\Models\Fase;
 use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\SchoolBab;
@@ -98,22 +99,54 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
                 continue;
             }
 
+            $school = SchoolPartner::find($this->schoolId);
+
+            // VALIDASI FASE
+            $fase = Fase::where('kurikulum_id', $this->curriculumId)->where('nama_fase', $row['fase'])->first();
+
+            if (!$fase) {
+                $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$row['fase']} tidak ditemukan.";
+                continue;
+            }
+
+            $allowedPhases = [
+                'SD'  => ['Fase A', 'Fase B', 'Fase C'],
+                'MI'  => ['Fase A', 'Fase B', 'Fase C'],
+
+                'SMP' => ['Fase D'],
+                'MTS' => ['Fase D'],
+
+                'SMA' => ['Fase E', 'Fase F', 'Fase F+'],
+                'SMK' => ['Fase E', 'Fase F', 'Fase F+'],
+                'MA'  => ['Fase E', 'Fase F', 'Fase F+'],
+                'MAK' => ['Fase E', 'Fase F', 'Fase F+'],
+            ];
+
+            if (isset($allowedPhases[$school->jenjang_sekolah]) && !in_array($row['fase'], $allowedPhases[$school->jenjang_sekolah])) {
+                $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$row['fase']} tidak sesuai dengan jenjang {$school->jenjang_sekolah}.";
+                continue;
+            }
+
             // VALIDASI KELAS
-            $kelas = Kelas::where('kelas', $row['kelas'])->where('kurikulum_id', $this->curriculumId)->first();
+            $kelas = Kelas::where('kelas', $row['kelas'])->where('fase_id', $fase->id)->where('kurikulum_id', $this->curriculumId)->first();
 
             if (!$kelas) {
-                $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$row['kelas']} tidak ditemukan.";
+                $errors[] = "Sheet {$this->sheetTitle} - Baris {$rowNumber}: {$row['kelas']} tidak ditemukan pada fase {$row['fase']}.";
                 continue;
             }
 
             $allowedClass = [
                 'SD'  => ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
+                'MI'  => ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6'],
+
                 'SMP' => ['Kelas 7', 'Kelas 8', 'Kelas 9'],
+                'MTS' => ['Kelas 7', 'Kelas 8', 'Kelas 9'],
+
                 'SMA' => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
                 'SMK' => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
+                'MA'  => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
+                'MAK' => ['Kelas 10', 'Kelas 11', 'Kelas 12'],
             ];
-
-            $school = SchoolPartner::find($this->schoolId);
 
             if (isset($allowedClass[$school->jenjang_sekolah]) && !in_array($row['kelas'], $allowedClass[$school->jenjang_sekolah])) {
 
@@ -133,7 +166,9 @@ class SchoolSyllabusImport implements ToCollection, WithHeadingRow, WithStartRow
     {
         foreach ($rows as $index => $row) {
 
-            $kelas = Kelas::where('kelas', $row['kelas'])->where('kurikulum_id', $this->curriculumId)->first();
+            $fase = Fase::where('kurikulum_id', $this->curriculumId)->where('nama_fase', $row['fase'])->first();
+
+            $kelas = Kelas::where('kelas', $row['kelas'])->where('fase_id', $fase->id)->where('kurikulum_id', $this->curriculumId)->first();
 
             $faseId = $kelas->fase_id;
 

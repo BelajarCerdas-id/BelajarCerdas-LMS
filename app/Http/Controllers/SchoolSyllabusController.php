@@ -68,10 +68,10 @@ class SchoolSyllabusController extends Controller
             'MI' => ['fase a', 'fase b', 'fase c'],
             'SMP' => ['fase d'],
             'MTS' => ['fase d'],
-            'SMA' => ['fase e', 'fase f'],
-            'SMK' => ['fase e', 'fase f'],
-            'MA' => ['fase e', 'fase f'],
-            'MAK' => ['fase e', 'fase f'],
+            'SMA' => ['fase e', 'fase f', 'fase f+'],
+            'SMK' => ['fase e', 'fase f', 'fase f+'],
+            'MA' => ['fase e', 'fase f', 'fase f+'],
+            'MAK' => ['fase e', 'fase f', 'fase f+'],
         ];
 
         $allowedPhases = $phaseMap[$getSchool->jenjang_sekolah] ?? [];
