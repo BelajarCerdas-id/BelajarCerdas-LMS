@@ -20,6 +20,7 @@
 /public/assessment/*/*.*
 /public/library/*/*.*
 /public/school-logo/*.*
+/public/school-foundation-logo/*.*
 /public/lms-contents/*.*
 /public/lms-docx-image/*.*
 /lms-docx-image/*.*
