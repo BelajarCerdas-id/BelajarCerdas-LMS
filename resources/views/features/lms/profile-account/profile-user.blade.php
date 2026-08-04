@@ -115,6 +115,14 @@
                                             {{ $studentSchoolClass->SchoolClass->class_name ?? '-' }}
                                         </div>
                                     </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm text-gray-500">NISN</label>
+                                        <div id="view-class-name"
+                                            class="w-full bg-gray-50 border-2 border-gray-200 rounded-md px-3 py-3 text-sm">
+                                            {{ Auth::user()->StudentProfile->nisn ?? '-' }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
