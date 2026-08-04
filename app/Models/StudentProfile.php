@@ -13,6 +13,7 @@ class StudentProfile extends Model
         'user_id',
         'nama_lengkap',
         'personal_email',
+        'nisn',
         'enrollment_type',
         'school_partner_id',
     ];

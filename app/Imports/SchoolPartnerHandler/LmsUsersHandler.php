@@ -146,7 +146,8 @@ class LmsUsersHandler
                             StudentProfile::updateOrCreate(
                                 ['user_id' => $user->id],
                                 [
-                                    'personal_email' => $row['email_user'],
+                                    'personal_email' => $row['email_user'], 
+                                    'nisn' => $row['nisn'],
                                     'nama_lengkap' => $row['nama_user'],
                                     'enrollment_type' => $row['enrollment_type'],
                                     'school_partner_id' => $schoolPartner->id,
@@ -262,6 +263,7 @@ class LmsUsersHandler
 
         $errors = [];
         $emailsInFile = [];
+        $nisnInFile = [];
 
         // Preload data untuk validasi
         $npsns = $rows->pluck('npsn')->filter()->unique();
@@ -361,6 +363,21 @@ class LmsUsersHandler
                     if (!$exists) {
                         throw new \Exception("Wali Kelas tidak terdaftar.");
                     }
+
+                    $checkNisn = StudentProfile::where('nisn', $row['nisn'])->first();
+
+                    if ($checkNisn) {
+                        throw new \Exception("NISN {$row['nisn']} sudah terdaftar.");
+                    }
+
+                    // nisn duplikat dalam file
+                    $nisn = strtolower($row['nisn']);
+
+                    if (in_array($nisn, $nisnInFile)) {
+                        throw new \Exception("NISN {$row['nisn']} duplikat dalam file.");
+                    }
+
+                    $nisnInFile[] = $nisn;
                 }
 
             } catch (\Throwable $e) {
