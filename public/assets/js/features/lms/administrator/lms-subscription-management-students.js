@@ -138,8 +138,8 @@ function managementStudentSchoolSubscription() {
                                 </div>
 
                                 <div class="bg-[#EEF6FF] rounded-xl p-4 min-w-40">
-                                    <p class="text-xs text-[#4189E0] mb-1">Total Siswa</p>
-                                    <p class="font-bold text-2xl text-[#4189E0]">${response.data.length}</p>
+                                    <p class="text-xs text-[#4189E0] mb-1">Total Siswa Aktif</p>
+                                    <p class="font-bold text-2xl text-[#4189E0]">${response.activeStudentCount}</p>
                                 </div>
                             </div>
                         </div>
@@ -447,7 +447,7 @@ $(document).on('change', '.toggle-activate-student-in-class', function () {
             student_class_status: status // Kirim status baru (active/inactive)
         },
         success: function (response) {
-            // tampilkan pesan berhasil
+            managementStudentSchoolSubscription();
         },
         error: function (xhr) {
             alert('Gagal mengubah status.');

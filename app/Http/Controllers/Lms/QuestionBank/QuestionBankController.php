@@ -37,8 +37,10 @@ class QuestionBankController extends Controller
                 $q->where('school_partner_id', $schoolId);
             })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
+            })->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
             });
-        })->get();
+        })->where('status_akun', 'aktif')->get();
 
         // jika ada schoolId maka ambil content dari sekolah tersebut dan dari global
         if ($schoolId) {

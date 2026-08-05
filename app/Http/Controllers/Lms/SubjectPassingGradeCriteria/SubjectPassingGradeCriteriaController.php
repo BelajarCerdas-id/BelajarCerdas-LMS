@@ -90,8 +90,10 @@ class SubjectPassingGradeCriteriaController extends Controller
                     $q->where('school_partner_id', $schoolId);
                 })->orWhereHas('SchoolStaffProfile', function ($q) use ($schoolId) {
                     $q->where('school_partner_id', $schoolId);
-                });
-            })->get();
+                })->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            });
+        })->where('status_akun', 'aktif')->get();
 
         $countUsers = $users->count();
 

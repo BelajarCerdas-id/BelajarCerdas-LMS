@@ -17,10 +17,17 @@ class AccountController extends Controller
         return view('features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role', 'managedRole'));
     }
 
-    // function paginate lms management account
+   // function paginate lms management account
     public function paginateLmsSchoolAccount(Request $request, $role, $schoolName, $schoolId, $managedRole)
     {
-        $users = UserAccount::with(['StudentProfile', 'SchoolStaffProfile', 'ParentProfile'])->withCount('ParentProfile')->where(function ($query) use ($schoolId) {
+        $users = UserAccount::with([
+            'StudentProfile',
+            'SchoolStaffProfile',
+            'ParentProfile'
+        ])
+        ->withCount('ParentProfile')
+        ->where(function ($query) use ($schoolId) {
+
             $query->whereHas('StudentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             })
@@ -30,24 +37,32 @@ class AccountController extends Controller
             ->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
-        })->where('role', $managedRole);
 
-        // Filter school
+        })
+        ->where('role', $managedRole);
+
+        // Search User
         if ($request->filled('search_user')) {
             $search = $request->search_user;
 
             $users->where(function ($q) use ($search) {
+
                 $q->whereHas('StudentProfile', function ($s) use ($search) {
                     $s->where('nama_lengkap', 'LIKE', "%{$search}%");
-                })->orWhereHas('SchoolStaffProfile', function ($s) use ($search) {
+                })
+                ->orWhereHas('SchoolStaffProfile', function ($s) use ($search) {
+                    $s->where('nama_lengkap', 'LIKE', "%{$search}%");
+                })
+                ->orWhereHas('ParentProfile', function ($s) use ($search) {
                     $s->where('nama_lengkap', 'LIKE', "%{$search}%");
                 });
+
             });
         }
 
-        $countUsers = $users->count();
+        $countUsers = (clone $users)->where('status_akun', 'aktif')->count();
 
-        $paginated = $users->paginate(10);
+        $paginated = $users->latest()->paginate(10);
 
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 
@@ -56,6 +71,7 @@ class AccountController extends Controller
             'links' => (string) $paginated->links(),
             'current_page' => $paginated->currentPage(),
             'per_page' => $paginated->perPage(),
+            'total' => $paginated->total(),
             'schoolIdentity' => $getSchool,
             'countUsers' => $countUsers,
             'parentChildrenList' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-accounts/:parentId/parent-children-list',

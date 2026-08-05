@@ -62,32 +62,52 @@ class StudentSchoolClassController extends Controller
     }
 
     // function paginate lms management users
-    public function paginateLmsSchoolSubscriptionUsers($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
-    {
-        $getUsersQuery = StudentSchoolClass::with(['UserAccount.StudentProfile', 'SchoolClass', 
-        'SchoolClass.UserAccount.SchoolStaffProfile']);
+public function paginateLmsSchoolSubscriptionUsers(
+    $role,
+    $schoolName,
+    $schoolId,
+    $managedRole,
+    $classId,
+    $majorId = null
+) {
+    $studentSchoolClassQuery = StudentSchoolClass::with([
+        'UserAccount.StudentProfile',
+        'SchoolClass',
+        'SchoolClass.UserAccount.SchoolStaffProfile',
+    ]);
 
-        if ($majorId) {
-            $getUsersQuery->with(['SchoolClass.SchoolMajor']);
-        }
-
-        $getUsers = $getUsersQuery->whereHas('SchoolClass', function ($query) use ($schoolId) {
-            $query->where('school_partner_id', $schoolId);
-        })->where('school_class_id', $classId)->get();
-
-        $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
-
-        $academicActionCheck = $getUsers->map(function ($item) {
-            $item->has_academic_action = !empty($item->academic_action);
-            return $item;
-        });;
-
-        return response()->json([
-            'data' => $getUsers,
-            'schoolIdentity' => $getSchool,
-            'academicActionCheck' => $academicActionCheck,
-        ]);
+    if ($majorId) {
+        $studentSchoolClassQuery->with('SchoolClass.SchoolMajor');
     }
+
+    $studentSchoolClasses = $studentSchoolClassQuery
+        ->whereHas('SchoolClass', function ($query) use ($schoolId) {
+            $query->where('school_partner_id', $schoolId);
+        })
+        ->where('school_class_id', $classId)
+        ->get();
+
+    $school = SchoolPartner::with([
+        'UserAccount.SchoolStaffProfile'
+    ])->find($schoolId);
+
+    $academicActionCheck = $studentSchoolClasses->map(function ($item) {
+        $item->has_academic_action = !empty($item->academic_action);
+        return $item;
+    });
+
+    // Hitung siswa yang status kelasnya aktif
+    $activeStudentCount = $studentSchoolClasses
+        ->where('student_class_status', 'active')
+        ->count();
+
+    return response()->json([
+        'data' => $studentSchoolClasses,
+        'schoolIdentity' => $school,
+        'academicActionCheck' => $academicActionCheck,
+        'activeStudentCount' => $activeStudentCount,
+    ]);
+}
 
     // function activate student in class
     public function lmsActivateStudentInClass(Request $request, $id)

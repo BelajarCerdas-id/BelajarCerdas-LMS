@@ -56,7 +56,7 @@ function managementAcademic() {
                                 </div>
 
                                 <div class="bg-[#EEF6FF] rounded-xl p-4 min-w-40">
-                                    <p class="text-xs text-[#0071BC] mb-1">Total Pengguna</p>
+                                    <p class="text-xs text-[#0071BC] mb-1">Total Pengguna Aktif</p>
                                     <p class="font-bold text-2xl text-[#0071BC]">${response.countUsers}</p>
                                 </div>
 
