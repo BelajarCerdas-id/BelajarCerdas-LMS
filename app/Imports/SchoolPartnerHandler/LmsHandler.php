@@ -423,7 +423,7 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
-                'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
+                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
             ],
             '*.password_akun'    => 'required',
             '*.enrollment_type'  => 'required',

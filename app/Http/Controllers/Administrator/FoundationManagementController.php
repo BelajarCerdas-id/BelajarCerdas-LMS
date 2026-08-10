@@ -177,7 +177,11 @@ class FoundationManagementController extends Controller
 
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'required|string|unique:user_accounts,no_hp|regex:/^08\d{8,11}$/',
-            'email' => 'required|unique:user_accounts,email|regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
+            'email' => [
+                'required',
+                'unique:user_accounts,email',
+                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+            ],
             'password' => 'required',
 
             'school_partner_id' => 'required|array|min:1',

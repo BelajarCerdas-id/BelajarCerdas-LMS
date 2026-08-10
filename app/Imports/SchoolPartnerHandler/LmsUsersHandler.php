@@ -401,7 +401,7 @@ class LmsUsersHandler
             '*.nama_sekolah'    => 'required',
             '*.npsn'            => 'required',
             '*.jenjang_sekolah' => 'required',
-            '*.email_akun'      => ['required', 'email', 'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$'],
+            '*.email_akun'      => ['required', 'email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'],
             '*.pembelian_fitur' => 'required',
         ];
 
@@ -409,7 +409,7 @@ class LmsUsersHandler
             if (($row['role_account_orang_tua'] ?? null) === 'Orang Tua' && ($row['role_account'] ?? null) === 'Siswa') {
                 $rules["{$index}.nama_orang_tua_siswa"] = 'required';
                 $rules["{$index}.no_hp_orang_tua"] = ['required', 'regex:/^08\d{8,11}$/'];
-                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$'];
+                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'];
                 $rules["{$index}.password_akun_orang_tua"] = 'required';
             } else {
                 $rules["{$index}.nama_user"] = 'required';

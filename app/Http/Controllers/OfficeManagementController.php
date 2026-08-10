@@ -39,7 +39,12 @@ class OfficeManagementController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
-            'email' => 'required|email|unique:user_accounts,email|regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
+            'email' => [
+                'required',
+                'email',
+                'unique:user_accounts,email',
+                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+            ],
             'no_hp' => 'required',
             'password' => 'required',
             'role' => 'required',
@@ -88,7 +93,7 @@ class OfficeManagementController extends Controller
             'email' => [
                 'required',
                 'email',
-                'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
+                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
                 Rule::unique('user_accounts', 'email')->ignore($userAccountId),
             ],
             'no_hp' => [
