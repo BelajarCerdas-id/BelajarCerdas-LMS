@@ -176,7 +176,7 @@ class FoundationManagementController extends Controller
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2000',
 
             'nama_lengkap' => 'required|string|max:255',
-            'no_hp' => 'required|string|unique:user_accounts,no_hp|regex:/^08\d{8,11}$/',
+            'no_hp' => 'required|string|regex:/^08\d{8,11}$/',
             'email' => [
                 'required',
                 'unique:user_accounts,email',
@@ -198,7 +198,6 @@ class FoundationManagementController extends Controller
 
             'no_hp.required' => 'Harap isi nomor HP.',
             'no_hp.regex' => 'No.HP tidak valid.',
-            'no_hp.unique' => 'Nomor HP sudah digunakan.',
 
             'password.required' => 'Harap isi password.',
 

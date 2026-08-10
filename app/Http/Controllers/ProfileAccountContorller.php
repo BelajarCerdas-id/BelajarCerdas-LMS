@@ -31,13 +31,13 @@ class ProfileAccountContorller extends Controller
             'nama_lengkap' => 'required',
             'no_hp' => [
                 'required',
-                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+                'regex:/^08\d{8,11}$/'
             ],
             'personal_email' => 'required|email',
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'no_hp.required' => 'Nomor HP harus diisi.',
-            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
             'personal_email.required' => 'Email pribadi harus diisi.',
             'personal_email.email' => 'Format email tidak valid.',
         ]);
@@ -78,12 +78,12 @@ class ProfileAccountContorller extends Controller
             'nama_lengkap' => 'required',
             'no_hp' => [
                 'required',
-                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+                'regex:/^08\d{8,11}$/'
             ],
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'no_hp.required' => 'Nomor HP harus diisi.',
-            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -120,14 +120,14 @@ class ProfileAccountContorller extends Controller
             'nama_lengkap' => 'required',
             'no_hp' => [
                 'required',
-                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+                'regex:/^08\d{8,11}$/'
             ],
             'personal_email' => 'required|email',
             'nik' => 'required',
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'no_hp.required' => 'Nomor HP harus diisi.',
-            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
             'personal_email.required' => 'Email pribadi harus diisi.',
             'personal_email.email' => 'Format email tidak valid.',
             'nik.required' => 'NIK harus diisi.',
@@ -171,12 +171,12 @@ class ProfileAccountContorller extends Controller
             'nama_lengkap' => 'required',
             'no_hp' => [
                 'required',
-                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+                'regex:/^08\d{8,11}$/'
             ],
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'no_hp.required' => 'Nomor HP harus diisi.',
-            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -213,12 +213,12 @@ class ProfileAccountContorller extends Controller
             'nama_lengkap' => 'required',
             'no_hp' => [
                 'required',
-                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+                'regex:/^08\d{8,11}$/'
             ],
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'no_hp.required' => 'Nomor HP harus diisi.',
-            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
         ]);
 
         if ($validator->fails()) {
