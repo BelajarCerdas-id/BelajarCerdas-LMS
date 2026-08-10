@@ -668,7 +668,7 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('profile-account-office.view', [
+                            <a href="{{ route('profile-account-non-school-partner.view', [
                                 'role' => Auth::user()->role,
                             ]) }}">
                                 <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -703,7 +703,7 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('profile-account-office.view', [
+                            <a href="{{ route('profile-account-non-school-partner.view', [
                                 'role' => Auth::user()->role,
                             ]) }}">
                                 <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -751,7 +751,7 @@
                             </div>
                         </a>
                         
-                        <a href="{{ route('profile-account-office.view', [
+                        <a href="{{ route('profile-account-non-school-partner.view', [
                             'role' => Auth::user()->role,
                         ]) }}">
                             <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -1072,7 +1072,7 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('profile-account-office.view', [
+                            <a href="{{ route('profile-account-non-school-partner.view', [
                                 'role' => Auth::user()->role,
                             ]) }}">
                                 <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -1107,7 +1107,7 @@
                                 </div>
                             </a>
 
-                            <a href="{{ route('profile-account-office.view', [
+                            <a href="{{ route('profile-account-non-school-partner.view', [
                                 'role' => Auth::user()->role,
                             ]) }}">
                                 <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -1155,7 +1155,7 @@
                             </div>
                         </a>
 
-                        <a href="{{ route('profile-account-office.view', [
+                        <a href="{{ route('profile-account-non-school-partner.view', [
                             'role' => Auth::user()->role,
                         ]) }}">
                             <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
@@ -3780,6 +3780,14 @@
                                     </div>
                                 </a>
 
+                                <a href="{{ route('profile-account-non-school-partner.view', [
+                                    'role' => Auth::user()->role,
+                                ]) }}">
+                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                                    </div>
+                                </a>
+
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button
@@ -3808,6 +3816,14 @@
                                     class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
                                     <i class="fa-solid fa-house"></i>
                                     Beranda
+                                </div>
+                            </a>
+                            
+                            <a href="{{ route('profile-account-non-school-partner.view', [
+                                'role' => Auth::user()->role,
+                            ]) }}">
+                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
                                 </div>
                             </a>
 
@@ -3855,7 +3871,15 @@
                                 <i class="fa-solid fa-house"></i>
                                 Beranda
                             </div>
-                        </a>            
+                        </a>
+                        
+                        <a href="{{ route('profile-account-non-school-partner.view', [
+                            'role' => Auth::user()->role,
+                        ]) }}">
+                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
+                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
+                            </div>
+                        </a>
 
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf

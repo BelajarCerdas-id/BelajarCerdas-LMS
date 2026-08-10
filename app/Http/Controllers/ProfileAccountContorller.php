@@ -206,6 +206,48 @@ class ProfileAccountContorller extends Controller
         ]);
     }
 
+    // update personal information school foundation (yayasan sekolah)
+    public function updatePersonalInformationSchoolFoundation(Request $request, $role, $userId)
+    {
+        $validator = Validator::make($request->all(), [
+            'nama_lengkap' => 'required',
+            'no_hp' => [
+                'required',
+                Rule::unique('user_accounts', 'no_hp')->ignore($userId),
+            ],
+        ], [
+            'nama_lengkap.required' => 'Nama lengkap harus diisi.',
+            'no_hp.required' => 'Nomor HP harus diisi.',
+            'no_hp.unique' => 'Nomor HP telah terdaftar.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $dataSchoolFoundationProfile = UserAccount::with('SchoolFoundationProfile')->findOrFail($userId);
+
+        $dataSchoolFoundationProfile->SchoolFoundationProfile->update([
+            'nama_lengkap' => $request->nama_lengkap,
+        ]);
+
+        $dataSchoolFoundationProfile->update([
+            'no_hp' => $request->no_hp,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data berhasil diperbarui.',
+            'data' => [
+                'nama_lengkap' => $dataSchoolFoundationProfile->SchoolFoundationProfile->nama_lengkap,
+                'no_hp' => $dataSchoolFoundationProfile->no_hp,
+            ]
+        ]);
+    }
+
     public function resetPasswordView($role, $schoolName = null, $schoolId = null) {
 
         return view('features.lms.profile-account.settings.reset-password', compact('role', 'schoolName', 'schoolId'));

@@ -233,7 +233,7 @@
                             <!--- items --->
                             <ul class="lsit-style-none">
                                 <li class="text-sm pl-8 pr-2">
-                                    <a href="{{ route('profile-account-office.reset-password.view', [
+                                    <a href="{{ route('profile-account-non-school-partner.reset-password.view', [
                                         'role' => $role,
                                     ]) }}" class="flex justify-between w-full">
                                         Atur Ulang Kata Sandi
@@ -625,6 +625,143 @@
                             <input type="text" id="nama_lengkap" name="nama_lengkap"
                                 class="w-full bg-white shadow-lg h-11 border-gray-200 border outline-none rounded-full text-xs px-2 mt-2"
                                 value="{{ Auth::user()->ParentProfile->nama_lengkap ?? '' }}"
+                                placeholder="Masukkan Nama Lengkap">
+                            <span id="error-nama_lengkap" class="text-red-500 text-xs mt-1 font-bold"></span>
+                        </div>
+
+                        <!---- No.HP ---->
+                        <div class="mt-4 w-96 md:w-112.5">
+                            <label class="text-sm">
+                                No.HP
+                                <sup class="text-red-500 top-0 text-lg">&#42;</sup>
+                            </label>
+                            <input type="text" id="no_hp" name="no_hp"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                class="w-full bg-white shadow-lg h-11 border-gray-200 border outline-none rounded-full text-xs px-2 mt-2"
+                                value="{{ Auth::user()->no_hp }}"
+                                placeholder="Masukkan Nmmor HP">
+                            <span id="error-no_hp" class="text-red-500 text-xs mt-1 font-bold"></span>
+                        </div>
+
+                        <!---- button submit ---->
+                        <div class="flex justify-end mt-8">
+                            <button type="button" id="submit-button-update-personal-information"
+                                class="bg-[#4189e0] hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all cursor-pointer disabled:cursor-default">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+        </div>
+    </div>
+@elseif (Auth::user()->SchoolFoundationProfile)
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
+        <div class="my-15 mx-7.5">
+
+            <!--- alert success --->
+            <div id="alert-success-update-personal-information"></div>
+
+            <main>
+                <section class="flex flex-col lg:flex-row gap-14">
+
+                    <!--- left profil --->
+                    <div class="bg-white w-full lg:w-125 h-max lg:h-156.75 shadow-lg rounded-lg py-10 border-2 border-gray-200">
+
+                        <!--- image user --->
+                        <div class="flex justify-center">
+                            <i class="fas fa-user-circle text-6xl pb-4"></i>
+                        </div>
+
+                        <!--- name & role --->
+                        <div class="flex flex-col items-center">
+                            <span class="p-px px-2 bg-[#4189e0] text-white text-sm">{{ Auth::user()->role }}</span>
+                        </div>
+
+                        <!--- pengaturan akun --->
+                        <div class="flex flex-col gap-4 jsutify-center pt-10 px-6">
+
+                            <!--- label --->
+                            <div class="flex items-center gap-2 text-[#4189e0] font-bold">
+                                <i class="fa-solid fa-user-gear text-xl"></i>
+                                <span class="text-lg">Pengaturan Akun</span>
+                            </div>
+
+                            <!--- items --->
+                            <ul class="lsit-style-none">
+                                <li class="text-sm pl-8 pr-2">
+                                    <a href="{{ route('profile-account-non-school-partner.reset-password.view', [
+                                        'role' => $role,
+                                    ]) }}" class="flex justify-between w-full">
+                                        Atur Ulang Kata Sandi
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!--- right profil --->
+                    <div class="w-full flex flex-col gap-4">
+
+                        <!--- Persnal Information --->
+                        <div>
+                            <div class="flex justify-between">
+                                <span class="font-bold text-2xl opacity-60">Informasi Pribadi</span>
+                                <div onclick="my_modal_1.showModal()" class="flex gap-2 items-center cursor-pointer text-[#4189e0] font-bold">
+                                    <span>Edit</span>
+                                    <i class="fas fa-pen"></i>
+                                </div>
+                            </div>
+
+                            <div class="bg-white h-full shadow-lg rounded-lg px-6 py-6 md:py-2 border-2 border-gray-200">
+                                <div class="grid grid-cols-2 gap-4 mt-4">
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm text-gray-500">Nama Lengkap</label>
+                                        <div id="view-nama-lengkap"
+                                            class="w-full bg-gray-50 border-2 border-gray-200 rounded-md px-3 py-3 text-sm">
+                                            {{ Auth::user()->SchoolFoundationProfile->nama_lengkap ?? '-' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm text-gray-500">No. HP</label>
+                                        <div id="view-no-hp"
+                                            class="w-full bg-gray-50 border-2 border-gray-200 rounded-md px-3 py-3 text-sm">
+                                            {{ Auth::user()->no_hp ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!--- modal edit personal information --->
+            <dialog id="my_modal_1" class="modal">
+                <div class="modal-box bg-white w-max focus:outline-none" tabindex="-1">
+
+                    <!---- Form edit personal information ---->
+                    <form id="update-personal-information-form" data-url="{{ route('profile-account-school-partner.personal-information-school-foundation.update', [
+                        'role' => $role,
+                        'userId' => Auth::user()->id
+                    ]) }}">
+                        <span class="text-xl font-bold flex justify-center">Informasi Pribadi</span>
+
+                        <!---- Nama Lengkap ---->
+                        <div class="mt-4 w-96 md:w-112.5">
+                            <label class="text-sm">
+                                Nama Lengkap
+                                <sup class="text-red-500 top-0 text-lg">&#42;</sup>
+                            </label>
+                            <input type="text" id="nama_lengkap" name="nama_lengkap"
+                                class="w-full bg-white shadow-lg h-11 border-gray-200 border outline-none rounded-full text-xs px-2 mt-2"
+                                value="{{ Auth::user()->SchoolFoundationProfile->nama_lengkap ?? '' }}"
                                 placeholder="Masukkan Nama Lengkap">
                             <span id="error-nama_lengkap" class="text-red-500 text-xs mt-1 font-bold"></span>
                         </div>

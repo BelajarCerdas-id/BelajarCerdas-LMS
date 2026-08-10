@@ -1,7 +1,7 @@
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'Atur Ulang Sandi',
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
-    'linkBackButton' => $schoolId ? route('profile-account-school-partner.view', [$role, $schoolName, $schoolId]) : route('profile-account-office.view', [$role]),
+    'linkBackButton' => $schoolId ? route('profile-account-school-partner.view', [$role, $schoolName, $schoolId]) : route('profile-account-non-school-partner.view', [$role]),
 ])
 
 @if (Auth::user())
