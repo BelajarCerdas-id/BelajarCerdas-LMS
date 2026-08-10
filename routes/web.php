@@ -47,6 +47,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
+use App\Http\Controllers\Administrator\FoundationManagementController;
 use App\Http\Controllers\OfficeManagementController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\ProfileAccountContorller;
@@ -590,7 +591,40 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // paginate
         Route::get('/lms/{role}/office-management/manage-user/paginate', [OfficeManagementController::class, 'paginateManageUser'])->name('lms.officeManagement.manage-user.paginate');
-    
+        
+        // ROUTES SCHOOL FOUNDATION MANAGEMENT (In Administrator)
+        // views
+        Route::get('/lms/{role}/school-foundation/manage', [FoundationManagementController::class, 'index'])->name('lms.schoolFoundation.manage.view'); 
+        Route::get('/lms/{role}/school-foundation/manage/form', [FoundationManagementController::class, 'viewSchoolFoundationForm'])->name('lms.schoolFoundation.form.view'); 
+        Route::get('/lms/{role}/school-foundation/manage/edit-form/{schoolFoundationId}', [FoundationManagementController::class, 'viewSchoolFoundationEditForm'])->name('lms.schoolFoundation.form.edit.view'); 
+        Route::get('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}', [FoundationManagementController::class, 'viewSchoolFoundationAccessControl'])->name('lms.schoolFoundation.access-control.view'); 
+        Route::get('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}', [FoundationManagementController::class, 'viewSchoolFoundationFinanceAccess'])->name('lms.schoolFoundation.finance-access-control.view'); 
+
+        // crud
+        Route::post('/lms/{role}/school-foundation/{schoolFoundationId}/manage/school-to-foundation/submit-form', [FoundationManagementController::class, 'addSchoolToFoundation'])->name('lms.addSchoolToFoundation.form.submit'); 
+        Route::post('/lms/{role}/school-foundation/{schoolFoundationId}/manage/remove-school-to-foundation/{schoolId}', [FoundationManagementController::class, 'removeSchoolFromFoundation'])->name('lms.removeSchoolFromFoundation.form.submit'); 
+        Route::post('/lms/{role}/school-foundation/manage/submit-form', [FoundationManagementController::class, 'schoolFoundationSubmitForm'])->name('lms.schoolFoundation.form.submit'); 
+        Route::post('/lms/{role}/school-foundation/manage/edit-form/{schoolFoundationId}/submit', [FoundationManagementController::class, 'editSchoolFoundationSubmitForm'])->name('lms.schoolFoundation.form.edit.submit'); 
+        Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/activate-account/{userId}', [FoundationManagementController::class, 'schoolFoundationAccessControlActivate'])->name('lms.schoolFoundation.access-control.activate'); 
+        Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/toggle-access/{profileId}', [FoundationManagementController::class, 'toggleSchoolFoundationAccessControl'])->name('lms.school-foundation.access-control.toggle');
+        Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/create-user-account', [FoundationManagementController::class, 'foundationCreateUser'])->name('lms.schoolFoundation.access-control.create-user'); 
+        Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user-account', [FoundationManagementController::class, 'foundationAssignUser'])->name('lms.schoolFoundation.access-control.assign-user'); 
+        Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user/{userId}', [FoundationManagementController::class, 'assignExistingAccount']);
+        Route::post('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/create-link', [FoundationManagementController::class, 'schoolFoundationFinanceAccessStore'])->name('lms.schoolFoundation.finance-access-control.store'); 
+        Route::put('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/status-access-control/activate/{linkId}', [FoundationManagementController::class, 'schoolFoundationFinanceAccessActivate'])->name('lms.schoolFoundation.finance-access-control.activate'); 
+        Route::post('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/status-access-control/edit/{linkId}', [FoundationManagementController::class, 'schoolFoundationFinanceAccessEdit'])->name('lms.schoolFoundation.finance-access-control.edit'); 
+
+        // load data edit
+        Route::get('/lms/{role}/school-foundation/manage/edit-form/{schoolFoundationId}/load-data', [FoundationManagementController::class, 'editSchoolFoundationForm'])->name('lms.schoolFoundation.form.edit'); 
+
+        // paginate
+        Route::get('/lms/{role}/school-foundation/paginate', [FoundationManagementController::class, 'paginateSchoolFoundation'])->name('lms.schoolFoundation.manage.paginate');
+        Route::get('/lms/{role}/school-foundation/manage/form/paginate-school-list', [FoundationManagementController::class, 'paginateSchoolList'])->name('lms.schoolFoundation.school-list.paginate'); 
+        Route::get('/lms/{role}/school-foundation/{foundationId}/manage/form/paginate-school-list', [FoundationManagementController::class, 'paginateSchoolList'])->name('lms.schoolFoundation.school-list.paginate'); 
+        Route::get('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/paginate', [FoundationManagementController::class, 'paginateSchoolFoundationAccessControl'])->name('lms.schoolFoundation.access-control.paginate'); 
+        Route::get('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/existing-account', [FoundationManagementController::class, 'loadExistingAccounts']);
+        Route::get('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/paginate', [FoundationManagementController::class, 'paginateSchoolFoundationFinanceAccess'])->name('lms.schoolFoundation.finance-access-control.paginate'); 
+
         // =========================================================
         // ROUTES FINANCE
     

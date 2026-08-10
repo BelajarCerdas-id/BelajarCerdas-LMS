@@ -448,7 +448,7 @@
                     @csrf
 
                     <button
-                        class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
+                        class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95 text-slate-900 font-medium">
                         <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                         Keluar
                     </button>
@@ -592,6 +592,25 @@
                             ]) }}"
                                 class="link-href flex py-2 text-[14px]">
                                 LMS
+                            </a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4 px-4">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                            <i class="fa-solid fa-building-columns text-[12px]"></i>
+                            <span class="text-[14px]">Yayasan</span>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6">
+                            <a href="{{ route('lms.schoolFoundation.manage.view', [
+                                'role' => Auth::user()->role
+                            ]) }}"
+                                class="link-href flex py-2 text-[14px]">
+                                Manajemen Yayasan
                             </a>
                         </div>
                     </div>
@@ -899,6 +918,23 @@
                                     'role' => Auth::user()->role
                                 ]) }}" class="link-href flex py-2 text-[14px]">
                                     LMS
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-building-columns text-[12px]"></i>
+                                <span class="text-[14px]">Yayasan</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]" id="rotate-icon"></i>
+                            </div>
+                            <div class="content-dropdown px-2 w-full">
+                                <a href="{{ route('lms.schoolFoundation.manage.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}" class="link-href flex py-2 text-[14px]">
+                                    Manajemen Yayasan
                                 </a>
                             </div>
                         </div>
@@ -1871,7 +1907,7 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
@@ -2237,7 +2273,7 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
@@ -2752,7 +2788,7 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
@@ -3542,7 +3578,7 @@
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button
-                            class="w-full flex items-center jus3.5ify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
+                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                             Keluar
                         </button>
