@@ -173,4 +173,9 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(LmsContentRead::class, 'student_id');
     }
+    
+    public function SchoolFoundationProfile()
+    {
+        return $this->hasOne(SchoolFoundationProfile::class, 'user_id');
+    }
 }

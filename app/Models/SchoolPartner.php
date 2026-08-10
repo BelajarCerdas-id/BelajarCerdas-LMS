@@ -12,6 +12,7 @@ class SchoolPartner extends Model
         'nama_sekolah',
         'npsn',
         'kepsek_id',
+        'school_foundation_id',
         'jenjang_sekolah',
         'logo',
     ];
@@ -145,5 +146,10 @@ class SchoolPartner extends Model
     public function TeacherDailyAgenda()
     {
         return $this->hasMany(TeacherDailyAgenda::class, 'school_partner_id');
+    }
+
+    public function SchoolFoundationFinanceAccess()
+    {
+        return $this->hasMany(SchoolFoundationFinanceAccess::class, 'school_partner_id');
     }
 }
