@@ -177,7 +177,7 @@ class FoundationManagementController extends Controller
 
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'required|string|unique:user_accounts,no_hp',
-            'email' => 'required|unique:user_accounts,email',
+            'email' => 'required|unique:user_accounts,email|regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
             'password' => 'required',
 
             'school_partner_id' => 'required|array|min:1',
@@ -188,6 +188,8 @@ class FoundationManagementController extends Controller
             'nama_lengkap.required' => 'Harap isi nama lengkap.',
 
             'email.required' => 'Harap isi email akun.',
+            'email.email' => 'Format email tidak valid.',
+            'email.regex' => 'Format email tidak valid.',
             'email.unique' => 'Email akun telah terdaftar.',
 
             'no_hp.required' => 'Harap isi nomor HP.',

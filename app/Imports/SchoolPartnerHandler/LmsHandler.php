@@ -423,7 +423,7 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
-                'regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+                'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
             ],
             '*.password_akun'    => 'required',
             '*.enrollment_type'  => 'required',
@@ -447,8 +447,8 @@ class LmsHandler
             '*.no_hp.regex'               => 'No.HP tidak valid.',
 
             '*.email_akun.required'       => 'Email akun tidak boleh kosong.',
-            '*.email_akun.email'          => 'Format email_akun harus @belajarcerdas.id.',
-            '*.email_akun.regex'          => 'Format email_akun harus @belajarcerdas.id.',
+            '*.email_akun.email'          => 'Format email tidak valid.',
+            '*.email_akun.regex'          => 'Format email tidak valid.',
 
             '*.password_akun.required'    => 'Password akun tidak boleh kosong.',
 

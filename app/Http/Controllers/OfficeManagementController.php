@@ -39,15 +39,15 @@ class OfficeManagementController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
-            'email' => 'required|email|unique:user_accounts,email|regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+            'email' => 'required|email|unique:user_accounts,email|regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
             'no_hp' => 'required',
             'password' => 'required',
             'role' => 'required',
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email harus @belajarcerdas.id.',
-            'email.regex' => 'Format email harus @belajarcerdas.id.',
+            'email.email' => 'Format email tidak valid.',
+            'email.regex' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar.',
             'no_hp.required' => 'No HP harus diisi.',
             'password.required' => 'Password harus diisi.',
@@ -88,7 +88,7 @@ class OfficeManagementController extends Controller
             'email' => [
                 'required',
                 'email',
-                'regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+                'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
                 Rule::unique('user_accounts', 'email')->ignore($userAccountId),
             ],
             'no_hp' => 'required',
@@ -96,8 +96,8 @@ class OfficeManagementController extends Controller
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
             'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email harus @belajarcerdas.id.',
-            'email.regex' => 'Format email harus @belajarcerdas.id.',
+            'email.email' => 'Format email tidak valid.',
+            'email.regex' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar.',
             'no_hp.required' => 'No HP harus diisi.',
             'role.required' => 'Role harus diisi.',

@@ -22,12 +22,12 @@ class AuthController extends Controller
     {
         // VALIDASI
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email|regex:/^[a-zA-z0-9._%+-]+@belajarcerdas\.id$/',
+            'email' => 'required|email|regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
             'password' => 'required',
         ], [
             'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email harus @belajarcerdas.id.',
-            'email.regex' => 'Format email harus @belajarcerdas.id.',
+            'email.email' => 'Format email tidak valid.',
+            'email.regex' => 'Format email tidak valid.',
             'password.required' => 'Password harus diisi.',
         ]);
 
