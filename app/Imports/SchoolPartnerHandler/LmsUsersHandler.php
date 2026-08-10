@@ -408,14 +408,14 @@ class LmsUsersHandler
         foreach ($rowsArray as $index => $row) {
             if (($row['role_account_orang_tua'] ?? null) === 'Orang Tua' && ($row['role_account'] ?? null) === 'Siswa') {
                 $rules["{$index}.nama_orang_tua_siswa"] = 'required';
-                $rules["{$index}.no_hp_orang_tua"] = ['required', 'regex:/^08\d{9,11}$/'];
+                $rules["{$index}.no_hp_orang_tua"] = ['required', 'regex:/^08\d{8,11}$/'];
                 $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$'];
                 $rules["{$index}.password_akun_orang_tua"] = 'required';
             } else {
                 $rules["{$index}.nama_user"] = 'required';
                 $rules["{$index}.email_user"] = ['required', 'email', 'regex:/^[a-zA-z0-9._%+-]+@gmail\.com$/'];
                 $rules["{$index}.password_akun"] = 'required';
-                $rules["{$index}.no_hp"] = ['required', 'regex:/^08\d{9,11}$/'];
+                $rules["{$index}.no_hp"] = ['required', 'regex:/^08\d{8,11}$/'];
             }
 
             if (($row['role_account'] ?? null) !== 'Siswa') {

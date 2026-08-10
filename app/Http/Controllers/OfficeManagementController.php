@@ -91,7 +91,10 @@ class OfficeManagementController extends Controller
                 'regex:/^[A-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$',
                 Rule::unique('user_accounts', 'email')->ignore($userAccountId),
             ],
-            'no_hp' => 'required',
+            'no_hp' => [
+                'required',
+                'regex:/^08\d{8,11}$/',
+            ],
             'role' => 'required',
         ], [
             'nama_lengkap.required' => 'Nama lengkap harus diisi.',
@@ -100,6 +103,7 @@ class OfficeManagementController extends Controller
             'email.regex' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar.',
             'no_hp.required' => 'No HP harus diisi.',
+            'no_hp.regex' => 'No.HP tidak valid.',
             'role.required' => 'Role harus diisi.',
         ]);
 

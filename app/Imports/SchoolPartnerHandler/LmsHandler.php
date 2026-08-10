@@ -418,7 +418,7 @@ class LmsHandler
             ],
             '*.no_hp' => [
                 'required',
-                'regex:/^08\d{9,11}$/',
+                'regex:/^08\d{8,11}$/',
             ],
             '*.email_akun' => [
                 'required',
