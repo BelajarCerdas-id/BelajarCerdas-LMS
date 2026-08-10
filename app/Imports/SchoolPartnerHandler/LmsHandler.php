@@ -423,6 +423,7 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
+                'unique:user_accounts,email',
                 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
             ],
             '*.password_akun'    => 'required',
@@ -448,6 +449,7 @@ class LmsHandler
 
             '*.email_akun.required'       => 'Email akun tidak boleh kosong.',
             '*.email_akun.email'          => 'Format email tidak valid.',
+            '*.email_akun.unique'          => 'Email akun telah terdaftar.',
             '*.email_akun.regex'          => 'Format email tidak valid.',
 
             '*.password_akun.required'    => 'Password akun tidak boleh kosong.',

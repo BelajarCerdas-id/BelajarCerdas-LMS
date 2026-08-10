@@ -401,7 +401,7 @@ class LmsUsersHandler
             '*.nama_sekolah'    => 'required',
             '*.npsn'            => 'required',
             '*.jenjang_sekolah' => 'required',
-            '*.email_akun'      => ['required', 'email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'],
+            '*.email_akun'      => ['required', 'email', 'unique:user_accounts,email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'],
             '*.pembelian_fitur' => 'required',
         ];
 
@@ -409,7 +409,7 @@ class LmsUsersHandler
             if (($row['role_account_orang_tua'] ?? null) === 'Orang Tua' && ($row['role_account'] ?? null) === 'Siswa') {
                 $rules["{$index}.nama_orang_tua_siswa"] = 'required';
                 $rules["{$index}.no_hp_orang_tua"] = ['required', 'regex:/^08\d{8,11}$/'];
-                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'];
+                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'unique:user_accounts,email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'];
                 $rules["{$index}.password_akun_orang_tua"] = 'required';
             } else {
                 $rules["{$index}.nama_user"] = 'required';
@@ -449,12 +449,14 @@ class LmsUsersHandler
             '*.kode_jurusan.required' => 'Kode Jurusan tidak boleh kosong.',
             '*.email_akun.required' => 'Email Akun tidak boleh kosong.',
             '*.email_akun.email' => 'Email akun tidak valid.',
+            '*.email_akun.unique' => 'Email akun telah terdaftar.',
             '*.email_akun.regex' => 'Email akun tidak valid.',
             '*.password_akun.required' => 'Password Akun tidak boleh kosong.',
             '*.nama_orang_tua_siswa.required' => 'Nama Orang Tua Siswa tidak boleh kosong.',
             '*.no_hp_orang_tua.required' => 'Nomor HP Orang Tua tidak boleh kosong.',
             '*.no_hp_orang_tua.regex' => 'Nomor HP Orang Tua tidak valid.',
             '*.email_akun_orang_tua.required' => 'Email Akun Orang Tua tidak boleh kosong.',
+            '*.email_akun_orang_tua.unique' => 'Email Akun Orang Tua telah terdaftar.',
             '*.email_akun_orang_tua.email' => 'Email akun orang tua tidak valid.',
             '*.email_akun_orang_tua.regex' => 'Email akun orang tua tidak valid.',
             '*.password_akun_orang_tua.required' => 'Password Akun Orang Tua tidak boleh kosong.',
