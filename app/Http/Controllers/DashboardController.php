@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Finance\FinanceDashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\ParentProfile; 
+use App\Models\ParentProfile;
+use App\Models\SchoolFoundationProfile;
 use App\Models\SchoolStaffProfile;
 use App\Models\StudentProfile;
 
@@ -141,6 +142,23 @@ class DashboardController extends Controller
                 'Administrator' => app(AdministratorDashboardController::class)->index($user->role),
                 default => abort(404),
             };
+        }
+
+        // 7. jika yang masuk adalah foundation role (yayasan)
+        if ($user->role === 'Yayasan') {
+
+            $foundationProfile = SchoolFoundationProfile::where('user_id', $user->id)->first();
+            
+            if ($foundationProfile) {
+                $choolFoundationId = $foundationProfile->school_foundation_id;
+                
+                return redirect()->route('lms.foundation.dashboard.view', [
+                    'role'       => $user->role,
+                    'foundationId' => $choolFoundationId ?? null
+                ]);
+            } else {
+                abort(403, 'Profil staff Anda belum lengkap. Silakan hubungi admin.');
+            }
         }
 
         // Default Fallback jika role tidak dikenali

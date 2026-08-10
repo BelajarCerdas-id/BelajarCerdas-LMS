@@ -32,14 +32,29 @@ class SchoolContractService
         return $user->OfficeProfile;
     }
 
+    private function schoolFoundationProfile(UserAccount $user): ?object
+    {
+        return $user->SchoolFoundationProfile;
+    }
+
     public function validate(UserAccount $user): array
     {
         $schoolPartnerId = $this->getSchoolPartnerId($user);
 
         $officeProfile = $this->officeProfile($user);
 
+        $schoolFoundationProfile = $this->schoolFoundationProfile($user);
+
         // office profile tidak di cek
         if ($officeProfile) {
+            return [
+                'success' => true,
+                'message' => null,
+            ];
+        }
+
+        // foundation profile tidak di cek
+        if ($schoolFoundationProfile) {
             return [
                 'success' => true,
                 'message' => null,
