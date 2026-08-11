@@ -13,7 +13,7 @@ function loadKPI(search_academic_year) {
     }
 
     $.ajax({
-        url: `/lms/${role}/foundation}/school-teacher-performance-kpi/${foundationId}`,
+        url: `/lms/${role}/foundation/school-teacher-performance-kpi/${foundationId}`,
         method: 'GET',
         data: {
             academic_year: search_academic_year
