@@ -148,6 +148,11 @@ class SchoolPartner extends Model
         return $this->hasMany(TeacherDailyAgenda::class, 'school_partner_id');
     }
 
+    public function SchoolFoundation()
+    {
+        return $this->belongsTo(SchoolFoundation::class, 'school_foundation_id');
+    }
+
     public function SchoolFoundationFinanceAccess()
     {
         return $this->hasMany(SchoolFoundationFinanceAccess::class, 'school_partner_id');
