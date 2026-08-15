@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Lms\Academic;
 
 use App\Events\LmsManagementMajors;
 use App\Http\Controllers\Controller;
+use App\Models\SchoolClass;
 use App\Models\SchoolMajor;
 use App\Models\SchoolPartner;
 use Illuminate\Http\Request;
@@ -22,9 +23,26 @@ class MajorController extends Controller
     {
         $majors = SchoolMajor::withCount([
             'schoolClass as school_class_count' => function ($q) {
-                $q->where('status_major', 'active');
+                $q->where('status_class', 'active');
             }
-        ])->where('school_partner_id', $schoolId)->get();
+        ])->where('school_partner_id', $schoolId)->get()->map(function ($major) {
+            $major->is_general = false;
+            return $major;
+        });
+
+        // Kelas yang belum memiliki jurusan / peminatan
+        $generalClassCount = SchoolClass::where('school_partner_id', $schoolId)->whereNull('major_id')->where('status_class', 'active')->count();
+
+        if ($generalClassCount > 0) {
+            $majors->prepend((object) [
+                'id' => null,
+                'major_name' => 'Umum',
+                'major_code' => null,
+                'status_major' => 'active',
+                'school_class_count' => $generalClassCount,
+                'is_general' => true,
+            ]);
+        }
 
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 

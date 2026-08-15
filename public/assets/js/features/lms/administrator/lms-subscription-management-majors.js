@@ -71,8 +71,9 @@ function managementMajorsSchoolSubscription() {
                     `;
                     $.each(response.data, function (index, item) {
 
-                        const lmsManagementClass = response.lmsManagementClass.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah)
-                            .replace(':schoolId', schoolIdentity.id).replace(':managedRole', managedRole).replace(':majorId', item.id);
+                        const majorId = item.is_general ? 'general' : item.id;
+
+                        const lmsManagementClass = response.lmsManagementClass.replace(':role', role).replace(':schoolName', schoolIdentity.nama_sekolah).replace(':schoolId', schoolIdentity.id).replace(':managedRole', managedRole).replace(':majorId', majorId);
 
                         const card = `
                             <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition duration-300 flex flex-col justify-between">
@@ -90,71 +91,88 @@ function managementMajorsSchoolSubscription() {
                                         <div tabindex="0" role="button">
                                             <i class="fa-solid fa-ellipsis-vertical cursor-pointer"></i>
                                         </div>
-                                            <ul tabindex="0"
-                                                class="dropdown-content menu rounded-box w-max p-2 shadow-lg z-9999 bg-white">
+
+                                        <ul tabindex="0" class="dropdown-content menu rounded-box w-max p-2 shadow-lg z-9999 bg-white">
+                                            <li class="text-xs">
+                                                <a href="${lmsManagementClass}"
+                                                class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
+
+                                                    <i class="fa-solid fa-users-gear text-[#4189E0] font-bold"></i>
+                                                    Kelola Kelas
+                                                </a>
+                                            </li>
+
+                                            ${!item.is_general ? `
                                                 <li class="text-xs">
-                                                    <a href="${lmsManagementClass}"
-                                                    class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
-                                                        <i class="fa-solid fa-users-gear text-[#4189E0] font-bold"></i>
-                                                        Kelola Kelas
-                                                    </a>
-                                                </li>
-                                                <li class="text-xs">
-                                                    <a href=""
-                                                    class="btn-edit-major flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100"
-                                                    data-major-id="${item.id}" data-major-name="${item.major_name}" data-major-code="${item.major_code}">
+                                                    <a href="" class="btn-edit-major flex items-center gap-2 px-4 py-2 text-xs" data-major-id="${item.id}" 
+                                                    data-major-name="${item.major_name}" data-major-code="${item.major_code}">
                                                         <i class="fa-solid fa-pen text-[#4189E0] font-bold"></i>
                                                         Edit Jurusan
                                                     </a>
                                                 </li>
-                                            </ul>
+                                            ` : ''}
+                                        </ul>
                                     </div>
                                 </div>
 
-                                <!-- NAMA JURUSAN -->
+                                <!-- NAMA -->
                                 <div>
-                                    <span class="text-md font-bold text-gray-800 mb-1">
+                                    <span class="text-md font-bold text-gray-800">
                                         ${item.major_name}
                                     </span>
+
                                     <p class="text-sm text-gray-500">
-                                        Kode Jurusan: <span class="font-semibold text-gray-700">${item.major_code}</span>
+                                        ${item.is_general ? 'Kelas tanpa peminatan jurusan' : `Kode Jurusan:
+                                            <span class="font-semibold text-gray-700">
+                                                ${item.major_code}
+                                            </span>`
+                                        }
                                     </p>
                                 </div>
 
                                 <!-- FOOTER -->
                                 <div class="flex items-center justify-between mt-6">
-                                    <!-- TOTAL KELAS AKTIF SETIAP JURUSAN -->
                                     <div>
-                                        <p class="text-xs text-gray-500">Total Kelas Aktif</p>
+
+                                        <p class="text-xs text-gray-500">
+                                            Total Kelas Aktif
+                                        </p>
+
                                         <p class="text-lg font-bold text-[#4189E0]">
                                             ${item.school_class_count}
                                         </p>
                                     </div>
 
-                                    <!-- TOGGLE STATUS -->
-                                    <div class="flex flex-col items-center justify-center gap-3">
-                                        <div class="flex items-center gap-2">
-                                            <p class="text-xs text-gray-500">Status</p>
-                                            <span class="text-gray-500 opacity-50"> | </span>
-                                            <span class="text-xs font-medium ${item.status_major === 'active' ? 'text-green-600' : 'text-gray-400'}">
-                                                ${item.status_major === 'active' ? 'Aktif' : 'Tidak Aktif'}
-                                            </span>
-                                        </div>
+                                    ${!item.is_general ? `
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-xs text-gray-500">
+                                                    Status
+                                                </p>
 
-                                        <div>
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="hidden peer toggle-activate-major"
-                                                    data-id="${item.id}"
-                                                    ${item.status_major === 'active' ? 'checked' : ''} />
-                                                <div
-                                                    class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
-                                                </div>
-                                                    <div
-                                                    class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5">
-                                                </div>
-                                            </label>
+                                                <span class="text-gray-500 opacity-50">|</span>
+
+                                                <span class="text-xs font-medium
+                                                    ${item.status_major === 'active' ? 'text-green-600' : 'text-gray-400'}">
+                                                    ${item.status_major === 'active' ? 'Aktif' : 'Tidak Aktif'}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" class="hidden peer toggle-activate-major"
+                                                        data-id="${item.id}" ${item.status_major === 'active' ? 'checked' : ''}/>
+
+                                                    <div class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300">
+                                                    </div>
+
+                                                    <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-5">
+                                                    </div>
+                                                </label>
+                                            </div>
+
                                         </div>
-                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;

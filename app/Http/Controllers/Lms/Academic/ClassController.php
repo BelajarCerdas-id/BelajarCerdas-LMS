@@ -95,67 +95,58 @@ class ClassController extends Controller
     {
         $getSchool = SchoolPartner::with('UserAccount.SchoolStaffProfile')->where('id', $schoolId)->first();
 
-        $startLevelMap = [
-            'SD' => 1,
-            'MI' => 1,
-            'SMP' => 7,
-            'MTS' => 7,
-            'SMA' => 10,
-            'SMK' => 10,
-            'MA' => 10,
-            'MAK' => 10
-        ];
+        $selectedYear = $request->filled('search_year') ? $request->search_year : SchoolClass::where('school_partner_id', $schoolId)->orderBy('tahun_ajaran')->value('tahun_ajaran');
 
-        $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
-
-        // level dari dropdown (optional)
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $defaultLevel;
-        $selectedYear = $request->filled('search_year') ? $request->search_year : SchoolClass::where('school_partner_id', $schoolId)
-        ->orderBy('tahun_ajaran')->value('tahun_ajaran');
-
-        $getClassQuery = SchoolClass::with(['UserAccount', 'UserAccount.SchoolStaffProfile', 'Kelas'])
-            ->withCount([
-                'StudentSchoolClass as student_school_class_count' => function ($q) {
-                    $q->where('student_class_status', 'active')
-                    ->where(function ($sub) {
-                        $sub->whereNull('academic_action')
-                            ->orWhere('academic_action', '');
+        $getClassQuery = SchoolClass::with(['UserAccount', 'UserAccount.SchoolStaffProfile', 'Kelas'])->withCount([
+            'StudentSchoolClass as student_school_class_count' => function ($q) {
+                    $q->where('student_class_status', 'active')->where(function ($sub) {
+                        $sub->whereNull('academic_action')->orWhere('academic_action', '');
                     });
                 }
-            ])
-            ->where('school_partner_id', $schoolId)
-            ->where('tahun_ajaran', $selectedYear);
+            ])->where('school_partner_id', $schoolId)->where('tahun_ajaran', $selectedYear);
 
-        if ($majorId) {
+        // Filter berdasarkan jurusan
+        if ($majorId === 'general') {
+            $getClassQuery->whereNull('major_id');
+        } elseif ($majorId !== null) {
             $getClassQuery->where('major_id', $majorId);
-        }        
+        }
 
-        $getClass = $getClassQuery->get()->filter(function ($class) use ($selectedClass) {
+        $classes = $getClassQuery->get();
+
+        // Level kelas yang tersedia pada jurusan tersebut
+        $availableClassLevels = $classes->map(function ($class) {
+            return $this->extractClassLevel($class->class_name);
+        })->unique()->sort()->values();
+
+        // Default ke level kelas paling rendah yang tersedia
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $availableClassLevels->first();
+
+        // Filter kelas berdasarkan level yang dipilih
+        $getClass = $classes->filter(function ($class) use ($selectedClass) {
             return $this->extractClassLevel($class->class_name) === $selectedClass;
         })->values();
 
-
-        $className = SchoolClass::where('school_partner_id', $schoolId)->pluck('class_name')->map(function ($className) {
-            return $this->extractClassLevel($className);
-        })->unique()->sort()->values();
-
-        // ambil tahun ajaran berdasarkan tingkat kelas
-        $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->when($majorId, function ($q) use ($majorId) {
+        // Tahun ajaran berdasarkan major dan level kelas
+        $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->when($majorId === 'general', function ($q) {
+            $q->whereNull('major_id');
+        })->when($majorId !== null && $majorId !== 'general', function ($q) use ($majorId) {
             $q->where('major_id', $majorId);
         })->get()->filter(function ($class) use ($selectedClass) {
-            if (!$selectedClass) return true;
-                return $this->extractClassLevel($class->class_name) === $selectedClass;
-            })->pluck('tahun_ajaran')->unique()->sort()->values();
+            return $this->extractClassLevel($class->class_name) === $selectedClass;
+        })->pluck('tahun_ajaran')->unique()->sort()->values();
 
         return response()->json([
             'data' => $getClass,
             'schoolIdentity' => $getSchool,
-            'className' => $className,
+            'className' => $availableClassLevels,
             'tahunAjaran' => $tahunAjaran,
             'selectedYear' => $selectedYear,
             'selectedClass' => $selectedClass,
-            'lmsManagementStudentsWithMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-majors/:majorId/management-students',
-            'lmsManagementStudentsNoMajor' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-students',
+            'lmsManagementStudentsWithMajor' =>
+                '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-majors/:majorId/management-students',
+            'lmsManagementStudentsNoMajor' =>
+                '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/management-role-account/:managedRole/management-class/:classId/management-students',
         ]);
     }
 
