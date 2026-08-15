@@ -114,6 +114,19 @@
                                 <span id="error-tahun_ajaran"class="text-red-500 font-bold text-xs pt-2"></span>
                             </div>
 
+                            <!-- JURUSAN TUJUAN -->
+                            <div id="container-major-promote" class="hidden">
+                                <label class="block text-sm font-bold opacity-70 mb-1">
+                                    Jurusan Tujuan
+                                </label>
+                                <select id="target-school-major-promote" name="major_id"
+                                    class="w-full bg-white shadow-lg rounded-md h-12 outline-none border border-gray-300 text-sm px-2 cursor-default opacity-50" disabled>
+                                    <option value="" class="hidden">Pilih Jurusan</option>
+                                    <!-- show option in ajax -->
+                                </select>
+                                <span id="error-major_id"class="text-red-500 font-bold text-xs pt-2"></span>
+                            </div>
+
                             <!-- KELAS TUJUAN -->
                             <div>
                                 <label class="block text-sm font-bold opacity-70 mb-1">

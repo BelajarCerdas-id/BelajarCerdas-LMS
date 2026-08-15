@@ -141,7 +141,7 @@ public function paginateLmsSchoolSubscriptionUsers(
 
         $classesQuery = SchoolClass::where('school_partner_id', $schoolId)->orderBy('tahun_ajaran');
 
-        if ($majorId) {
+        if ($majorId !== 'general') {
             $classesQuery->where('major_id', $majorId);
         }
 
@@ -158,7 +158,32 @@ public function paginateLmsSchoolSubscriptionUsers(
             return $level === $targetLevel;
         })->values(); // reset index
 
-        return response()->json($classes);
+        $tahunAjaran = $classes->pluck('tahun_ajaran')->unique()->values();
+
+        $majors = $classes->filter(function ($class) {
+            return $class->major_id !== null;
+        })->map(function ($class) {
+            return [
+                'id' => $class->major_id,
+                'major_name' => $class->schoolMajor?->major_name,
+                'major_code' => $class->schoolMajor?->major_code,
+            ];
+        })->unique('id')->values();
+
+        return response()->json([
+            'status' => 'success',
+            'currentClass' => [
+                'id' => $currentClass->id,
+                'class_name' => $currentClass->class_name,
+                'tahun_ajaran' => $currentClass->tahun_ajaran,
+                'major_id' => $currentClass->major_id,
+                'major_name' => $currentClass->schoolMajor?->major_name,
+            ],
+            'targetLevel' => $targetLevel,
+            'tahunAjaran' => $tahunAjaran,
+            'majors' => $majors,
+            'classes' => $classes,
+        ]);
     }
 
     // function repeat class lms management users

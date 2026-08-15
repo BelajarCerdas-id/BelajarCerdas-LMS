@@ -478,6 +478,14 @@ $(document).off('click', '.btn-promote-to-next-class').on('click', '.btn-promote
     const classId = container.dataset.classId;
     const majorId = container.dataset.majorId;
 
+    const containerMajorPromote = document.getElementById('container-major-promote');
+
+    if (majorId !== 'general') {
+        containerMajorPromote.classList.add('hidden');
+    } else {
+        containerMajorPromote.classList.remove('hidden');
+    }
+
     const studentIds = [];
     selected.each(function () {
         studentIds.push($(this).data('user-id'));
@@ -493,8 +501,12 @@ $(document).off('click', '.btn-promote-to-next-class').on('click', '.btn-promote
     $('#school-partner-id-promote-class').val(schoolId);
     $('#major-id-promote-class').val(majorId);
 
+    const yearSelect = $('#target-school-year-promote');
+    const majorSelect = $('#target-school-major-promote');
     const classSelect = $('#target-class-id-promote');
 
+    yearSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-50').addClass('opacity-50');
+    majorSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-50').addClass('opacity-50');
     classSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-100').addClass('opacity-50');
 
     // set url
@@ -506,22 +518,24 @@ $(document).off('click', '.btn-promote-to-next-class').on('click', '.btn-promote
         url = `/lms/school/${schoolId}/promotion-to-next-class-options`;
     }
 
-    // AMBIL OPSI KELAS TUJUAN DI SINI
-    $.get(`${url}`, { class_id: classId }, function (classes) {
-        const yearSelect = $('#target-school-year-promote');
-        const classSelect = $('#target-class-id-promote');
+    // AMBIL OPSI TAHUN AJARAN DAN KELAS
+    $.get(`${url}`, { class_id: classId }, function (response) {
 
         yearSelect.empty();
-        classSelect.empty().prop('disabled', true).addClass('cursor-default');
-        yearSelect.append(`<option value="" class="hidden">Pilih Tahun Ajaran </option>`);
+        majorSelect.empty();
+        classSelect.empty();
+
+        yearSelect.append(`<option value="" class="hidden">Pilih Tahun Ajaran</option>`);
+        majorSelect.append(`<option value="" class="hidden">Pilih Jurusan</option>`);
         classSelect.append(`<option value="" class="hidden">Pilih Kelas Tujuan</option>`);
 
         const grouped = {};
 
-        classes.forEach(item => {
+        response.classes.forEach(item => {
             if (!grouped[item.tahun_ajaran]) {
                 grouped[item.tahun_ajaran] = [];
             }
+
             grouped[item.tahun_ajaran].push(item);
         });
 
@@ -529,33 +543,131 @@ $(document).off('click', '.btn-promote-to-next-class').on('click', '.btn-promote
             yearSelect.append(`<option value="${year}">${year}</option>`);
         });
 
+        yearSelect.prop('disabled', false).removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
+
         // simpan cache global
         window.__promotionClasses = grouped;
-    }
-    );
+
+        // Jika kelas asal tidak memiliki jurusan gunakan Tahun Ajaran -> Kelas
+        if (majorId !== 'general') {
+            majorSelect.prop('disabled', true);
+
+            yearSelect.off('change').on('change', function () {
+                const year = $(this).val();
+
+                classSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-100').addClass('opacity-50');
+                classSelect.append(`<option value="" class="hidden">Pilih Kelas Tujuan</option>`);
+
+                if (!year || !window.__promotionClasses[year]) return;
+
+                window.__promotionClasses[year].forEach(cls => {
+                    classSelect.append(`
+                        <option value="${cls.id}">
+                            ${cls.class_name}
+                        </option>
+                    `);
+                });
+
+                classSelect.prop('disabled', false).removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
+            });
+
+            return;
+        }
+
+        // Tahun Ajaran -> Jurusan -> Kelas
+        yearSelect.off('change').on('change', function () {
+            const year = $(this).val();
+
+            majorSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-100').addClass('opacity-50');
+            classSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-100').addClass('opacity-50');
+
+            majorSelect.append(`<option value="" class="hidden">Pilih Jurusan</option>`);
+            classSelect.append(`<option value="" class="hidden">Pilih Kelas Tujuan</option>`);
+
+            if (!year || !window.__promotionClasses[year]) {
+                return;
+            }
+
+            const classes = window.__promotionClasses[year];
+
+            const majors = {};
+
+            classes.forEach(cls => {
+                if (cls.major_id) {
+                    majors[cls.major_id] = {
+                        id: cls.major_id,
+                        name: cls.school_major?.major_name ?? 'Umum'
+                    };
+                }
+            });
+
+            const majorList = Object.values(majors);
+
+            if (majorList.length === 1) {
+
+                const selectedMajorId = String(majorList[0].id);
+
+                // otomatis pilih jurusan
+                majorSelect.append(`
+                    <option value="${selectedMajorId}" selected>
+                        ${majorList[0].name}
+                    </option>
+                `).prop('disabled', true).removeClass('opacity-50').addClass('opacity-50');
+
+                // tampilkan kelas
+                classes.filter(cls =>
+                    String(cls.major_id) === selectedMajorId
+                ).forEach(cls => {
+                    classSelect.append(`
+                        <option value="${cls.id}">
+                            ${cls.class_name}
+                        </option>
+                    `);
+                });
+
+                classSelect.prop('disabled', false).removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
+
+                return;
+            }
+
+            // lebih dari 1 jurusan
+            majorList.forEach(major => {
+                majorSelect.append(`
+                    <option value="${major.id}">
+                        ${major.name}
+                    </option>
+                `);
+            });
+
+            majorSelect.prop('disabled', false).removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
+        });
+
+        // Jurusan -> Kelas
+        majorSelect.off('change').on('change', function () {
+            const year = yearSelect.val();
+            const selectedMajorId = $(this).val();
+
+            classSelect.empty().prop('disabled', true).removeClass('cursor-pointer').addClass('cursor-default').removeClass('opacity-100').addClass('opacity-50');
+            classSelect.append(`<option value="" class="hidden">Pilih Kelas Tujuan</option>`);
+
+            if (!year || !selectedMajorId || !window.__promotionClasses[year]) {
+                return;
+            }
+
+            window.__promotionClasses[year].filter(cls => String(cls.major_id) === String(selectedMajorId)).forEach(cls => {
+                    classSelect.append(`
+                        <option value="${cls.id}">
+                            ${cls.class_name}
+                        </option>
+                    `);
+                });
+
+            classSelect.prop('disabled', false).removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
+        });
+    });
 
     // buka modal
     document.getElementById('my_modal_1').showModal();
-});
-
-// dropdown bertingkat tahun ajaran -> kelas
-$('#target-school-year-promote').on('change', function () {
-    const year = $(this).val();
-    const classSelect = $('#target-class-id-promote');
-
-    classSelect.prop('disabled', false);
-    classSelect.removeClass('cursor-default').addClass('cursor-pointer').removeClass('opacity-50').addClass('opacity-100');
-    classSelect.empty().append(`<option value="" class="hidden">Pilih Kelas Tujuan</option>`);
-
-    if (!year || !window.__promotionClasses[year]) return;
-
-    window.__promotionClasses[year].forEach(cls => {
-        classSelect.append(`
-            <option value="${cls.id}">
-                ${cls.class_name}
-            </option>
-        `);
-    });
 });
 
 // Form Action promote class
