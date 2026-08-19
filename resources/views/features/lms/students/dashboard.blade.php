@@ -630,32 +630,6 @@
             </div>
         </div>
 
-        {{-- ======================================= --}}
-        {{-- MODALS SECTION                          --}}
-        {{-- ======================================= --}}
-        
-        {{-- 1. Modal Notifikasi Awal --}}
-        <div id="announcementModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeModal()"></div>
-            <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-8 transform scale-95 transition-all duration-300" id="modalContent">
-                <button onclick="closeModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-500 transition-colors">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-                <div class="w-16 h-16 bg-blue-50 text-[#0071BC] rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-5 mx-auto shadow-inner border border-blue-100">
-                    <i class="fas fa-bell animate-wiggle"></i>
-                </div>
-                <div class="text-center mb-6 md:mb-8">
-                    <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-2">Pemberitahuan Baru!</h3>
-                    <p class="text-xs md:text-sm text-slate-500 leading-relaxed px-2">
-                        Selamat datang di Dashboard Siswa. Pastikan untuk selalu memeriksa Jadwal Pelajaran, Modul, dan Tugas barumu hari ini!
-                    </p>
-                </div>
-                <button onclick="closeModal()" class="w-full py-3 px-4 bg-gradient-to-r from-[#0071BC] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
-                    Baik, Saya Mengerti
-                </button>
-            </div>
-        </div>
-
         {{-- 2. Modal Detail Jadwal --}}
         <div id="mapelDetailModal" class="fixed inset-0 z-[110] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 px-4">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm cursor-pointer" onclick="closeMapelModal()"></div>
@@ -1009,36 +983,6 @@ s
         }
     }
 
-    // ================= INISIALISASI SAAT DOM LOADED =================
-    document.addEventListener("DOMContentLoaded", function() {
-        updateModuleSlider();
-
-        // Munculkan Modal Notifikasi Awal HANYA SEKALI per sesi login
-        const userId = "{{ Auth::id() }}";
-        const sessionKey = 'welcome_modal_shown_' + userId;
-
-        // Cek apakah key sessionKey belum ada di sessionStorage
-        if (!sessionStorage.getItem(sessionKey)) {
-            setTimeout(function() {
-                const modal = document.getElementById('announcementModal');
-                const modalContent = document.getElementById('modalContent');
-                
-                if(modal && modalContent) {
-                    modal.classList.remove('hidden');
-                    setTimeout(() => {
-                        modal.classList.remove('opacity-0');
-                        modal.classList.add('opacity-100');
-                        modalContent.classList.remove('scale-95');
-                        modalContent.classList.add('scale-100');
-                        
-                        // Tandai bahwa modal sudah ditampilkan agar tidak muncul lagi saat di-refresh
-                        sessionStorage.setItem(sessionKey, 'true');
-                    }, 10);
-                }
-            }, 500); 
-        }
-    });
-
     function bacaPengumuman(id, title, content, date, type) {
         document.getElementById('judulPengumuman').innerText = title;
         document.getElementById('isiPengumuman').innerText = content;
@@ -1091,23 +1035,6 @@ s
             // Refresh otomatis agar status "Baru" ter-update di dashboard
             window.location.reload(); 
         }, 300);
-    }
-
-    // ================= FUNGSI UNTUK MODAL NOTIFIKASI AWAL =================
-    function closeModal() {
-        const modal = document.getElementById('announcementModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        if(modal && modalContent) {
-            modal.classList.remove('opacity-100');
-            modal.classList.add('opacity-0');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300); 
-        }
     }
 
     // ================= FUNGSI UNTUK MODAL DETAIL MAPEL =================
