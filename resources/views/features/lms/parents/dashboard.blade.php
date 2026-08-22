@@ -3,6 +3,22 @@
 ])
 
 @if (Auth::user()->role === 'Orang Tua')
+<style>
+.parent-extracurricular-card {
+    transition:
+        width 0.3s ease,
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.parent-extracurricular-card.parent-extracurricular-active {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+</style>
+
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-50 min-h-screen pb-12">
         
         <div class="pt-6 sm:pt-8 mx-4 sm:mx-6 lg:mx-10">
@@ -459,6 +475,332 @@
                         </div>
                     </div>
 
+                    {{-- =========================================================
+                        EKSTRAKURIKULER ANAK
+                    ========================================================= --}}
+
+<div
+    id="parent-extracurricular-section"
+    class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col"
+>
+
+    {{-- HEADER --}}
+    <div class="flex items-center justify-between mb-5 pb-4 border-b border-slate-100">
+
+        <div class="flex items-center gap-3">
+
+            <div
+                class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center"
+            >
+                <i class="fas fa-people-group text-lg"></i>
+            </div>
+
+            <div>
+
+                <h2 class="text-lg font-extrabold text-slate-800">
+                    Ekstrakurikuler
+                </h2>
+
+                <p class="text-xs text-slate-500">
+                    Informasi kehadiran kegiatan ekstrakurikuler
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- JIKA TIDAK ADA EKSKUL --}}
+    @if(($extracurricularSessions ?? collect())->isEmpty())
+
+        <div class="py-10 text-center">
+
+            <div
+                class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-3"
+            >
+                <i class="fas fa-people-group text-2xl"></i>
+            </div>
+
+            <h4 class="font-bold text-slate-600 text-sm">
+                Belum mengikuti ekstrakurikuler
+            </h4>
+
+            <p class="text-xs text-slate-400 mt-1">
+                Anak belum terdaftar pada kegiatan ekstrakurikuler.
+            </p>
+
+        </div>
+
+    @else
+
+        {{-- LIST EKSKUL --}}
+        <div
+            id="parentExtracurricularList"
+            class="grid grid-cols-1 gap-4"
+        >
+
+            @foreach($extracurricularSessions as $item)
+
+                @php
+
+                    $status = strtolower(
+                        $item['status'] ?? 'not_recorded'
+                    );
+
+                    $isPresent = in_array($status, [
+                        'present',
+                        'hadir'
+                    ]);
+
+                    $isAbsent = in_array($status, [
+                        'absent',
+                        'alpa',
+                        'alpha'
+                    ]);
+
+                    $history =
+                        $item['attendance_history']
+                        ?? collect();
+
+                    $hadir =
+                        $item['hadir']
+                        ?? 0;
+
+                    $alpa =
+                        $item['alpa']
+                        ?? 0;
+
+                    $totalPertemuan =
+                        $item['total_pertemuan']
+                        ?? $history->count();
+
+                    $percentage =
+                        $item['percentage']
+                        ?? 0;
+
+                @endphp
+
+
+                {{-- CARD --}}
+                <div
+                    class="parent-extracurricular-card border border-slate-200 rounded-2xl overflow-hidden bg-white transition-all duration-300"
+                >
+
+                    {{-- HEADER --}}
+                    <button
+                        type="button"
+                        class="parent-extracurricular-toggle w-full p-4 text-left"
+                    >
+
+                        <div class="flex items-center justify-between gap-3">
+
+                            {{-- KIRI --}}
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+
+                                <div
+                                    class="w-11 h-11 shrink-0 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center"
+                                >
+
+                                    @if(str_contains(strtolower($item['name']), 'pramuka'))
+
+                                        <i class="fas fa-campground"></i>
+
+                                    @elseif(str_contains(strtolower($item['name']), 'foto'))
+
+                                        <i class="fas fa-camera-retro"></i>
+
+                                    @elseif(str_contains(strtolower($item['name']), 'futsal'))
+
+                                        <i class="fas fa-futbol"></i>
+
+                                    @elseif(str_contains(strtolower($item['name']), 'basket'))
+
+                                        <i class="fas fa-basketball"></i>
+
+                                    @else
+
+                                        <i class="fas fa-people-group"></i>
+
+                                    @endif
+
+                                </div>
+
+
+                               <div class="min-w-0 flex-1">
+
+                                <h5
+                                    class="font-bold text-slate-800 whitespace-normal break-words leading-tight"
+                                >
+                                    {{ $item['name'] }}
+                                </h5>
+
+                                <p class="text-[11px] text-slate-400 mt-0.5 whitespace-normal">
+
+                                        {{ $item['tipe_kelas'] ?: 'Ekstrakurikuler' }}
+
+                                        @if(!empty($item['kelas']))
+                                            · {{ $item['kelas'] }}
+                                        @endif
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- KANAN --}}
+                            <div class="flex items-center gap-2 shrink-0">
+
+                                {{-- STATUS --}}
+                                @if($isPresent)
+
+                                    <span
+                                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-green-50 border border-green-200"
+                                    >
+
+                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+
+                                        <span
+                                            class="text-[9px] font-bold text-green-700 uppercase"
+                                        >
+                                            Hadir
+                                        </span>
+
+                                    </span>
+
+                                @elseif($isAbsent)
+
+                                    <span
+                                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-50 border border-red-200"
+                                    >
+
+                                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+
+                                        <span
+                                            class="text-[9px] font-bold text-red-700 uppercase"
+                                        >
+                                            Alpa
+                                        </span>
+
+                                    </span>
+
+                                @else
+
+                                    <span
+                                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-50 border border-slate-200"
+                                    >
+
+                                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+
+                                        <span
+                                            class="text-[9px] font-bold text-slate-500 uppercase"
+                                        >
+                                            Belum Diisi
+                                        </span>
+
+                                    </span>
+
+                                @endif
+
+
+                                <i
+                                    class="parent-extracurricular-arrow fas fa-chevron-down text-xs text-slate-400 transition-transform duration-300"
+                                ></i>
+
+                            </div>
+
+                        </div>
+
+                    </button>
+
+
+                    {{-- DETAIL --}}
+                    <div
+                        class="parent-extracurricular-detail hidden border-t border-slate-100"
+                    >
+
+                        {{-- REKAP --}}
+                        <div class="p-4 bg-slate-50">
+
+                            <div class="grid grid-cols-2 gap-3">
+
+                                {{-- HADIR --}}
+                                <div
+                                    class="bg-white border border-green-100 rounded-xl p-4"
+                                >
+
+                                    <div
+                                        class="text-[10px] text-slate-400 font-semibold uppercase"
+                                    >
+                                        Hadir
+                                    </div>
+
+                                    <div
+                                        class="text-2xl font-black text-green-600"
+                                    >
+                                        {{ $hadir }}
+                                    </div>
+
+                                </div>
+
+
+                                {{-- ALPA --}}
+                                <div
+                                    class="bg-white border border-red-100 rounded-xl p-4"
+                                >
+
+                                    <div
+                                        class="text-[10px] text-slate-400 font-semibold uppercase"
+                                    >
+                                        Alpa
+                                    </div>
+
+                                    <div
+                                        class="text-2xl font-black text-red-600"
+                                    >
+                                        {{ $alpa }}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- TOTAL --}}
+                            <div
+                                class="mt-4 flex items-center justify-between"
+                            >
+
+                                <span class="text-xs text-slate-500">
+                                    Total {{ $totalPertemuan }} pertemuan
+                                </span>
+
+                                <span
+                                    class="text-sm font-black text-green-600"
+                                >
+                                    {{ $percentage }}% Kehadiran
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            @endforeach
+
+        </div>
+
+    @endif
+
+</div>
+
                     {{-- STUDENT ASSESSMENT CHEATING HISTORY --}}
                     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4 shrink-0">
@@ -755,4 +1097,152 @@
             Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
         }
     }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const section =
+        document.getElementById('parent-extracurricular-section');
+
+    if (!section) {
+        return;
+    }
+
+    const list =
+        document.getElementById('parentExtracurricularList');
+
+    if (!list) {
+        return;
+    }
+
+
+    const cards =
+        list.querySelectorAll(
+            '.parent-extracurricular-card'
+        );
+
+
+    cards.forEach(function (card) {
+
+        const button =
+            card.querySelector(
+                '.parent-extracurricular-toggle'
+            );
+
+        const detail =
+            card.querySelector(
+                '.parent-extracurricular-detail'
+            );
+
+        const arrow =
+            card.querySelector(
+                '.parent-extracurricular-arrow'
+            );
+
+
+        if (!button || !detail) {
+            return;
+        }
+
+
+        button.addEventListener('click', function () {
+
+            const isOpening =
+                detail.classList.contains('hidden');
+
+
+            /*
+             * TUTUP SEMUA CARD
+             */
+            cards.forEach(function (otherCard) {
+
+                const otherDetail =
+                    otherCard.querySelector(
+                        '.parent-extracurricular-detail'
+                    );
+
+                const otherArrow =
+                    otherCard.querySelector(
+                        '.parent-extracurricular-arrow'
+                    );
+
+
+                if (otherCard !== card) {
+
+                    otherCard.classList.remove(
+                        'parent-extracurricular-active'
+                    );
+
+                    otherDetail?.classList.add('hidden');
+
+                    otherArrow?.classList.remove(
+                        'rotate-180'
+                    );
+
+                }
+
+            });
+
+
+            /*
+             * BUKA CARD YANG DIKLIK
+             */
+            if (isOpening) {
+
+                detail.classList.remove('hidden');
+
+                arrow?.classList.add('rotate-180');
+
+                card.classList.add(
+                    'parent-extracurricular-active'
+                );
+
+
+                /*
+                 * CARD MENJADI FULL WIDTH
+                 */
+                cards.forEach(function (otherCard) {
+
+                    if (otherCard !== card) {
+
+                        otherCard.classList.add('hidden');
+
+                    }
+
+                });
+
+            } else {
+
+                /*
+                 * TUTUP KEMBALI
+                 */
+
+                detail.classList.add('hidden');
+
+                arrow?.classList.remove(
+                    'rotate-180'
+                );
+
+                card.classList.remove(
+                    'parent-extracurricular-active'
+                );
+
+
+                /*
+                 * TAMPILKAN SEMUA EKSKUL
+                 */
+
+                cards.forEach(function (otherCard) {
+
+                    otherCard.classList.remove('hidden');
+
+                });
+
+            }
+
+        });
+
+    });
+
+});
 </script>

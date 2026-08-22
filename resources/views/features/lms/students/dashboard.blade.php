@@ -624,10 +624,820 @@
                             @endforelse
                         </div>
                     </div>
+{{-- =============================== --}}
+{{-- EKSTRAKURIKULER SISWA --}}
+{{-- =============================== --}}
+
+<div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+
+    {{-- HEADER --}}
+    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-blue-100">
+
+        <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-md">
+            <i class="fas fa-people-group"></i>
+        </div>
+
+        <div>
+            <h3 class="font-bold text-green-800 text-lg">
+                Ekstrakurikuler
+            </h3>
+
+            <p class="text-xs text-slate-500">
+                Informasi kehadiran kegiatan ekstrakurikuler
+            </p>
+        </div>
+
+    </div>
+
+
+    @if($extracurricularSessions->isEmpty())
+
+        {{-- EMPTY --}}
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+
+            <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
+                <i class="fas fa-calendar-xmark text-2xl"></i>
+            </div>
+
+            <h4 class="font-bold text-slate-700">
+                Belum Ada Sesi
+            </h4>
+
+            <p class="text-sm text-slate-400 mt-1">
+                Belum ada sesi ekstrakurikuler yang tersedia.
+            </p>
+
+        </div>
+
+    @else
+
+        {{-- PILIH SESI --}}
+        <div class="mb-5">
+
+            <label class="block text-xs font-semibold text-slate-500 mb-2">
+                Pilih Sesi
+            </label>
+
+            <select
+                id="extracurricularSessionSelect"
+                class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+
+                @foreach($extracurricularSessions as $index => $session)
+
+                    @php
+                        $hadir = $session['items']->filter(function ($item) {
+                            return in_array(strtolower($item['status']), [
+                                'present',
+                                'hadir'
+                            ]);
+                        })->count();
+
+                        $total = $session['items']->count();
+                    @endphp
+
+                    <option value="session-{{ $index }}">
+                        {{ $session['date']->translatedFormat('l, d F Y') }}
+                        —
+                        {{ $total }} Ekstrakurikuler
+                    </option>
+
+                @endforeach
+
+            </select>
+
+        </div>
+
+
+        {{-- SESI --}}
+        <div class="max-h-[550px] overflow-y-auto custom-scrollbar pr-2">
+
+            @foreach($extracurricularSessions as $index => $session)
+
+                @php
+
+                    $hadir = $session['items']->filter(function ($item) {
+                        return in_array(strtolower($item['status']), [
+                            'present',
+                            'hadir'
+                        ]);
+                    })->count();
+
+                    $total = $session['items']->count();
+
+                    $percentage = $total > 0
+                        ? round(($hadir / $total) * 100, 1)
+                        : 0;
+
+                @endphp
+
+
+                <div
+                    id="session-{{ $index }}"
+                    class="extracurricular-session {{ $index !== 0 ? 'hidden' : '' }}">
+
+                    {{-- HEADER SESI --}}
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
+
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-4">
+
+                            <div class="flex justify-between items-center gap-4">
+
+                                <div class="flex items-center gap-3">
+
+                                    <div class="w-11 h-11 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <div class="flex items-center gap-2 flex-wrap">
+
+                                            <h4 class="font-bold text-slate-800">
+                                                {{ $session['date']->translatedFormat('d F Y') }}
+                                            </h4>
+
+                                            <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">
+                                                {{ $total }} Ekskul
+                                            </span>
+
+                                        </div>
+
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            {{ $session['date']->translatedFormat('l') }}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+                                {{-- REKAP --}}
+                                <div class="text-right">
+
+                                    <div class="text-xs text-slate-400 font-semibold">
+                                        Kehadiran
+                                    </div>
+
+                                    <div class="text-xl font-black text-green-600">
+
+                                        {{ $hadir }}
+
+                                        <span class="text-slate-400">
+                                            /{{ $total }}
+                                        </span>
+
+                                    </div>
+
+                                    <div class="text-[11px] text-slate-500">
+                                        {{ $percentage }}%
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- DAFTAR EKSKUL --}}
+                        <div class="p-5">
+
+                            <div
+    class="extracurricular-grid grid grid-cols-1 md:grid-cols-2 gap-4"
+>
+
+    @foreach($session['items'] as $item)
+
+        @php
+
+            $status = strtolower(
+                $item['status'] ?? 'not_recorded'
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | STATUS UTAMA
+            |--------------------------------------------------------------------------
+            */
+
+            $isPresent = in_array($status, [
+                'present',
+                'hadir'
+            ]);
+
+            $isAbsent = in_array($status, [
+                'absent',
+                'alpa',
+                'alpha'
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | HISTORY
+            |--------------------------------------------------------------------------
+            */
+
+            $history = $item['attendance_history'] ?? collect();
+
+            if (!($history instanceof \Illuminate\Support\Collection)) {
+                $history = collect($history);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | HANYA HITUNG HADIR & ALPA
+            |--------------------------------------------------------------------------
+            */
+
+            $hadir = $history->filter(function ($historyItem) {
+
+                return in_array(
+                    strtolower($historyItem['status'] ?? ''),
+                    ['present', 'hadir']
+                );
+
+            })->count();
+
+
+            $alpa = $history->filter(function ($historyItem) {
+
+                return in_array(
+                    strtolower($historyItem['status'] ?? ''),
+                    ['absent', 'alpa', 'alpha']
+                );
+
+            })->count();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL PERTEMUAN
+            |--------------------------------------------------------------------------
+            */
+
+            $totalPertemuan = $hadir + $alpa;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PERSENTASE
+            |--------------------------------------------------------------------------
+            */
+
+            $percentage = $totalPertemuan > 0
+                ? round(($hadir / $totalPertemuan) * 100, 1)
+                : 0;
+
+        @endphp
+
+
+        {{-- ========================================================= --}}
+        {{-- CARD EKSTRAKURIKULER --}}
+        {{-- ========================================================= --}}
+
+        <div
+            class="extracurricular-card border border-slate-200 rounded-2xl overflow-hidden bg-white transition-all duration-300 hover:shadow-md"
+            data-extracurricular-card
+        >
+
+            {{-- ================================================= --}}
+            {{-- HEADER CARD --}}
+            {{-- ================================================= --}}
+
+            <button
+                type="button"
+                class="extracurricular-toggle w-full p-4 text-left"
+            >
+
+                <div class="flex items-center justify-between gap-3">
+
+                    {{-- ============================= --}}
+                    {{-- IDENTITAS EKSKUL --}}
+                    {{-- ============================= --}}
+
+                    <div class="flex items-center gap-3 min-w-0">
+
+                        <div
+                            class="w-11 h-11 shrink-0 rounded-xl
+                                   bg-blue-100 text-blue-600
+                                   flex items-center justify-center"
+                        >
+
+                            @if(str_contains(strtolower($item['name']), 'pramuka'))
+
+                                <i class="fas fa-campground"></i>
+
+                            @elseif(str_contains(strtolower($item['name']), 'foto'))
+
+                                <i class="fas fa-camera-retro"></i>
+
+                            @elseif(str_contains(strtolower($item['name']), 'futsal'))
+
+                                <i class="fas fa-futbol"></i>
+
+                            @elseif(str_contains(strtolower($item['name']), 'basket'))
+
+                                <i class="fas fa-basketball"></i>
+
+                            @else
+
+                                <i class="fas fa-people-group"></i>
+
+                            @endif
+
+                        </div>
+
+
+                        <div class="min-w-0">
+
+                            <h5 class="font-bold text-slate-800 truncate">
+                                {{ $item['name'] }}
+                            </h5>
+
+                            <p class="text-[11px] text-slate-400 mt-0.5">
+
+                                {{ $item['tipe_kelas'] ?: 'Ekstrakurikuler' }}
+
+                                @if(!empty($item['kelas']))
+                                    · {{ $item['kelas'] }}
+                                @endif
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- ============================= --}}
+                    {{-- STATUS --}}
+                    {{-- ============================= --}}
+
+                    <div class="flex items-center gap-3 shrink-0">
+
+                        @if($isPresent)
+
+                            <span
+                                class="flex items-center gap-1.5
+                                       px-3 py-1.5 rounded-full
+                                       bg-green-50 border border-green-200"
+                            >
+
+                                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+
+                                <span class="text-[10px] font-bold text-green-700 uppercase">
+                                    Hadir
+                                </span>
+
+                            </span>
+
+                        @elseif($isAbsent)
+
+                            <span
+                                class="flex items-center gap-1.5
+                                       px-3 py-1.5 rounded-full
+                                       bg-red-50 border border-red-200"
+                            >
+
+                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+
+                                <span class="text-[10px] font-bold text-red-700 uppercase">
+                                    Alpa
+                                </span>
+
+                            </span>
+
+                        @else
+
+                            <span
+                                class="flex items-center gap-1.5
+                                       px-3 py-1.5 rounded-full
+                                       bg-slate-50 border border-slate-200"
+                            >
+
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">
+                                    Belum Diisi
+                                </span>
+
+                            </span>
+
+                        @endif
+
+
+                        {{-- CHEVRON --}}
+
+                        <span
+                            class="extracurricular-chevron
+                                   w-7 h-7 rounded-lg
+                                   bg-slate-50
+                                   flex items-center justify-center
+                                   text-slate-400
+                                   transition-transform duration-300"
+                        >
+
+                            <i class="fas fa-chevron-down text-xs"></i>
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </button>
+
+
+            {{-- ================================================= --}}
+            {{-- DETAIL --}}
+            {{-- ================================================= --}}
+
+            <div class="extracurricular-detail hidden border-t border-slate-100">
+
+                <div class="p-4 bg-slate-50">
+
+
+                    {{-- ================================================= --}}
+                    {{-- REKAP HADIR / ALPA SAJA --}}
+                    {{-- ================================================= --}}
+
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+
+                        {{-- HADIR --}}
+
+                        <div
+                            class="bg-white border border-green-100
+                                   rounded-xl p-4 text-center"
+                        >
+
+                            <div
+                                class="text-[10px] text-green-600
+                                       font-bold uppercase"
+                            >
+                                Hadir
+                            </div>
+
+                            <div
+                                class="text-2xl font-black
+                                       text-green-600"
+                            >
+                                {{ $hadir }}
+                            </div>
+
+                        </div>
+
+
+                        {{-- ALPA --}}
+
+                        <div
+                            class="bg-white border border-red-100
+                                   rounded-xl p-4 text-center"
+                        >
+
+                            <div
+                                class="text-[10px] text-red-600
+                                       font-bold uppercase"
+                            >
+                                Alpa
+                            </div>
+
+                            <div
+                                class="text-2xl font-black
+                                       text-red-600"
+                            >
+                                {{ $alpa }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- ================================================= --}}
+                    {{-- RINGKASAN --}}
+                    {{-- ================================================= --}}
+
+                    <div
+                        class="flex items-center justify-between
+                               mb-4"
+                    >
+
+                        <div>
+
+                            <h6 class="font-bold text-slate-700 text-sm">
+                                Riwayat Kehadiran
+                            </h6>
+
+                            <p class="text-[11px] text-slate-400">
+                                Rekap setiap pertemuan ekstrakurikuler
+                            </p>
+
+                        </div>
+
+
+                        <div class="text-right">
+
+                            <div class="text-[10px] text-slate-400">
+                                Total Pertemuan
+                            </div>
+
+                            <div class="font-black text-slate-700">
+                                {{ $totalPertemuan }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- ================================================= --}}
+                    {{-- RIWAYAT --}}
+                    {{-- ================================================= --}}
+
+                    @php
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | FILTER HISTORY
+                        | Hanya Hadir dan Alpa
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $filteredHistory = $history->filter(function ($historyItem) {
+
+                            return in_array(
+                                strtolower($historyItem['status'] ?? ''),
+                                [
+                                    'present',
+                                    'hadir',
+                                    'absent',
+                                    'alpa',
+                                    'alpha'
+                                ]
+                            );
+
+                        })->values();
+
+                    @endphp
+
+
+                    @if($filteredHistory->isEmpty())
+
+                        <div
+                            class="rounded-xl
+                                   border border-dashed
+                                   border-slate-200
+                                   p-6 text-center"
+                        >
+
+                            <i
+                                class="fas fa-calendar-xmark
+                                       text-slate-300 text-xl"
+                            ></i>
+
+                            <p class="text-xs text-slate-400 mt-2">
+                                Belum ada riwayat absensi.
+                            </p>
+
+                        </div>
+
+                    @else
+
+                        <div class="overflow-x-auto custom-scrollbar">
+
+                            <table
+                                class="min-w-[500px] w-full
+                                       text-center
+                                       border-separate
+                                       border-spacing-x-2
+                                       border-spacing-y-2"
+                            >
+
+                                <thead>
+
+                                    <tr>
+
+                                        @foreach($filteredHistory as $historyIndex => $historyItem)
+
+                                            <th class="pb-2">
+
+                                                <div
+                                                    class="bg-slate-100
+                                                           rounded-xl
+                                                           py-2 px-3
+                                                           text-xs
+                                                           font-semibold
+                                                           text-slate-600
+                                                           whitespace-nowrap"
+                                                >
+
+                                                    Minggu {{ $historyIndex + 1 }}
+
+                                                    <div
+                                                        class="text-[9px]
+                                                               text-slate-400
+                                                               font-normal
+                                                               mt-0.5"
+                                                    >
+
+                                                        @php
+                                                            $historyDate =
+                                                                $historyItem['date'] ?? null;
+                                                        @endphp
+
+                                                        @if($historyDate instanceof \Carbon\Carbon)
+
+                                                            {{ $historyDate->format('d/m/Y') }}
+
+                                                        @elseif($historyDate)
+
+                                                            {{ \Carbon\Carbon::parse($historyDate)->format('d/m/Y') }}
+
+                                                        @else
+
+                                                            -
+
+                                                        @endif
+
+                                                    </div>
+
+                                                </div>
+
+                                            </th>
+
+                                        @endforeach
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    <tr>
+
+                                        @foreach($filteredHistory as $historyItem)
+
+                                            @php
+
+                                                $historyStatus = strtolower(
+                                                    $historyItem['status'] ?? ''
+                                                );
+
+                                                $historyIsPresent = in_array(
+                                                    $historyStatus,
+                                                    [
+                                                        'present',
+                                                        'hadir'
+                                                    ]
+                                                );
+
+                                                $historyIsAbsent = in_array(
+                                                    $historyStatus,
+                                                    [
+                                                        'absent',
+                                                        'alpa',
+                                                        'alpha'
+                                                    ]
+                                                );
+
+                                            @endphp
+
+
+                                            <td>
+
+                                                @if($historyIsPresent)
+
+                                                    <div
+                                                        class="h-16
+                                                               rounded-2xl
+                                                               bg-green-50
+                                                               border border-green-200
+                                                               flex flex-col
+                                                               items-center
+                                                               justify-center"
+                                                    >
+
+                                                        <span
+                                                            class="text-2xl
+                                                                   font-bold
+                                                                   text-green-600"
+                                                        >
+                                                            ✓
+                                                        </span>
+
+                                                        <span
+                                                            class="text-[9px]
+                                                                   font-bold
+                                                                   text-green-600
+                                                                   uppercase"
+                                                        >
+                                                            Hadir
+                                                        </span>
+
+                                                    </div>
+
+
+                                                @elseif($historyIsAbsent)
+
+                                                    <div
+                                                        class="h-16
+                                                               rounded-2xl
+                                                               bg-red-50
+                                                               border border-red-200
+                                                               flex flex-col
+                                                               items-center
+                                                               justify-center"
+                                                    >
+
+                                                        <span
+                                                            class="text-xl
+                                                                   font-bold
+                                                                   text-red-600"
+                                                        >
+                                                            A
+                                                        </span>
+
+                                                        <span
+                                                            class="text-[9px]
+                                                                   font-bold
+                                                                   text-red-600
+                                                                   uppercase"
+                                                        >
+                                                            Alpa
+                                                        </span>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+                                        @endforeach
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    @endif
+
+
+                    {{-- ================================================= --}}
+                    {{-- PERSENTASE --}}
+                    {{-- ================================================= --}}
+
+                    <div
+                        class="mt-4 pt-4
+                               border-t border-slate-200
+                               flex items-center
+                               justify-between"
+                    >
+
+                        <span class="text-[11px] text-slate-400">
+                            Persentase Kehadiran
+                        </span>
+
+                        <span
+                            class="text-sm font-black
+                            {{ $percentage >= 75
+                                ? 'text-green-600'
+                                : 'text-red-500' }}"
+                        >
+                            {{ $percentage }}%
+                        </span>
+
+                    </div>
 
                 </div>
 
             </div>
+
+        </div>
+
+    @endforeach
+
+</div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @endforeach
+
+        </div>
+
+    @endif
+
+</div>
+
         </div>
 
         {{-- 2. Modal Detail Jadwal --}}
@@ -1521,4 +2331,289 @@ function refreshModuleSlider() {
     // Update tombol next
     $('#btnNextModule').prop('disabled', moduleIndex >= totalModule - 1).toggleClass('opacity-50 cursor-not-allowed', moduleIndex >= totalModule - 1);
 }
+</script>
+
+
+{{-- =============================== --}}
+{{-- DROPDOWN SESSION SCRIPT --}}
+{{-- =============================== --}}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* =========================================================
+       DROPDOWN SESSION
+       ========================================================= */
+
+    const sessionSelect = document.getElementById(
+        'extracurricularSessionSelect'
+    );
+
+    if (sessionSelect) {
+
+        const sessions = document.querySelectorAll(
+            '.extracurricular-session'
+        );
+
+        sessionSelect.addEventListener('change', function () {
+
+            /*
+             * Tutup semua sesi
+             */
+            sessions.forEach(function (session) {
+
+                session.classList.add('hidden');
+
+            });
+
+
+            /*
+             * Buka sesi yang dipilih
+             */
+            const selectedSession = document.getElementById(
+                this.value
+            );
+
+            if (selectedSession) {
+
+                selectedSession.classList.remove('hidden');
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       TOGGLE EKSTRAKURIKULER
+       ========================================================= */
+
+    document
+        .querySelectorAll('.extracurricular-toggle')
+        .forEach(function (button) {
+
+            button.addEventListener('click', function () {
+
+                const card =
+                    this.closest('.extracurricular-card');
+
+                if (!card) {
+                    return;
+                }
+
+
+                /*
+                 * Grid tempat card berada
+                 */
+                const grid =
+                    card.closest('.extracurricular-grid');
+
+                if (!grid) {
+                    return;
+                }
+
+
+                /*
+                 * Detail card
+                 */
+                const detail =
+                    card.querySelector(
+                        '.extracurricular-detail'
+                    );
+
+
+                /*
+                 * Chevron
+                 */
+                const chevron =
+                    card.querySelector(
+                        '.extracurricular-chevron'
+                    );
+
+
+                /*
+                 * Cek apakah card sedang dibuka
+                 */
+                const isExpanded =
+                    card.classList.contains(
+                        'md:col-span-2'
+                    );
+
+
+                /* =====================================================
+                   JIKA CARD SUDAH TERBUKA
+                   → KEMBALIKAN SEMUA EKSKUL
+                   ===================================================== */
+
+                if (isExpanded) {
+
+                    grid
+                        .querySelectorAll(
+                            '.extracurricular-card'
+                        )
+                        .forEach(function (otherCard) {
+
+                            /*
+                             * Tampilkan kembali
+                             */
+                            otherCard.classList.remove(
+                                'hidden',
+                                'md:col-span-2'
+                            );
+
+
+                            /*
+                             * Tutup detail
+                             */
+                            const otherDetail =
+                                otherCard.querySelector(
+                                    '.extracurricular-detail'
+                                );
+
+                            if (otherDetail) {
+
+                                otherDetail.classList.add(
+                                    'hidden'
+                                );
+
+                            }
+
+
+                            /*
+                             * Kembalikan chevron
+                             */
+                            const otherChevron =
+                                otherCard.querySelector(
+                                    '.extracurricular-chevron'
+                                );
+
+                            if (otherChevron) {
+
+                                otherChevron.classList.remove(
+                                    'rotate-180'
+                                );
+
+                            }
+
+                        });
+
+                    return;
+                }
+
+
+                /* =====================================================
+                   SEMBUNYIKAN SEMUA EKSKUL LAIN
+                   ===================================================== */
+
+                grid
+                    .querySelectorAll(
+                        '.extracurricular-card'
+                    )
+                    .forEach(function (otherCard) {
+
+                        /*
+                         * Jangan sembunyikan card yang diklik
+                         */
+                        if (otherCard === card) {
+                            return;
+                        }
+
+
+                        /*
+                         * Hide card lain
+                         */
+                        otherCard.classList.add(
+                            'hidden'
+                        );
+
+
+                        /*
+                         * Hapus full width
+                         */
+                        otherCard.classList.remove(
+                            'md:col-span-2'
+                        );
+
+
+                        /*
+                         * Tutup detail card lain
+                         */
+                        const otherDetail =
+                            otherCard.querySelector(
+                                '.extracurricular-detail'
+                            );
+
+                        if (otherDetail) {
+
+                            otherDetail.classList.add(
+                                'hidden'
+                            );
+
+                        }
+
+
+                        /*
+                         * Reset chevron
+                         */
+                        const otherChevron =
+                            otherCard.querySelector(
+                                '.extracurricular-chevron'
+                            );
+
+                        if (otherChevron) {
+
+                            otherChevron.classList.remove(
+                                'rotate-180'
+                            );
+
+                        }
+
+                    });
+
+
+                /* =====================================================
+                   CARD YANG DIKLIK
+                   → FULL WIDTH
+                   ===================================================== */
+
+                card.classList.remove(
+                    'hidden'
+                );
+
+                card.classList.add(
+                    'md:col-span-2'
+                );
+
+
+                /* =====================================================
+                   BUKA DETAIL
+                   ===================================================== */
+
+                if (detail) {
+
+                    detail.classList.remove(
+                        'hidden'
+                    );
+
+                }
+
+
+                /* =====================================================
+                   PUTAR CHEVRON
+                   ===================================================== */
+
+                if (chevron) {
+
+                    chevron.classList.add(
+                        'rotate-180'
+                    );
+
+                }
+
+            });
+
+        });
+
+});
 </script>

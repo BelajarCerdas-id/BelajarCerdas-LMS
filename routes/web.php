@@ -24,6 +24,8 @@ use App\Http\Controllers\TeacherGradebookController;
 use App\Http\Controllers\TeacherQuestionBankController;
 use App\Http\Controllers\TeacherQuestionBankReleaseController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\KelengkapanEkskulController;
+use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\Lms\Academic\AcademicDashboardController;
 use App\Http\Controllers\Lms\Academic\ClassController;
 use App\Http\Controllers\Lms\Academic\MajorController;
@@ -1032,7 +1034,352 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-summary', [StudentVicePrincipalController::class, 'loadReflectionDetailSummary'])->name('lms.student-vice-principal.reflection-management-history-detail.load-summary');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-chart', [StudentVicePrincipalController::class, 'loadReflectionDetailChart'])->name('lms.student-vice-principal.reflection-management-history-detail.load-chart');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/student-answer/paginate', [StudentVicePrincipalController::class, 'paginateReflectionStudentAnswer'])->name('lms.student-vice-principal.reflection-management-history-detail.student-answer.paginate');
-    
+
+// =========================================
+// EXTRACURRICULAR MANAGEMENT
+// =========================================
+
+// LIST
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management',
+    [ExtracurricularController::class, 'index']
+)->name('lms.student-vice-principal.extracurricular-management.view');
+
+
+// DOWNLOAD TEMPLATE
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/download-template',
+    [ExtracurricularController::class, 'downloadTemplate']
+)->name('lms.student-vice-principal.extracurricular-management.download-template');
+
+
+// PAGINATION
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/paginate',
+    [ExtracurricularController::class, 'paginate']
+)->name('lms.student-vice-principal.extracurricular-management.paginate');
+
+
+
+// CRUD
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/store',
+    [ExtracurricularController::class, 'store']
+)->name('lms.student-vice-principal.extracurricular-management.store');
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/update/{id}',
+    [ExtracurricularController::class, 'update']
+)->name('lms.student-vice-principal.extracurricular-management.update');
+
+Route::put(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/update-detail',
+    [ExtracurricularController::class, 'updateDetail']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.update-detail'
+);
+
+Route::delete(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/delete/{id}',
+    [ExtracurricularController::class, 'destroy']
+)->name('lms.student-vice-principal.extracurricular-management.delete');
+
+// =========================================
+// KPI EKSTRAKURIKULER
+// =========================================
+
+// KPI MEMBER
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kpi/member',
+    [ExtracurricularController::class, 'memberKpi']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kpi.member'
+);
+
+// KPI MEETING
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kpi/meeting',
+    [ExtracurricularController::class, 'kpiMeetings']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kpi.meeting'
+);
+
+// IMPORT
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/import',
+    [ExtracurricularController::class, 'importExcel']
+)->name('lms.student-vice-principal.extracurricular-management.import');
+
+
+
+// BULK MEMBER
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/upload-member',
+    [ExtracurricularController::class, 'importMember']
+)->name('lms.student-vice-principal.extracurricular-management.upload-member');
+
+
+// BULK ATTENDANCE
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/upload-attendance',
+    [ExtracurricularController::class, 'uploadAttendance']
+)->name('lms.student-vice-principal.extracurricular-management.upload-attendance');
+
+
+// DETAIL (HARUS PALING BAWAH)
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}',
+    [ExtracurricularController::class, 'detail']
+)->name('lms.student-vice-principal.extracurricular-management.detail');
+
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kpi',
+    [ExtracurricularController::class, 'kpi']
+)->name('lms.student-vice-principal.extracurricular.kpi');
+
+/// =========================================
+// MEMBER
+// =========================================
+
+// Simpan 1 member
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/member/store',
+    [ExtracurricularController::class, 'storeMember']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.member.store'
+);
+
+
+// Import Member Excel
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/member/import',
+    [ExtracurricularController::class, 'importMember']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.member.import'
+);
+
+
+// Download Template Member
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/member/download-template',
+    [ExtracurricularController::class, 'downloadMemberTemplate']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.member.download-template'
+);
+
+
+// Hapus Member
+Route::delete(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/member/{memberId}',
+    [ExtracurricularController::class, 'destroyMember']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.member.destroy'
+);
+
+// =========================
+// BULK ABSENSI
+// =========================
+
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/attendance/template',
+    [ExtracurricularController::class, 'downloadAttendanceTemplate']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.attendance.template'
+);
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/attendance/import',
+    [ExtracurricularController::class, 'importAttendance']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.attendance.import'
+);
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/attendance/save',
+    [ExtracurricularController::class, 'saveAttendance']
+)->name('lms.student-vice-principal.extracurricular-management.attendance.save');
+
+
+// =========================================
+// nilai
+// =========================================
+
+Route::get(
+    '/{role}/{schoolName}/{schoolId}/{extracurricularId}/nilai/template',
+    [ExtracurricularController::class, 'downloadNilaiTemplate']
+)->name(
+    'lms.student-vice-principal.extracurricular.nilai.template'
+);
+
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/nilai/import',
+    [ExtracurricularController::class, 'uploadNilaiExcel']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.nilai.import'
+);
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/nilai/upload',
+    [ExtracurricularController::class, 'uploadNilaiExcel']
+)->name(
+    'lms.student-vice-principal.extracurricular.nilai.upload'
+);
+
+
+Route::get(
+    '/{role}/{schoolName}/{schoolId}/{extracurricularId}/kpi',
+    [ExtracurricularController::class, 'kpi']
+)->name(
+    'lms.student-vice-principal.extracurricular.kpi'
+);
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricular}/nilai/update',
+    [ExtracurricularController::class, 'updateNilai']
+)->name('extracurricular.nilai.update');
+
+
+// =========================================
+// KELENGKAPAN EXTRAKURIKULER
+// =========================================
+
+Route::get(
+    '/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan',
+    [KelengkapanEkskulController::class, 'index']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan'
+);
+
+
+Route::get(
+    '/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan/kpi',
+    [KelengkapanEkskulController::class, 'kpi']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.kpi'
+);
+
+
+Route::post(
+    '/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/comment',
+    [KelengkapanEkskulController::class, 'saveComment']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.comment'
+);
+
+
+Route::post(
+    '/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/document',
+    [KelengkapanEkskulController::class, 'updateDocument']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.document'
+);  
+
+// ============================================================
+// KELENGKAPAN EKSTRAKURIKULER
+// ============================================================
+
+// Halaman daftar kelengkapan
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan',
+    [KelengkapanEkskulController::class, 'index']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan'
+);
+
+
+// KPI kelengkapan
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan/kpi',
+    [KelengkapanEkskulController::class, 'kpi']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.kpi'
+);
+
+
+// ============================================================
+// DETAIL KELENGKAPAN PER EKSTRAKURIKULER
+// ============================================================
+
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan/{extracurricularId}',
+    [KelengkapanEkskulController::class, 'detail']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.detail'
+);
+
+
+// ============================================================
+// KOMENTAR
+// ============================================================
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/comment',
+    [KelengkapanEkskulController::class, 'saveComment']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.comment'
+);
+
+
+// ============================================================
+// UPDATE STATUS DOKUMEN
+// ============================================================
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/document',
+    [KelengkapanEkskulController::class, 'updateDocument']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.document'
+);
+
+
+// ============================================================
+// UPLOAD FILE
+// ============================================================
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/upload',
+    [KelengkapanEkskulController::class, 'uploadKelengkapan']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.upload'
+);
+
+
+// ============================================================
+// GANTI FILE
+// ============================================================
+
+Route::post(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/replace',
+    [KelengkapanEkskulController::class, 'replaceKelengkapan']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.replace'
+);
+
+
+// ============================================================
+// LIHAT FILE
+// ============================================================
+
+Route::get(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/file/{document}',
+    [KelengkapanEkskulController::class, 'viewDocument']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.file'
+);
+
+
+// ============================================================
+// HAPUS FILE
+// ============================================================
+
+Route::delete(
+    '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/kelengkapan/file/{document}',
+    [KelengkapanEkskulController::class, 'deleteKelengkapanFile']
+)->name(
+    'lms.student-vice-principal.extracurricular-management.kelengkapan.file.delete'
+);
+
         // =========================================================
         // ROUTES ORANG TUA
         // =========================================================

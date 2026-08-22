@@ -21,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Force HTTPS (from your previous setup)
-        URL::forceScheme('https');
+        // URL::forceScheme('https');
 
         // Dynamically toggle Debugbar based on the domain
         if (app()->bound('debugbar')) {

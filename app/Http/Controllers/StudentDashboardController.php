@@ -10,6 +10,11 @@ use App\Models\SchoolClass;
 use App\Models\SchReflAnswer;
 use App\Models\SchReflQuestion;
 use App\Models\SchReflTarget;
+use App\Models\Extracurricular;
+use App\Models\ExtracurricularStudent;
+use App\Models\ExtracurricularAttendance;
+use App\Models\ExtracurricularMeeting;
+use App\Models\StudentProfile;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentSchoolClass;
 use Illuminate\Http\Request;
@@ -93,6 +98,383 @@ class StudentDashboardController extends Controller
             'kehadiran_hari_ini' => $statusHadir
         ];
 
+// =========================================================
+// EKSTRAKURIKULER SISWA
+// =========================================================
+
+$studentProfileId = $studentProfile->id;
+
+// Semua ekskul yang benar-benar diikuti siswa
+$studentExtracurriculars = ExtracurricularStudent::with('extracurricular')
+    ->where('student_profile_id', $studentProfileId)
+    ->where('status', 'active')
+    ->get()
+    ->filter(function ($member) {
+        return $member->extracurricular
+            && $member->extracurricular->status === 'active';
+    })
+    ->values();
+
+
+// =========================================================
+// AMBIL SEMUA MEETING / SESI
+// =========================================================
+
+$meetings = ExtracurricularMeeting::whereIn(
+        'extracurricular_id',
+        $studentExtracurriculars
+            ->pluck('extracurricular_id')
+            ->unique()
+            ->values()
+    )
+    ->orderBy('meeting_date', 'asc')
+    ->get();
+
+
+// =========================================================
+// BUAT SESI BERDASARKAN TANGGAL MEETING
+// =========================================================
+
+$extracurricularSessions = collect();
+
+foreach ($meetings->groupBy(function ($meeting) {
+    return Carbon::parse($meeting->meeting_date)->format('Y-m-d');
+}) as $date => $dateMeetings) {
+
+    $items = collect();
+
+    foreach ($dateMeetings as $meeting) {
+
+    $membership = $studentExtracurriculars
+        ->firstWhere('extracurricular_id', $meeting->extracurricular_id);
+
+    if (!$membership) {
+        continue;
+    }
+
+    // =====================================================
+    // ABSENSI PADA SESI INI
+    // =====================================================
+
+    $attendance = ExtracurricularAttendance::where(
+            'meeting_id',
+            $meeting->id
+        )
+        ->where('student_profile_id', $studentProfileId)
+        ->first();
+
+
+    // =====================================================
+    // SELURUH MEETING EKSKUL INI
+    // Untuk menampilkan riwayat saat kartu di-expand
+    // =====================================================
+
+    $extracurricularMeetings = $meetings
+        ->where('extracurricular_id', $meeting->extracurricular_id)
+        ->sortBy('meeting_date')
+        ->values();
+
+
+    $attendanceHistory = collect();
+
+    foreach ($extracurricularMeetings as $historyMeeting) {
+
+        $historyAttendance = ExtracurricularAttendance::where(
+                'meeting_id',
+                $historyMeeting->id
+            )
+            ->where('student_profile_id', $studentProfileId)
+            ->first();
+
+        $attendanceHistory->push([
+            'meeting_id' => $historyMeeting->id,
+
+            'date' => Carbon::parse(
+                $historyMeeting->meeting_date
+            ),
+
+            'status' => $historyAttendance?->status
+                ?? 'not_recorded',
+        ]);
+    }
+
+
+    // =====================================================
+    // REKAP ABSENSI
+    // =====================================================
+
+    $hadir = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['present', 'hadir']
+        );
+    })->count();
+
+    $izin = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['permission', 'izin']
+        );
+    })->count();
+
+    $sakit = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['sick', 'sakit']
+        );
+    })->count();
+
+    $alpa = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['absent', 'alpa', 'alpha']
+        );
+    })->count();
+
+    $totalPertemuan = $attendanceHistory->count();
+
+    $percentage = $totalPertemuan > 0
+        ? round(($hadir / $totalPertemuan) * 100, 1)
+        : 0;
+
+
+    // =====================================================
+    // PUSH DATA
+    // =====================================================
+
+    $items->push([
+
+        'extracurricular_id' =>
+            $membership->extracurricular_id,
+
+        'name' =>
+            $membership->extracurricular->name,
+
+        'kelas' =>
+            $membership->kelas,
+
+        'tipe_kelas' =>
+            $membership->tipe_kelas,
+
+        'status' =>
+            $attendance?->status ?? 'not_recorded',
+
+        'meeting_id' =>
+            $meeting->id,
+
+        'meeting_date' =>
+            Carbon::parse($meeting->meeting_date),
+
+        // DATA RIWAYAT
+        'attendance_history' =>
+            $attendanceHistory,
+
+        // REKAP
+        'hadir' => $hadir,
+        'izin' => $izin,
+        'sakit' => $sakit,
+        'alpa' => $alpa,
+
+        'total_pertemuan' =>
+            $totalPertemuan,
+
+        'percentage' =>
+            $percentage,
+    ]);
+}
+
+    if ($items->isNotEmpty()) {
+
+        $extracurricularSessions->push([
+            'date' => Carbon::parse($date),
+            'items' => $items,
+        ]);
+    }
+}
+
+
+// =========================================================
+// EKSKUL YANG BELUM MASUK SESI / BELUM PUNYA MEETING
+// MASUKKAN KE SESI 1
+// =========================================================
+
+$alreadyInSession = $extracurricularSessions
+    ->flatMap(function ($session) {
+        return $session['items'];
+    })
+    ->pluck('extracurricular_id')
+    ->unique();
+
+$notYetInSession = $studentExtracurriculars
+    ->whereNotIn('extracurricular_id', $alreadyInSession);
+
+
+// =========================================================
+// JIKA ADA EKSKUL YANG BELUM MASUK SESI
+// =========================================================
+
+if ($notYetInSession->isNotEmpty()) {
+
+    // Kalau sudah ada sesi, masuk ke sesi pertama
+    if ($extracurricularSessions->isNotEmpty()) {
+
+        $firstSession = $extracurricularSessions->first();
+
+        foreach ($notYetInSession as $membership) {
+
+    $attendanceHistory = collect();
+
+    // Semua meeting ekskul ini kalau ternyata ada
+    $extracurricularMeetings = $meetings
+        ->where('extracurricular_id', $membership->extracurricular_id)
+        ->sortBy('meeting_date')
+        ->values();
+
+    foreach ($extracurricularMeetings as $historyMeeting) {
+
+        $historyAttendance = ExtracurricularAttendance::where(
+                'meeting_id',
+                $historyMeeting->id
+            )
+            ->where('student_profile_id', $studentProfileId)
+            ->first();
+
+        $attendanceHistory->push([
+            'meeting_id' => $historyMeeting->id,
+
+            'date' => Carbon::parse(
+                $historyMeeting->meeting_date
+            ),
+
+            'status' =>
+                $historyAttendance?->status
+                ?? 'not_recorded',
+        ]);
+    }
+
+    $hadir = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['present', 'hadir']
+        );
+    })->count();
+
+    $izin = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['permission', 'izin']
+        );
+    })->count();
+
+    $sakit = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['sick', 'sakit']
+        );
+    })->count();
+
+    $alpa = $attendanceHistory->filter(function ($item) {
+        return in_array(
+            strtolower($item['status']),
+            ['absent', 'alpa', 'alpha']
+        );
+    })->count();
+
+    $totalPertemuan = $attendanceHistory->count();
+
+    $percentage = $totalPertemuan > 0
+        ? round(($hadir / $totalPertemuan) * 100, 1)
+        : 0;
+
+
+    $firstSession['items']->push([
+
+        'extracurricular_id' =>
+            $membership->extracurricular_id,
+
+        'name' =>
+            $membership->extracurricular->name,
+
+        'kelas' =>
+            $membership->kelas,
+
+        'tipe_kelas' =>
+            $membership->tipe_kelas,
+
+        'status' =>
+            'not_recorded',
+
+        'meeting_id' =>
+            null,
+
+        'meeting_date' =>
+            $firstSession['date'],
+
+        'attendance_history' =>
+            $attendanceHistory,
+
+        'hadir' => $hadir,
+        'izin' => $izin,
+        'sakit' => $sakit,
+        'alpa' => $alpa,
+
+        'total_pertemuan' =>
+            $totalPertemuan,
+
+        'percentage' =>
+            $percentage,
+    ]);
+}
+
+        // Update sesi pertama
+        $extracurricularSessions->put(
+            0,
+            $firstSession
+        );
+
+    } else {
+
+        // =====================================================
+        // BELUM ADA SESI SAMA SEKALI
+        // BUAT SESI 1
+        // =====================================================
+
+        $items = collect();
+
+        foreach ($notYetInSession as $membership) {
+
+            $items->push([
+
+                'extracurricular_id' =>
+                    $membership->extracurricular_id,
+
+                'name' =>
+                    $membership->extracurricular->name,
+
+                'kelas' =>
+                    $membership->kelas,
+
+                'tipe_kelas' =>
+                    $membership->tipe_kelas,
+
+                'status' =>
+                    'not_recorded',
+
+                'meeting_id' =>
+                    null,
+
+                'meeting_date' =>
+                    now(),
+
+            ]);
+        }
+
+        $extracurricularSessions->push([
+            'date' => now(),
+            'items' => $items,
+        ]);
+    }
+}
         // =========================================================
         // 3. JADWAL PELAJARAN
         // =========================================================
@@ -396,10 +778,24 @@ class StudentDashboardController extends Controller
         ])->latest()->take(4)->get();
             
         return view('features.lms.students.dashboard', compact(
-            'dataSiswa', 'role', 'schoolName', 'schoolId', 'agendaSekolah', 'selectedDate', 
-            'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',
-            'jadwalHariIni', 'hariIni', 'selectedJadwalDate', 'hariDipilih',
-            'unreadModules', 'pendingTasks'
+            'dataSiswa',
+            'role',
+            'schoolName',
+            'schoolId',
+            'agendaSekolah',
+            'selectedDate',
+            'jadwalUjian',
+            'statistikMapel',
+            'activePolls',
+            'votedPolls',
+            'pengumumanTerkini',
+            'jadwalHariIni',
+            'hariIni',
+            'selectedJadwalDate',
+            'hariDipilih',
+            'unreadModules',
+            'pendingTasks',
+            'extracurricularSessions'
         ));
     }
 

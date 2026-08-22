@@ -11,6 +11,9 @@ use App\Models\AcademicCalendar;
 use App\Models\Announcement;
 use App\Models\Poll;
 use App\Models\StudentAssessmentAttempt;
+use App\Models\ExtracurricularStudent;
+use App\Models\ExtracurricularMeeting;
+use App\Models\ExtracurricularAttendance;
 use Carbon\Carbon;
 
 class ParentController extends Controller
@@ -71,11 +74,129 @@ class ParentController extends Controller
         }
 
         // Data Dasar Anak untuk View
-        $dataAnak = (object)[
-            'nama_lengkap' => $studentProfile->nama_lengkap ?? "Siswa Tidak Ditemukan",
-            'kelas' => $studentClass,
-            'kehadiran_hari_ini' => $statusHadir
-        ];
+        // Data Dasar Anak untuk View
+$dataAnak = (object)[
+    'id' => $studentProfile?->id,
+    'user_id' => $studentProfile?->user_id,
+    'nama_lengkap' => $studentProfile?->nama_lengkap ?? 'Siswa Tidak Ditemukan',
+    'kelas' => $studentClass,
+    'kehadiran_hari_ini' => $statusHadir,
+];
+
+        /* =========================================================
+ * EKSTRAKURIKULER ANAK
+ * ========================================================= */
+
+$extracurricularSessions = collect();
+
+if ($dataAnak) {
+
+    // Ambil ekskul yang diikuti anak
+   $memberEkskul = ExtracurricularStudent::with('extracurricular')
+    ->where('student_profile_id', $studentProfile->id)
+    ->get();
+
+    foreach ($memberEkskul as $member) {
+
+        $extracurricular = $member->extracurricular;
+
+        if (!$extracurricular) {
+            continue;
+        }
+
+        /*
+         * Ambil seluruh pertemuan ekskul
+         */
+        $meetings = ExtracurricularMeeting::where(
+                'extracurricular_id',
+                $extracurricular->id
+            )
+            ->orderBy('meeting_date')
+            ->get();
+
+        $history = collect();
+
+        $hadir = 0;
+        $alpa = 0;
+
+        foreach ($meetings as $meeting) {
+
+            /*
+             * Ambil absensi anak pada pertemuan tersebut.
+             *
+             * Jika FK di database kamu bernama
+             * extracurricular_meeting_id, gunakan ini.
+             */
+            $attendance = ExtracurricularAttendance::where(
+                'student_profile_id',
+                $studentProfile->id
+            )
+            ->where(
+                'meeting_id',
+                $meeting->id
+            )
+            ->first();
+
+            $status = strtolower(
+                $attendance->status ?? 'not_recorded'
+            );
+
+            /*
+             * Normalisasi status
+             */
+            if (in_array($status, ['present', 'hadir'])) {
+
+                $status = 'hadir';
+                $hadir++;
+
+            } elseif (in_array($status, ['absent', 'alpa', 'alpha'])) {
+
+                $status = 'alpa';
+                $alpa++;
+
+            } else {
+
+                $status = 'not_recorded';
+            }
+
+            $history->push([
+                'status' => $status,
+                'date' => $meeting->meeting_date,
+            ]);
+        }
+
+        $totalPertemuan = $meetings->count();
+
+        $percentage = $totalPertemuan > 0
+            ? round(($hadir / $totalPertemuan) * 100)
+            : 0;
+
+        $extracurricularSessions->push([
+            'name' => $extracurricular->name,
+
+            'tipe_kelas' =>
+                $extracurricular->tipe_kelas ?? null,
+
+            'kelas' =>
+                $extracurricular->kelas ?? null,
+
+            'status' =>
+                $history->last()['status'] ?? 'not_recorded',
+
+            'hadir' => $hadir,
+            'alpa' => $alpa,
+
+            'total_pertemuan' =>
+                $totalPertemuan,
+
+            'percentage' =>
+                $percentage,
+
+            'attendance_history' =>
+                $history,
+        ]);
+    }
+}
 
         // =========================================================
         // 4. STATISTIK KPI ANAK (Nilai, Hadir, Tugas Pending)
@@ -336,11 +457,27 @@ class ParentController extends Controller
             $query->whereNull('target_class_id')->orWhere('target_class_id', $studentClassId);
         })->latest()->take(8)->get();
 
-        return view('features.lms.parents.dashboard', compact(
-            'role', 'schoolName', 'schoolId', 'studentId', 'childrens',
-            'profilOrangTua', 'dataAnak', 'agendaSekolah', 
-            'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory', 'announcements'
-        ));
+        return view(
+    'features.lms.parents.dashboard',
+    compact(
+        'profilOrangTua',
+        'dataAnak',
+        'childrens',
+        'studentId',
+        'role',
+        'schoolName',
+        'schoolId',
+        'statsAnak',
+        'jadwalHariIni',
+        'tugasAnak',
+        'statistikMapel',
+        'announcements',
+        'agendaSekolah',
+        'cheatingHistory',
+        'polls',
+        'extracurricularSessions'
+    )
+);
     }
 
     public function submitPoll(Request $request, $id)
