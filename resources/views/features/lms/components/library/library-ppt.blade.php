@@ -1,4 +1,4 @@
-s{{-- SIDEBAR --}}
+{{-- SIDEBAR --}}
 @include('components/sidebar-beranda', [
     'headerSideNav' => 'PPT Library',
 ])
