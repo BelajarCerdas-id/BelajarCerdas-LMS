@@ -109,7 +109,8 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                 contentContainer.innerHTML = response.contents.map(item => {
                     const filename = item.lms_content_item?.[0]?.original_filename ?? '-';
 
-                    let = subBab_display = '';
+                    // FIX 1: Correct variable declaration
+                    let subBab_display = '';
 
                     if (item.sub_bab_id) {
                         subBab_display = `
@@ -198,8 +199,10 @@ $(document).on('input', '#search_materi', function () {
     formContentForRelease($(this).val(), $('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val() || null);
 });
 
+// FIX 2: Reset filter class value in UI when academic year changes
 $(document).on('change', '#dropdown-tahun-ajaran', function () {
-    formContentForRelease($('#search_materi').val(), $(this).val(), null); // null supaya auto pilih kelas paling rendah
+    $('#dropdown-filter-class').val('');
+    formContentForRelease($('#search_materi').val(), $(this).val(), null);
 });
 
 $(document).on('change', '#dropdown-filter-class', function () {
@@ -251,27 +254,34 @@ function disableFlatpickr(el) {
     }
 }
 
+// FIX 3: Reset DOM state completely so datepicker re-initializes on toggle back
 function initRombelRadioLogic() {
 
     $(document).off('change', '.rombel-radio').on('change', '.rombel-radio', function () {
 
-        // RESET SEMUA ROW
+        // RESET ALL ROWS
         $('.rombel-date').each(function () {
-            disableFlatpickr(this); // destroy instance dulu
+            disableFlatpickr(this); // Destroy instance first
 
-            $(this).prop('disabled', true).removeAttr('name').val('').removeClass('border-red-400');
+            $(this)
+                .prop('disabled', true)
+                .removeAttr('name')
+                .val('')
+                .removeClass('border-red-400 flatpickr-input active'); // Remove Flatpickr residual classes
         });
 
         $('.error-meeting-date').text('');
         $('.rombel-status').text('Belum dipilih').addClass('text-gray-400');
 
-        // ROW YANG DIPILIH
+        // SELECTED ROW LOGIC
         const row = $(this).closest('tr');
-        const dateInput = row.find('.rombel-date')[0]; // ambil DOM element
+        const dateInput = row.find('.rombel-date')[0];
 
-        $(dateInput).prop('disabled', false).attr('name', 'meeting_date');
+        $(dateInput)
+            .prop('disabled', false)
+            .attr('name', 'meeting_date');
 
-        // INIT FLATPICKR LAGI
+        // RE-INIT FLATPICKR
         enableFlatpickr(dateInput);
 
         row.find('.rombel-status').text('Dipilih').removeClass('text-gray-400');
@@ -289,7 +299,7 @@ function initRombelRadioLogic() {
 $(document).on('change', 'input[name="lms_content_id"]', function () {
 
     const selected = $(this).closest('.content-item');
-    const serviceId = selected.data('service'); // nanti kita taruh di data attribute
+    const serviceId = selected.data('service');
 
     $('#hidden-service-id').remove();
 
@@ -376,11 +386,11 @@ $('#submit-button-publish-content-for-release, #submit-button-draft-content-for-
     if (!container) return;
     if (!role || !schoolName || !schoolId) return;
 
-    const status = $(this).data('status'); // draft / publish
+    const status = $(this).data('status');
     const isActive = status === 'publish' ? 1 : 0;
 
-    const form = $('#content-for-release-form')[0]; // ambil DOM Form-nya
-    const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
+    const form = $('#content-for-release-form')[0];
+    const formData = new FormData(form);
 
     formData.append('is_active', isActive);
 
@@ -431,7 +441,7 @@ $('#submit-button-publish-content-for-release, #submit-button-draft-content-for-
             $('#id_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
             $('#id_sub_bab').html('<option disabled selected>Pilih Bab</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
 
-            // RESET SEMUA
+            // RESET ALL
             $('#content-for-release-form')[0].reset();
 
             isProcessing = false;
