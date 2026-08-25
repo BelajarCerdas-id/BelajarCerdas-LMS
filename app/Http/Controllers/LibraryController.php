@@ -1967,9 +1967,15 @@ private function mergeChunks(UploadSession $upload)
             ]);
 
         }
+
+        $submittedCount = StudentTkaAnswer::where('attempt_id', $attemptId)->where('status_answer', 'submitted')->count();
+
+        $isFinished = $submittedCount >= $attempt->total_question;
+
         return response()->json([
             'status' => 'success',
             'message' => 'Jawaban berhasil disimpan',
+            'is_finished' => $isFinished,
         ]);
     }
 }
