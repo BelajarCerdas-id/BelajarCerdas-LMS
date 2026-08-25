@@ -20,6 +20,7 @@ class StudentTkaAttempt extends Model
         'question_order',
         'total_question',
         'status',
+        'attempt_type',
     ];
 
     public function StudentTkaAnswer()

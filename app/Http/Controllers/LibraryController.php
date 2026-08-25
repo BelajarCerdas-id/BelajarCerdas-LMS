@@ -1318,7 +1318,8 @@ private function mergeChunks(UploadSession $upload)
     {
         $user = UserAccount::with('StudentProfile')->find(Auth::id());
 
-        $attempt = StudentTkaAttempt::where('student_id', $user->id)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->latest()->first();
+        $attempt = StudentTkaAttempt::where('student_id', $user->id)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('attempt_type', 'practice')
+        ->where('status', 'active')->latest()->first();
 
         if (!$attempt) {
             return response()->json([
@@ -1742,7 +1743,8 @@ private function mergeChunks(UploadSession $upload)
     {
         $userId = Auth::id();
 
-        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
+        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('attempt_type', 'practice')->where('status', 'active')
+        ->update([
             'status' => 'inactive'
         ]);
 
@@ -1755,6 +1757,7 @@ private function mergeChunks(UploadSession $upload)
             'total_question' => count($questionOrder),
             'question_order' => $questionOrder,
             'status'         => 'active',
+            'attempt_type'   => 'practice',
         ]);
 
         return response()->json([
@@ -1766,7 +1769,8 @@ private function mergeChunks(UploadSession $upload)
     {
         $userId = Auth::id();
 
-        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->update([
+        StudentTkaAttempt::where('student_id', $userId)->where('kelas_id', $kelasId)->where('mapel_id', $mapelId)->where('status', 'active')->where('attempt_type', 'practice')
+        ->update([
             'status' => 'inactive'
         ]);
 
@@ -1779,6 +1783,7 @@ private function mergeChunks(UploadSession $upload)
             'total_question' => count($questionOrder),
             'question_order' => $questionOrder,
             'status'         => 'active',
+            'attempt_type'   => 'practice',
         ]);
 
         return response()->json([
@@ -1790,10 +1795,7 @@ private function mergeChunks(UploadSession $upload)
     {
         $userId = Auth::id();
 
-        $attempt = StudentTkaAttempt::where('id', $attemptId)
-            ->where('status', 'active')
-            ->where('student_id', $userId)
-            ->firstOrFail();
+        $attempt = StudentTkaAttempt::where('id', $attemptId)->where('student_id', $userId)->where('attempt_type', 'practice')->where('status', 'active')->firstOrFail();
 
         $validator = Validator::make($request->all(), [
             'question_id' => 'required|exists:lms_question_banks,id',
@@ -1937,13 +1939,7 @@ private function mergeChunks(UploadSession $upload)
         }
 
         // SIMPAN JAWABAN
-        $answer = StudentTkaAnswer::where('question_id', $request->question_id)
-            ->whereHas('StudentTkaAttempt', function ($query) use ($userId, $kelasId, $mapelId) {
-                $query->where('student_id', $userId)
-                    ->where('kelas_id', $kelasId)
-                    ->where('mapel_id', $mapelId);
-            })
-            ->first();
+        $answer = StudentTkaAnswer::where('attempt_id', $attemptId)->where('question_id', $request->question_id)->first();
 
         if ($answer) {
 
