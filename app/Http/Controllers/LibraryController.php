@@ -1330,30 +1330,18 @@ private function mergeChunks(UploadSession $upload)
         $questionIds = $attempt->question_order ?? [];
 
         if (empty($questionIds)) {
-
             return response()->json([
                 'message' => 'Question order tidak ditemukan.'
             ], 500);
-
         }
 
         // Ambil soal berdasarkan ID yang sudah dipilih
-        $questions = LmsQuestionBank::with([
-            'LmsQuestionOption',
-            'Mapel'
-        ])
-        ->whereIn('id', $questionIds)
-        ->get()
-        ->sortBy(function ($question) use ($questionIds) {
+        $questions = LmsQuestionBank::with(['LmsQuestionOption', 'Mapel'])->whereIn('id', $questionIds)->get()->sortBy(function ($question) use ($questionIds) {
             return array_search($question->id, $questionIds);
-        })
-        ->values();
+        })->values();
 
-        $optionOrder = $attempt->option_order ?? [];
-        $isOptionOrderChanged = false;
-
-        // SHUFFLE OPTIONS
-        $questions->transform(function ($question) use ($attempt, &$optionOrder, &$isOptionOrderChanged) {
+        // Shuffle option berdasarkan setiap attempt
+        $questions->transform(function ($question) use ($attempt) {
 
             $type = strtoupper($question->tipe_soal ?? '');
 
@@ -1363,82 +1351,32 @@ private function mergeChunks(UploadSession $upload)
                 return $question;
             }
 
-            $publishedOptionIds = $options->sortBy('id')->pluck('id')->implode(',');
-
-            // $optionOrder = $attempt->option_order ?? [];
-
-            $cacheName = "mcq_{$question->id}_{$publishedOptionIds}";
-
             // MCQ / MCMA
-            if (in_array($type, ['MCQ','MCMA'])) {
+            if (in_array($type, ['MCQ', 'MCMA'])) {
 
-                if (isset($optionOrder[$cacheName])) {
+                $sorted = $options
+                    ->sortBy(function ($option) use ($attempt, $question) {
+                        return md5($attempt->id . '_' . $question->id . '_' . $option->id);
+                    })
+                    ->values();
 
-                    $cachedIds = $optionOrder[$cacheName];
-
-                    $sorted = $options
-                        ->whereIn('id', $cachedIds)
-                        ->sortBy(function ($opt) use ($cachedIds) {
-                            return array_search($opt->id, $cachedIds);
-                        })
-                        ->values();
-
-                } else {
-
-                    $sorted = $options->shuffle()->values();
-
-                    $optionOrder[$cacheName] = $sorted
-                        ->pluck('id')
-                        ->toArray();
-
-                    // $attempt->option_order = $optionOrder;
-                    // $attempt->save();
-                    $isOptionOrderChanged = true;
-                }
-
-                $question->setRelation('LmsQuestionOption', $sorted);
+                $question->LmsQuestionOption = $sorted;
             }
 
             // MATCHING
             if ($type === 'MATCHING') {
 
                 $left = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'left';
                 })->values();
 
                 $right = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'right';
+                })->sortBy(function ($option) use ($attempt, $question) {
+                    return md5($attempt->id . '_' . $question->id . '_' . $option->id);
                 })->values();
-
-                $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
-
-                $cacheName = "matching_{$question->id}_{$publishedRightIds}";
-
-                if (isset($optionOrder[$cacheName])) {
-
-                    $cachedIds = $optionOrder[$cacheName];
-
-                    $right = $right
-                        ->whereIn('id', $cachedIds)
-                        ->sortBy(function ($opt) use ($cachedIds) {
-                            return array_search($opt->id, $cachedIds);
-                        })
-                        ->values();
-
-                } else {
-
-                    $right = $right->shuffle()->values();
-
-                    $optionOrder[$cacheName] = $right
-                        ->pluck('id')
-                        ->toArray();
-
-                    // $attempt->option_order = $optionOrder;
-                    // $attempt->save();
-                    $isOptionOrderChanged = true;
-                }
 
                 $shuffled = collect();
 
@@ -1450,78 +1388,27 @@ private function mergeChunks(UploadSession $upload)
                     $shuffled->push($r);
                 }
 
-                $question->setRelation('LmsQuestionOption', $shuffled);
+                $question->LmsQuestionOption = $shuffled;
             }
 
+            // PG KOMPLEKS
             if ($type === 'PG_KOMPLEKS') {
 
                 // AMBIL ITEMS (ROW)
                 $items = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'item';
+                })->sortBy(function ($option) use ($attempt, $question) {
+                    return md5($attempt->id . '_' . $question->id . '_' . $option->id);
                 })->values();
-
-                $publishedItemIds = $items->sortBy('id')->pluck('id')->implode(',');
-                
-                $cacheName = "pgk_item_{$question->id}_{$publishedItemIds}";
-
-                if (isset($optionOrder[$cacheName])) {
-
-                    $cachedIds = $optionOrder[$cacheName];
-
-                    $items = $items
-                        ->whereIn('id', $cachedIds)
-                        ->sortBy(function ($opt) use ($cachedIds) {
-                            return array_search($opt->id, $cachedIds);
-                        })
-                        ->values();
-
-                } else {
-
-                    $items = $items->shuffle()->values();
-
-                    $optionOrder[$cacheName] = $items
-                        ->pluck('id')
-                        ->toArray();
-
-                    // $attempt->option_order = $optionOrder;
-                    // $attempt->save();
-                    $isOptionOrderChanged = true;
-                }
 
                 // AMBIL CATEGORY (COLUMN)
                 $right = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'category';
+                })->sortBy(function ($option) use ($attempt, $question) {
+                    return md5($attempt->id . '_' . $question->id . '_' . $option->id);
                 })->values();
-
-                $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
-
-                $cacheName = "pgk_category_{$question->id}_{$publishedRightIds}";
-
-                if (isset($optionOrder[$cacheName])) {
-
-                    $cachedIds = $optionOrder[$cacheName];
-
-                    $right = $right
-                        ->whereIn('id', $cachedIds)
-                        ->sortBy(function ($opt) use ($cachedIds) {
-                            return array_search($opt->id, $cachedIds);
-                        })
-                        ->values();
-
-                } else {
-
-                    $right = $right->shuffle()->values();
-
-                    $optionOrder[$cacheName] = $right
-                        ->pluck('id')
-                        ->toArray();
-
-                    // $attempt->option_order = $optionOrder;
-                    // $attempt->save();
-                    $isOptionOrderChanged = true;
-                }
 
                 // GABUNGKAN ITEMS + CATEGORY
                 $shuffled = collect();
@@ -1534,91 +1421,69 @@ private function mergeChunks(UploadSession $upload)
                     $shuffled->push($cat);
                 }
 
-                $question->setRelation('LmsQuestionOption', $shuffled);
-
-                $shuffled = collect();
-
-                foreach ($items as $l) {
-                    $shuffled->push($l);
-                }
-
-                foreach ($right as $r) {
-                    $shuffled->push($r);
-                }
-
-                $question->setRelation('LmsQuestionOption', $shuffled);
+                $question->LmsQuestionOption = $shuffled;
             }
 
             return $question;
         });
 
-        if ($isOptionOrderChanged) {
-            $attempt->update([
-                'option_order' => $optionOrder
-            ]);
-        }
-        
         $questionsAnswer = collect();
 
         if ($attempt) {
             // STUDENT ANSWER
             $questionsAnswer = StudentTkaAnswer::with(['StudentTkaAttempt'])->where('attempt_id', $attempt->id)->get()->mapWithKeys(function ($item) {
-    
+
                     $data = $item->attributesToArray();
-    
+
                     if (is_string($data['answer_value'])) {
                         $decoded = json_decode($data['answer_value'], true);
                         if (json_last_error() === JSON_ERROR_NONE) {
                             $data['answer_value'] = $decoded;
                         }
                     }
-    
+
                     $question = LmsQuestionBank::with('LmsQuestionOption')->find($item->question_id);
-    
+
                     $isCorrect = false;
-    
+
                     if ($question) {
-    
+
                         $type = $question->tipe_soal;
-    
-                        $correctOptions = $question->LmsQuestionOption
-                            ->where('is_correct', 1)
-                            ->pluck('options_key')
-                            ->values()
-                            ->toArray();
-    
+
+                        $correctOptions = $question->LmsQuestionOption->where('is_correct', 1)->pluck('options_key')->values()->toArray();
+
                         $studentAnswer = $data['answer_value'];
-    
+
                         if ($type === 'MCQ') {
                             $isCorrect = $studentAnswer === ($correctOptions[0] ?? null);
                         }
-    
+
                         if ($type === 'MCMA') {
-    
+
                             if (!is_array($studentAnswer)) {
                                 $isCorrect = false;
                             } else {
-    
+
                                 sort($correctOptions);
                                 sort($studentAnswer);
-    
+
                                 $isCorrect = $studentAnswer === $correctOptions;
                             }
                         }
-    
+
                         if ($type === 'MATCHING') {
-    
+
                             if (is_string($studentAnswer)) {
                                 $studentAnswer = json_decode($studentAnswer, true);
                             }
-    
+
                             if (!is_array($studentAnswer)) {
                                 $isCorrect = false;
                             } else {
-    
+
                                 $correctPairs = $question->LmsQuestionOption
                                     ->filter(function ($opt) {
-                                        return isset($opt->extra_data['side']) 
+                                        return isset($opt->extra_data['side'])
                                             && $opt->extra_data['side'] === 'left';
                                     })
                                     ->mapWithKeys(function ($opt) {
@@ -1628,33 +1493,33 @@ private function mergeChunks(UploadSession $upload)
                                         ];
                                     })
                                     ->toArray();
-    
+
                                 $normalizedStudentAnswer = collect($studentAnswer)
                                     ->mapWithKeys(function ($value, $key) {
                                         return [trim($key) => trim($value)];
                                     })
                                     ->toArray();
-    
+
                                 ksort($correctPairs);
                                 ksort($normalizedStudentAnswer);
-    
+
                                 $isCorrect = $correctPairs === $normalizedStudentAnswer;
                             }
                         }
-    
+
                         if ($type === 'PG_KOMPLEKS') {
-    
+
                             if (is_string($studentAnswer)) {
                                 $studentAnswer = json_decode($studentAnswer, true);
                             }
-    
+
                             if (!is_array($studentAnswer)) {
                                 $isCorrect = false;
                             } else {
-    
+
                                 $correctPairs = $question->LmsQuestionOption
                                     ->filter(function ($opt) {
-                                        return isset($opt->extra_data['side']) 
+                                        return isset($opt->extra_data['side'])
                                             && $opt->extra_data['side'] === 'item';
                                     })
                                     ->mapWithKeys(function ($opt) {
@@ -1664,23 +1529,23 @@ private function mergeChunks(UploadSession $upload)
                                         ];
                                     })
                                     ->toArray();
-    
+
                                 $normalizedStudentAnswer = collect($studentAnswer)
                                     ->mapWithKeys(function ($value, $key) {
                                         return [trim($key) => trim($value)];
                                     })
                                     ->toArray();
-    
+
                                 ksort($correctPairs);
                                 ksort($normalizedStudentAnswer);
-    
+
                                 $isCorrect = $correctPairs === $normalizedStudentAnswer;
                             }
                         }
                     }
-    
+
                     $data['is_correct'] = $isCorrect;
-    
+
                     return [
                         $item->question_id => $data
                     ];
