@@ -18,7 +18,7 @@ function emptyTime() {
 
 
 function startTimer() {
-    if (!containerFormAssessment) return;
+    if (!containerFormAssessment.length) return;
     if (countdown !== null) return;
 
     const timerExam = document.getElementById('timer-assessment-test');
@@ -60,13 +60,39 @@ function startTimer() {
             success: function (response) {
                 const startTime = response.start_time;
                 const expireTime = response.expire_time;
-
                 localStorage.setItem(START_KEY, startTime);
                 localStorage.setItem(EXPIRE_KEY, expireTime);
 
                 const remaining = Math.ceil((expireTime - Date.now()) / 1000);
 
-                runCountdown(remaining);
+                if (remaining > 0) {
+                    runCountdown(remaining);
+                }
+            },
+            error: function (xhr) {
+                if (xhr.status === 422) {
+                    const response = xhr.responseJSON;
+
+                    if (response?.status === 'not_started') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Asesmen Belum Dimulai',
+                            text: response.message,
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    if (response?.status === 'expired') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Asesmen Telah Berakhir',
+                            text: response.message,
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+                }
             }
         });
     }
@@ -143,9 +169,10 @@ function getTotalExamDuration() {
 
     if (!startTime || !expireTime) return 0;
 
-    const totalDuration = Math.floor((expireTime - startTime) / 1000);
-    const remaining = Math.max(0, Math.floor((expireTime - Date.now()) / 1000));
+    const now = Date.now();
 
+    const totalDuration = Math.floor((expireTime - startTime) / 1000);
+    const remaining = Math.max(0, Math.floor((expireTime - now) / 1000));
     const usedDuration = totalDuration - remaining;
 
     return usedDuration;

@@ -33,43 +33,44 @@ function studentFormAssessment(selectedIndex = 0) {
             const formAssessment = $('#form-assessment-test');
             formAssessment.empty();
 
-            const now = new Date(); // waktu lokal user
-            const start = parseLocalDateTime(response.start_date);
-            const end = parseLocalDateTime(response.end_date);
+            const isBefore = response.status === 'not_started';
+            const isActive = response.status === 'active';
+            const isAfter = response.status === 'expired';
 
-            const isBefore = now < start;
-            const isActive = now >= start && now <= end;
-            const isAfter = now > end;
+            function formatAssessmentDate(start, end, timezone, timezoneLabel) {
 
-            function formatAssessmentDate(start, end) {
-
-                const days = [
-                    'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
-                ];
-
-                const months = [
-                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                ];
+                if (!start || !end || !timezone) {
+                    return {
+                        date: '-',
+                        time: '-'
+                    };
+                }
 
                 const startDate = new Date(start);
                 const endDate = new Date(end);
 
-                const day = days[startDate.getDay()];
-                const date = startDate.getDate();
-                const month = months[startDate.getMonth()];
-                const year = startDate.getFullYear();
+                const dateFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: timezone,
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
 
-                const startTime = startDate.toTimeString().slice(0, 5);
-                const endTime = endDate.toTimeString().slice(0, 5);
+                const timeFormatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: timezone,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hourCycle: 'h23'
+                });
 
                 return {
-                    date: `${day}, ${date} ${month} ${year}`,
-                    time: `${startTime} - ${endTime}`
+                    date: dateFormatter.format(startDate),
+                    time: `${timeFormatter.format(startDate)} - ${timeFormatter.format(endDate)} ${timezoneLabel ?? timezone}`
                 };
             }
 
-            const formatted = formatAssessmentDate(response.start_date, response.end_date);
+            const formatted = formatAssessmentDate(response.start_date_iso, response.end_date_iso, response.timezone, response.timezone_label);
 
             $('#assessment-date').text(formatted.date);
             $('#assessment-time').text(formatted.time);
@@ -1100,23 +1101,10 @@ function studentFormAssessment(selectedIndex = 0) {
     });
 }
 
-function parseLocalDateTime(dateStr) {
-    if (!dateStr) return null;
-
-    const [datePart, timePart] = dateStr.split(' ');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
-
-    return new Date(year, month - 1, day, hour, minute);
-}
-
 $(document).ready(function () {
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {
-        const now = new Date(); // waktu lokal user
-        const start = parseLocalDateTime(response.start_date);
-        const end = parseLocalDateTime(response.end_date);
 
-        if (now < start) {
+        if (response.status === 'not_started') {
             Swal.fire({
                 icon: 'warning',
                 title: 'Asesmen Belum Dimulai',
@@ -1126,14 +1114,13 @@ $(document).ready(function () {
                 allowEscapeKey: false,
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // jika user ok, redirect ke halaman preview assessment
-                    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`
+                    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
                 }
             });
             return;
         }
 
-        if (now > end) {
+        if (response.status === 'expired') {
             Swal.fire({
                 icon: 'warning',
                 title: 'Asesmen Telah Berakhir',

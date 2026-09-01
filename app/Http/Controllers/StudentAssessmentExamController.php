@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentQuestion;
+use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentAssessmentSummary;
@@ -483,15 +485,37 @@ class StudentAssessmentExamController extends Controller
                 ];
             });
 
-        $schoolAssessment = SchoolAssessment::where('id', $assessmentId)->first();
+        $schoolPartner = SchoolPartner::findOrFail($assessment->school_partner_id);
+
+        $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+        $timezoneLabel = TimezoneHelper::getTimezoneLabel($timezone);
+
+        $startDate = TimezoneHelper::parse($assessment->start_date, $timezone);
+        $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+        $now = TimezoneHelper::now($timezone);
+
+        $status = 'active';
+
+        if ($startDate && $now->lt($startDate)) {
+            $status = 'not_started';
+        } elseif ($endDate && $now->gt($endDate)) {
+            $status = 'expired';
+        }
 
         return response()->json([
             'data' => $questions,
             'questionsAnswer' => $questionsAnswer,
             'schoolAssessment' => $schoolAssessment,
             'user' => $user,
-            'start_date' => $assessment->start_date ? $assessment->start_date->format('Y-m-d H:i') : null,
-            'end_date' => $assessment->end_date ? $assessment->end_date->format('Y-m-d H:i') : null,
+            'start_date' => $startDate?->format('Y-m-d H:i:s'),
+            'end_date' => $endDate?->format('Y-m-d H:i:s'),
+            'start_date_iso' => $startDate?->format('Y-m-d\TH:i:sP'),
+            'end_date_iso' => $endDate?->format('Y-m-d\TH:i:sP'),
+            'timezone' => $timezone,
+            'timezone_label' => $timezoneLabel,
+            'status' => $status,
+            'server_now' => $now->format('Y-m-d H:i:s'),
+            'server_now_iso' => $now->format('Y-m-d\TH:i:sP'),
             'assessment_title' => $assessment->SchoolAssessmentType->name,
             'semester' => $assessment->semester,
             'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test'
@@ -504,19 +528,44 @@ class StudentAssessmentExamController extends Controller
 
         $assessment = SchoolAssessment::findOrFail($assessmentId);
 
+        $schoolPartner = SchoolPartner::findOrFail($assessment->school_partner_id);
+
+        $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+
+        $startDate = TimezoneHelper::parse($assessment->start_date, $timezone);
+        $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+        $schoolNow = TimezoneHelper::now($timezone);
+
+        if ($startDate && $schoolNow->lt($startDate)) {
+            return response()->json([
+                'status' => 'not_started',
+                'message' => 'Asesmen belum dimulai.'
+            ], 422);
+        }
+
+        if ($endDate && $schoolNow->gt($endDate)) {
+            return response()->json([
+                'status' => 'expired',
+                'message' => 'Asesmen sudah berakhir.'
+            ], 422);
+        }
+
+        $now = now();
+
         $attempt = StudentAssessmentAttempt::firstOrCreate(
             [
                 'student_id' => $userId,
                 'school_assessment_id' => $assessmentId
             ],
             [
-                'start_time' => now(),
-                'expire_time' => now()->addMinutes($assessment->duration),
+                'start_time' => $now,
+                'expire_time' => $now->copy()->addMinutes($assessment->duration),
                 'status' => 'in_progress'
             ]
         );
 
         return response()->json([
+            'status' => 'success',
             'start_time' => $attempt->start_time->timestamp * 1000,
             'expire_time' => $attempt->expire_time->timestamp * 1000,
             'duration' => $assessment->duration
@@ -591,7 +640,14 @@ class StudentAssessmentExamController extends Controller
 
         $assessment = SchoolAssessment::findOrFail($assessmentId);
 
-        $isExpired = now()->greaterThan($assessment->end_date);
+        $schoolPartner = SchoolPartner::findOrFail($assessment->school_partner_id);
+
+        $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+
+        $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+        $now = TimezoneHelper::now($timezone);
+
+        $isExpired = $endDate && $now->greaterThan($endDate);
 
         if ($isExpired && !$request->auto_submit) {
 
@@ -906,8 +962,16 @@ class StudentAssessmentExamController extends Controller
         $userId = Auth::id();
         $assessment = SchoolAssessment::findOrFail($assessmentId);
 
-        $isExpired = now()->greaterThan($assessment->end_date);
-        $isBeforeStart = now()->lessThan($assessment->start_date);
+        $schoolPartner = SchoolPartner::findOrFail($assessment->school_partner_id);
+
+        $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+
+        $startDate = TimezoneHelper::parse($assessment->start_date, $timezone);
+        $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+        $now = TimezoneHelper::now($timezone);
+
+        $isExpired = $endDate && $now->greaterThan($endDate);
+        $isBeforeStart = $startDate && $now->lessThan($startDate);
 
         if ($isBeforeStart) {
             return response()->json([
