@@ -51,12 +51,16 @@ function changeSemester(semester) {
 
             assessments.forEach(assessment => {
 
-                const startDate = assessment.start_date ? formatDate(assessment.start_date) : '-';
-                const endDate = assessment.end_date ? formatDate(assessment.end_date) : '-';
+                const timezone = assessment.timezone;
+                const timezoneLabel = assessment.timezone_label;
+
+                const startDate = assessment.start_date_iso ? formatDate(assessment.start_date_iso, timezone, timezoneLabel) : '-';
+                const endDate = assessment.end_date_iso ? formatDate(assessment.end_date_iso, timezone, timezoneLabel) : '-';
 
                 const now = new Date();
-                const start = parseLocalDateTime(assessment.start_date);
-                const end = parseLocalDateTime(assessment.end_date);
+
+                const start = parseSchoolDateTime(assessment.start_date_iso);
+                const end = parseSchoolDateTime(assessment.end_date_iso);
 
                 const total_questions = assessment.total_questions;
                 const total_answers = assessment.total_answers;
@@ -440,46 +444,51 @@ function changeSemester(semester) {
     });
 }
 
-function formatDate(dateString) {
+function parseSchoolDateTime(dateString) {
 
-    const months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
+    if (!dateString) return null;
 
-    const date = parseLocalDateTime(dateString);
+    const date = new Date(dateString);
+
+    return Number.isNaN(date.getTime())
+        ? null
+        : date;
+}
+
+function formatDate(dateString, timezone, timezoneLabel) {
+
+    if (!dateString || !timezone) return '-';
+
+    const date = parseSchoolDateTime(dateString);
 
     if (!date) return '-';
 
-    const day = date.getDate();
-    const monthName = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
+    const parts = new Intl.DateTimeFormat('id-ID', {
+        timeZone: timezone,
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+    }).formatToParts(date);
 
-    return `${day} ${monthName} ${year} (${hour}:${minute})`;
-}
+    const values = {};
 
-function parseLocalDateTime(dateStr) {
+    parts.forEach(part => {
+        if (part.type !== 'literal') {
+            values[part.type] = part.value;
+        }
+    });
 
-    if (!dateStr) return null;
-
-    const [datePart, timePart] = dateStr.split(' ');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
-
-    return new Date(year, month - 1, day, hour, minute);
+    return `${values.day} ${values.month} ${values.year} (${values.hour}:${values.minute} ${timezoneLabel ?? timezone})`;
 }
 
 function startExamLocalTime(assessmentId) {
 
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {
 
-        const now = new Date();
-        const start = parseLocalDateTime(response.start_date);
-        const end = parseLocalDateTime(response.end_date);
-
-        if (now < start) {
+        if (response.status === 'not_started') {
 
             Swal.fire({
                 icon: 'warning',
@@ -490,7 +499,7 @@ function startExamLocalTime(assessmentId) {
             return;
         }
 
-        if (now > end) {
+        if (response.status === 'expired') {
 
             Swal.fire({
                 icon: 'warning',
