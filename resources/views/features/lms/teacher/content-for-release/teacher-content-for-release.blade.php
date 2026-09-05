@@ -11,248 +11,444 @@
                     class="border-b border-gray-300 pb-10">
                     <div class="space-y-6">
                         <form id="content-for-release-form">
-                            <!-- ================= HEADER ================= -->
-                            <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100 mb-10">
-                                <div class="flex items-center justify-between mb-6">
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 mb-8">
+                                <div class="flex flex-col gap-6">
                                     <div>
                                         <h2 class="text-xl font-semibold text-gray-800">
                                             Content For Release Management
                                         </h2>
                                         <p class="text-sm text-gray-500 mt-1">
-                                            Atur distribusi materi untuk setiap rombel dalam satu pertemuan.
+                                            Atur distribusi materi dan jadwal release untuk rombel serta beberapa pertemuan sekaligus.
                                         </p>
                                     </div>
-                                </div>
-    
-                                <div id="form-content-for-release" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    
-                                    <!-- tahun ajaran -->
-                                    <div id="container-dropdown-tahun-ajaran">
-                                        <!-- show data in ajax -->
-                                    </div>
-    
-                                    <!-- Semester -->
-                                    <div id="container-dropdown-semester">
-                                        <div class="flex flex-col w-full mb-2">
-                                            <label class="text-sm font-medium text-gray-600 mb-1">
-                                                Pilih Semester
-                                            </label>
-                                            <select id="dropdown-semester" name="semester" class="w-full bg-white shadow-lg rounded-md h-12 outline-none border border-gray-300 text-sm pr-6 cursor-pointer">
-                                                <option value="" class="hidden">Pilih Semester</option>
-                                                <option value="1">Semester 1</option>
-                                                <option value="2">Semester 2</option>
-                                            </select>
-                                            <span id="error-semester" class="text-red-500 text-xs mt-1 font-bold"></span>
-                                        </div>
-                                    </div>
-    
-                                    <!-- Pertemuan -->
-                                    <div id="container-dropdown-pertemuan">
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-500 mb-1">
-                                                Pertemuan
-                                            </label>
 
-                                            <select name="pertemuan"
-                                                class="w-full bg-white shadow-lg rounded-md h-12 outline-none border border-gray-300 text-sm pr-6 cursor-pointer">
+                                    <div id="form-content-for-release" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-                                                <option value="" class="hidden">Pilih Pertemuan</option>
+                                        <!-- Tahun Ajaran -->
+                                        <div id="container-dropdown-tahun-ajaran">
+                                            <div class="flex flex-col w-full">
+                                                <label for="dropdown-tahun-ajaran" class="text-sm font-medium text-gray-600 mb-2">
+                                                    Pilih Tahun Ajaran
+                                                    <sup class="text-red-500">&#42;</sup>
+                                                </label>
 
-                                                @for ($i = 1; $i <= 16; $i++)
-                                                    <option value="{{ $i }}">
-                                                        Pertemuan {{ $i }}
+                                                <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-12 bg-white border border-gray-300 
+                                                    rounded-xl px-4 text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                    <option value="" class="hidden">
+                                                        Pilih Tahun Ajaran
                                                     </option>
-                                                @endfor
+                                                </select>
 
-                                            </select>
+                                                <span id="error-tahun-ajaran" class="text-red-500 text-xs font-semibold mt-1.5"></span>
+                                            </div>
+                                        </div>
 
-                                            <span id="error-pertemuan"
-                                                class="text-red-500 text-xs mt-1 font-bold"></span>
+                                        <!-- Semester -->
+                                        <div id="container-dropdown-semester">
+                                            <div class="flex flex-col w-full">
+                                                <label for="dropdown-semester" class="text-sm font-medium text-gray-600 mb-2">
+                                                    Pilih Semester
+                                                    <sup class="text-red-500">&#42;</sup>
+                                                </label>
+
+                                                <select id="dropdown-semester" name="semester" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-4 
+                                                    text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                    <option value="" class="hidden">
+                                                        Pilih Semester
+                                                    </option>
+
+                                                    <option value="1">
+                                                        Semester 1
+                                                    </option>
+
+                                                    <option value="2">
+                                                        Semester 2
+                                                    </option>
+                                                </select>
+
+                                                <span id="error-semester" class="text-red-500 text-xs font-semibold mt-1.5"></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Filter Kelas -->
+                                        <div id="container-dropdown-class">
+                                            <div class="flex flex-col w-full">
+                                                <label for="dropdown-filter-class" class="text-sm font-medium text-gray-600 mb-2">
+                                                    Filter Kelas
+                                                    <sup class="text-red-500">&#42;</sup>
+                                                </label>
+
+                                                <select id="dropdown-filter-class" name="class" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-4 
+                                                    text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                    <option value="" class="hidden">
+                                                        Filter Kelas
+                                                    </option>
+                                                </select>
+
+                                                <span id="error-class" class="text-red-500 text-xs font-semibold mt-1.5"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="container-dropdown-rombel">
+                                            <div class="flex flex-col">
+                                                <label class="text-sm font-medium text-gray-600 mb-2">
+                                                    Rombel Kelas
+                                                    <sup class="text-red-500">&#42;</sup>
+                                                </label>
+
+                                                <div class="relative">
+                                                    <select id="dropdown-school-class" name="school_class_id" class="w-full h-12 bg-white border border-gray-300 rounded-xl 
+                                                        px-4 pr-10 text-sm outline-none cursor-pointer appearance-none transition focus:border-[#0071BC] focus:ring-2 
+                                                        focus:ring-blue-100">
+
+                                                        <option value="" class="hidden">
+                                                            Pilih Rombel Kelas
+                                                        </option>
+                                                    </select>
+
+                                                    <span class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                                    </span>
+                                                </div>
+
+                                                <span id="error-school_class_id" class="text-red-500 text-xs font-semibold mt-1.5"></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-    
-                            <!-- ================= TARGET ROMBEL ================= -->
-                            <div class="bg-white shadow-sm rounded-2xl border border-gray-100 p-6 mb-10">
-    
-                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-                                    <div>
-                                        <h3 class="text-sm font-semibold text-gray-800 pb-2">
-                                            Target Rombel & Jadwal Release
-                                        </h3>
-                                        <p class="text-xs text-gray-500">
-                                            Centang rombel yang ingin diberikan materi dan tentukan tanggalnya.
-                                        </p>
 
+                            <!-- target release -->
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 mb-8">
+                                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 pb-5 border-b border-gray-100">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 shrink-0 rounded-xl bg-blue-50 text-[#0071BC] flex items-center justify-center">
+                                            <i class="fa-solid fa-calendar-days"></i>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-base font-semibold text-gray-800">
+                                                Target Jadwal Rilis
+                                            </h3>
+
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Tentukan target rombel, pilih pertemuan, dan atur jadwal rilis untuk setiap pertemuan.
+                                            </p>
+                                        </div>
                                     </div>
-                                    
-                                    <div id="container-dropdown-class">
-                                        <!-- show data in ajax -->
+
+                                    <div class="shrink-0 flex items-center gap-2">
+                                        <span class="text-xs text-gray-500">
+                                            Pertemuan dipilih:
+                                        </span>
+
+                                        <span id="total-meeting-selected"
+                                            class="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-[#0071BC] text-xs font-semibold">
+                                            0 Pertemuan
+                                        </span>
                                     </div>
                                 </div>
-                                <span id="error-school_class_id"
-                                    class="text-red-500 text-xs font-semibold hidden">
-                                </span>
-    
-                                <div class="overflow-x-auto mt-2">
-                                    <div class="max-h-80 overflow-y-auto border border-gray-200 rounded-xl">
-                                        <table id="table-rombel-class-content-for-release" class="min-w-175 lg:min-w-full text-sm border-collapse">
-                                            <thead class="thead-table-rombel-class-content-for-release bg-gray-50 hidden shadow-inner">
-                                                <tr>
-                                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
-                                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Rombel Kelas</th>
-                                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Mata Pelajaran</th>
-                                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status</th>
-                                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Release</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbody-rombel-class-content-for-release">
-                                                <!-- show data in ajax -->
-                                            </tbody>
-                                        </table>
+
+                                <div class="mt-5 space-y-5">
+
+                                    <!-- pertemuan -->
+                                    <div class="border border-gray-200 rounded-2xl overflow-hidden">
+                                        <div class="px-4 md:px-5 py-4 bg-gray-50 border-b border-gray-200">
+                                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-9 h-9 shrink-0 rounded-xl bg-white border border-gray-200 text-gray-500 flex items-center justify-center">
+                                                        <i class="fa-solid fa-list-check text-sm"></i>
+                                                    </div>
+
+                                                    <div>
+                                                        <h4 class="text-sm font-semibold text-gray-800">
+                                                            Pertemuan & Jadwal Rilis
+                                                            <sup class="text-red-500">&#42;</sup>
+                                                        </h4>
+
+                                                        <p class="text-xs text-gray-500 mt-0.5">
+                                                            Centang pertemuan yang akan menerima materi dan atur jadwal rilis nya.
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <span class="text-[11px] text-gray-400 shrink-0">
+                                                    Maksimal 16 pertemuan
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- validation -->
+                                        <span id="error-pertemuan" class="text-red-500 text-xs font-semibold px-4 md:px-5 pt-4 block"></span>
+
+                                        <!-- meeting list -->
+                                        <div id="meeting-release-list" class="max-h-125 overflow-y-auto">
+                                            @for ($i = 1; $i <= 16; $i++)
+                                                <div class="meeting-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-4 md:px-5 py-4 border-b border-gray-100 
+                                                    last:border-b-0 hover:bg-gray-50 transition">
+
+                                                    <!-- meeting checbkox -->
+                                                    <div class="md:col-span-5">
+                                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                                            <input type="checkbox" value="{{ $i }}" name="pertemuan[]" class="meeting-checkbox h-4 w-4 shrink-0 rounded 
+                                                                border-gray-300 text-[#0071BC] cursor-pointer">
+
+                                                            <div class="flex items-center gap-3 min-w-0">
+                                                                <div class="w-9 h-9 shrink-0 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center transition 
+                                                                    group-hover:bg-blue-50 group-hover:text-[#0071BC]">
+                                                                    <span class="text-xs font-bold">
+                                                                        {{ $i }}
+                                                                    </span>
+                                                                </div>
+
+                                                                <div class="min-w-0">
+                                                                    <p class="text-sm font-semibold text-gray-700">
+                                                                        Pertemuan {{ $i }}
+                                                                    </p>
+
+                                                                    <p class="text-xs text-gray-400 mt-0.5">
+                                                                        Aktifkan untuk menentukan jadwal release.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+
+                                                    <div class="hidden md:flex md:col-span-1 justify-center text-gray-300">
+                                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                                    </div>
+
+                                                    <!-- release date -->
+                                                    <div class="md:col-span-6">
+                                                        <div class="relative">
+                                                            <input type="text" name="meeting_date[]" class="meeting-release-date w-full bg-gray-100 border border-gray-200 
+                                                                rounded-xl px-4 py-3 pr-10 text-sm outline-none transition disabled:cursor-not-allowed disabled:text-gray-400 
+                                                                disabled:bg-gray-100" data-meeting="{{ $i }}" placeholder="Pilih tanggal dan waktu release" disabled>
+
+                                                            <span class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                                                                <i class="fa-regular fa-calendar text-sm"></i>
+                                                            </span>
+                                                        </div>
+
+                                                        <span class="meeting-error-date text-red-500 text-xs font-semibold mt-1.5 block"></span>
+                                                    </div>
+                                                </div>
+                                            @endfor
+                                        </div>
                                     </div>
-                                </div>
-                                <div id="empty-message-rombel-class-content-for-release-list" class="w-full h-80 hidden">
-                                    <span class="flex h-full items-center justify-center text-gray-500">
-                                        Tidak ada rombel kelas yang terdaftar.
-                                    </span>
                                 </div>
                             </div>
-    
-                            <!-- ================= CONTENT SECTION ================= -->
-                            <div id="container" data-school-id="{{ $schoolId }}" class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10"> 
-    
-                                <!-- FILTER PANEL -->
-                                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                                    <h3 class="text-sm font-semibold text-gray-700">
-                                        Filter Materi
-                                    </h3>
-    
-                                    <div class="">
-                                        <!--- search bar --->
-                                        <label class="input input-bordered outline-none border-gray-300 flex items-center gap-2 w-full">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-70" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1111 3a7.5 7.5 0 015.65 13.65z" />
-                                            </svg>
-                                            <input id="search_materi" type="search" class="grow text-sm"
-                                                placeholder="Cari materi..." autocomplete="OFF" />
-                                        </label>
-                                    </div>
-    
-                                    <!--- Kurikulum --->
-                                    <div class="flex flex-col">
-                                        <label class="mb-2 text-sm">
-                                            Kurikulum
-                                        </label>
-                                        <select name="kurikulum_id" id="id_kurikulum"
-                                            class="w-full bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 focus:border cursor-pointer">
-                                            <option value="" class="hidden">Pilih Kurikulum</option>
-                                            @foreach ($getCurriculum as $item)
-                                                <option value="{{ $item->id }}">{{ $item->nama_kurikulum }}</option>
-                                            @endforeach
-                                        </select>
+
+                            <!-- content -->
+                            <div id="container" data-school-id="{{ $schoolId }}" class="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+                                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-[#0071BC] flex items-center justify-center">
+                                            <i class="fa-solid fa-filter text-sm"></i>
+                                        </div>
+
+                                        <div>
+                                            <h3 class="text-sm font-semibold text-gray-800">
+                                                Filter Materi
+                                            </h3>
+
+                                            <p class="text-xs text-gray-400 mt-0.5">
+                                                Gunakan filter untuk menemukan materi.
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <!--- Service --->
-                                    <div class="flex flex-col">
-                                        <label class="mb-2 text-sm">
-                                            Service
-                                        </label>
-                                        <select name="service_id" id="id_service"
-                                            class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
-                                            <option class="hidden">Pilih Service</option>
-                                        </select>
-                                    </div>
-    
-                                    <!--- Kelas --->
-                                    <div class="flex flex-col">
-                                        <label class="mb-2 text-sm">
-                                            Kelas
-                                        </label>
-                                        <select name="kelas_id" id="id_kelas"
-                                            class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
-                                            <option class="hidden">Pilih Kelas</option>
-                                        </select>
-                                    </div>
-    
-                                    <!--- Mapel --->
-                                    <div class="flex flex-col">
-                                        <label class="mb-2 text-sm">
-                                            Mata Pelajaran
-                                        </label>
-                                        <select name="mapel_id" id="id_mapel"
-                                            class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
-                                            <option class="hidden">Pilih Mata Pelajaran</option>
-                                        </select>
-                                    </div>
-    
-                                    <!--- Bab --->
-                                    <div class="flex flex-col">
-                                        <label class="mb-2 text-sm">
-                                            Bab
-                                        </label>
-                                        <select name="bab_id" id="id_bab"
-                                            class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
-                                            <option class="hidden">Pilih Bab</option>
-                                        </select>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600 mb-2 block">
+                                                Cari Materi
+                                            </label>
+
+                                            <label class="flex items-center gap-2 h-12 bg-white border border-gray-300 rounded-xl px-3 transition focus-within:border-[#0071BC] 
+                                                focus-within:ring-2 focus-within:ring-blue-100">
+                                                <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
+
+                                                <input id="search_materi" type="search" class="w-full bg-transparent text-sm outline-none" 
+                                                    placeholder="Cari nama materi..." autocomplete="off">
+                                            </label>
+                                        </div>
+
+                                        <!-- kurikulum -->
+                                        <div class="flex flex-col">
+                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                                Kurikulum
+                                            </label>
+
+                                            <select name="kurikulum_id" id="id_kurikulum" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm 
+                                                outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                <option value="" class="hidden">
+                                                    Pilih Kurikulum
+                                                </option>
+
+                                                @foreach ($getCurriculum as $item)
+                                                    <option value="{{ $item->id }}">
+                                                        {{ $item->nama_kurikulum }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <!-- service -->
+                                        <div class="flex flex-col">
+                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                                Service
+                                            </label>
+
+                                            <select name="service_id" id="id_service" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm 
+                                                outline-none transition opacity-50 cursor-not-allowed" disabled>
+                                                <option value="" class="hidden">
+                                                    Pilih Service
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <!-- kelas -->
+                                        <div class="flex flex-col">
+                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                                Kelas
+                                            </label>
+
+                                            <select name="kelas_id" id="id_kelas" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
+                                                transition opacity-50 cursor-not-allowed" disabled>
+                                                <option value="" class="hidden">
+                                                    Pilih Kelas
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <!-- mapel -->
+                                        <div class="flex flex-col">
+                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                                Mata Pelajaran
+                                            </label>
+
+                                            <select name="mapel_id" id="id_mapel" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
+                                                transition opacity-50 cursor-not-allowed" disabled>
+                                                <option value="" class="hidden">
+                                                    Pilih Mata Pelajaran
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        {{-- Bab --}}
+                                        <div class="flex flex-col">
+                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                                Bab
+                                            </label>
+
+                                            <select name="bab_id" id="id_bab" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
+                                                transition opacity-50 cursor-not-allowed" disabled>
+                                                <option value="" class="hidden">
+                                                    Pilih Bab
+                                                </option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-    
-                                <!-- MASTER CONTENT LIST -->
-                                <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-6 space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <h3 class="text-sm font-semibold text-gray-700">
-                                            Pilih Materi
-                                        </h3>
+
+                                <!-- content list -->
+                                <div class="xl:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-gray-100">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-9 h-9 shrink-0 rounded-xl bg-blue-50 text-[#0071BC] flex items-center justify-center">
+                                                <i class="fa-solid fa-book-open text-sm"></i>
+                                            </div>
+
+                                            <div>
+                                                <h3 class="text-sm font-semibold text-gray-800">
+                                                    Pilih Materi
+                                                </h3>
+
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    Materi yang dipilih akan digunakan pada seluruh pertemuan yang telah dipilih.
+                                                </p>
+                                            </div>
+                                        </div>
+
                                         <span id="total-selected"
-                                            class="text-blue-600 font-semibold">
+                                            class="shrink-0 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-[#0071BC] text-xs font-semibold">
                                             0 Dipilih
                                         </span>
                                     </div>
 
-                                    <span id="error-lms_content_id"
-                                        class="text-red-500 text-xs font-semibold hidden">
-                                    </span>
-    
-                                    <div id="content-list-container" class="space-y-3 max-h-100 overflow-y-auto pr-1 hidden">
+                                    <span id="error-lms_content_id" class="text-red-500 text-xs font-semibold mt-4 block"></span>
+
+                                    <!-- content list -->
+                                    <div id="content-list-container" class="hidden space-y-3 max-h-125 overflow-y-auto pr-1 mt-4">
                                         <!-- show data in ajax -->
                                     </div>
+
+                                    <!-- empty state -->
+                                    <div id="empty-message-content-list" class="hidden">
+                                        <div class="min-h-100 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <div class="w-14 h-14 mx-auto rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center">
+                                                    <i class="fa-solid fa-book-open text-lg"></i>
+                                                </div>
     
-                                    <div id="empty-message-content-list" class="w-full h-96 hidden">
-                                        <span class="flex h-full items-center justify-center text-gray-500">
-                                            Tidak ada content yang terdaftar.
-                                        </span>
+                                                <p class="text-sm font-medium text-gray-600 mt-4">
+                                                    Materi tidak ditemukan
+                                                </p>
+    
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    Tidak terdapat materi untuk dipilih.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-    
-                            <!-- ================= SUBMIT BUTTON ================= -->
-                            <div class="bg-[#0071BC] rounded-2xl p-6 text-white flex flex-col lg:flex-row items-center justify-between gap-4">
-    
-                                <div>
-                                    <p class="text-sm font-semibold text-center lg:text-left">
-                                        Siap Dipublish
-                                    </p>
-                                    <div class="text-xs text-blue-100 mt-1 flex items-center gap-1">
-                                        <span id="text-semester"></span>
-                                        <span id="text-pertemuan"></span>
-                                        <span id="total-rombel-selected"></span>
-                                    </div>
-                                </div>
-    
-                                <div class="flex gap-3">
-                                    <button id="submit-button-draft-content-for-release" type="button" data-status="draft" class="px-5 py-2 text-sm rounded-xl bg-white/20 hover:bg-white/30 
-                                        transition cursor-pointer default:cursor-default">
-                                        Simpan Draft
-                                    </button>
 
-                                    <button id="submit-button-publish-content-for-release" type="button" data-status="publish" class="px-5 py-2 text-sm rounded-xl bg-white text-blue-700 
-                                        font-semibold hover:bg-gray-100 transition shadow cursor-pointer default:cursor-default">
-                                        Publish Sekarang
-                                    </button>
+                            <!-- submit summary -->
+                            <div class="bg-[#0071BC] rounded-2xl p-5 md:p-6 text-white">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                                    <div>
+                                        <p class="text-base font-semibold">
+                                            Siap Dipublish
+                                        </p>
+
+                                        <p class="text-sm text-blue-100 mt-1">
+                                            Pastikan target rombel, pertemuan, jadwal release, dan materi sudah sesuai.
+                                        </p>
+
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-3 text-xs text-blue-100">
+                                            <span id="text-semester">
+                                                Belum memilih semester
+                                            </span>
+
+                                            <i class="fa-solid fa-circle text-[3px] opacity-50"></i>
+
+                                            <span id="text-rombel">
+                                                Belum memilih rombel
+                                            </span>
+
+                                            <i class="fa-solid fa-circle text-[3px] opacity-50"></i>
+
+                                            <span id="text-meeting">
+                                                0 Pertemuan
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Action --}}
+                                    <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+                                        <button id="submit-button-draft-content-for-release" type="button" data-status="draft" class="h-11 px-5 rounded-xl 
+                                            bg-white/15 border border-white/20 text-sm font-medium text-white hover:bg-white/25 transition cursor-pointer">
+                                            <i class="fa-solid fa-floppy-disk mr-2"></i>
+                                            Simpan Draft
+                                        </button>
+
+                                        <button id="submit-button-publish-content-for-release" type="button" data-status="publish" class="h-11 px-5 rounded-xl bg-white 
+                                            text-[#0071BC] text-sm font-semibold hover:bg-gray-100 transition shadow-sm cursor-pointer">
+                                            <i class="fa-solid fa-paper-plane mr-2"></i>
+                                            Publish Sekarang
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </form>

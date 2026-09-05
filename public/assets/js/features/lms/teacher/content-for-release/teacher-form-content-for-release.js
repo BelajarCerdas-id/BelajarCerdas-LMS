@@ -1,4 +1,6 @@
-function formContentForRelease(search_materi = null, search_year = null, search_class = null, kurikulum_id = null, service_id = null, kelas_id = null, mapel_id = null, bab_id = null) {
+function formContentForRelease(search_materi = null, search_year = null, search_class = null, kurikulum_id = null, service_id = null, kelas_id = null,
+    mapel_id = null, bab_id = null, preserveSelection = true) {
+    
     const container = document.getElementById('container-form-content-for-release');
     if (!container) return;
 
@@ -6,6 +8,10 @@ function formContentForRelease(search_materi = null, search_year = null, search_
     const schoolName = container.dataset.schoolName;
     const schoolId = container.dataset.schoolId;
     if (!role || !schoolName || !schoolId) return;
+
+    const selectedSchoolClassId = preserveSelection ? ($('#dropdown-school-class').val() || '') : '';
+    const selectedMeetingData = preserveSelection ? getSelectedMeetings() : [];
+    const selectedContentId = preserveSelection ? ($('input[name="lms_content_id"]:checked').val() || '') : '';
 
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/content-for-release/form`,
@@ -21,86 +27,61 @@ function formContentForRelease(search_materi = null, search_year = null, search_
             bab_id
         },
         success: function (response) {
-            // Dropdown Tahun Ajaran
-            const containerDropdownTahunAjaran = document.getElementById('container-dropdown-tahun-ajaran');
-            containerDropdownTahunAjaran.innerHTML = `
-                <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Pilih Tahun Ajaran</label>
-                    <select id="dropdown-tahun-ajaran" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-6 cursor-pointer outline-none">
-                        <option value="" class="hidden">Pilih Tahun Ajaran</option>
-                        ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
-                    </select>
-                </div>
-            `;
+            const dropdownTahunAjaran = document.getElementById('dropdown-tahun-ajaran');
+            const dropdownClass = document.getElementById('dropdown-filter-class');
 
-            // Dropdown Kelas
-            const containerDropdownClass = document.getElementById('container-dropdown-class');
-            containerDropdownClass.innerHTML = `
-                <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Kelas</label>
-                    <select id="dropdown-filter-class" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-24 cursor-pointer outline-none">
-                        <option value="" class="hidden">Filter Kelas</option>
-                        ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
-                    </select>
-                </div>
-            `;
+            // render tahun ajaran
+            if (dropdownTahunAjaran) {
+                const tahunAjaranOptions = (response.tahunAjaran || []).map(item => `
+                    <option value="${item}"
+                        ${response.selectedYear == item ? 'selected' : ''}>
+                        Tahun Ajaran ${item}
+                    </option>
+                `).join('');
 
-            // Table Rombel
-            const tbodyContent = document.getElementById('tbody-rombel-class-content-for-release');
-            tbodyContent.innerHTML = '';
+                dropdownTahunAjaran.insertAdjacentHTML('beforeend', tahunAjaranOptions);
+            }
 
-            if (response.rombel.length > 0) {
+            // render rombel kelas
+            if (dropdownClass) {
+                const classOptions = (response.className || []).map(item => `
+                    <option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>
+                        Kelas ${item}
+                    </option>
+                `).join('');
 
-                tbodyContent.innerHTML = ''; // supaya tidak double render
+                dropdownClass.insertAdjacentHTML('beforeend', classOptions);
+            }
 
-                (response.rombel || []).forEach((item) => {
-
-                    const row = document.createElement('tr');
-                    row.classList.add('rombel-row');
-
-                    const classId = item.school_class?.id ?? '';
-                    const mapelId = item.mapel?.id ?? '';
-                    const mapelName = item.mapel?.mata_pelajaran ?? '';
-
-                    row.innerHTML = `
-                        <td class="border border-gray-300 px-3 py-2 text-center">
-                            <input type="radio" name="school_class_id" value="${classId}" data-mapel="${mapelId}" class="rombel-radio h-4 w-4 text-blue-600 cursor-pointer">
-                        </td>
-
-                        <td class="border border-gray-300 px-3 py-2 text-center">
-                            ${item.school_class?.class_name ?? ''}
-                        </td>
-
-                        <td class="border border-gray-300 px-3 py-2 text-center">
-                            ${mapelName}
-                        </td>
-
-                        <td class="border border-gray-300 px-3 py-2 text-center rombel-status text-gray-400">
-                            Belum dipilih
-                        </td>
-
-                        <td class="border border-gray-300 px-3 py-2 align-middle">
-                            <div class="relative w-full">
-                                <input 
-                                    type="text" class="rombel-date w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm outline-none
-                                        disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih tanggal release" disabled>
-                                <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
-                                    <i class="fa-regular fa-calendar text-sm"></i>
-                                </span>
-                            </div>
-                            <span class="text-red-500 text-xs font-semibold error-meeting-date"></span>
-                        </td>
+            // Dropdown Rombel
+            const dropdownSchoolClass = document.getElementById('dropdown-school-class');
+            if (dropdownSchoolClass) {
+                dropdownSchoolClass.innerHTML = `
+                    <option value="" class="hidden">Pilih Rombel Kelas</option>
+                    ${(response.rombel || []).map(item => {
+                        const classId = item.school_class?.id ?? '';
+                        const className = item.school_class?.class_name ?? '';
+                        const mapelId = item.mapel?.id ?? '';
+                        const mapelName = item.mapel?.mata_pelajaran ?? '';
+                    
+                    return `
+                        <option value="${classId}" data-mapel="${mapelId}" data-class-name="${className}" data-mapel-name="${mapelName}"
+                            ${selectedSchoolClassId == classId ? 'selected' : ''}>
+                            ${className} - ${mapelName}
+                        </option>
                     `;
+                }).join('')}
+                `;
+            }
 
-                    tbodyContent.appendChild(row);
-                });
-    
-                initRombelRadioLogic();
-                $('.thead-table-rombel-class-content-for-release').show();
-                $('#empty-message-rombel-class-content-for-release-list').hide();
+            // Update Informasi Rombel
+            if (selectedSchoolClassId && $('#dropdown-school-class').val() == selectedSchoolClassId) {
+                updateSelectedRombelInformation();
             } else {
-                $('.thead-table-rombel-class-content-for-release').hide();
-                $('#empty-message-rombel-class-content-for-release-list').show();
+                $('#selected-rombel-information').addClass('hidden');
+                $('#selected-rombel-name').text('');
+                $('#selected-rombel-mapel').text('');
+                $('#dynamic_mapel_id').remove();
             }
 
             // Table Contents
@@ -108,14 +89,11 @@ function formContentForRelease(search_materi = null, search_year = null, search_
             if (response.contents && response.contents.length > 0) {
                 contentContainer.innerHTML = response.contents.map(item => {
                     const filename = item.lms_content_item?.[0]?.original_filename ?? '-';
-
-                    // FIX 1: Correct variable declaration
-                    let subBab_display = '';
+                    let subBabDisplay = '';
 
                     if (item.sub_bab_id) {
-                        subBab_display = `
+                        subBabDisplay = `
                             <i class="fa-solid fa-circle text-[4px]"></i>
-
                             <span class="truncate max-w-full">
                                 ${item.sub_bab?.sub_bab ?? '-'}
                             </span>
@@ -123,10 +101,11 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                     }
 
                     return `
-                        <label class="content-item flex gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
+                        <label class="content-item flex gap-3 p-4 rounded-xl border ${selectedContentId == item.id ? 'border-blue-400 bg-blue-50' : 'border-gray-200'} hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
                             data-service="${item.service_id}">
-
-                            <input type="radio" name="lms_content_id" value="${item.id}" class="content-checkbox mt-1 h-4 w-4 shrink-0 rounded border-gray-300 cursor-pointer">
+                            <input type="radio" name="lms_content_id" value="${item.id}"
+                                ${selectedContentId == item.id ? 'checked' : ''}
+                                class="content-checkbox mt-1 h-4 w-4 shrink-0 rounded border-gray-300 cursor-pointer">
 
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-gray-800 wrap-break-word">
@@ -134,47 +113,40 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                                 </p>
 
                                 <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-                                    
                                     <span class="truncate max-w-full">
                                         ${item.kurikulum?.nama_kurikulum ?? ''}
                                     </span>
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
-
                                     <span class="truncate max-w-full">
                                         ${item.kelas?.kelas ?? ''}
                                     </span>
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
-
                                     <span class="truncate max-w-full">
                                         ${item.mapel?.mata_pelajaran ?? '-'}
                                     </span>
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
-
                                     <span class="truncate max-w-full">
                                         ${item.bab?.nama_bab ?? '-'}
                                     </span>
 
-                                    ${subBab_display}
+                                    ${subBabDisplay}
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
-
+                                    
                                     <span class="truncate max-w-full">
                                         ${item.service?.name ?? '-'}
                                     </span>
 
                                     <i class="fa-solid fa-circle text-[4px]"></i>
-
                                     <span class="truncate max-w-full">
                                         ${item.school_partner_id ? item.school_partner?.nama_sekolah : 'belajarcerdas.id'}
                                     </span>
-
                                 </div>
                             </div>
                         </label>
-
                     `;
                 }).join('');
 
@@ -184,6 +156,12 @@ function formContentForRelease(search_materi = null, search_year = null, search_
                 $('#content-list-container').hide();
                 $('#empty-message-content-list').show();
             }
+
+            restoreSelectedMeetings(selectedMeetingData);
+            initMeetingLogic();
+            updateSelectedCount();
+            updateMeetingSelectedCount();
+            updateSummary();
         },
         error: function (err) {
             console.log(err);
@@ -196,180 +174,254 @@ $(document).ready(function () {
 });
 
 $(document).on('input', '#search_materi', function () {
-    formContentForRelease($(this).val(), $('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val() || null);
+    formContentForRelease($(this).val(), $('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val() || null, $('#id_kurikulum').val(), $('#id_service').val(),
+        $('#id_kelas').val(), $('#id_mapel').val(), $('#id_bab').val());
 });
 
-// FIX 2: Reset filter class value in UI when academic year changes
 $(document).on('change', '#dropdown-tahun-ajaran', function () {
     $('#dropdown-filter-class').val('');
-    formContentForRelease($('#search_materi').val(), $(this).val(), null);
+    formContentForRelease($('#search_materi').val(), $(this).val(), null, $('#id_kurikulum').val(), $('#id_service').val(), $('#id_kelas').val(), $('#id_mapel').val(),
+        $('#id_bab').val());
 });
 
 $(document).on('change', '#dropdown-filter-class', function () {
-    formContentForRelease($('#search_materi').val(), $('#dropdown-tahun-ajaran').val(), $(this).val());
+    formContentForRelease($('#search_materi').val(), $('#dropdown-tahun-ajaran').val(), $(this).val(), $('#id_kurikulum').val(), $('#id_service').val(), $('#id_kelas').val(),
+        $('#id_mapel').val(), $('#id_bab').val());
 });
 
 $(document).on('change', '#id_kurikulum, #id_service, #id_kelas, #id_mapel, #id_bab', function () {
-    formContentForRelease(
-        $('#search_materi').val(),
-        $('#dropdown-tahun-ajaran').val(),
-        $('#dropdown-filter-class').val(),
-        $('#id_kurikulum').val(),
-        $('#id_service').val(),
-        $('#id_kelas').val(),
-        $('#id_mapel').val(),
-        $('#id_bab').val(),
-    );
-
-    document.getElementById('total-selected').innerText = '0 Dipilih';
+    formContentForRelease($('#search_materi').val(), $('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val(), $('#id_kurikulum').val(), $('#id_service').val(),
+        $('#id_kelas').val(), $('#id_mapel').val(), $('#id_bab').val());
 });
 
-function enableFlatpickr(el) {
-    if (el._flatpickr) return;
+function getSelectedMeetings() {
+    const meetings = [];
 
-    flatpickr(el, {
-        dateFormat: "Y-m-d",
-        minDate: "today",
-        disableMobile: true,
+    $('.meeting-checkbox:checked').each(function () {
+        const pertemuan = $(this).val();
+        const dateInput = $(`.meeting-release-date[data-meeting="${pertemuan}"]`);
 
-        onChange: function (selectedDates, dateStr, instance) {
+        meetings.push({pertemuan: pertemuan, release_date: dateInput.val() || ''});
+    });
 
-            const input = instance.input;
+    return meetings;
+}
 
-            input.classList.remove('border-red-400');
+function restoreSelectedMeetings(meetings = []) {
+    $('.meeting-checkbox').prop('checked', false);
 
-            const row = input.closest('tr');
-            const errorSpan = row.querySelector('.error-meeting-date');
+    $('.meeting-release-date').each(function () {
+        const input = this;
 
-            if (errorSpan) {
-                errorSpan.textContent = '';
+        input.disabled = true;
+
+        if (input._flatpickr) {
+            input._flatpickr.clear();
+        }
+
+        $(input).removeClass('border-red-400 bg-white border-gray-300').addClass('bg-gray-100 border-gray-200');
+    });
+
+    $('.meeting-row').removeClass('bg-blue-50');
+
+    meetings.forEach(item => {
+        const checkbox = $(`.meeting-checkbox[value="${item.pertemuan}"]`);
+
+        const dateInput = $(`.meeting-release-date[data-meeting="${item.pertemuan}"]`);
+
+        const input = dateInput[0];
+
+        if (!checkbox.length || !input) {
+            return;
+        }
+
+        checkbox.prop('checked', true);
+
+        input.disabled = false;
+
+        $(input).removeClass('bg-gray-100 border-gray-200').addClass('bg-white border-gray-300');
+
+        if (input._flatpickr) {
+            input._flatpickr.setDate(item.release_date || null, false);
+        }
+
+        checkbox.closest('.meeting-row').addClass('bg-blue-50');
+    });
+}
+
+function initMeetingDatePickers() {
+    $('.meeting-release-date').each(function () {
+        const input = this;
+
+        if (input._flatpickr) {
+            return;
+        }
+
+        flatpickr(input, {
+            dateFormat: 'Y-m-d H:i',
+            enableTime: true,
+            time_24hr: true,
+            minDate: 'today',
+            disableMobile: true,
+
+            onChange: function (selectedDates, dateStr, instance) {
+                const input = instance.input;
+
+                input.classList.remove('border-red-400');
+
+                const row = input.closest('.meeting-row');
+                const errorSpan = row?.querySelector('.meeting-error-date');
+
+                if (errorSpan) {
+                    errorSpan.textContent = '';
+                }
+
+                updateSummary();
             }
+        });
+    });
+}
+
+function initMeetingLogic() {
+
+    initMeetingDatePickers();
+
+    $(document).off('change', '.meeting-checkbox').on('change', '.meeting-checkbox', function () {
+        
+        const meeting = $(this).val();
+        const dateInput = $(`.meeting-release-date[data-meeting="${meeting}"]`);
+
+        const row = $(this).closest('.meeting-row');
+        const errorSpan = row.find('.meeting-error-date');
+
+        const input = dateInput[0];
+
+        if (!input) {
+            return;
+        }
+
+        if ($(this).is(':checked')) {
+            input.disabled = false;
+
+            dateInput.removeClass('bg-gray-100 border-gray-200').addClass('bg-white border-gray-300');
+
+            row.addClass('bg-blue-50');
+
+            errorSpan.text('');
+
+        } else {
+            if (input._flatpickr) {
+                input._flatpickr.clear();
+            }
+
+            input.disabled = true;
+
+            dateInput.removeClass('border-red-400 bg-white border-gray-300').addClass('bg-gray-100 border-gray-200');
+
+            row.removeClass('bg-blue-50');
+
+            errorSpan.text('');
+        }
+
+        updateMeetingSelectedCount();
+        updateSummary();
+
+        if ($('.meeting-checkbox:checked').length > 0) {
+            $('#error-meetings').text('');
         }
     });
 }
 
-function disableFlatpickr(el) {
-    if (el._flatpickr) {
-        el._flatpickr.destroy();
-    }
-}
+function updateSelectedRombelInformation() {
+    const selectedOption = $('#dropdown-school-class option:selected');
+    const classId = selectedOption.val();
+    const className = selectedOption.data('class-name') || '';
+    const mapelId = selectedOption.data('mapel') || '';
+    const mapelName = selectedOption.data('mapel-name') || '';
 
-// FIX 3: Reset DOM state completely so datepicker re-initializes on toggle back
-function initRombelRadioLogic() {
-
-    $(document).off('change', '.rombel-radio').on('change', '.rombel-radio', function () {
-
-        // RESET ALL ROWS
-        $('.rombel-date').each(function () {
-            disableFlatpickr(this); // Destroy instance first
-
-            $(this)
-                .prop('disabled', true)
-                .removeAttr('name')
-                .val('')
-                .removeClass('border-red-400 flatpickr-input active'); // Remove Flatpickr residual classes
-        });
-
-        $('.error-meeting-date').text('');
-        $('.rombel-status').text('Belum dipilih').addClass('text-gray-400');
-
-        // SELECTED ROW LOGIC
-        const row = $(this).closest('tr');
-        const dateInput = row.find('.rombel-date')[0];
-
-        $(dateInput)
-            .prop('disabled', false)
-            .attr('name', 'meeting_date');
-
-        // RE-INIT FLATPICKR
-        enableFlatpickr(dateInput);
-
-        row.find('.rombel-status').text('Dipilih').removeClass('text-gray-400');
-
-        // SET HIDDEN MAPEL
-        const mapelId = $(this).data('mapel');
+    if (!classId) {
+        $('#selected-rombel-information').addClass('hidden');
+        $('#selected-rombel-name').text('');
+        $('#selected-rombel-mapel').text('');
         $('#dynamic_mapel_id').remove();
+        return;
+    }
 
-        $('#content-for-release-form').append(
-            `<input type="hidden" id="dynamic_mapel_id" name="mapel_id" value="${mapelId}">`
-        );
-    });
+    $('#selected-rombel-name').text(className);
+    $('#selected-rombel-mapel').text(mapelName);
+    $('#selected-rombel-information').removeClass('hidden');
+
+    $('#dynamic_mapel_id').remove();
+
+    $('#content-for-release-form').append(
+        `<input type="hidden" id="dynamic_mapel_id" name="mapel_id" value="${mapelId}">`
+    );
+
+    $('#error-school_class_id').text('');
+    updateSummary();
 }
+
+$(document).on('change', '#dropdown-school-class', function () {
+    updateSelectedRombelInformation();
+});
 
 $(document).on('change', 'input[name="lms_content_id"]', function () {
-
     const selected = $(this).closest('.content-item');
     const serviceId = selected.data('service');
+
+    $('.content-item').removeClass('border-blue-400 bg-blue-50').addClass('border-gray-200');
+
+    selected.removeClass('border-gray-200').addClass('border-blue-400 bg-blue-50');
 
     $('#hidden-service-id').remove();
 
     $('#content-for-release-form').append(
         `<input type="hidden" id="hidden-service-id" name="service_id" value="${serviceId}">`
     );
-});
 
-document.addEventListener('change', function (e) {
-
-    if (e.target.classList.contains('content-checkbox')) {
-        updateSelectedCount();
-    }
-
-    if (e.target.classList.contains('rombel-checkbox')) {
-        updateRombelSelectedCount();
-    }
-
+    $('#error-lms_content_id').text('');
+    updateSelectedCount();
 });
 
 function updateSelectedCount() {
-
     const selected = document.querySelector('.content-checkbox:checked');
     const total = selected ? 1 : 0;
 
-    document.getElementById('total-selected').innerText = `${total} Dipilih`;
+    $('#total-selected').text(`${total} Dipilih`);
 
     if (total > 0) {
         $('#error-lms_content_id').text('');
     }
 }
 
-function updateRombelSelectedCount() {
+function updateMeetingSelectedCount() {
+    const total = $('.meeting-checkbox:checked').length;
 
-    const checkedItems = document.querySelectorAll('.rombel-checkbox:checked');
-    const total = checkedItems.length;
-
-    if (total > 0) {
-        $('#total-rombel-selected').html(`
-            <div class="flex items-center gap-1">
-                <i class="fa-solid fa-circle text-[4px] text-white"></i>
-                <span>${total} Rombel kelas dipilih</span>
-            </div>
-        `);
-
-        $('#error-school_class_id').text('');
-    } else {
-        $('#total-rombel-selected').html('');
-    }
+    $('#total-meeting-selected').text(`${total} Pertemuan`);
 }
 
-$(document).on('change', '#container-dropdown-semester', function () {
-    const selectedOption = $(this).find('option:selected').text();
+function updateSummary() {
+    const semester = $('#dropdown-semester').val();
+    const selectedOption = $('#dropdown-school-class option:selected');
+    const className = selectedOption.data('class-name') || '';
+    const mapelName = selectedOption.data('mapel-name') || '';
+    const totalMeeting = $('.meeting-checkbox:checked').length;
 
-    $('#text-semester').html(`
-        <div class="flex items-center gap-1">
-            <span>${selectedOption}</span>
-        </div>
-    `);
+    $('#text-semester').text(semester ? `Semester ${semester}` : 'Belum memilih semester');
+    $('#text-rombel').text(selectedOption.val() ? `${className}${mapelName ? ` - ${mapelName}` : ''}` : 'Belum memilih rombel');
+    $('#text-meeting').text(`${totalMeeting} Pertemuan`);
+}
+
+$(document).on('change', '#dropdown-semester', function () {
+    if ($(this).val()) {
+        $('#error-semester').text('');
+    }
+
+    updateSummary();
 });
 
-$(document).on('change', '#container-dropdown-pertemuan', function () {
-    const selectedOption = $(this).find('option:selected').text();
-
-    $('#text-pertemuan').html(`
-        <div class="flex items-center gap-1">
-            <i class="fa-solid fa-circle text-[4px] text-white"></i>
-            <span>${selectedOption}</span>
-        </div>
-    `);
+$(document).on('change', '.meeting-release-date', function () {
+    updateSummary();
 });
 
 let isProcessing = false;
@@ -447,44 +499,60 @@ $('#submit-button-publish-content-for-release, #submit-button-draft-content-for-
             isProcessing = false;
             btn.prop('disabled', false);
 
-            formContentForRelease();
+            formContentForRelease(null, null, null, null, null, null, null, null, false);
             paginateContentForRelease();
         },
         error: function (xhr) {
 
             if (xhr.status === 422) {
 
-                const errors = xhr.responseJSON.errors;
+                const errors = xhr.responseJSON.errors || {};
 
-                // reset error
-                $('.border-red-400').removeClass('border-red-400 border');
-                $('.error-meeting-date').text('');
+                // Reset semua error
+                $('.border-red-400').removeClass('border-red-400');
+                $('.meeting-error-date').text('');
                 $('.text-error').text('');
 
                 $.each(errors, function (field, messages) {
 
-                    if (field === 'meeting_date') {
+                    // error meeting date
+                    if (field.startsWith('meeting_date.')) {
 
-                        const selectedRow = $('.rombel-radio:checked').closest('tr');
-                        selectedRow.find('.rombel-date')
-                            .addClass('border-red-400 border');
+                        const index = field.split('.')[1];
 
-                        selectedRow.find('.error-meeting-date')
-                            .text(messages[0]);
+                        const checkbox = $(`.meeting-checkbox`).eq(index);
+                        const meeting = checkbox.val();
 
-                    } else {
-                        $(`#error-${field}`).text(messages[0]);
-                        $(`[name="${field}"]`)
-                            .addClass('border-red-400 border');
+                        const dateInput = $(`.meeting-release-date[data-meeting="${meeting}"]`);
+
+                        const row = checkbox.closest('.meeting-row');
+                        const errorSpan = row.find('.meeting-error-date');
+
+                        dateInput.addClass('border-red-400');
+
+                        errorSpan.text(messages[0]);
+
+                        return;
                     }
+
+                    // Error field biasa
+                    $(`#error-${field}`).removeClass('hidden').text(messages[0]);
+                    $(`[name="${field}"]`).addClass('border-red-400');
                 });
 
+                // Error khusus rombel
                 if (errors.school_class_id) {
                     $('#error-school_class_id').removeClass('hidden').text(errors.school_class_id[0]);
                 }
 
+                // Error khusus content
                 if (errors.lms_content_id) {
                     $('#error-lms_content_id').removeClass('hidden').text(errors.lms_content_id[0]);
+                }
+
+                // Error meeting secara global
+                if (errors.pertemuan) {
+                    $('#error-meetings').removeClass('hidden').text(errors.pertemuan[0]);
                 }
 
             } else {
