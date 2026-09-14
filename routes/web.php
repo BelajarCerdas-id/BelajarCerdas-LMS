@@ -282,7 +282,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::put('/syllabus/curriculum/bab/activate/{babId}', [SyllabusController::class, 'babActivate'])->name('bab.activate');
     
         // CRUD Sub Bab
-        Route::post('/syllabus/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/sub-bab/store', [SyllabusController::class, 'subBabStore'])->name('subBab.store');
+        Route::post('/syllabus/{curriculumId}/{faseId}/{kelasId}/{mapelId}/bab/sub-bab/store', [SyllabusController::class, 'subBabStore'])->name('subBab.store');
         Route::post('/syllabus/curriculum/sub-bab/edit/{curriculumId}/{faseId}/{kelasId}/{mapelId}/{babId}/{subBabId}', [SyllabusController::class, 'subBabEdit'])->name('subBab.edit');
         Route::put('/syllabus/curriculum/sub-bab/activate/{subBabId}', [SyllabusController::class, 'subBabActivate'])->name('subBab.activate');
     
@@ -611,7 +611,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::post('/lms/{role}/school-foundation/manage/submit-form', [FoundationManagementController::class, 'schoolFoundationSubmitForm'])->name('lms.schoolFoundation.form.submit'); 
         Route::post('/lms/{role}/school-foundation/manage/edit-form/{schoolFoundationId}/submit', [FoundationManagementController::class, 'editSchoolFoundationSubmitForm'])->name('lms.schoolFoundation.form.edit.submit'); 
         Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/activate-account/{userId}', [FoundationManagementController::class, 'schoolFoundationAccessControlActivate'])->name('lms.schoolFoundation.access-control.activate'); 
-        Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/toggle-access/{profileId}', [FoundationManagementController::class, 'toggleSchoolFoundationAccessControl'])->name('lms.school-foundation.access-control.toggle');
+        Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/toggle-access/{profileId}', [FoundationManagementController::class, 'toggleSchoolFoundationAccessControl'])->name('lms.school-foundation.access-control.toggle'); 
         Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/create-user-account', [FoundationManagementController::class, 'foundationCreateUser'])->name('lms.schoolFoundation.access-control.create-user'); 
         Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user-account', [FoundationManagementController::class, 'foundationAssignUser'])->name('lms.schoolFoundation.access-control.assign-user'); 
         Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user/{userId}', [FoundationManagementController::class, 'assignExistingAccount']);
@@ -625,14 +625,14 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // paginate
         Route::get('/lms/{role}/school-foundation/paginate', [FoundationManagementController::class, 'paginateSchoolFoundation'])->name('lms.schoolFoundation.manage.paginate');
         Route::get('/lms/{role}/school-foundation/manage/form/paginate-school-list', [FoundationManagementController::class, 'paginateSchoolList'])->name('lms.schoolFoundation.school-list.paginate'); 
-        Route::get('/lms/{role}/school-foundation/{foundationId}/manage/form/paginate-school-list', [FoundationManagementController::class, 'paginateSchoolList'])->name('lms.schoolFoundation.school-list.paginate'); 
+        Route::get('/lms/{role}/school-foundation/{foundationId}/manage/form/paginate-school-list', [FoundationManagementController::class, 'paginateSchoolList'])->name('lms.schoolFoundation.school-list.foundation.paginate'); 
         Route::get('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/paginate', [FoundationManagementController::class, 'paginateSchoolFoundationAccessControl'])->name('lms.schoolFoundation.access-control.paginate'); 
         Route::get('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/existing-account', [FoundationManagementController::class, 'loadExistingAccounts']);
         Route::get('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/paginate', [FoundationManagementController::class, 'paginateSchoolFoundationFinanceAccess'])->name('lms.schoolFoundation.finance-access-control.paginate'); 
 
         // =========================================================
         // ROUTES FINANCE
-    
+        
         // MANAGE CONTRACT (VIEWS)
         Route::get('/lms/{role}/manage-contract', [FinanceContractController::class, 'index'])->name('lms.finance.manage-contract.view');
         Route::get('/lms/{role}/manage-contract/schools/{schoolId}', [FinanceContractController::class, 'manageContractDetail'])->name('lms.finance.manage-contract-detail.view');
@@ -701,14 +701,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // assessment
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.mode.view');
-    
-        // load assessment data by semester
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'studentPreviewAssessment'])->name('lms.studentPreviewAssessment.mode.view');
         
         // load assessment data by semester
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/mode/{mode}/{parentAssessmentId}', [StudentAssessmentController::class, 'loadStudentPreviewAssessment'])->name('lms.loadStudentPreviewAssessment.mode');
-        Route::get('/lms/check-assessment-status/{assessmentId}', [StudentAssessmentController::class, 'checkAssessmentStatus'])->name('lms.checkAssessmentStatus');
     
         // assessment (exam)
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/test/{assessmentId}', [StudentAssessmentExamController::class, 'studentAssessmentExam'])->name('lms.studentAssessmentExan.view');
@@ -729,15 +725,10 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         
         // end assessment
         Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/emd', [StudentAssessmentExamController::class, 'studentAssessmentExamEnd'])->name('lms.studentAssessmentExan.emd');
-    
-        // routes store and delete image essay
-        Route::post('/lms/image-essay/store-image/endpoint', [StudentAssessmentExamController::class, 'storeImageEssay'])->name('assessment-test.storeImage');
-        Route::post('/lms/image-essay/delete-image/endpoint', [StudentAssessmentExamController::class, 'deleteImageEssay'])->name('assessment-test.deleteImage');
         
         // results
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/result-test', [StudentAssessmentExamController::class, 'studentResultAssessment'])->name('lms.studentAssessment.result');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/project-result', [StudentAssessmentExamController::class, 'studentProjectResult'])->name('lms.studentProjectAssessment.result');
-        Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
         Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [\App\Http\Controllers\TeacherInformationController::class, 'getScheduleDataAjax']);
         
         // polling siswa
@@ -768,10 +759,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // assessment management
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.view');
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{mode}/{parentAssessmentId}', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.mode.view');
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/view', [TeacherAssessmentController::class, 'teacherAssessmentManagementEdit'])->name('lms.teacherAssessmentManagementEdit.view');
-    
-        // form
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{mode}/{parentAssessmentId}', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.mode.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/view', [TeacherAssessmentController::class, 'teacherAssessmentManagementEdit'])->name('lms.teacherAssessmentManagementEdit.view');
     
@@ -923,7 +910,6 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // ROUTES STUDENT DASHBOARD
         // --------------------------------------------------------------------
         Route::get('/lms/{role}/{schoolName}/{schoolId}/student/dashboard', [StudentDashboardController::class, 'index'])->name('lms.student.dashboard');
-        Route::get('/lms/student/dashboard/cheating-history/data-paginate', [StudentDashboardController::class, 'getStudentAssessmentCheatingHistory'])->name('lms.studentAssessmentCheatingHistory.dashboard');
         Route::post('/student/announcement/mark-read', [StudentDashboardController::class, 'markAnnouncementAsRead'])->name('lms.studentAnnouncement.markRead');
     
         // daily reflection
@@ -990,7 +976,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/lms/{role}/foundation/school-user-kpi/{foundationId?}', [SchoolUserController::class, 'schoolUserKPI'])->name('lms.foundation.schoolUser.kpi');
 
         // load charts
-        Route::get('/lms/{role}/foundation/school-teacher-performance/load-chart/{foundationId?}', [TeacherPerformanceController::class, 'schoolTeacherPerformanceChart'])->name('lms.foundation.teacherPerformance.kpi');
+        Route::get('/lms/{role}/foundation/school-teacher-performance/load-chart/{foundationId?}', [TeacherPerformanceController::class, 'schoolTeacherPerformanceChart'])->name('lms.foundation.teacherPerformance.chart');
         Route::get('/lms/{role}/foundation/student-reflection/load-emotion-overview/{foundationId?}', [StudentReflectionController::class, 'loadEmotionOverview'])->name('lms.foundation.studentReflection.emotion-overview.load');
         Route::get('/lms/{role}/foundation/student-reflection/load-reflection-trend/{foundationId?}', [StudentReflectionController::class, 'loadReflectionTrend'])->name('lms.foundation.studentReflection.reflection-trend.load');
         Route::get('/lms/{role}/foundation/student-reflection/load-emotion-trend/{foundationId?}', [StudentReflectionController::class, 'loadEmotionTrend'])->name('lms.foundation.studentReflection.emotion-trend.load');
