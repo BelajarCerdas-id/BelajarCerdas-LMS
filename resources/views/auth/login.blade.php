@@ -46,7 +46,7 @@
                         Email
                         <sup class="text-red-500">&#42;</sup>
                     </label>
-                    <input type="email" name="email" placeholder="nama@email.com" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none text-sm"
+                    <input type="email" name="email" placeholder="nama@email.com" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none text-sm transition-all duration-200"
                     autocomplete="OFF">
                     <span id="error-email" class="error-text text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
@@ -56,17 +56,17 @@
                         Password
                         <sup class="text-red-500">&#42;</sup>
                     </label>
-                    <input id="passwordInput" type="password" name="password" placeholder="Masukkan paswword" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none text-sm" 
+                    <input id="passwordInput" type="password" name="password" placeholder="Masukkan password" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none text-sm transition-all duration-200" 
                         autocomplete="OFF">
                         <span id="error-password" class="error-text text-red-500 text-xs mt-1 font-bold"></span>
                     <button type="button" onclick="togglePassword('passwordInput', this)"
-                        class="absolute right-3 top-14 transform -translate-y-1/2 text-gray-600 focus:outline-none">
-                        <i class="fa-solid fa-eye-slash cursor-pointer"></i>
+                        class="absolute right-3 top-14 transform -translate-y-1/2 text-gray-600 focus:outline-none cursor-pointer">
+                        <i class="fa-solid fa-eye-slash"></i>
                     </button>
                 </div>
 
                 <!-- Button -->
-                <button id="submit-button" type="button" class="w-full mt-4 py-3 rounded-xl bg-blue-500 text-white font-semibold transition cursor-pointer disabled:cursor-default">
+                <button id="submit-button" type="submit" class="w-full mt-4 py-3 rounded-xl bg-[#0071BC] hover:bg-blue-600 text-white font-semibold shadow-sm hover:shadow transition-all text-sm flex items-center justify-center cursor-pointer disabled:cursor-default">
                     Masuk
                 </button>
             </form>
