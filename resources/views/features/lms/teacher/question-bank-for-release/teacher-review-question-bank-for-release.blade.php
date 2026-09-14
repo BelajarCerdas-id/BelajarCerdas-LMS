@@ -6,11 +6,11 @@
 
 @if (Auth::user()->role === 'Guru')
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
             <main class="mb-10 space-y-6">
                 <section id="container-paginate-teacher-review-question-bank-for-release-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
                     data-assessment-question-id="{{ $assessmentQuestionId }}"
-                    class="mt-10">
+                    class="mt-4">
 
                     <h2 class="text-xl font-semibold text-gray-800">
                         Review Question Bank For Release
