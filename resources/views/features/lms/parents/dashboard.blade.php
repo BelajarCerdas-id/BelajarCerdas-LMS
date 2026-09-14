@@ -3,7 +3,7 @@
 ])
 
 @if (Auth::user()->role === 'Orang Tua')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-50 min-h-screen pb-12">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-white min-h-screen pb-12">
         
         <div class="pt-6 sm:pt-8 mx-4 sm:mx-6 lg:mx-10">
             
@@ -648,7 +648,7 @@
         </div>
     </div>
 @else
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 min-h-screen flex flex-col items-center justify-center bg-white px-4">
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col items-center text-center max-w-sm w-full">
             <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-5">
                 <i class="fas fa-shield-alt text-4xl"></i>

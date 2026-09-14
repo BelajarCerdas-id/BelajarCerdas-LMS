@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-10 mx-6 space-y-8">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-6 space-y-8">
 
             <div id="alert-success-edit-meeting-content"></div>
 
@@ -49,24 +49,24 @@
                             <input type="hidden" id="edit-meeting-date" name="meeting_date">
 
                             <div class="mt-4 w-full md:w-96.25">
-                                <label class="text-sm font-medium text-gray-600 mb-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Pilih Semester
                                 </label>
-                                    <select id="edit-semester-name" name="semester" class="w-full bg-white shadow-lg rounded-md h-12 outline-none border border-gray-300 text-sm pr-6 cursor-pointer">
-                                        <option value="" class="hidden">Pilih Semester</option>
-                                        <option value="1">Semester 1</option>
-                                        <option value="2">Semester 2</option>
-                                    </select>
+                                <select id="edit-semester-name" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                    <option value="" class="hidden">Pilih Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                </select>
                                 <span id="error-semester" class="text-red-500 text-xs mt-1 font-bold"></span>
                             </div>
 
                             <div class="mt-4 w-full md:w-96.25">
-                                <label class="text-sm font-medium text-gray-500 mb-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Pertemuan
                                 </label>
 
                                 <select id="edit-pertemuan" name="meeting_number"
-                                    class="w-full bg-white shadow-lg rounded-md h-12 outline-none border border-gray-300 text-sm pr-6 cursor-pointer">
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                         <option value="" class="hidden">Pilih Pertemuan</option>
                                         @for ($i = 1; $i <= 16; $i++)
@@ -75,7 +75,7 @@
                                             </option>
                                         @endfor
                                 </select>
-                                    <span id="error-meeting_number" class="text-red-500 text-xs mt-1 font-bold"></span>
+                                <span id="error-meeting_number" class="text-red-500 text-xs mt-1 font-bold"></span>
                             </div>
 
                             <div class="w-full relative flex flex-col gap-2 mt-4">

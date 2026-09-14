@@ -11,8 +11,8 @@
 ))
 
 @if (Auth::user()->role === 'Administrator' || Auth::user()->role === 'Admin Sekolah')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <!---- alerts success ---->
             <div id="alert-success-insert-bank-soal"></div>
@@ -22,8 +22,8 @@
                 class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden">
             </div>
 
-            <main class="bg-white shadow-lg h-max rounded-lg border border-gray-200">
-                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-200">
+            <main class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" class="border-b border-gray-100">
                     <form id="bank-soal-form">
 
                         <input type="hidden" name="school_partner_id" value="{{ $schoolId }}">
@@ -31,93 +31,93 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
                             <!--- Kurikulum --->
                             <div class="flex flex-col order-1 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Kurikulum
-                                    <sup class="text-red-500">&#42;</sup>
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                 </label>
                                 <select name="kurikulum_id" id="id_kurikulum"
-                                    class="w-full bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 focus:border cursor-pointer">
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                     <option value="" class="hidden">Pilih Kurikulum</option>
                                     @foreach ($getCurriculum as $item)
                                         <option value="{{ $item->id }}">{{ $item->nama_kurikulum }}</option>
                                     @endforeach
                                 </select>
-                                <span id="error-kurikulum_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-kurikulum_id" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- Mapel --->
                             <div class="flex flex-col order-3 lg:order-2 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Mata Pelajaran
-                                    <sup class="text-red-500">&#42;</sup>
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                 </label>
                                 <select name="mapel_id" id="id_mapel"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                     <option class="hidden">Pilih Mata Pelajaran</option>
                                 </select>
-                                <span id="error-mapel_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-mapel_id" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- Sub Bab --->
                             <div class="flex flex-col order-5 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Sub Bab
                                 </label>
                                 <select name="sub_bab_id" id="id_sub_bab"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                     <option class="hidden">Pilih Sub Bab</option>
                                 </select>
-                                <span id="error-sub_bab_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-sub_bab_id" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- Kelas --->
                             <div class="flex flex-col order-2 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Kelas
-                                    <sup class="text-red-500">&#42;</sup>
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                 </label>
                                 <select name="kelas_id" id="id_kelas"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                     <option class="hidden">Pilih Kelas</option>
                                 </select>
-                                <span id="error-kelas_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-kelas_id" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- Bab --->
                             <div class="flex flex-col order-4 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Bab
                                 </label>
                                 <select name="bab_id" id="id_bab"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                     <option class="hidden">Pilih Bab</option>
                                 </select>
-                                <span id="error-bab_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-bab_id" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- Kategori Soal --->
                             <div class="flex flex-col order-6 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Kategori Soal
-                                    <sup class="text-red-500">&#42;</sup>
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                 </label>
                                 <select name="question_category" id="question_category"
-                                    class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 focus:border cursor-pointer">
+                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                     <option value="" class="hidden">Pilih Kategori Soal</option>
                                     <option value="TKA">TKA</option>
                                     <option value="Umum">Umum</option>
                                 </select>
-                                <span id="error-question_category" class="text-red-500 font-bold text-xs pt-2"></span>
+                                <span id="error-question_category" class="text-red-500 font-bold text-xs pt-1"></span>
                             </div>
 
                             <!--- button bulkupload lms --->
                             <div class="flex flex-col order-7 xl:order-0">
-                                <label class="mb-2 text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Soal
-                                    <sup class="text-red-500">&#42;</sup>
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                 </label>
                                 <button type="button"
-                                    class="bg-[#4189e0] hover:bg-blue-500 text-white font-bold h-10 px-6 rounded-lg shadow-md transition-all text-sm flex gap-2 items-center justify-center cursor-pointer"
+                                    class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold h-11 px-6 rounded-xl shadow-sm hover:shadow transition-all text-sm flex gap-2 items-center justify-center cursor-pointer"
                                     onclick="my_modal_1.showModal()">
                                     <i class="fa-solid fa-circle-plus"></i>
                                     Bulk Upload Soal

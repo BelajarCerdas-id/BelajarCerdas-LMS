@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role == 'Finance')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-10 mx-6 space-y-6">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-6 space-y-6">
 
             <!-- ALERT -->
             <div id="alert-success-insert-contract-students"></div>
@@ -299,7 +299,7 @@
                                 </label>
 
                                     <select id="filter_status"
-                                        class="select select-bordered rounded-2xl cursor-pointer outline-none">
+                                        class="h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
 
                                         <option value="" selected>
                                             Semua Status

@@ -1,7 +1,7 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Question Bank For Release']);
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
         <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-create-question-for-release"></div>
@@ -145,7 +145,7 @@
                                     <div>
                                         <label
                                             for="dropdown-filter-tahun-ajaran"
-                                            class="block mb-1.5 text-[11px] font-semibold text-gray-600">
+                                            class="block text-sm font-medium text-gray-700 mb-1.5">
                                             Tahun Ajaran
                                         </label>
     
@@ -156,7 +156,7 @@
                                     <div>
                                         <label
                                             for="dropdown-filter-class"
-                                            class="block mb-1.5 text-[11px] font-semibold text-gray-600">
+                                            class="block text-sm font-medium text-gray-700 mb-1.5">
                                             Rombel / Kelas
                                         </label>
     
@@ -167,7 +167,7 @@
                                     <div>
                                         <label
                                             for="dropdown-filter-assessment-type"
-                                            class="block mb-1.5 text-[11px] font-semibold text-gray-600">
+                                            class="block text-sm font-medium text-gray-700 mb-1.5">
                                             Jenis Asesmen
                                         </label>
     
@@ -178,7 +178,7 @@
                                     <div>
                                         <label
                                             for="dropdown-filter-subject-rombel-class"
-                                            class="block mb-1.5 text-[11px] font-semibold text-gray-600">
+                                            class="block text-sm font-medium text-gray-700 mb-1.5">
                                             Mata Pelajaran
                                         </label>
     

@@ -5,33 +5,32 @@
 ]);
 
 @if (Auth::user()->role === 'Administrator')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!---- alert success from ajax ---->
             <div id="alert-success-insert-data-fase"></div>
             <div id="alert-success-edit-data-fase"></div>
 
             <main>
-                <section class="bg-white shadow-lg p-6 rounded-lg border-gray-200 border">
+                <section class="bg-white shadow-sm p-6 rounded-2xl border-gray-200 border">
                     <!---- Form input fase  ---->
                     <form id="create-fase-form" autocomplete="OFF">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                             <div class="w-full">
-                                <label class="text-sm">
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                     Nama Fase
-                                    <sup class="text-red-500 pl-1">&#42;</sup>
+                                    <sup class="text-red-500 pl-0.5">&#42;</sup>
                                 </label>
-                                <div class="flex relative max-w-lg mt-2">
-                                    <div class="flex gap-2 w-full">
+                                <div class="flex relative max-w-lg mt-1">
+                                    <div class="flex gap-3 w-full items-start">
                                         <div class="w-full">
                                             <input type="text" name="nama_fase"
-                                                class="w-full bg-white shadow-lg h-11 border-gray-200 border outline-none rounded-full text-xs px-2" placeholder="Masukkan Nama fase">
-                                            <span id="error-nama_fase" class="text-red-500 text-xs mt-1 font-bold"></span>
+                                                class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 placeholder:text-gray-400" placeholder="Masukkan Nama fase">
+                                            <span id="error-nama_fase" class="text-red-500 text-xs mt-1 font-bold block"></span>
                                         </div>
                                         <button id="submit-button-create-fase" type="button"
-                                            class="bg-[#4189e0] hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all h-max text-md cursor-pointer
-                                            disabled:cursor-default">
+                                            class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold h-11 px-6 rounded-xl shadow-sm hover:shadow transition-all text-sm flex items-center justify-center cursor-pointer shrink-0 disabled:cursor-default">
                                             Tambah
                                         </button>
                                     </div>
@@ -73,23 +72,23 @@
 
                     <!---- modal edit fase ---->
                     <dialog id="my_modal_1" class="modal">
-                        <div class="modal-box bg-white w-max">
+                        <div class="modal-box bg-white rounded-2xl w-max">
                             <form id="edit-fase-form" autocomplete="OFF">
-                                <span class="text-xl font-bold flex justify-center">Edit Fase</span>
+                                <span class="text-xl font-bold flex justify-center text-gray-800">Edit Fase</span>
 
                                 <input type="hidden" id="edit-curriculum-id">
                                 <input type="hidden" id="edit-fase-id">
 
                                 <div class="mt-4 w-80">
-                                    <label class="text-sm">Nama Fase</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Fase</label>
                                     <input type="text" id="edit-fase-name" name="nama_fase"
-                                        class="w-full bg-white shadow-lg h-11 border-gray-200 border outline-none rounded-full text-xs px-2 mt-2" placeholder="Masukkan Nama fase">
-                                    <span id="error-nama_fase" class="text-red-500 text-xs mt-1 font-bold"></span>
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 placeholder:text-gray-400 mt-1" placeholder="Masukkan Nama fase">
+                                    <span id="error-nama_fase" class="text-red-500 text-xs mt-1 font-bold block"></span>
                                 </div>
 
                                 <div class="flex justify-end mt-8">
                                     <button id="submit-button-edit-fase" type="button"
-                                        class="bg-[#4189e0] hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all cursor-pointer disabled:cursor-default">
+                                        class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold h-11 px-6 rounded-xl shadow-sm hover:shadow transition-all text-sm flex items-center justify-center cursor-pointer disabled:cursor-default">
                                         Simpan
                                     </button>
                                 </div>

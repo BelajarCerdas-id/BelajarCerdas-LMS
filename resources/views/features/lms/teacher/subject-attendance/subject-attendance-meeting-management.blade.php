@@ -6,7 +6,7 @@
 
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
 
         <!---- alert success from ajax ---->
         <div id="alert-success-insert-data-announcement"></div>
@@ -59,7 +59,7 @@
             </div>
         </section>
 
-        <div class="my-10 sm:my-12 lg:my-15 mx-3 sm:mx-5 lg:mx-7.5">
+        <div class="mt-6 mb-10 mx-3 sm:mx-5 lg:mx-7.5">
             <main>
                 <section id="container" data-role="{{ $role }}" data-school-id="{{ $schoolId }}" data-school-name="{{ $schoolName }}" 
                     data-subject-teacher-id="{{ $subjectTeacherId }}" data-meeting-number="{{ $meetingNumber }}" data-semester="{{ $semester }}">
@@ -235,8 +235,7 @@
                                             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
                                                 <select id="assessmentTypeFilter"
-                                                    class="w-full bg-white shadow-sm rounded-xl h-12 border border-gray-300
-                                                    text-sm px-4 cursor-pointer outline-none">
+                                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                                     <option value="">
                                                         Semua Jenis Asesmen
@@ -448,12 +447,11 @@
 
                                 <!-- TYPE -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Jenis Pengumuman
                                     </label>
 
-                                    <select name="type" class="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white outline-none text-sm font-medium 
-                                        text-slate-700 cursor-pointer">
+                                    <select name="type" class="w-full h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white outline-none text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                         <option value="" class="hidden">Pilih jenis pengumuman</option>
                                         <option value="info">Info Biasa</option>

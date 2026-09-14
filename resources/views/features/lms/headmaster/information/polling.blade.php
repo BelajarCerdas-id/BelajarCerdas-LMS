@@ -32,7 +32,7 @@
                 <form action="{{ route('kepsek.polling.index') }}" method="GET" class="flex flex-1 flex-col sm:flex-row gap-3 w-full">
                     
                     {{-- Filter Pembuat --}}
-                    <select name="pembuat" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-4 py-2.5 focus:ring-[#0071BC] flex-1 appearance-none cursor-pointer">
+                    <select name="pembuat" class="h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none flex-1 cursor-pointer transition-all hover:border-gray-400">
                         <option value="">-- Semua Pembuat --</option>
                         <option value="Kepala Sekolah" {{ request('pembuat') == 'Kepala Sekolah' ? 'selected' : '' }}>Kepala Sekolah</option>
                         <option value="Wakil Kepala Sekolah" {{ request('pembuat') == 'Wakil Kepala Sekolah' ? 'selected' : '' }}>Wakil Kepala Sekolah</option>
@@ -40,7 +40,7 @@
                     </select>
 
                     {{-- Filter Target --}}
-                    <select name="target" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-4 py-2.5 focus:ring-[#0071BC] flex-1 appearance-none cursor-pointer">
+                    <select name="target" class="h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none flex-1 cursor-pointer transition-all hover:border-gray-400">
                         <option value="">-- Semua Target Audiens --</option>
                         <option value="Semua Warga Sekolah" {{ request('target') == 'Semua Warga Sekolah' ? 'selected' : '' }}>Semua Warga Sekolah</option>
                         <option value="Semua Guru" {{ request('target') == 'Semua Guru' ? 'selected' : '' }}>Semua Guru</option>
@@ -254,8 +254,8 @@
                 {{-- Target & Kelas --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2.5">Target Audiens</label>
-                        <select name="target" required class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-[#0071BC]/10 focus:border-[#0071BC] appearance-none cursor-pointer">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Target Audiens</label>
+                        <select name="target" required class="w-full h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                             <option value="Semua Warga Sekolah">Semua Warga Sekolah</option>
                             <option value="Semua Guru">Semua Guru</option>
                             <option value="Semua Siswa">Semua Siswa</option>
@@ -263,8 +263,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-2.5">Spesifik Kelas (Opsional)</label>
-                        <select name="class_id" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-[#0071BC]/10 focus:border-[#0071BC] appearance-none cursor-pointer">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Spesifik Kelas (Opsional)</label>
+                        <select name="class_id" class="w-full h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                             <option value="">Semua Kelas (Global)</option>
                             @foreach($daftarKelas as $kelas)
                                 <option value="{{ $kelas->id }}">{{ $kelas->class_name }}</option>

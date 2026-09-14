@@ -24,8 +24,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
             const containerDropdownTahunAjaran = document.getElementById('container-dropdown-school-year-cheating-history');
             containerDropdownTahunAjaran.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Tahun Ajaran</label>
-                    <select id="dropdown-filter-school-year-cheating-history" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm outline-none cursor-pointer">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tahun Ajaran</label>
+                    <select id="dropdown-filter-school-year-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Pilih Tahun Ajaran</option>
                         ${response.tahunAjaran.map(item =>
                             `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`
@@ -38,8 +38,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
             const containerDropdownClass = document.getElementById('container-dropdown-rombel-class-cheating-history');
             containerDropdownClass.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Kelas</label>
-                    <select id="dropdown-filter-rombel-class-cheating-history" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm outline-none cursor-pointer">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Kelas</label>
+                    <select id="dropdown-filter-rombel-class-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Kelas</option>
                         ${response.className.map(item =>
                             `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`
@@ -52,8 +52,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
             const containerMapel = document.getElementById('container-dropdown-subject-teacher-cheating-history');
             containerMapel.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Mapel</label>
-                    <select id="dropdown-filter-mapel-cheating-history" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm outline-none cursor-pointer">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Mapel</label>
+                    <select id="dropdown-filter-mapel-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Mata Pelajaran</option>
                         ${response.subject.map(item =>
                             `<option value="${item.id}" ${subject_id == item.id ? 'selected' : ''}>${item.name}</option>`
@@ -66,8 +66,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
             const containerAssessmentType = document.getElementById('container-dropdown-assessment-type-cheating-history');
             containerAssessmentType.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Tipe Asesmen</label>
-                    <select id="dropdown-filter-assessment-type-cheating-history" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm outline-none cursor-pointer">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Asesmen</label>
+                    <select id="dropdown-filter-assessment-type-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Tipe Asesmen</option>
                         ${response.schoolAssessmentType.map(item =>
                             `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`

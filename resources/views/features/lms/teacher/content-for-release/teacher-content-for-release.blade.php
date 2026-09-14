@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Content For Release'])
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-content-for-release"></div>
 
@@ -27,13 +27,12 @@
                                         <!-- Tahun Ajaran -->
                                         <div id="container-dropdown-tahun-ajaran">
                                             <div class="flex flex-col w-full">
-                                                <label for="dropdown-tahun-ajaran" class="text-sm font-medium text-gray-600 mb-2">
+                                                <label for="dropdown-tahun-ajaran" class="block text-sm font-medium text-gray-700 mb-1.5">
                                                     Pilih Tahun Ajaran
-                                                    <sup class="text-red-500">&#42;</sup>
+                                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
-                                                <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-12 bg-white border border-gray-300 
-                                                    rounded-xl px-4 text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                                     <option value="" class="hidden">
                                                         Pilih Tahun Ajaran
                                                     </option>
@@ -46,13 +45,12 @@
                                         <!-- Semester -->
                                         <div id="container-dropdown-semester">
                                             <div class="flex flex-col w-full">
-                                                <label for="dropdown-semester" class="text-sm font-medium text-gray-600 mb-2">
+                                                <label for="dropdown-semester" class="block text-sm font-medium text-gray-700 mb-1.5">
                                                     Pilih Semester
-                                                    <sup class="text-red-500">&#42;</sup>
+                                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
-                                                <select id="dropdown-semester" name="semester" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-4 
-                                                    text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                <select id="dropdown-semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                                     <option value="" class="hidden">
                                                         Pilih Semester
                                                     </option>
@@ -73,13 +71,12 @@
                                         <!-- Filter Kelas -->
                                         <div id="container-dropdown-class">
                                             <div class="flex flex-col w-full">
-                                                <label for="dropdown-filter-class" class="text-sm font-medium text-gray-600 mb-2">
+                                                <label for="dropdown-filter-class" class="block text-sm font-medium text-gray-700 mb-1.5">
                                                     Filter Kelas
-                                                    <sup class="text-red-500">&#42;</sup>
+                                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
-                                                <select id="dropdown-filter-class" name="class" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-4 
-                                                    text-sm outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                                <select id="dropdown-filter-class" name="class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                                     <option value="" class="hidden">
                                                         Filter Kelas
                                                     </option>
@@ -91,24 +88,17 @@
                                         
                                         <div id="container-dropdown-rombel">
                                             <div class="flex flex-col">
-                                                <label class="text-sm font-medium text-gray-600 mb-2">
+                                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                     Rombel Kelas
-                                                    <sup class="text-red-500">&#42;</sup>
+                                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
                                                 <div class="relative">
-                                                    <select id="dropdown-school-class" name="school_class_id" class="w-full h-12 bg-white border border-gray-300 rounded-xl 
-                                                        px-4 pr-10 text-sm outline-none cursor-pointer appearance-none transition focus:border-[#0071BC] focus:ring-2 
-                                                        focus:ring-blue-100">
-
+                                                    <select id="dropdown-school-class" name="school_class_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                                         <option value="" class="hidden">
                                                             Pilih Rombel Kelas
                                                         </option>
                                                     </select>
-
-                                                    <span class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
-                                                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                                                    </span>
                                                 </div>
 
                                                 <span id="error-school_class_id" class="text-red-500 text-xs font-semibold mt-1.5"></span>
@@ -275,12 +265,11 @@
 
                                         <!-- kurikulum -->
                                         <div class="flex flex-col">
-                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                 Kurikulum
                                             </label>
 
-                                            <select name="kurikulum_id" id="id_kurikulum" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm 
-                                                outline-none cursor-pointer transition focus:border-[#0071BC] focus:ring-2 focus:ring-blue-100">
+                                            <select name="kurikulum_id" id="id_kurikulum" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                                 <option value="" class="hidden">
                                                     Pilih Kurikulum
                                                 </option>
@@ -295,12 +284,11 @@
 
                                         <!-- service -->
                                         <div class="flex flex-col">
-                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                 Service
                                             </label>
 
-                                            <select name="service_id" id="id_service" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm 
-                                                outline-none transition opacity-50 cursor-not-allowed" disabled>
+                                            <select name="service_id" id="id_service" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                                 <option value="" class="hidden">
                                                     Pilih Service
                                                 </option>
@@ -309,12 +297,11 @@
 
                                         <!-- kelas -->
                                         <div class="flex flex-col">
-                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                 Kelas
                                             </label>
 
-                                            <select name="kelas_id" id="id_kelas" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
-                                                transition opacity-50 cursor-not-allowed" disabled>
+                                            <select name="kelas_id" id="id_kelas" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                                 <option value="" class="hidden">
                                                     Pilih Kelas
                                                 </option>
@@ -323,12 +310,11 @@
 
                                         <!-- mapel -->
                                         <div class="flex flex-col">
-                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                 Mata Pelajaran
                                             </label>
 
-                                            <select name="mapel_id" id="id_mapel" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
-                                                transition opacity-50 cursor-not-allowed" disabled>
+                                            <select name="mapel_id" id="id_mapel" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                                 <option value="" class="hidden">
                                                     Pilih Mata Pelajaran
                                                 </option>
@@ -337,12 +323,11 @@
 
                                         {{-- Bab --}}
                                         <div class="flex flex-col">
-                                            <label class="text-sm font-medium text-gray-600 mb-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                 Bab
                                             </label>
 
-                                            <select name="bab_id" id="id_bab" class="w-full h-12 bg-white border border-gray-300 rounded-xl px-3 text-sm outline-none 
-                                                transition opacity-50 cursor-not-allowed" disabled>
+                                            <select name="bab_id" id="id_bab" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                                 <option value="" class="hidden">
                                                     Pilih Bab
                                                 </option>

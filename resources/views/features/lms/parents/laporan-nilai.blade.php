@@ -1,6 +1,6 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Laporan Nilai Anak'])
 
-<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] p-6 md:p-10 bg-slate-50 min-h-screen">
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] p-4 sm:p-6 md:p-8 xl:p-10 bg-white min-h-screen">
 
     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
 

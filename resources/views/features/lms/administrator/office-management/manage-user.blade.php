@@ -3,15 +3,15 @@
 ])
 
 @if (Auth::user()->role === 'Administrator')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!-- ALERT SUCCESS -->
             <div id="alert-success-insert-data-manage-user"></div>
             <div id="alert-success-edit-data-manage-user"></div>
 
             <main>
-                <section id="container" data-role="{{ $role }}" class="bg-white shadow-lg p-6 rounded-2xl border border-gray-300">
+                <section id="container" data-role="{{ $role }}" class="bg-white shadow-sm p-4 sm:p-6 rounded-2xl border border-gray-200">
 
                     <!-- Header -->
                     <div class="flex flex-col gap-5">

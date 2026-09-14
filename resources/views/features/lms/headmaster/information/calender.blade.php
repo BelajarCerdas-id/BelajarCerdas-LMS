@@ -119,7 +119,7 @@
             </div>
             <div>
                 <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Kategori Label</label>
-                <select id="event-type" required class="w-full border-2 border-slate-200 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#0071BC] outline-none transition-all appearance-none cursor-pointer">
+                <select id="event-type" required class="w-full border-2 border-slate-200 bg-slate-50 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-[#0071BC] outline-none transition-all cursor-pointer">
                     <option value="exam">Hari Ujian (Hijau)</option>
                     <option value="school_event" selected>Kegiatan Sekolah (Kuning)</option>
                     <option value="wfa">Kegiatan WFA (Biru)</option>

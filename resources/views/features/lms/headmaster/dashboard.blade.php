@@ -251,12 +251,11 @@
                 {{-- JUDUL --}}
                 <div>
 
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                         Judul Pengumuman
                     </label>
 
-                    <input id="title" type="text" name="title" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] 
-                    outline-none" placeholder="Contoh: Rapat Evaluasi Mingguan">
+                    <input id="title" type="text" name="title" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Contoh: Rapat Evaluasi Mingguan">
 
                     <span id="error-title" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
@@ -264,11 +263,11 @@
                 {{-- JENIS --}}
                 <div>
 
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                         Jenis Pengumuman
                     </label>
 
-                    <select id="type" name="type" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] outline-none">
+                    <select id="type" name="type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Jenis Pengumuman</option>
                         <option value="info">Info Biasa</option>
                         <option value="penting">Penting / Urgent</option>
@@ -279,17 +278,16 @@
                 {{-- CONTENT --}}
                 <div>
 
-                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                         Isi Pengumuman
                     </label>
 
-                    <textarea id="content" name="content" rows="5" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#0071BC] 
-                    outline-none custom-scrollbar" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
+                    <textarea id="content" name="content" rows="4" class="w-full bg-white rounded-xl border border-gray-300 p-3.5 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all custom-scrollbar" placeholder="Tuliskan isi pengumuman di sini..."></textarea>
 
                     <span id="error-content" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
 
-                <button type="submit" class="cursor-pointer btn-submit-pengumuman w-full py-3 rounded-xl bg-[#0071BC] hover:bg-blue-700 transition text-white font-bold">
+                <button type="submit" class="cursor-pointer btn-submit-pengumuman w-full h-11 rounded-xl bg-[#0071BC] hover:bg-blue-600 transition text-white font-semibold text-sm shadow-sm hover:shadow">
                     Kirim Pengumuman
                 </button>
 

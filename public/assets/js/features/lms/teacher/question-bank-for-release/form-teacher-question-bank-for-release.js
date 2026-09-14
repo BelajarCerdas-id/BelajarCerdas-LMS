@@ -528,7 +528,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
 
     if (containerDropdownTahunAjaran && Array.isArray(response.tahunAjaran)) {
         containerDropdownTahunAjaran.innerHTML = `
-            <select id="dropdown-filter-tahun-ajaran" class="w-full bg-white rounded-xl h-11 border border-gray-200 text-xs text-gray-700 cursor-pointer outline-none px-3">
+            <select id="dropdown-filter-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                 <option value="">Pilih Tahun Ajaran</option>
                 ${response.tahunAjaran.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item)}" ${String(searchYear ?? response.selectedYear ?? '') === String(item) ? 'selected' : ''}>
@@ -543,7 +543,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
 
     if (containerDropdownClass && Array.isArray(response.className)) {
         containerDropdownClass.innerHTML = `
-            <select id="dropdown-filter-class" class="w-full bg-white rounded-xl h-11 border border-gray-200 text-xs text-gray-700 cursor-pointer outline-none px-3">
+            <select id="dropdown-filter-class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                 <option value="">Pilih Kelas</option>
                 ${response.className.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item)}" ${String(searchClass ?? response.selectedClass ?? '') === String(item) ? 'selected' : ''}>
@@ -558,7 +558,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
 
     if (containerAssessmentType && Array.isArray(response.schoolAssessmentType)) {
         containerAssessmentType.innerHTML = `
-            <select id="dropdown-assessment-type" class="w-full bg-white rounded-xl h-11 border border-gray-200 text-xs text-gray-700 cursor-pointer outline-none px-3">
+            <select id="dropdown-assessment-type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                 <option value="">Pilih Jenis Asesmen</option>
                 ${response.schoolAssessmentType.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item.id)}" ${String(searchAssessmentType ?? '') === String(item.id) ? 'selected' : ''}>
@@ -573,7 +573,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
 
     if (containerDropdownSubject && Array.isArray(response.subject)) {
         containerDropdownSubject.innerHTML = `
-            <select id="dropdown-filter-mapel" class="w-full bg-white rounded-xl h-11 border border-gray-200 text-xs text-gray-700 cursor-pointer outline-none px-3">
+            <select id="dropdown-filter-mapel" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                 <option value="">Pilih Mata Pelajaran</option>
                 ${response.subject.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item.id)}" ${String(searchSubject ?? '') === String(item.id) ? 'selected' : ''}>

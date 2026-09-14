@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role === 'Administrator' || Auth::user()->role === 'Admin Sekolah')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-insert-data-assessment-weight"></div>
             <div id="alert-success-edit-data-assessment-weight"></div>
@@ -17,17 +17,17 @@
                     <div id="school-detail-card" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden"></div>
                 </section>
 
-                <section class="bg-white shadow-lg p-6 rounded-lg border-gray-200 border">
+                <section class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 overflow-hidden">
                     <!---- Form input assessment weight ---->
                     <form id="create-assessment-weight-form" autocomplete="off">
-                        <div class="py-6 space-y-8">
+                        <div class="py-4 space-y-8">
 
                             <!-- HEADER -->
-                            <div class="space-y-2">
-                                <h2 class="text-lg font-bold text-gray-800">
+                            <div class="space-y-1">
+                                <h2 class="text-base sm:text-lg font-bold text-gray-800">
                                     Atur Bobot Asesmen
                                 </h2>
-                                <p class="text-sm text-gray-500">
+                                <p class="text-xs sm:text-sm text-gray-500">
                                     Tentukan bobot nilai untuk setiap jenis asesmen. Total bobot seluruh asesmen harus mencapai 100%.
                                 </p>
                             </div>
@@ -36,12 +36,12 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                                 <div>
-                                    <label class="text-sm font-semibold text-gray-700">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Tipe Asesmen
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="assessment_type_id"
-                                        class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs shadow-sm outline-none cursor-pointer">
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                         <option value="" class="hidden">Pilih Tipe Asesmen</option>
                                         @foreach ($assessmentType as $item)
                                             <option value="{{ $item->id }}">{{ $item->name }}</option>
@@ -51,12 +51,12 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-semibold text-gray-700">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Tahun Ajaran
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="school_year"
-                                        class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs shadow-sm outline-none cursor-pointer">
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                         <option value="" class="hidden">Pilih Tahun Ajaran</option>
                                         @foreach ($tahunAjaran as $item)
                                             <option value="{{ $item }}">{{ $item }}</option>
@@ -66,12 +66,11 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-semibold text-gray-700">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Bobot Asesmen (%)
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
-                                    <input type="number" name="weight" min="0" max="100" class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs 
-                                        shadow-sm outline-none" placeholder="Masukkan bobot nilai asesmen">
+                                    <input type="number" name="weight" min="0" max="100" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Masukkan bobot nilai asesmen">
                                     <span id="error-weight" class="text-red-500 text-xs mt-1 font-bold"></span>
                                     <p class="text-xs text-gray-400 relative pt-2">Bobot antara 1–100</p>
                                 </div>
@@ -81,7 +80,7 @@
                             <!-- SUBMIT -->
                             <div class="flex justify-end pt-4">
                                 <button type="button" id="submit-button-create-assessment-weight"
-                                    class="bg-[#0071BC] text-white font-semibold text-sm px-8 py-3 rounded-full shadow-md transition cursor-pointer disabled:cursor-default">
+                                    class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold text-sm px-8 h-11 rounded-xl shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                     Simpan Bobot Asesmen
                                 </button>
                             </div>

@@ -1,7 +1,69 @@
+/* ==========================================================================
+   GLOBAL PURE WHITE MODE ENFORCEMENT (ALL BROWSERS & SYSTEM PREFERENCES)
+   ========================================================================== */
+:root,
+html,
 body {
+    color-scheme: light !important;
     font-family: "Poppins", sans-serif;
-    color: black;
-    background-color: white;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root,
+    html,
+    body {
+        color-scheme: light !important;
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+
+    body,
+    div,
+    main,
+    section,
+    table,
+    select,
+    input,
+    textarea {
+        color-scheme: light !important;
+    }
+}
+
+/* ==========================================================================
+   GLOBAL SELECT / DROPDOWN CHEVRON STYLING
+   Replaces cramped native OS dropdown arrows (V) with a modern Material SVG chevron
+   with comfortable breathing room and proper right padding.
+   ========================================================================== */
+select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron),
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron) {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-position: right 1rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.15rem 1.15rem !important;
+    padding-right: 2.75rem !important;
+}
+
+select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron):focus,
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230071BC' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+}
+
+select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron):disabled,
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):disabled {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+    cursor: not-allowed;
+}
+
+select.no-custom-chevron,
+.has-custom-chevron select,
+.no-custom-chevron select {
+    background-image: none !important;
 }
 
 /* dropdown sidebar administrator */
@@ -63,17 +125,27 @@ body {
     max-height: 400px;
 }
 
-/* rotate untuk button profile navbar */
+/* rotate chevron with smooth Material motion */
+.toggle-sub-menu-sidebar i,
+.toggle-sub-menu-sidebar .fa-chevron-down,
+.toggle-menu-sidebar i.fa-chevron-down,
+#rotate-icon,
+#rotate-icon-2 {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .list-item-button-profile.show #rotate-icon {
     transform: rotate(-180deg);
 }
 
-.list-item.show #rotate-icon {
+.list-item.show #rotate-icon,
+.list-item.show > .dropdown-menu > .toggle-menu-sidebar i.fa-chevron-down {
     transform: rotate(-180deg);
 }
 
 /* rotate untuk dropdown sub menu */
-.toggle-sub-menu-sidebar.show #rotate-icon-2 {
+.toggle-sub-menu-sidebar.show #rotate-icon-2,
+.toggle-sub-menu-sidebar.show i.fa-chevron-down {
     transform: rotate(-180deg);
 }
 

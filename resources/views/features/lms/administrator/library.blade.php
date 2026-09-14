@@ -7,8 +7,8 @@
 
     @if (Auth::user()->role === 'Administrator')
 
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)]">
-    <div class="my-6 mx-4">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+    <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
         
 
     <main>
@@ -670,8 +670,8 @@
                 
                 <!-- KELAS -->
                 <div id="wrapper_kelas">
-                    <label class="text-sm font-semibold mb-1 block"> Kelas <span class="text-red-500">*</span> </label>
-                    <select name="kelas_id" id="kelas_add" class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Kelas <span class="text-red-500">*</span> </label>
+                    <select name="kelas_id" id="kelas_add" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Kelas</option>
                         @foreach($kelas as $k)
                             <option value="{{ $k->id }}">{{ $k->kelas }}</option>
@@ -681,8 +681,8 @@
                 
                 <!-- MAPEL -->
                 <div>
-                    <label class="text-sm font-semibold mb-1 block"> Mata Pelajaran <span class="text-red-500">*</span> </label>
-                    <select id="mapel_add" name="mapel_id" required class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Mata Pelajaran <span class="text-red-500">*</span> </label>
+                    <select id="mapel_add" name="mapel_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Mapel</option>
                         @foreach($mapels as $mapel)
                             <option value="{{ $mapel->id }}">{{ $mapel->mata_pelajaran }}</option>
@@ -692,8 +692,8 @@
                 
                 <!-- BAB -->
                 <div id="wrapper_bab">
-                    <label class="text-sm font-semibold mb-1 block"> Bab Materi <span class="text-red-500">*</span> </label>
-                    <select id="bab_add" name="bab_id" required class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Bab Materi <span class="text-red-500">*</span> </label>
+                    <select id="bab_add" name="bab_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Bab</option>
                         @foreach($babs as $bab)
                             <option value="{{ $bab->id }}" data-mapel="{{ $bab->mapel_id }}">
@@ -708,8 +708,8 @@
                 
                 <!-- TOPIK -->
                 <div class="md:col-span-2 hidden" id="topik_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Topik Materi </label>
-                    <select id="topik_add" name="topik_materi_id" class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Topik Materi </label>
+                    <select id="topik_add" name="topik_materi_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">pilih topik</option>
                         @foreach($topiks as $topik)
                             <option value="{{ $topik->id }}" data-mapel="{{ $topik->mapel_id }}" data-deskripsi="{{ $topik->deskripsi }}">
@@ -805,8 +805,8 @@
             <h3 class="font-bold text-xl mb-5"> ➕ Tambah Topik Materi </h3>
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="font-semibold block mb-1"> Mata Pelajaran </label>
-                    <select id="topik_mapel" name="mapel_id" required class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Mata Pelajaran </label>
+                    <select id="topik_mapel" name="mapel_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Mapel</option>
                         @foreach($mapels as $mapel)
                             <option value="{{ $mapel->id }}"> {{ $mapel->mata_pelajaran }} </option>
@@ -845,24 +845,24 @@
             
             <div class="grid md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
-                    <label class="text-sm font-semibold mb-1 block">Judul *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul *</label>
                     <input id="edit_title" name="title" required class="input input-bordered w-full">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="text-sm font-semibold mb-1 block">Deskripsi *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi *</label>
                     <textarea id="edit_description" name="description" rows="4" class="textarea textarea-bordered w-full"></textarea>
                 </div>
                 <div>
-                    <label class="text-sm font-semibold mb-1 block">Kelas *</label>
-                    <select id="edit_kelas" name="kelas_id" required class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Kelas *</label>
+                    <select id="edit_kelas" name="kelas_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         @foreach($kelas as $k)
                             <option value="{{ $k->id }}">{{ $k->kelas }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm font-semibold mb-1 block">Mapel *</label>
-                    <select id="edit_mapel" name="mapel_id" required class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Mapel *</label>
+                    <select id="edit_mapel" name="mapel_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Mata Pelajaran</option>
                         @foreach($mapels as $mapel)
                             <option value="{{ $mapel->id }}">{{ $mapel->mata_pelajaran }}</option>
@@ -871,8 +871,8 @@
                     
                 </div>
                 <div>
-                    <label class="text-sm font-semibold mb-1 block">Bab *</label>
-                    <select id="edit_bab" name="bab_id" class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Bab *</label>
+                    <select id="edit_bab" name="bab_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         @foreach($babs as $bab)
                             <option value="{{ $bab->id }}" data-mapel="{{ $bab->mapel_id }}">
                                 {{ $bab->nama_bab }}
@@ -881,17 +881,17 @@
                     </select>
                 </div>
                 <div id="file_wrapper_edit">
-                    <label class="text-sm font-semibold mb-1 block">File Baru</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">File Baru</label>
                     <input id="file_pdf_edit" type="file" name="file" class="file-input file-input-bordered w-full">
                 </div>
                 <div id="video_wrapper_edit" class="hidden">
-                    <label class="text-sm font-semibold mb-1 block">Link Video</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Link Video</label>
                     <input id="video_url_edit" type="text" name="video_url" class="input input-bordered w-full">
                 </div>
                 <!-- TOPIK -->
                 <div class="md:col-span-2" id="edit_topik_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Topik Materi </label>
-                    <select id="edit_topik_add" name="topik_materi_id" class="select select-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Topik Materi </label>
+                    <select id="edit_topik_add" name="topik_materi_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         @foreach($topiks as $t)
                             <option value="{{ $t->id }}" data-deskripsi="{{ $t->deskripsi }}" data-kelas="{{ $t->kelas_id }}" data-mapel="{{ $t->mapel_id }}">
                                 {{ $t->nama_topik }}

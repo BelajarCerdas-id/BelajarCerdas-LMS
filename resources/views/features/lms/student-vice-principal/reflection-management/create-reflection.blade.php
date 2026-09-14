@@ -80,24 +80,18 @@
                                 <!-- TAHUN AJARAN -->
                                 <div id="container-dropdown-tahun-ajaran" class="w-full sm:w-72">
 
-                                    <label class="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Tahun Ajaran
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
 
                                     <div class="relative">
 
-                                        <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="appearance-none w-full rounded-2xl border border-gray-300 bg-white px-5 
-                                            py-4 pr-12 text-sm font-bold text-slate-700 outline-none focus:border-[#2563EB] focus:ring-4 focus:ring-blue-100 transition-all
-                                            cursor-pointer">
+                                        <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 pr-10 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all cursor-pointer">
                                             <option value="" class="hidden">Pilih Tahun Ajaran</option>
                                             <!-- show data in ajax -->
                                         </select>
                                         <span id="error-tahun_ajaran" class="text-red-500 text-xs mt-1 font-bold"></span>
-
-                                        <div class="absolute top-1/2 right-5 -translate-y-1/2 text-slate-400">
-                                            <i class="fas fa-chevron-down text-sm"></i>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

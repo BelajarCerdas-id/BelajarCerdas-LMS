@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-edit-assessment"></div>
 
@@ -27,11 +27,11 @@
             
                         <!-- Semester -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                 Semester
-                                <sup class="text-red-500">&#42;</sup>
+                                <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                             </label>
-                            <select id="edit-semester" name="semester" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm cursor-pointer outline-none">
+                            <select id="edit-semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                 <option value="" hidden>Pilih Semester</option>
                                 <option value="1">Semester 1</option>
                                 <option value="2">Semester 2</option>
@@ -41,12 +41,12 @@
             
                         <!-- Title -->
                         <div>
-                            <label class="block text-sm font-medium">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                 Assessment Title
-                                <sup class="text-red-500">&#42;</sup>
+                                <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                             </label>
                             <input type="text" id="edit-assessment-title" name="title" value="" placeholder="Masukkan Judul Asesmen"
-                                class="mt-2 w-full border border-gray-300 rounded-lg px-4 h-12 outline-none text-sm">
+                                class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20">
                             <span id="error-title" class="text-red-500 text-xs font-semibold"></span>
                         </div>
 
