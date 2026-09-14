@@ -69,7 +69,9 @@ class TeacherQuestionBankReleaseController extends Controller
             $query->whereNot('code', 'project');
         })->where('user_id', $user->id)->where('school_partner_id', $schoolId)->orderByDesc('created_at')->get();
 
-        $tahunAjaran = $allSchoolAssessments->pluck('SchoolClass.tahun_ajaran')->filter()->unique()->sortDesc()->values();
+        $tahunAjaran = $teacherMapels->toBase()->pluck('SchoolClass.tahun_ajaran')
+            ->concat($allSchoolAssessments->toBase()->pluck('SchoolClass.tahun_ajaran'))
+            ->filter()->unique()->sortDesc()->values();
 
         $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
 
@@ -78,16 +80,15 @@ class TeacherQuestionBankReleaseController extends Controller
             return $schoolClass && (!$searchYear || $schoolClass->tahun_ajaran === $searchYear);
         })->values();
 
-        $assessmentClassLevels = $allSchoolAssessments->filter(function ($assessment) use ($searchYear) {
+        $assessmentClassLevels = $allSchoolAssessments->toBase()->filter(function ($assessment) use ($searchYear) {
             return optional($assessment->SchoolClass)->tahun_ajaran === $searchYear;
         })->map(function ($assessment) {
             return (int) $this->extractClassLevel(
                 optional($assessment->SchoolClass)->class_name
             );
-        })->filter()
-        ->unique();
+        })->filter()->unique();
 
-        $teacherClassLevels = $teacherMapels->filter(function ($teacherMapel) use ($searchYear) {
+        $teacherClassLevels = $teacherMapels->toBase()->filter(function ($teacherMapel) use ($searchYear) {
             $schoolClass = $teacherMapel->SchoolClass;
             return $schoolClass && (!$searchYear || $schoolClass->tahun_ajaran === $searchYear);
         })->map(function ($teacherMapel) {
@@ -96,7 +97,7 @@ class TeacherQuestionBankReleaseController extends Controller
             );
         })->filter()->unique();
 
-        $classLevels = $assessmentClassLevels->merge($teacherClassLevels)->unique()->sort()->values();
+        $classLevels = $assessmentClassLevels->concat($teacherClassLevels)->unique()->sort()->values();
 
         $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
@@ -175,7 +176,7 @@ class TeacherQuestionBankReleaseController extends Controller
             }
         }
 
-        $subjects = $teacherClasses->filter(function ($teacherMapel) use ($selectedClass) {
+        $subjects = $teacherClasses->toBase()->filter(function ($teacherMapel) use ($selectedClass) {
             $schoolClass = $teacherMapel->SchoolClass;
 
             if (!$schoolClass) {
@@ -190,14 +191,14 @@ class TeacherQuestionBankReleaseController extends Controller
             ];
         })->values();
 
-        $assessmentSubjects = $schoolAssessment->filter(fn($item) => !is_null($item->mapel_id))->unique('mapel_id')->map(function ($item) {
+        $assessmentSubjects = $schoolAssessment->toBase()->filter(fn($item) => !is_null($item->mapel_id))->unique('mapel_id')->map(function ($item) {
             return [
                 'id' => $item->mapel_id,
                 'name' => optional($item->Mapel)->mata_pelajaran ?? '-',
             ];
         })->values();
 
-        $subjects = $subjects->merge($assessmentSubjects)->unique('id')->values();
+        $subjects = $subjects->concat($assessmentSubjects)->unique('id')->values();
 
         $schoolAssessmentType = SchoolAssessmentType::where('school_partner_id', $schoolId)->get();
 
@@ -254,19 +255,19 @@ class TeacherQuestionBankReleaseController extends Controller
         } elseif ($selectedAssessmentMapelId) {
             $mapelIds = collect([(int) $selectedAssessmentMapelId]);
         } else {
-            $teacherMapelIds = $teacherMapels->filter(function ($teacherMapel) use ($searchYear) {
+            $teacherMapelIds = $teacherMapels->toBase()->filter(function ($teacherMapel) use ($searchYear) {
                 $schoolClass = $teacherMapel->SchoolClass;
 
                 return $schoolClass && (!$searchYear || $schoolClass->tahun_ajaran === $searchYear);
             })->pluck('mapel_id')->filter()->map(fn($id) => (int) $id)->unique()->values();
 
-            $assessmentMapelIds = $allSchoolAssessments->filter(function ($assessment) use ($searchYear) {
+            $assessmentMapelIds = $allSchoolAssessments->toBase()->filter(function ($assessment) use ($searchYear) {
                 $schoolClass = $assessment->SchoolClass;
 
                 return $schoolClass && (!$searchYear || $schoolClass->tahun_ajaran === $searchYear);
             })->pluck('mapel_id')->filter()->map(fn($id) => (int) $id)->unique()->values();
 
-            $mapelIds = $teacherMapelIds->merge($assessmentMapelIds)->unique()->values();
+            $mapelIds = $teacherMapelIds->concat($assessmentMapelIds)->unique()->values();
         }
 
         $questionQuery = LmsQuestionBank::with(['UserAccount', 'UserAccount.OfficeProfile', 'UserAccount.SchoolStaffProfile', 'Kurikulum', 'Kelas', 'Mapel', 'Bab', 
@@ -528,12 +529,12 @@ class TeacherQuestionBankReleaseController extends Controller
         $defaultLevel = $startLevelMap[$jenjang] ?? 1;
 
         $query = SchoolAssessmentQuestion::with(['SchoolAssessment', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolAssessmentType'
-        ])->whereHas('SchoolAssessment', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
+        ])->whereHas('SchoolAssessment', function ($query) use ($user, $schoolId) {
+            $query->where('user_id', $user->id)->where('school_partner_id', $schoolId);
         })->orderBy('created_at', 'desc')->get();
 
         // TAHUN AJARAN
-        $tahunAjaran = $query->pluck('SchoolAssessment.SchoolClass.tahun_ajaran')->unique()->sortDesc()->values();
+        $tahunAjaran = $query->pluck('SchoolAssessment.SchoolClass.tahun_ajaran')->filter()->unique()->sortDesc()->values();
 
         $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
 
@@ -543,22 +544,22 @@ class TeacherQuestionBankReleaseController extends Controller
         })->values();
         
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolAssessment.SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolAssessment.SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->filter()->unique()->sort()->values();
 
         $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolAssessment->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolAssessment?->SchoolClass?->class_name) === (int)$selectedClass)->values();
 
         // Filter berdasarkan level kelas
         if ($selectedClass) {
             $query = $query->filter(function ($item) use ($selectedClass) {
 
-                if (!$item || !$item->SchoolAssessment->SchoolClass->class_name) {
+                if (!$item?->SchoolAssessment?->SchoolClass?->class_name) {
                     return false;
                 }
 
-                return $this->extractClassLevel($item->SchoolAssessment->SchoolClass->class_name) == $selectedClass;
+                return (int)$this->extractClassLevel($item->SchoolAssessment->SchoolClass->class_name) === (int)$selectedClass;
             });
         }
 
@@ -567,7 +568,7 @@ class TeacherQuestionBankReleaseController extends Controller
         // FILTER SEARCH ASSESSMENT TYPE
         if ($request->filled('search_assessment_type')) {
             $query = $query->filter(function ($item) use ($request) {
-                return $item->SchoolAssessment->SchoolAssessmentType->id == $request->search_assessment_type;
+                return (int)optional($item->SchoolAssessment?->SchoolAssessmentType)->id === (int)$request->search_assessment_type;
             })->values();
         }
 
