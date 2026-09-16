@@ -108,12 +108,12 @@
                 <section class="mt-6 px-6">
                     <span class="text-lg font-bold opacity-70">List Content</span>
 
-                    <div class="flex items-center gap-6 mt-6">
-                        <div id="container-dropdown-tahun-ajaran">
+                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 mt-6">
+                        <div id="container-dropdown-tahun-ajaran" class="w-full sm:w-64 min-w-[240px]">
                             <!-- show data in ajax -->
                         </div>
 
-                        <div id="container-dropdown-class">
+                        <div id="container-dropdown-class" class="w-full sm:w-64 min-w-[240px]">
                             <!-- show data in ajax -->
                         </div>
                     </div>

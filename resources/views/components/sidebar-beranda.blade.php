@@ -132,7 +132,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -460,13 +460,13 @@
     </div>
 
 @elseif(Auth::user()->role === 'Administrator')
-    <aside class="sidebar-beranda-administrator hidden md:block">
-        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}">
-            <div class="logo_details flex items-center justify-center">
-                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="" class="w-50 h-32">
+    <aside class="sidebar-beranda-administrator hidden md:flex flex-col h-screen overflow-hidden">
+        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="block shrink-0">
+            <div class="logo_details h-16 sm:h-18 flex items-center justify-center px-4 border-b border-white/10">
+                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
             </div>
         </a>
-        <ul class="max-h-screen overflow-y-auto pb-3">
+        <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
             <div class="dropdown-menu">
                 <li class="list-item pb-2">
                     <div class="content-menu flex items-center gap-3 px-3 py-2">
@@ -621,25 +621,25 @@
 
     <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-white shadow-lg flex items-center justify-between px-12.5">
-                <header class="text-[20px] font-bold opacity-70 flex items-center gap-3.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+                <header class="text-lg sm:text-[19px] font-bold text-white flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
                             @if (isset($backButton))
                                 <div class="flex items-center gap-2">
-                                    <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
-                                    <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                                    <button class="font-bold text-lg cursor-pointer text-white">{!! $backButton !!}</button>
+                                    <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                                 </div>
                             @endif
                         </a>
                     @else
                         @if (isset($backButton))
                             <div class="flex items-center gap-2">
-                                <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
-                                <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                                <button class="font-bold text-lg cursor-pointer text-white">{!! $backButton !!}</button>
+                                <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                             </div>
                         @else
-                            <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                            <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                         @endif
                     @endif
                 </header>
@@ -647,15 +647,15 @@
                 <div class="list-item-button-profile m-2 z-40">
                     <div class="dropdown-menu hidden lg:block">
                         <div class="toggle-menu-button-profile flex items-center gap-3.5 relative cursor-pointer">
-                            <div class="flex items-center justify-between gap-2.5 w-55 h-14 rounded-[20px] p-2.5 bg-[#005B94]">
+                            <div class="flex items-center justify-between gap-2.5 w-52 h-11 rounded-xl px-3 py-1.5 bg-[#005B94] hover:bg-[#004e80] border border-white/15 transition-colors shadow-xs">
                                 <div class="flex items-center gap-2">
-                                    <i class="fas fa-circle-user text-2xl text-white opacity-85"></i>
-                                    <div class="flex flex-col">
-                                        <span class="text-[12px] text-white font-semibold leading-6">{{ Str::limit(Auth::user()->OfficeProfile->nama_lengkap ?? '', 20) }}</span>
-                                        <span class="text-[11px] text-white font-semibold leading-6">{{ Str::limit(Auth::user()->role ?? '', 20) }}</span>
+                                    <i class="fas fa-circle-user text-xl text-white opacity-90"></i>
+                                    <div class="flex flex-col justify-center">
+                                        <span class="text-[12px] text-white font-semibold leading-tight">{{ Str::limit(Auth::user()->OfficeProfile->nama_lengkap ?? '', 20) }}</span>
+                                        <span class="text-[10px] text-blue-100 font-medium leading-tight mt-0.5">{{ Str::limit(Auth::user()->role ?? '', 20) }}</span>
                                     </div>
                                 </div>
-                                <i id="rotate-icon" class="fas fa-chevron-down text-white opacity-85 transition-all duration-400"></i>
+                                <i id="rotate-icon" class="fas fa-chevron-down text-white opacity-85 text-xs transition-all duration-400"></i>
                             </div>
                         </div>
                         <div
@@ -691,7 +691,7 @@
                 <div class="list-item-button-profile relative lg:hidden z-40">
                     <div class="dropdown-menu">
                         <div class="toggle-menu-button-profile cursor-pointer">
-                            <i class="fas fa-circle-user text-4xl text-[#005B94]"></i>
+                            <i class="fas fa-circle-user text-4xl text-[#0071BC]"></i>
                         </div>
                         <div
                             class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
@@ -955,14 +955,14 @@
         </div>
     </div>
 @elseif(Auth::user()->role === 'Finance')
-    <aside class="sidebar-beranda-administrator hidden md:block">
-        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}">
-            <div class="logo_details flex items-center justify-center">
-                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="" class="w-50 h-32">
+    <aside class="sidebar-beranda-administrator hidden md:flex flex-col h-screen overflow-hidden">
+        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="block shrink-0">
+            <div class="logo_details h-16 sm:h-18 flex items-center justify-center px-4 border-b border-white/10">
+                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
             </div>
         </a>
 
-        <ul class="max-h-screen overflow-y-auto pb-3">
+        <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
 
             <!-- BERANDA -->
             <li class="list-item pb-2">
@@ -1025,25 +1025,25 @@
 
     <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-white shadow-lg flex items-center justify-between px-12.5">
-                <header class="text-[20px] font-bold opacity-70 flex items-center gap-3.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+                <header class="text-lg sm:text-[19px] font-bold text-white flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
                             @if (isset($backButton))
                                 <div class="flex items-center gap-2">
-                                    <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
-                                    <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                                    <button class="font-bold text-lg cursor-pointer text-white">{!! $backButton !!}</button>
+                                    <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                                 </div>
                             @endif
                         </a>
                     @else
                         @if (isset($backButton))
                             <div class="flex items-center gap-2">
-                                <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
-                                <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                                <button class="font-bold text-lg cursor-pointer text-white">{!! $backButton !!}</button>
+                                <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                             </div>
                         @else
-                            <span class="font-bold text-xl cursor-pointer">{{ $headerSideNav ?? '' }}</span>
+                            <span class="font-bold text-lg cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
                         @endif
                     @endif
                 </header>
@@ -1051,15 +1051,15 @@
                 <div class="list-item-button-profile m-2 z-40">
                     <div class="dropdown-menu hidden lg:block">
                         <div class="toggle-menu-button-profile flex items-center gap-3.5 relative cursor-pointer">
-                            <div class="flex items-center justify-between gap-2.5 w-55 h-14 rounded-[20px] p-2.5 bg-[#005B94]">
+                            <div class="flex items-center justify-between gap-2.5 w-52 h-11 rounded-xl px-3 py-1.5 bg-[#005B94] hover:bg-[#004e80] border border-white/15 transition-colors shadow-xs">
                                 <div class="flex items-center gap-2">
-                                    <i class="fas fa-circle-user text-2xl text-white opacity-85"></i>
-                                    <div class="flex flex-col">
-                                        <span class="text-[12px] text-white font-semibold leading-6">{{ Str::limit(Auth::user()->OfficeProfile->nama_lengkap ?? '', 20) }}</span>
-                                        <span class="text-[11px] text-white font-semibold leading-6">{{ Str::limit(Auth::user()->role ?? '', 20) }}</span>
+                                    <i class="fas fa-circle-user text-xl text-white opacity-90"></i>
+                                    <div class="flex flex-col justify-center">
+                                        <span class="text-[12px] text-white font-semibold leading-tight">{{ Str::limit(Auth::user()->OfficeProfile->nama_lengkap ?? '', 20) }}</span>
+                                        <span class="text-[10px] text-blue-100 font-medium leading-tight mt-0.5">{{ Str::limit(Auth::user()->role ?? '', 20) }}</span>
                                     </div>
                                 </div>
-                                <i id="rotate-icon" class="fas fa-chevron-down text-white opacity-85 transition-all duration-400"></i>
+                                <i id="rotate-icon" class="fas fa-chevron-down text-white opacity-85 text-xs transition-all duration-400"></i>
                             </div>
                         </div>
                         <div
@@ -1095,7 +1095,7 @@
                 <div class="list-item-button-profile relative lg:hidden z-40">
                     <div class="dropdown-menu">
                         <div class="toggle-menu-button-profile cursor-pointer">
-                            <i class="fas fa-circle-user text-4xl text-[#005B94]"></i>
+                            <i class="fas fa-circle-user text-4xl text-[#0071BC]"></i>
                         </div>
                         <div
                             class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
@@ -1497,7 +1497,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -2001,7 +2001,7 @@
     <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
             <!-- Navbar for PC -->
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -2476,7 +2476,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -2881,7 +2881,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -3278,7 +3278,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -3732,7 +3732,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-24 bg-[#0071BC] shadow-lg flex items-center justify-between px-12.5">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -4066,6 +4066,7 @@
 <script src="{{ asset('assets/js/components/sidebar-student.js') }}"></script> 
 <script src="{{ asset('assets/js/components/navbar-button-profile.js') }}"></script>
 <script src="{{ asset('assets/js/components/form-submit-school-logo.js') }}"></script>
+<script src="{{ asset('assets/js/components/sidebar-resize.js') }}?v={{ file_exists(public_path('assets/js/components/sidebar-resize.js')) ? filemtime(public_path('assets/js/components/sidebar-resize.js')) : time() }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 

@@ -32,25 +32,27 @@ function formContentForRelease(search_materi = null, search_year = null, search_
 
             // render tahun ajaran
             if (dropdownTahunAjaran) {
-                const tahunAjaranOptions = (response.tahunAjaran || []).map(item => `
-                    <option value="${item}"
-                        ${response.selectedYear == item ? 'selected' : ''}>
-                        Tahun Ajaran ${item}
-                    </option>
-                `).join('');
-
-                dropdownTahunAjaran.insertAdjacentHTML('beforeend', tahunAjaranOptions);
+                dropdownTahunAjaran.innerHTML = `
+                    <option value="" class="hidden">Pilih Tahun Ajaran</option>
+                    ${(response.tahunAjaran || []).map(item => `
+                        <option value="${item}"
+                            ${response.selectedYear == item ? 'selected' : ''}>
+                            Tahun Ajaran ${item}
+                        </option>
+                    `).join('')}
+                `;
             }
 
-            // render rombel kelas
+            // render kelas
             if (dropdownClass) {
-                const classOptions = (response.className || []).map(item => `
-                    <option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>
-                        Kelas ${item}
-                    </option>
-                `).join('');
-
-                dropdownClass.insertAdjacentHTML('beforeend', classOptions);
+                dropdownClass.innerHTML = `
+                    <option value="" class="hidden">Pilih Kelas</option>
+                    ${(response.className || []).map(item => `
+                        <option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>
+                            Kelas ${item}
+                        </option>
+                    `).join('')}
+                `;
             }
 
             // Dropdown Rombel

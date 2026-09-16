@@ -4,6 +4,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../../public/assets/js/**/*.js';
 @plugin "daisyui" {
     themes: light --default;
 }
@@ -28,7 +29,14 @@ body {
 
 /* Global Select Dropdown Chevron Styling */
 select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron),
-select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron) {
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron),
+#dropdown-tahun-ajaran,
+#dropdown-semester,
+#dropdown-filter-class,
+#dropdown-school-class,
+#dropdown-filter-tahun-ajaran,
+#dropdown-filter-mapel,
+#semester {
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
     appearance: none !important;
@@ -40,7 +48,14 @@ select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron) {
 }
 
 select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron):focus,
-select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):focus {
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):focus,
+#dropdown-tahun-ajaran:focus,
+#dropdown-semester:focus,
+#dropdown-filter-class:focus,
+#dropdown-school-class:focus,
+#dropdown-filter-tahun-ajaran:focus,
+#dropdown-filter-mapel:focus,
+#semester:focus {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230071BC' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
 }
 

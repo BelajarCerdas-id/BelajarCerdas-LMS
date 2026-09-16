@@ -31,7 +31,7 @@
                                 Semester
                                 <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                             </label>
-                            <select id="edit-semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                            <select id="edit-semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                                 <option value="" hidden>Pilih Semester</option>
                                 <option value="1">Semester 1</option>
                                 <option value="2">Semester 2</option>

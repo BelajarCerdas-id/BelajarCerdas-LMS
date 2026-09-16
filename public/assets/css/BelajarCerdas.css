@@ -12,6 +12,7 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+
     :root,
     html,
     body {
@@ -66,16 +67,49 @@ select.no-custom-chevron,
     background-image: none !important;
 }
 
+/* Sidebar Width Variable (dynamically adjustable via sidebar-resize.js) */
+:root {
+    --sidebar-width: 250px;
+}
+
+body:has(.sidebar-beranda-student) {
+    --sidebar-width: 290px;
+}
+
 /* dropdown sidebar administrator */
 .sidebar-beranda-administrator {
-    width: 250px;
-    background-color: #005B94;
+    width: var(--sidebar-width);
+    background-color: #0071BC;
     color: white;
     height: 100vh;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     position: fixed;
     top: 0;
     left: 0;
+    z-index: 30;
+}
+
+/* Custom sleek sidebar scrollbar */
+.custom-sidebar-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 9999px;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.custom-sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 /* sembunyikan dropdown */
@@ -101,7 +135,7 @@ select.no-custom-chevron,
 .list-item.active .content-menu i,
 .toggle-sub-menu-sidebar.active,
 .link-href.active,
-.list-item.active > .dropdown-menu > .toggle-menu-sidebar i {
+.list-item.active>.dropdown-menu>.toggle-menu-sidebar i {
     color: orange;
 }
 
@@ -139,7 +173,7 @@ select.no-custom-chevron,
 }
 
 .list-item.show #rotate-icon,
-.list-item.show > .dropdown-menu > .toggle-menu-sidebar i.fa-chevron-down {
+.list-item.show>.dropdown-menu>.toggle-menu-sidebar i.fa-chevron-down {
     transform: rotate(-180deg);
 }
 
@@ -155,7 +189,7 @@ select.no-custom-chevron,
     padding-left: 15px;
 }
 
-#grid-list-soal ol{
+#grid-list-soal ol {
     list-style: decimal !important;
     padding-left: 24px;
 }
@@ -194,7 +228,7 @@ select.no-custom-chevron,
 
 /* sidebar beranda siswa  */
 .sidebar-beranda-student {
-    width: 290px;
+    width: var(--sidebar-width);
     background-color: #0071BC;
     color: white;
     height: 100vh;
@@ -222,7 +256,7 @@ select.no-custom-chevron,
 
 /* sidebar beranda school admin  */
 .sidebar-beranda-school-admin {
-    width: 250px;
+    width: var(--sidebar-width);
     background-color: #0071BC;
     color: white;
     height: 100vh;
@@ -252,27 +286,25 @@ select.no-custom-chevron,
     padding-left: 15px;
 }
 
-input[type="radio"]:checked + label.nomor-soal {
+input[type="radio"]:checked+label.nomor-soal {
     background-color: rgba(0, 0, 0, 0.09);
 }
 
-input[type="radio"]:checked + .checked-timeline {
+input[type="radio"]:checked+.checked-timeline {
     border-bottom: 2px solid #4189E0;
 }
 
-input[type="radio"]:checked + label.checked-option,
-input[type="checkbox"]:checked + label.checked-option {
+input[type="radio"]:checked+label.checked-option,
+input[type="checkbox"]:checked+label.checked-option {
     background-color: rgba(0, 0, 0, 0.09);
 }
 
 .progress-shimmer {
 
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,.45),
-        transparent
-    );
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, .45),
+            transparent);
 
     animation: shimmerMove 2s linear infinite;
 }
@@ -296,13 +328,11 @@ input[type="checkbox"]:checked + label.checked-option {
     inset: 0;
 
     background:
-        repeating-linear-gradient(
-            -45deg,
-            rgba(255,255,255,.18) 0px,
-            rgba(255,255,255,.18) 20px,
+        repeating-linear-gradient(-45deg,
+            rgba(255, 255, 255, .18) 0px,
+            rgba(255, 255, 255, .18) 20px,
             transparent 20px,
-            transparent 40px
-        );
+            transparent 40px);
 
     background-size: 60px 60px;
 
@@ -318,4 +348,259 @@ input[type="checkbox"]:checked + label.checked-option {
     to {
         background-position: 60px 0;
     }
-}   
+}
+
+/* ==========================================================================
+   SIDEBAR & CONTENT VIEWPORT EXACT ALIGNMENT (RESIZABLE)
+   Guarantees 0px overlap and 0px right gap on all screen resolutions and zooms
+   ========================================================================== */
+@media (min-width: 768px) {
+
+    .sidebar-beranda-administrator,
+    .sidebar-beranda-student,
+    .sidebar-beranda-school-admin {
+        width: var(--sidebar-width) !important;
+    }
+
+    .left-62\.5,
+    .md\:left-62\.5,
+    .left-72\.5,
+    .md\:left-72\.5 {
+        left: var(--sidebar-width) !important;
+    }
+
+    .w-\[calc\(100\%-250px\)\],
+    .md\:w-\[calc\(100\%-250px\)\],
+    .w-\[calc\(100\%-290px\)\],
+    .md\:w-\[calc\(100\%-290px\)\] {
+        width: calc(100% - var(--sidebar-width)) !important;
+    }
+}
+
+/* ==========================================================================
+   SIDEBAR RESIZE HANDLE & INTERACTIVE STATES
+   ========================================================================== */
+.sidebar-resizer {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 12px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 50;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease;
+}
+
+.sidebar-resizer::after {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 100%;
+    background: transparent;
+    transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sidebar-resizer:hover {
+    background-color: rgba(96, 165, 250, 0.12);
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.is-dragging::after {
+    background-color: #38bdf8;
+    width: 4px;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+}
+
+/* When actively dragging, disable text selection and transitions everywhere */
+body.sidebar-is-resizing,
+body.sidebar-is-resizing * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: col-resize !important;
+    transition: none !important;
+}
+
+body.sidebar-is-resizing iframe {
+    pointer-events: none !important;
+}
+
+/* ==========================================================================
+   LOGIN PAGE STYLING (ALL SCREENS & RESPONSIVE CONSTRAINTS)
+   ========================================================================== */
+.login-box {
+    width: 100% !important;
+    max-width: 420px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+.login-logo {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    object-fit: contain !important;
+    height: 3.75rem !important;
+    max-height: 64px !important;
+}
+
+.toggle-password-btn {
+    position: absolute !important;
+    right: 12px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    outline: none !important;
+    transform: none !important;
+    translate: none !important;
+    transition: color 0.15s ease-in-out !important;
+}
+
+.toggle-password-btn:hover {
+    color: #475569 !important;
+}
+
+@media screen and (max-width: 1400px) and (max-height: 850px),
+screen and (max-width: 1366px) and (min-width: 1024px),
+screen and (max-height: 768px) {
+    .login-box {
+        max-width: 380px !important;
+        padding: 1.5rem !important;
+    }
+
+    .login-logo {
+        height: 3.25rem !important;
+        max-height: 52px !important;
+        margin-bottom: 0.875rem !important;
+    }
+}
+
+@media screen and (max-height: 700px) {
+    .login-box {
+        max-width: 350px !important;
+        padding: 1.25rem !important;
+    }
+
+    .login-logo {
+        height: 2.75rem !important;
+        max-height: 44px !important;
+        margin-bottom: 0.625rem !important;
+    }
+}
+
+/* ==========================================================================
+   DROPDOWN FILTER SIZING & SPACING
+   ========================================================================== */
+#dropdown-filter-tahun-ajaran:not(#form-content-for-release *),
+#dropdown-filter-class:not(#form-content-for-release *) {
+    min-width: 220px !important;
+}
+
+#form-content-for-release select {
+    min-width: 0 !important;
+}
+
+select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron),
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron),
+#dropdown-tahun-ajaran,
+#dropdown-semester,
+#dropdown-filter-class,
+#dropdown-school-class,
+#dropdown-filter-tahun-ajaran,
+#dropdown-filter-mapel,
+#semester,
+#dropdown-assessment-management-filter-tahun-ajaran,
+#dropdown-assessment-management-filter-class,
+#dropdown-assessment-type {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-position: right 1rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.15rem 1.15rem !important;
+    padding-right: 2.75rem !important;
+}
+
+select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron):focus,
+select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):focus,
+#dropdown-tahun-ajaran:focus,
+#dropdown-semester:focus,
+#dropdown-filter-class:focus,
+#dropdown-school-class:focus,
+#dropdown-filter-tahun-ajaran:focus,
+#dropdown-filter-mapel:focus,
+#semester:focus,
+#dropdown-assessment-management-filter-tahun-ajaran:focus,
+#dropdown-assessment-management-filter-class:focus,
+#dropdown-assessment-type:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230071BC' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+}
+
+
+/* ==========================================================================
+   TEACHER QUESTION RELEASE - SELECT ALL PER BANK
+   ========================================================================== */
+[data-question-release-bank-select-all] {
+    display: inline-flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+[data-question-release-bank-select-all]:hover {
+    transform: translateY(-1px);
+}
+
+[data-question-release-bank-select-all]:active {
+    transform: translateY(0);
+}
+
+/* ==========================================================================
+   MEETING & RELEASE DATE PICKER - INLINE ROW
+   ========================================================================== */
+.meeting-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+}
+
+.meeting-row .meeting-date-container {
+    width: 320px !important;
+    max-width: 100% !important;
+    flex-shrink: 0 !important;
+}
+
+@media (max-width: 640px) {
+    .meeting-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+
+    .meeting-row .meeting-date-container {
+        width: 100% !important;
+    }
+}

@@ -72,13 +72,13 @@
                                         <div id="container-dropdown-class">
                                             <div class="flex flex-col w-full">
                                                 <label for="dropdown-filter-class" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                                    Filter Kelas
+                                                    Pilih Kelas
                                                     <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
                                                 <select id="dropdown-filter-class" name="class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                                     <option value="" class="hidden">
-                                                        Filter Kelas
+                                                        Pilih Kelas
                                                     </option>
                                                 </select>
 
@@ -86,20 +86,19 @@
                                             </div>
                                         </div>
                                         
+                                        <!-- Rombel Kelas -->
                                         <div id="container-dropdown-rombel">
-                                            <div class="flex flex-col">
-                                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                                    Rombel Kelas
+                                            <div class="flex flex-col w-full">
+                                                <label for="dropdown-school-class" class="block text-sm font-medium text-gray-700 mb-1.5">
+                                                    Pilih Rombel Kelas
                                                     <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                 </label>
 
-                                                <div class="relative">
-                                                    <select id="dropdown-school-class" name="school_class_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                                        <option value="" class="hidden">
-                                                            Pilih Rombel Kelas
-                                                        </option>
-                                                    </select>
-                                                </div>
+                                                <select id="dropdown-school-class" name="school_class_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                                    <option value="" class="hidden">
+                                                        Pilih Rombel Kelas
+                                                    </option>
+                                                </select>
 
                                                 <span id="error-school_class_id" class="text-red-500 text-xs font-semibold mt-1.5"></span>
                                             </div>
@@ -172,16 +171,15 @@
                                         <span id="error-pertemuan" class="text-red-500 text-xs font-semibold px-4 md:px-5 pt-4 block"></span>
 
                                         <!-- meeting list -->
-                                        <div id="meeting-release-list" class="max-h-125 overflow-y-auto">
+                                        <div id="meeting-release-list" class="max-h-125 overflow-y-auto divide-y divide-gray-100">
                                             @for ($i = 1; $i <= 16; $i++)
-                                                <div class="meeting-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-4 md:px-5 py-4 border-b border-gray-100 
-                                                    last:border-b-0 hover:bg-gray-50 transition">
+                                                <div class="meeting-row flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 md:px-5 py-3.5 hover:bg-gray-50/80 transition">
 
-                                                    <!-- meeting checbkox -->
-                                                    <div class="md:col-span-5">
-                                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                                    <!-- meeting checkbox & title -->
+                                                    <div class="min-w-0 flex-1">
+                                                        <label class="flex items-center gap-3 cursor-pointer group select-none">
                                                             <input type="checkbox" value="{{ $i }}" name="pertemuan[]" class="meeting-checkbox h-4 w-4 shrink-0 rounded 
-                                                                border-gray-300 text-[#0071BC] cursor-pointer">
+                                                                border-gray-300 text-[#0071BC] focus:ring-[#0071BC] cursor-pointer">
 
                                                             <div class="flex items-center gap-3 min-w-0">
                                                                 <div class="w-9 h-9 shrink-0 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center transition 
@@ -204,23 +202,19 @@
                                                         </label>
                                                     </div>
 
-                                                    <div class="hidden md:flex md:col-span-1 justify-center text-gray-300">
-                                                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                                                    </div>
-
-                                                    <!-- release date -->
-                                                    <div class="md:col-span-6">
+                                                    <!-- release date (in line) -->
+                                                    <div class="meeting-date-container w-full sm:w-72 md:w-80 lg:w-96 shrink-0">
                                                         <div class="relative">
                                                             <input type="text" name="meeting_date[]" class="meeting-release-date w-full bg-gray-100 border border-gray-200 
-                                                                rounded-xl px-4 py-3 pr-10 text-sm outline-none transition disabled:cursor-not-allowed disabled:text-gray-400 
-                                                                disabled:bg-gray-100" data-meeting="{{ $i }}" placeholder="Pilih tanggal dan waktu release" disabled>
+                                                                rounded-xl px-4 py-2.5 pr-10 text-sm outline-none transition disabled:cursor-not-allowed disabled:text-gray-400 
+                                                                disabled:bg-gray-100 focus:bg-white focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20" data-meeting="{{ $i }}" placeholder="Pilih tanggal dan waktu release" disabled>
 
-                                                            <span class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                                                            <span class="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-gray-400">
                                                                 <i class="fa-regular fa-calendar text-sm"></i>
                                                             </span>
                                                         </div>
 
-                                                        <span class="meeting-error-date text-red-500 text-xs font-semibold mt-1.5 block"></span>
+                                                        <span class="meeting-error-date text-red-500 text-xs font-semibold mt-1 block"></span>
                                                     </div>
                                                 </div>
                                             @endfor
@@ -484,8 +478,8 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release.js') }}"></script> <!--- paginate content for release ---->
-<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/teacher-form-content-for-release.js') }}"></script> <!--- form content for release ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release.js')) ? filemtime(public_path('assets/js/features/lms/teacher/content-for-release/paginate-teacher-content-for-release.js')) : time() }}"></script> <!--- paginate content for release ---->
+<script src="{{ asset('assets/js/features/lms/teacher/content-for-release/teacher-form-content-for-release.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/content-for-release/teacher-form-content-for-release.js')) ? filemtime(public_path('assets/js/features/lms/teacher/content-for-release/teacher-form-content-for-release.js')) : time() }}"></script> <!--- form content for release ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->

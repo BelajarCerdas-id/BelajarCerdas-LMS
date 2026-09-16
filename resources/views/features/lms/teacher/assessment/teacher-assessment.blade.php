@@ -105,7 +105,7 @@
                                                         Semester
                                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                     </label>
-                                                    <select id="semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                                    <select id="semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                                                             <option value="" hidden>Pilih Semester</option>
                                                             <option value="1">Semester 1</option>
                                                             <option value="2">Semester 2</option>
@@ -177,7 +177,7 @@
                                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                     </label>
                                                     <select name="assessment_type_id"
-                                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                                                         <option value="" class="hidden">Pilih Tipe Asesmen</option>
                                                         @foreach ($schoolAssessmentType as $item)
                                                             <option value="{{ $item->id }}" data-mode="{{ $item->assessmentMode->code }}">{{ $item->name }}</option>
@@ -571,10 +571,10 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js') }}"></script> <!--- form teacher assessment management ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}"></script> <!--- teacher assessment management step form ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}"></script> <!--- paginate teacher assessment management ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js') }}"></script> <!--- assessment file upload preview ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js')) : time() }}"></script> <!--- form teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js')) : time() }}"></script> <!--- teacher assessment management step form ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js')) : time() }}"></script> <!--- paginate teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js')) : time() }}"></script> <!--- assessment file upload preview ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

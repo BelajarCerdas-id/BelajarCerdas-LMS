@@ -16,641 +16,493 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- ================= HEADER ================= -->
 
-    <div class="flex justify-between items-center mb-6">
+    <!-- ================= HEADER & CONTROLS ================= -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <form method="GET" action="{{ route('library.administrator') }}" class="relative w-full sm:w-80">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input
+                    type="search"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Cari materi perpustakaan..."
+                    class="w-full h-11 bg-white border border-gray-300 rounded-xl pl-11 pr-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 placeholder:text-gray-400 shadow-sm"
+                    oninput="this.form.submit()"
+                >
+            </div>
+        </form>
 
-    <form method="GET" action="{{ route('library.administrator') }}">
-    <input
-        type="search"
-        name="search"
-        value="{{ request('search') }}"
-        placeholder="Cari buku..."
-        class="border rounded px-3 py-2 w-64 text-sm"
-        oninput="this.form.submit()"
-    >
-</form>
-
-    <button
-    onclick="modal_pilih_tipe.showModal()"
-    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
-    Tambah Buku
-    </button>
-
+        <button
+            onclick="modal_pilih_tipe.showModal()"
+            class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold h-11 px-5 rounded-xl shadow-sm hover:shadow transition-all text-sm flex items-center justify-center gap-2 cursor-pointer shrink-0">
+            <i class="fa-solid fa-plus"></i>
+            <span>Tambah Library</span>
+        </button>
     </div>
 
+    <!-- ================= TABS ================= -->
+    <div class="flex items-center gap-2 mb-6 border-b border-gray-200 overflow-x-auto pb-px">
+        <button onclick="showTab('buku')" id="tab_buku"
+            class="px-5 py-2.5 border-b-2 border-[#0071BC] text-[#0071BC] font-semibold text-sm transition-all flex items-center gap-2 shrink-0 cursor-pointer">
+            <i class="fa-solid fa-book"></i>
+            <span>Buku</span>
+            <span class="bg-blue-50 text-[#0071BC] text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{ $books->where('tipe','buku')->count() }}</span>
+        </button>
 
-    <!-- ================= TAB ================= -->
+        <button onclick="showTab('ppt')" id="tab_ppt"
+            class="px-5 py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer border-b-2 border-transparent">
+            <i class="fa-solid fa-file-powerpoint"></i>
+            <span>PPT</span>
+            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{ $books->where('tipe','ppt')->count() }}</span>
+        </button>
 
-    <div class="flex gap-4 mb-4 border-b">
+        <button onclick="showTab('lks')" id="tab_lks" 
+            class="px-5 py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer border-b-2 border-transparent">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>LKPD</span>
+            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{ $books->where('tipe','lks')->count() }}</span>
+        </button>
 
-    <button onclick="showTab('buku')" id="tab_buku"
-    class="px-4 py-2 border-b-2 border-blue-500 text-blue-600 font-semibold">
-    Buku
-    </button>
-
-    <button onclick="showTab('ppt')" id="tab_ppt"
-    class="px-4 py-2 text-gray-500">
-    PPT
-    </button>
-
-    <button onclick="showTab('lks')" id="tab_lks" 
-    class="px-4 py-2 text-gray-500">
-        
-    LKPD
-    </button>
-
-    <button onclick="showTab('video')" id="tab_video" 
-    class="px-4 py-2 text-gray-500">
-    Video
-    </button> 
-
+        <button onclick="showTab('video')" id="tab_video" 
+            class="px-5 py-2.5 text-gray-500 hover:text-gray-700 text-sm font-medium transition-all flex items-center gap-2 shrink-0 cursor-pointer border-b-2 border-transparent">
+            <i class="fa-solid fa-video"></i>
+            <span>Video</span>
+            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{ $books->where('tipe','video')->count() }}</span>
+        </button> 
     </div>
-
 
     <!-- ================= TABLE BUKU ================= -->
-
     <div id="table_buku">
-
-    <div class="overflow-x-auto bg-white rounded shadow">
-
-    <table class="min-w-full text-sm">
-
-    <thead class="text-gray-500 text-xs border-b bg-gray-50">
-
-    <tr>
-    <th class="px-4 py-3">No</th>
-    <th class="px-4 py-3">Cover</th>
-    <th class="px-4 py-3">Judul</th>
-    <th class="px-4 py-3">Mapel</th>
-    <th class="px-4 py-3">Topik Materi</th>
-    <th class="px-4 py-3">Deskripsi Topik</th>
-    <th class="px-4 py-3">File</th>
-    <th class="px-4 py-3">Action</th>
-    </tr>
-
-    </thead>
-
-    <tbody class="divide-y">
-
-    @foreach($books->where('tipe','buku') as $book)
-
-    <tr class="hover:bg-gray-50">
-
-    <td class="px-4 py-2">{{ $loop->iteration }}</td>
-
-    <td class="px-4 py-2">
-    @if($book->cover)
-    <img src="{{ asset('library/sampul/'.$book->cover) }}"
-    class="w-16 h-20 object-cover rounded">
-    @endif
-    </td>
-
-    <td class="px-4 py-2 max-w-[200px] truncate">
-    {{ $book->title }}
-    </td>
-
-
-    <td class="px-4 py-2">
-    {{ $book->mapel->mata_pelajaran ?? '-' }}
-    </td>
-
-    <td>
-    {{ $book->topik->nama_topik ?? '-' }}
-    </td>
-
-    <td>
-    {{ Str::limit($book->topik->deskripsi ?? '-', 50) }}
-    </td>
-
-    <td class="px-4 py-2">
-
-    @if($book->file)
-    <a href="{{ asset('library/file/'.$book->file) }}"
-    target="_blank"
-    class="text-blue-500 text-xs">
-    Lihat
-    </a>
-    @endif
-
-    </td>
-
-    <td class="px-4 py-2">
-
-    <div class="flex gap-2">
-
-    <button
-    onclick="openEditModal(
-    '{{ $book->id }}',
-    'buku',
-    @js($book->title),
-    @js($book->description),
-    '{{ $book->kelas_id }}',
-    '{{ $book->mapel_id }}',
-    '{{ $book->bab_id ?? '' }}',
-    '{{ $book->topik_materi_id ?? '' }}'
-)"                                                                                                                                                                                                                                                             
-    class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
-    Edit
-    </button>
-
-    <form action="{{ route('library.delete',$book->id) }}" method="POST">
-    @csrf
-    @method('DELETE')
-
-    <button
-    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-    Delete
-    </button>
-
-    </form>
-
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50/80 text-gray-700 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3.5 text-center w-12">No</th>
+                            <th class="px-4 py-3.5 text-left">Cover</th>
+                            <th class="px-4 py-3.5 text-left">Judul</th>
+                            <th class="px-4 py-3.5 text-left">Mapel</th>
+                            <th class="px-4 py-3.5 text-left">Topik Materi</th>
+                            <th class="px-4 py-3.5 text-left">Deskripsi Topik</th>
+                            <th class="px-4 py-3.5 text-center">File</th>
+                            <th class="px-4 py-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                    @forelse($books->where('tipe','buku') as $book)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3">
+                                @if($book->cover)
+                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                @else
+                                    <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 font-semibold text-gray-800 max-w-[200px] truncate">{{ $book->title }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->mapel->mata_pelajaran ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-700 font-medium">{{ $book->topik->nama_topik ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">{{ Str::limit($book->topik->deskripsi ?? '-', 50) }}</td>
+                            <td class="px-4 py-3 text-center">
+                                @if($book->file)
+                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
+                                        <i class="fa-solid fa-eye text-[11px]"></i>
+                                        <span>Lihat</span>
+                                    </a>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="openEditModal('{{ $book->id }}', 'buku', @js($book->title), @js($book->description), '{{ $book->kelas_id }}', '{{ $book->mapel_id }}', '{{ $book->bab_id ?? '' }}', '{{ $book->topik_materi_id ?? '' }}')"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        <span>Edit</span>
+                                    </button>
+                                    <form action="{{ route('library.delete',$book->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button onclick="return confirm('Hapus buku ini?')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-colors cursor-pointer">
+                                            <i class="fa-solid fa-trash text-[11px]"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-12 text-gray-400">
+                                <i class="fa-solid fa-book-open text-4xl mb-2 text-gray-300 block"></i>
+                                Tidak ada data buku
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-    </td>
-
-    </tr>
-
-    @endforeach
-
-    </tbody>
-
-    </table>
-
-    </div>
-    </div>
-
-
 
     <!-- ================= TABLE PPT ================= -->
-
     <div id="table_ppt" class="hidden">
-
-    <div class="overflow-x-auto bg-white rounded shadow">
-
-    <table class="min-w-full text-sm">
-
-    <thead class="text-gray-500 text-xs border-b bg-gray-50">
-
-    <tr>
-    <th class="px-4 py-3">No</th>
-    <th class="px-4 py-3">Cover</th>
-    <th class="px-4 py-3">Judul</th>
-    <th class="px-4 py-3">Mapel</th>
-    <th class="px-4 py-3">Topik Materi</th>
-    <th class="px-4 py-3">Deskripsi Topik</th>
-    <th class="px-4 py-3">File</th>
-    <th class="px-4 py-3">Action</th>
-    </tr>
-
-    </thead>
-
-    <tbody class="divide-y">
-
-    @foreach($books->where('tipe','ppt') as $book)
-
-    <tr class="hover:bg-gray-50">
-
-    <td class="px-4 py-2">{{ $loop->iteration }}</td>
-
-    <td class="px-4 py-2">
-    @if($book->cover)
-    <img src="{{ asset('library/sampul/'.$book->cover) }}"
-    class="w-16 h-20 object-cover rounded">
-    @endif
-    </td>
-
-    <td class="px-4 py-2 max-w-[200px] truncate">
-    {{ $book->title }}
-    </td>
-
-
-    <td class="px-4 py-2">
-    {{ $book->mapel->mata_pelajaran ?? '-' }}
-    </td>
-
-    <td>
-    {{ $book->topik->nama_topik ?? '-' }}
-    </td>
-
-    <td>
-    {{ Str::limit($book->topik->deskripsi ?? '-', 50) }}
-    </td>
-
-    <td class="px-4 py-2">
-
-    @if($book->file)
-    <a href="{{ asset('library/file/'.$book->file) }}"
-    target="_blank"
-    class="text-blue-500 text-xs">
-    Lihat
-    </a>
-    @endif
-
-    </td>
-
-    <td class="px-4 py-2">
-
-    <div class="flex gap-2">
-
-    <button
-    onclick="openEditModal(
-    '{{ $book->id }}',
-    'ppt',
-    @js($book->title),
-    @js($book->description),
-    '{{ $book->kelas_id }}',
-    '{{ $book->mapel_id }}',
-    '{{ $book->bab_id ?? '' }}',
-    '{{ $book->topik_materi_id ?? '' }}'
-)"
-    class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
-    Edit
-    </button>
-
-    <form action="{{ route('library.delete',$book->id) }}" method="POST">
-    @csrf
-    @method('DELETE')
-
-    <button
-    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-    Delete
-    </button>
-
-    </form>
-
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50/80 text-gray-700 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3.5 text-center w-12">No</th>
+                            <th class="px-4 py-3.5 text-left">Cover</th>
+                            <th class="px-4 py-3.5 text-left">Judul</th>
+                            <th class="px-4 py-3.5 text-left">Mapel</th>
+                            <th class="px-4 py-3.5 text-left">Topik Materi</th>
+                            <th class="px-4 py-3.5 text-left">Deskripsi Topik</th>
+                            <th class="px-4 py-3.5 text-center">File</th>
+                            <th class="px-4 py-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                    @forelse($books->where('tipe','ppt') as $book)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3">
+                                @if($book->cover)
+                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                @else
+                                    <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 font-semibold text-gray-800 max-w-[200px] truncate">{{ $book->title }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->mapel->mata_pelajaran ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-700 font-medium">{{ $book->topik->nama_topik ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">{{ Str::limit($book->topik->deskripsi ?? '-', 50) }}</td>
+                            <td class="px-4 py-3 text-center">
+                                @if($book->file)
+                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
+                                        <i class="fa-solid fa-eye text-[11px]"></i>
+                                        <span>Lihat</span>
+                                    </a>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="openEditModal('{{ $book->id }}', 'ppt', @js($book->title), @js($book->description), '{{ $book->kelas_id }}', '{{ $book->mapel_id }}', '{{ $book->bab_id ?? '' }}', '{{ $book->topik_materi_id ?? '' }}')"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        <span>Edit</span>
+                                    </button>
+                                    <form action="{{ route('library.delete',$book->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button onclick="return confirm('Hapus PPT ini?')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-colors cursor-pointer">
+                                            <i class="fa-solid fa-trash text-[11px]"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-12 text-gray-400">
+                                <i class="fa-solid fa-file-powerpoint text-4xl mb-2 text-gray-300 block"></i>
+                                Tidak ada data PPT
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    </td>
-
-    </tr>
-
-    @endforeach
-
-    </tbody>
-
-    </table>
-
-    </div>
-    </div>
-
-    <!-- ================= TABLE LKS ================= -->
     <!-- ================= TABLE LKS ================= -->
     <div id="table_lks" class="hidden">
-
-        <div class="overflow-x-auto bg-white rounded shadow">
-
-            <table class="min-w-full text-sm">
-
-                <thead class="text-gray-500 text-xs border-b bg-gray-50">
-
-                    <tr>
-                        <th class="px-4 py-3">No</th>
-                        <th class="px-4 py-3">Cover</th>
-                        <th class="px-4 py-3">Judul LKS</th>
-                        <th class="px-4 py-3">Kelas</th>
-                        <th class="px-4 py-3">Mapel</th>
-                        <th class="px-4 py-3">Bab</th>
-                        <th class="px-4 py-3">File LKPD</th>
-                        <th class="px-4 py-3">Action</th>
-                    </tr>
-
-                </thead>
-
-                <tbody class="divide-y">
-
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50/80 text-gray-700 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3.5 text-center w-12">No</th>
+                            <th class="px-4 py-3.5 text-left">Cover</th>
+                            <th class="px-4 py-3.5 text-left">Judul LKS</th>
+                            <th class="px-4 py-3.5 text-left">Kelas</th>
+                            <th class="px-4 py-3.5 text-left">Mapel</th>
+                            <th class="px-4 py-3.5 text-left">Bab</th>
+                            <th class="px-4 py-3.5 text-center">File LKPD</th>
+                            <th class="px-4 py-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
                     @forelse($books->where('tipe','lks') as $book)
-
-                    <tr class="hover:bg-gray-50">
-
-                        <td class="px-4 py-2">
-                            {{ $loop->iteration }}
-                        </td>
-
-                        <td class="px-4 py-2">
-                            @if($book->cover)
-                                <img src="{{ asset('library/sampul/'.$book->cover) }}"
-                                    class="w-16 h-20 object-cover rounded">
-                            @else
-                                <span class="text-xs text-gray-400">No Cover</span>
-                            @endif
-                        </td>
-
-                        <td class="px-4 py-2 max-w-[200px] truncate">
-                            {{ $book->title }}
-                        </td>
-
-                        <td class="px-4 py-2">
-                            {{ $book->kelas->kelas ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-2">
-                            {{ $book->mapel->mata_pelajaran ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-2">
-                            {{ $book->bab->nama_bab ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-2">
-
-                            @if($book->file)
-                                <a href="{{ asset('library/file/'.$book->file) }}"
-                                target="_blank"
-                                class="text-blue-500 text-xs hover:underline">
-                                    Lihat LKPD
-                                </a>
-                            @else
-                                <span class="text-xs text-gray-400">Tidak ada file</span>
-                            @endif
-
-                        </td>
-
-                        <td class="px-4 py-2">
-
-                            <div class="flex gap-2">
-
-                                <button
-                                    onclick="openEditModal(
-                                        '{{ $book->id }}',
-                                        'lks',
-                                        '{{ $book->title }}',
-                                        '{{ $book->description }}',
-                                        '{{ $book->kelas_id }}',
-                                        '{{ $book->mapel_id }}',
-                                        '{{ $book->bab_id ?? '' }}'
-                                        )"
-                                    class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
-                                    Edit
-                                </button>
-
-                                <form action="{{ route('library.delete',$book->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button
-                                        onclick="return confirm('Hapus LKS ini?')"
-                                        class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-                                        Delete
-                                    </button>
-
-                                </form>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-
-                    @empty
-
-                    <tr>
-                        <td colspan="8" class="text-center py-6 text-gray-400">
-                            Tidak ada data LKS
-                        </td>
-                    </tr>
-
-                    @endforelse
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-<!-- ================= TABLE VIDEO ================= -->
-<div id="table_video" class="hidden">
-    <div class="overflow-x-auto bg-white rounded shadow">
-        <table class="min-w-full text-sm">
-            <thead class="text-gray-500 text-xs border-b bg-gray-50">
-                <tr>
-                    <th class="px-4 py-3">No</th>
-                    <th class="px-4 py-3">Cover</th>
-                    <th class="px-4 py-3">Judul</th>
-                    <th class="px-4 py-3">Deskripsi</th>
-                    <th class="px-4 py-3">Kelas</th>
-                    <th class="px-4 py-3">Mapel</th>
-                    <th class="px-4 py-3">Bab</th>
-                    <th class="px-4 py-3">Video</th>
-                    <!-- 🔥 PROGRESS BAR -->
-                    <th class="px-4 py-3">Upload</th>
-                    <th class="px-4 py-3">Action</th>
-                </tr>
-            </thead>
-
-            <tbody id="table_video_body" class="divide-y">
-
-                    {{-- VIDEO YANG MASIH PROSES UPLOAD --}}
-            @foreach($uploadingVideos as $upload)
-
-            <tr id="upload-row-{{ $upload->upload_id }}" class="bg-yellow-50">
-
-                <td>-</td>
-
-                <td>
-                    <div class="w-16 h-20 bg-gray-200 rounded flex items-center justify-center text-xs">
-                        Upload...
-                    </div>
-                </td>
-
-                <td>{{ $upload->file_name }}</td>
-
-                <td class="max-w-xs">
-                    <span class="text-gray-400 text-xs">-</span>
-                </td>
-
-                <td>-</td>
-
-                <td>-</td>
-
-                <td>-</td>
-
-                <td>
-                    <span class="text-blue-500 text-xs">
-                        Sedang diproses
-                    </span>
-                </td>
-
-                <td>
-
-                    @php
-                        $progress = $upload->total_chunks
-                            ? round(($upload->uploaded_chunks / $upload->total_chunks) * 100)
-                            : 0;
-                    @endphp
-
-                    <div class="w-40 bg-gray-200 rounded h-3">
-
-                        <div
-                            id="progress-bar-{{ $upload->upload_id }}"
-                            class="bg-blue-500 h-3 rounded text-white text-[10px] text-center"
-                            style="width: {{ $progress }}%;">
-
-                            {{ $progress }}%
-
-                        </div>
-
-                    </div>
-
-                </td>
-
-                <td>
-
-                    <span
-                        id="status-{{ $upload->upload_id }}"
-                        class="text-yellow-600 text-xs">
-
-                        Uploading...
-
-                    </span>
-
-                </td>
-
-            </tr>
-
-            @endforeach
-                @foreach($books->where('tipe','video') as $book)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2">{{ $loop->iteration }}</td>
-                        <!-- COVER -->
-                        <td class="px-4 py-2">
-                            @php
-                                $cover = $book->cover;
-                            @endphp
-                            @if($cover)
-                                @if(Str::startsWith($cover, 'http'))
-                                    <img src="{{ $cover }}" class="w-16 h-20 object-cover rounded">
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3">
+                                @if($book->cover)
+                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                 @else
-                                    <img src="{{ asset('library/sampul/'.$cover) }}" class="w-16 h-20 object-cover rounded">
+                                    <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
                                 @endif
-                            @endif
-                        </td>
-                        <td class="px-4 py-2 max-w-[200px] truncate">
-                            {{ $book->title }}
-                        </td>
-
-                        <td class="px-4 py-2 max-w-xs">
-                            {{ \Illuminate\Support\Str::limit($book->description ?? '-', 80) }}
-                        </td>
-
-                        <td class="px-4 py-2">
-                            {{ $book->kelas->kelas ?? '-' }}
-                        </td>
-                        <td class="px-4 py-2">{{ $book->mapel->mata_pelajaran ?? '-' }}</td>
-                        <td class="px-4 py-2">{{ $book->bab->nama_bab ?? '-' }}</td>
-                        <!-- VIDEO LINK -->
-                        <td class="px-4 py-2">
-                            <a href="{{ $book->file }}" target="_blank" class="text-blue-500 text-xs">
-                                Lihat Video
-                            </a>
-                        </td>
-                        <!-- bar progres -->
-                       <td class="px-4 py-2">
-
-                            <div id="upload_waiting_{{ $book->id }}" class="hidden">
-
-                                <div class="text-xs mb-1">
-                                    <span id="status_{{ $book->id }}">
-                                        Menunggu...
-                                    </span>
-                                </div>
-
-                                <div class="w-full bg-gray-200 rounded h-2 overflow-hidden">
-                                    <div
-                                        id="progress_{{ $book->id }}"
-                                        class="bg-blue-500 h-2 transition-all duration-300"
-                                        style="width:0%">
-                                    </div>
-                                </div>
-
-                                <div class="text-[11px] mt-2 text-gray-500">
-
-                                    <div>
-                                        Upload :
-                                        <span id="uploaded_{{ $book->id }}">0 MB</span>
-                                    </div>
-
-                                    <div>
-                                        Total :
-                                        <span id="total_{{ $book->id }}">0 MB</span>
-                                    </div>
-
-                                    <div>
-                                        Speed :
-                                        <span id="speed_{{ $book->id }}">0 MB/s</span>
-                                    </div>
-
-                                    <div>
-                                        ETA :
-                                        <span id="eta_{{ $book->id }}">--</span>
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            @if($book->file)
-
-                                <span class="text-green-600 text-xs">
-                                    ✔ Upload selesai
-                                </span>
-
-                            @endif
-
-                        </td>
-                        <!-- ACTION -->
-                        <td class="px-4 py-2">
-                            <div class="flex gap-2">
-                                <button onclick="openEditModal( '{{ $book->id }}', 'video', '{{ $book->title }}', '{{ $book->description }}', '{{ $book->kelas_id }}', '{{ $book->mapel_id }}', '{{ $book->bab_id ?? '' }}' )" class="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs">
-                                    Edit
-                                </button>
-                                <form action="{{ route('library.delete',$book->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs">
-                                        Delete
+                            </td>
+                            <td class="px-4 py-3 font-semibold text-gray-800 max-w-[200px] truncate">{{ $book->title }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->kelas->kelas ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->mapel->mata_pelajaran ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-700 font-medium">{{ $book->bab->nama_bab ?? '-' }}</td>
+                            <td class="px-4 py-3 text-center">
+                                @if($book->file)
+                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
+                                        <i class="fa-solid fa-file-pdf text-[11px]"></i>
+                                        <span>Lihat LKPD</span>
+                                    </a>
+                                @else
+                                    <span class="text-xs text-gray-400">Tidak ada file</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="openEditModal('{{ $book->id }}', 'lks', '{{ $book->title }}', '{{ $book->description }}', '{{ $book->kelas_id }}', '{{ $book->mapel_id }}', '{{ $book->bab_id ?? '' }}')"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        <span>Edit</span>
                                     </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                                    <form action="{{ route('library.delete',$book->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button onclick="return confirm('Hapus LKS ini?')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-colors cursor-pointer">
+                                            <i class="fa-solid fa-trash text-[11px]"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-12 text-gray-400">
+                                <i class="fa-solid fa-file-lines text-4xl mb-2 text-gray-300 block"></i>
+                                Tidak ada data LKPD
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- ================= TABLE VIDEO ================= -->
+    <div id="table_video" class="hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-gray-50/80 text-gray-700 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3.5 text-center w-12">No</th>
+                            <th class="px-4 py-3.5 text-left">Cover</th>
+                            <th class="px-4 py-3.5 text-left">Judul</th>
+                            <th class="px-4 py-3.5 text-left">Deskripsi</th>
+                            <th class="px-4 py-3.5 text-left">Kelas</th>
+                            <th class="px-4 py-3.5 text-left">Mapel</th>
+                            <th class="px-4 py-3.5 text-left">Bab</th>
+                            <th class="px-4 py-3.5 text-center">Video</th>
+                            <th class="px-4 py-3.5 text-center">Upload</th>
+                            <th class="px-4 py-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table_video_body" class="divide-y divide-gray-100">
+                    {{-- VIDEO YANG MASIH PROSES UPLOAD --}}
+                    @foreach($uploadingVideos as $upload)
+                        <tr id="upload-row-{{ $upload->upload_id }}" class="bg-amber-50/50">
+                            <td class="px-4 py-3 text-center">-</td>
+                            <td class="px-4 py-3">
+                                <div class="w-14 h-18 bg-gray-200 rounded-xl flex items-center justify-center text-xs text-gray-500 font-medium">
+                                    Upload...
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-semibold text-gray-800">{{ $upload->file_name }}</td>
+                            <td class="px-4 py-3 max-w-xs text-gray-400 text-xs">-</td>
+                            <td class="px-4 py-3 text-gray-400">-</td>
+                            <td class="px-4 py-3 text-gray-400">-</td>
+                            <td class="px-4 py-3 text-gray-400">-</td>
+                            <td class="px-4 py-3 text-center text-xs text-blue-600 font-medium">Sedang diproses</td>
+                            <td class="px-4 py-3 text-center">
+                                @php
+                                    $progress = $upload->total_chunks
+                                        ? round(($upload->uploaded_chunks / $upload->total_chunks) * 100)
+                                        : 0;
+                                @endphp
+                                <div class="w-36 bg-gray-200 rounded-full h-2.5 overflow-hidden mx-auto">
+                                    <div id="progress-bar-{{ $upload->upload_id }}"
+                                        class="bg-[#0071BC] h-full rounded-full text-white text-[9px] flex items-center justify-center font-bold"
+                                        style="width: {{ $progress }}%;">
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500 mt-1 block">{{ $progress }}%</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span id="status-{{ $upload->upload_id }}" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                    Uploading...
+                                </span>
+                            </td>
+                        </tr>
+                    @endforeach
+
+                    @forelse($books->where('tipe','video') as $book)
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $cover = $book->cover;
+                                @endphp
+                                @if($cover)
+                                    @if(Str::startsWith($cover, 'http'))
+                                        <img src="{{ $cover }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                    @else
+                                        <img src="{{ asset('library/sampul/'.$cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                    @endif
+                                @else
+                                    <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 font-semibold text-gray-800 max-w-[200px] truncate">{{ $book->title }}</td>
+                            <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">{{ Str::limit($book->description ?? '-', 80) }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->kelas->kelas ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-600 font-medium">{{ $book->mapel->mata_pelajaran ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-700 font-medium">{{ $book->bab->nama_bab ?? '-' }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{{ $book->file }}" target="_blank"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
+                                    <i class="fa-solid fa-play text-[11px]"></i>
+                                    <span>Lihat Video</span>
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div id="upload_waiting_{{ $book->id }}" class="hidden">
+                                    <div class="text-xs mb-1">
+                                        <span id="status_{{ $book->id }}" class="font-medium text-gray-600">Menunggu...</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                        <div id="progress_{{ $book->id }}" class="bg-[#0071BC] h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+                                    </div>
+                                    <div class="text-[11px] mt-2 text-gray-500 space-y-0.5">
+                                        <div>Upload : <span id="uploaded_{{ $book->id }}">0 MB</span></div>
+                                        <div>Total : <span id="total_{{ $book->id }}">0 MB</span></div>
+                                        <div>Speed : <span id="speed_{{ $book->id }}">0 MB/s</span></div>
+                                        <div>ETA : <span id="eta_{{ $book->id }}">--</span></div>
+                                    </div>
+                                </div>
+                                @if($book->file)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                                        <i class="fa-solid fa-check text-[10px]"></i> Selesai
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="openEditModal('{{ $book->id }}', 'video', '{{ $book->title }}', '{{ $book->description }}', '{{ $book->kelas_id }}', '{{ $book->mapel_id }}', '{{ $book->bab_id ?? '' }}')"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        <span>Edit</span>
+                                    </button>
+                                    <form action="{{ route('library.delete',$book->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button onclick="return confirm('Hapus video ini?')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-colors cursor-pointer">
+                                            <i class="fa-solid fa-trash text-[11px]"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="text-center py-12 text-gray-400">
+                                <i class="fa-solid fa-film text-4xl mb-2 text-gray-300 block"></i>
+                                Tidak ada data Video
+                            </td>
+                        </tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 @endif
 </main>
 </div>
 </div>
 
 <dialog id="modal_pilih_tipe" class="modal">
-    <div class="modal-box max-w-md">
-        <h3 class="font-bold text-xl text-center mb-5"> Pilih Tipe Library </h3>
-        <div class="grid grid-cols-2 gap-3">
-            <button type="button" onclick="pilihTipe('buku')" class="btn btn-primary"> 📖 Buku </button>
-            <button type="button" onclick="pilihTipe('ppt')" class="btn btn-info"> 📊 PPT </button>
-            <button type="button" onclick="pilihTipe('lks')" class="btn btn-success"> 📝 LKPD </button>
-            <button type="button" onclick="pilihTipe('video')" class="btn btn-warning"> 🎥 Video </button>
+    <div class="modal-box bg-white rounded-2xl max-w-md p-6 border border-gray-100 shadow-xl">
+        <h3 class="font-bold text-lg text-gray-800 text-center mb-1">Pilih Tipe Library</h3>
+        <p class="text-xs text-gray-500 text-center mb-5">Pilih jenis materi pembelajaran yang ingin Anda tambahkan</p>
+        <div class="grid grid-cols-2 gap-3.5">
+            <button type="button" onclick="pilihTipe('buku')" 
+                class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 hover:border-[#0071BC] hover:bg-blue-50/50 transition-all text-gray-700 hover:text-[#0071BC] group cursor-pointer shadow-xs">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-[#0071BC] flex items-center justify-center text-xl mb-2 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+                <span class="font-semibold text-sm">Buku</span>
+            </button>
+
+            <button type="button" onclick="pilihTipe('ppt')" 
+                class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 hover:border-amber-500 hover:bg-amber-50/50 transition-all text-gray-700 hover:text-amber-600 group cursor-pointer shadow-xs">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-2 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-file-powerpoint"></i>
+                </div>
+                <span class="font-semibold text-sm">PPT</span>
+            </button>
+
+            <button type="button" onclick="pilihTipe('lks')" 
+                class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-gray-700 hover:text-emerald-600 group cursor-pointer shadow-xs">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-2 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-file-lines"></i>
+                </div>
+                <span class="font-semibold text-sm">LKPD</span>
+            </button>
+
+            <button type="button" onclick="pilihTipe('video')" 
+                class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-200 hover:border-rose-500 hover:bg-rose-50/50 transition-all text-gray-700 hover:text-rose-600 group cursor-pointer shadow-xs">
+                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-2 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-video"></i>
+                </div>
+                <span class="font-semibold text-sm">Video</span>
+            </button>
         </div>
     </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
 </dialog>
 
 <!-- ================= MODAL TAMBAH ================= -->
 <dialog id="modal_add_book" class="modal">
-    <div class="modal-box w-[95%] max-w-2xl max-h-[85vh] overflow-y-auto p-0 rounded-2xl">
+    <div class="modal-box w-[95%] max-w-2xl max-h-[88vh] overflow-y-auto p-0 rounded-2xl border border-gray-100 shadow-2xl">
         <!-- HEADER -->
-        <div class="bg-gradient-to-r from-blue-500 to-sky-600 px-6 py-5 text-white">
-            <h3 class="text-2xl font-bold text-center"> 📚 Tambah Library </h3>
-            <p class="text-center text-sm opacity-90 mt-1"> Tambahkan materi pembelajaran dengan lengkap </p>
+        <div class="bg-gradient-to-r from-[#0071BC] to-[#005B94] px-6 py-5 text-white">
+            <h3 class="text-xl font-bold text-center flex items-center justify-center gap-2">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Tambah Library</span>
+            </h3>
+            <p class="text-center text-xs text-blue-100 mt-1"> Tambahkan materi pembelajaran dengan lengkap </p>
         </div>
         <form
-    id="libraryForm"
-    action="{{ route('library.store') }}"
-    method="POST"
-    enctype="multipart/form-data"
-    class="p-6">
-
+            id="libraryForm"
+            action="{{ route('library.store') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            class="p-6">
             @csrf
             <!-- AUTO COVER -->
             <input type="hidden" name="auto_cover" id="auto_cover">
@@ -658,14 +510,14 @@
             <div class="grid md:grid-cols-2 gap-4">
                 <!-- TITLE -->
                 <div id="title_wrapper" class="md:col-span-2">
-                    <label class="text-sm font-semibold mb-1 block"> Judul Materi <span class="text-red-500">*</span> </label>
-                    <input type="text" id="title" name="title" required class="input input-bordered w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Judul Materi <span class="text-red-500">*</span> </label>
+                    <input type="text" id="title" name="title" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20">
                 </div>
                 
                 <!-- DESC -->
                 <div id="wrapper_description" class="md:col-span-2">
-                    <label class="text-sm font-semibold mb-1 block"> Deskripsi <span class="text-red-500">*</span> </label>
-                    <textarea name="description" required rows="4" class="textarea textarea-bordered w-full"></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Deskripsi <span class="text-red-500">*</span> </label>
+                    <textarea name="description" required rows="3" class="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20"></textarea>
                 </div>
                 
                 <!-- KELAS -->
@@ -710,7 +562,7 @@
                 <div class="md:col-span-2 hidden" id="topik_wrapper">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5"> Topik Materi </label>
                     <select id="topik_add" name="topik_materi_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                        <option value="">pilih topik</option>
+                        <option value="">Pilih Topik</option>
                         @foreach($topiks as $topik)
                             <option value="{{ $topik->id }}" data-mapel="{{ $topik->mapel_id }}" data-deskripsi="{{ $topik->deskripsi }}">
                                 {{ $topik->nama_topik }}
@@ -721,50 +573,49 @@
                 
                 <!-- DESKRIPSI TOPIK -->
                 <div class="md:col-span-2 hidden" id="topik_deskripsi_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Deskripsi Topik </label>
-                    <textarea id="topik_deskripsi" readonly rows="3" class="textarea textarea-bordered w-full bg-gray-100"></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Deskripsi Topik </label>
+                    <textarea id="topik_deskripsi" readonly rows="2" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-600 outline-none"></textarea>
                 </div>
                 
                 <!-- JUDUL OTOMATIS -->
                 <div class="md:col-span-2 hidden" id="title_auto_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Judul Materi </label>
-                    <input type="text" id="title_auto" readonly class="input input-bordered w-full bg-gray-100">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Judul Materi </label>
+                    <input type="text" id="title_auto" readonly class="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm font-medium text-gray-600 outline-none">
                 </div>
                 
                 <!-- FILE -->
                 <div id="file_wrapper" class="md:col-span-2 hidden">
-                    <label class="text-sm font-semibold mb-1 block"> Upload File </label>
-                    <input type="file" name="file" id="file_pdf" required class="file-input file-input-bordered w-full">
-                    <small class="text-gray-500"> Format: PDF / PPT / DOC </small>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Upload File </label>
+                    <input type="file" name="file" id="file_pdf" required class="file-input file-input-bordered file-input-primary w-full rounded-xl">
+                    <small class="text-gray-500 text-xs mt-1 block"> Format: PDF / PPT / DOC </small>
                 </div>
                 
                 <!-- ================= VIDEO INPUT (LINK + FILE + PROGRESS) ================= -->
                 <div id="video_wrapper" class="md:col-span-2 hidden">
-                    <label class="text-sm font-semibold mb-2 block"> Input Video </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"> Input Video </label>
                     <!-- SWITCH MODE -->
                     <div class="flex gap-2 mb-3">
-                        <button type="button" class="px-3 py-1 text-xs bg-blue-500 text-white rounded" onclick="toggleVideoInputMode('url')"> 🔗 Link </button>
-                        <button type="button" class="px-3 py-1 text-xs bg-gray-300 rounded" onclick="toggleVideoInputMode('file')"> 📁 File </button>
+                        <button type="button" class="px-3.5 py-1.5 text-xs font-semibold bg-[#0071BC] text-white rounded-lg transition-all" onclick="toggleVideoInputMode('url')"> 🔗 Link </button>
+                        <button type="button" class="px-3.5 py-1.5 text-xs font-semibold bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-all" onclick="toggleVideoInputMode('file')"> 📁 File </button>
                     </div>
                     
                     <!-- ================= LINK INPUT ================= -->
                     <div id="video_url_box">
-                        <input type="url" name="video_url" id="video_url" class="input input-bordered w-full" placeholder="https://youtube.com / drive link">
-                        <small class="text-gray-500"> Gunakan link YouTube atau Google Drive </small>
+                        <input type="url" name="video_url" id="video_url" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20" placeholder="https://youtube.com / drive link">
+                        <small class="text-gray-500 text-xs mt-1 block"> Gunakan link YouTube atau Google Drive </small>
                     </div>
                     
                     <!-- ================= FILE INPUT ================= -->
                     <div id="video_file_box" class="hidden">
-                        <input type="file" name="video_file" id="video_file" accept="video/*"  class="file-input file-input-bordered w-full">
-                        <small class="text-gray-500"> Upload file video (mp4, mov, dll) </small>
-                        
+                        <input type="file" name="video_file" id="video_file" accept="video/*" class="file-input file-input-bordered file-input-primary w-full rounded-xl">
+                        <small class="text-gray-500 text-xs mt-1 block"> Upload file video (mp4, mov, dll) </small>
                         
                         <!-- ================= COVER TIMESTAMP PICKER ================= -->
-                        <div id="cover_time_box" class="mt-4 hidden">
-                            <label class="text-xs text-gray-600 block mb-1"> Pilih detik cover (thumbnail) </label>
-                            <input type="range" id="cover_time" min="0" value="1" step="1" class="w-full">
-                            <div class="text-xs text-gray-500 mt-1"> Detik: <span id="cover_time_label">1</span> </div>
-                            <button type="button" onclick="captureVideoCover()" class="mt-2 text-xs bg-blue-500 text-white px-3 py-1 rounded"> 🎬 Ambil Cover </button>
+                        <div id="cover_time_box" class="mt-4 hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="text-xs font-medium text-gray-700 block mb-1"> Pilih detik cover (thumbnail) </label>
+                            <input type="range" id="cover_time" min="0" value="1" step="1" class="w-full accent-[#0071BC]">
+                            <div class="text-xs text-gray-500 mt-1"> Detik: <span id="cover_time_label" class="font-bold text-[#0071BC]">1</span> </div>
+                            <button type="button" onclick="captureVideoCover()" class="mt-2 text-xs bg-[#0071BC] hover:bg-[#005B94] text-white px-3.5 py-1.5 rounded-lg font-medium transition-all"> 🎬 Ambil Cover </button>
                         </div>
                     </div>
                 </div>
@@ -779,17 +630,15 @@
             </div>
             
             <!-- BUTTON -->
-            <div class="flex justify-end gap-3 mt-7">
-                <button type="button" id="btnTambahTopik" onclick="modal_add_topik.showModal()" class="hidden bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"> ➕ Topik </button>
-                <button type="button" onclick="modal_add_book.close()" class="px-5 py-2 rounded-lg border hover:bg-gray-100"> Batal </button>
+            <div class="flex justify-end gap-3 mt-7 pt-4 border-t border-gray-100">
+                <button type="button" id="btnTambahTopik" onclick="modal_add_topik.showModal()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 rounded-xl transition-all shadow-xs text-sm"> ➕ Topik </button>
+                <button type="button" onclick="modal_add_book.close()" class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium transition-all text-sm cursor-pointer"> Batal </button>
                 <button
-    id="btnSaveLibrary"
-    type="submit"
-    class="bg-blue-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg">
-
-    💾 Simpan
-
-</button>
+                    id="btnSaveLibrary"
+                    type="submit"
+                    class="bg-[#0071BC] hover:bg-[#005B94] text-white font-medium px-6 py-2.5 rounded-xl shadow-xs hover:shadow transition-all text-sm cursor-pointer">
+                    💾 Simpan
+                </button>
             </div>
         </form>
     </div>
@@ -799,13 +648,21 @@
 </dialog>
 
 <dialog id="modal_add_topik" class="modal">
-    <div class="modal-box max-w-3xl">
+    <div class="modal-box max-w-3xl rounded-2xl border border-gray-100 shadow-2xl p-6">
         <form action="{{ route('library.topik.store') }}" method="POST">
             @csrf
-            <h3 class="font-bold text-xl mb-5"> ➕ Tambah Topik Materi </h3>
+            <div class="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+                <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-plus text-[#0071BC]"></i>
+                    <span>Tambah Topik Materi</span>
+                </h3>
+                <button type="button" onclick="modal_add_topik.close()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Mata Pelajaran </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Mata Pelajaran <span class="text-red-500">*</span> </label>
                     <select id="topik_mapel" name="mapel_id" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="">Pilih Mapel</option>
                         @foreach($mapels as $mapel)
@@ -814,17 +671,17 @@
                     </select>
                 </div>
             </div>
-            <hr class="my-5">
+            <hr class="my-5 border-gray-200">
             <div id="topikContainer">
-                <div class="grid grid-cols-12 gap-2 mb-3 topik-row">
-                    <input type="text" name="topik[0][nama_topik]" placeholder="Nama Topik" required class="input input-bordered col-span-5">
-                    <input type="text" name="topik[0][deskripsi]" placeholder="Deskripsi Topik" class="input input-bordered col-span-6">
-                    <button type="button" onclick="addTopikRow()" class="btn btn-success col-span-1"> + </button>
+                <div class="grid grid-cols-12 gap-2 mb-3 topik-row items-center">
+                    <input type="text" name="topik[0][nama_topik]" placeholder="Nama Topik" required class="w-full h-10 border border-gray-300 rounded-xl px-3 text-sm font-medium text-gray-700 outline-none focus:border-[#0071BC] col-span-5">
+                    <input type="text" name="topik[0][deskripsi]" placeholder="Deskripsi Topik" class="w-full h-10 border border-gray-300 rounded-xl px-3 text-sm font-medium text-gray-700 outline-none focus:border-[#0071BC] col-span-6">
+                    <button type="button" onclick="addTopikRow()" class="h-10 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl col-span-1 flex items-center justify-center font-bold text-lg cursor-pointer"> + </button>
                 </div>
             </div>
-            <div class="flex justify-end gap-3 mt-5">
-                <button type="button" onclick="modal_add_topik.close()" class="btn"> Batal </button>
-                <button type="submit" class="btn btn-primary"> Simpan Topik </button>
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <button type="button" onclick="modal_add_topik.close()" class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium transition-all text-sm cursor-pointer"> Batal </button>
+                <button type="submit" class="bg-[#0071BC] hover:bg-[#005B94] text-white font-medium px-5 py-2.5 rounded-xl shadow-xs hover:shadow transition-all text-sm cursor-pointer"> Simpan Topik </button>
             </div>
         </form>
     </div>
@@ -832,10 +689,13 @@
 
 <!-- ================= MODAL EDIT ================= -->
 <dialog id="modal_edit_book" class="modal">
-    <div class="modal-box w-[95%] max-w-2xl p-0 overflow-hidden rounded-2xl">
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-5 text-white">
-            <h3 class="text-2xl font-bold text-center">✏️ Edit Library</h3>
-            <p class="text-center text-sm opacity-90 mt-1"> Perbarui data materi pembelajaran </p>
+    <div class="modal-box w-[95%] max-w-2xl max-h-[88vh] overflow-y-auto p-0 rounded-2xl border border-gray-100 shadow-2xl">
+        <div class="bg-gradient-to-r from-[#0071BC] to-[#005B94] px-6 py-5 text-white">
+            <h3 class="text-xl font-bold text-center flex items-center justify-center gap-2">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Edit Library</span>
+            </h3>
+            <p class="text-center text-xs text-blue-100 mt-1"> Perbarui data materi pembelajaran </p>
         </div>
         <form id="editForm" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
@@ -846,11 +706,11 @@
             <div class="grid md:grid-cols-2 gap-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Judul *</label>
-                    <input id="edit_title" name="title" required class="input input-bordered w-full">
+                    <input id="edit_title" name="title" required class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Deskripsi *</label>
-                    <textarea id="edit_description" name="description" rows="4" class="textarea textarea-bordered w-full"></textarea>
+                    <textarea id="edit_description" name="description" rows="3" class="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20"></textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Kelas *</label>
@@ -868,7 +728,6 @@
                             <option value="{{ $mapel->id }}">{{ $mapel->mata_pelajaran }}</option>
                         @endforeach
                     </select>
-                    
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Bab *</label>
@@ -882,11 +741,11 @@
                 </div>
                 <div id="file_wrapper_edit">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">File Baru</label>
-                    <input id="file_pdf_edit" type="file" name="file" class="file-input file-input-bordered w-full">
+                    <input id="file_pdf_edit" type="file" name="file" class="file-input file-input-bordered file-input-primary w-full rounded-xl">
                 </div>
-                <div id="video_wrapper_edit" class="hidden">
+                <div id="video_wrapper_edit" class="hidden md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Link Video</label>
-                    <input id="video_url_edit" type="text" name="video_url" class="input input-bordered w-full">
+                    <input id="video_url_edit" type="text" name="video_url" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20">
                 </div>
                 <!-- TOPIK -->
                 <div class="md:col-span-2" id="edit_topik_wrapper">
@@ -901,18 +760,18 @@
                 </div>
                 <!-- DESKRIPSI TOPIK -->
                 <div class="md:col-span-2" id="edit_topik_deskripsi_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Deskripsi Topik </label>
-                    <input type="text" id="edit_topik_deskripsi" readonly class="input input-bordered w-full bg-gray-100" />
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Deskripsi Topik </label>
+                    <input type="text" id="edit_topik_deskripsi" readonly class="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm text-gray-600 outline-none" />
                 </div>
                 <!-- JUDUL OTOMATIS -->
                 <div class="md:col-span-2" id="edit_title_auto_wrapper">
-                    <label class="text-sm font-semibold mb-1 block"> Judul Materi </label>
-                    <input readonly id="edit_title_auto" name="title" class="input input-bordered w-full bg-gray-100">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5"> Judul Materi </label>
+                    <input readonly id="edit_title_auto" name="title" class="w-full h-11 bg-gray-50 border border-gray-200 rounded-xl px-4 text-sm font-medium text-gray-600 outline-none">
                 </div>
             </div>
-            <div class="flex justify-end gap-3 mt-7">
-                <button type="button" onclick="modal_edit_book.close()" class="px-5 py-2 border rounded-lg"> Batal </button>
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"> 🚀 Update </button>
+            <div class="flex justify-end gap-3 mt-7 pt-4 border-t border-gray-100">
+                <button type="button" onclick="modal_edit_book.close()" class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium transition-all text-sm cursor-pointer"> Batal </button>
+                <button type="submit" class="bg-[#0071BC] hover:bg-[#005B94] text-white font-medium px-6 py-2.5 rounded-xl shadow-xs hover:shadow transition-all text-sm cursor-pointer"> 🚀 Update </button>
             </div>
         </form>
     </div>
@@ -927,48 +786,35 @@
 
 <script>
 
-
-
-
-
     // ================= TAB FUNCTION =================
 
     function showTab(tab) {
-
         const tabs = ['buku','ppt','lks','video'];
-
         tabs.forEach(t => {
-
             const table = document.getElementById('table_' + t);
-
             const btn = document.getElementById('tab_' + t);
-
             if (table) table.classList.add('hidden');
-
             if (btn) {
-
-                btn.classList.remove('border-blue-500','text-blue-600','font-semibold');
-
-                btn.classList.add('text-gray-500');
-
+                btn.classList.remove('border-[#0071BC]', 'text-[#0071BC]', 'border-blue-500', 'text-blue-600', 'font-semibold');
+                btn.classList.add('border-transparent', 'text-gray-500');
+                const badge = btn.querySelector('span:last-child');
+                if (badge) {
+                    badge.className = 'bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold ml-1';
+                }
             }
-
         });
 
         const activeTable = document.getElementById('table_' + tab);
-
         const activeBtn = document.getElementById('tab_' + tab);
-
         if (activeTable) activeTable.classList.remove('hidden');
-
         if (activeBtn) {
-
-            activeBtn.classList.remove('text-gray-500');
-
-            activeBtn.classList.add('border-blue-500','text-blue-600','font-semibold');
-
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-[#0071BC]', 'text-[#0071BC]', 'font-semibold');
+            const badge = activeBtn.querySelector('span:last-child');
+            if (badge) {
+                badge.className = 'bg-blue-50 text-[#0071BC] text-xs px-2 py-0.5 rounded-full font-bold ml-1';
+            }
         }
-
     }
 
 
@@ -2141,13 +1987,13 @@ document.getElementById("edit_mapel")?.addEventListener("change", function () {
 
     function addTopikRow() {
 
-        const row = `<div class="grid grid-cols-12 gap-2 mb-3 topik-row">
+        const row = `<div class="grid grid-cols-12 gap-2 mb-3 topik-row items-center">
 
-            <input type="text" name="topik[${topikIndex}][nama_topik]" placeholder="Nama Topik" class="input input-bordered col-span-5">
+            <input type="text" name="topik[${topikIndex}][nama_topik]" placeholder="Nama Topik" class="w-full h-10 border border-gray-300 rounded-xl px-3 text-sm font-medium text-gray-700 outline-none focus:border-[#0071BC] col-span-5">
 
-            <input type="text" name="topik[${topikIndex}][deskripsi]" placeholder="Deskripsi Topik" class="input input-bordered col-span-5">
+            <input type="text" name="topik[${topikIndex}][deskripsi]" placeholder="Deskripsi Topik" class="w-full h-10 border border-gray-300 rounded-xl px-3 text-sm font-medium text-gray-700 outline-none focus:border-[#0071BC] col-span-6">
 
-            <button type="button" class="btn btn-error col-span-2" onclick="this.closest('.topik-row').remove()"> - </button>
+            <button type="button" class="h-10 bg-red-500 hover:bg-red-600 text-white rounded-xl col-span-1 flex items-center justify-center font-bold text-lg cursor-pointer" onclick="this.closest('.topik-row').remove()"> - </button>
 
         </div>`;
 

@@ -978,7 +978,8 @@ function getTeacherQuestionReleaseBankGroups() {
 }
 
 function getTeacherQuestionReleaseBankMeta(bank) {
-    const firstQuestion = bank.questions[0] || {};
+    const questions = bank.questions || [];
+    const firstQuestion = questions[0] || {};
     const schoolPartner = firstQuestion.school_partner || null;
 
     let source = firstQuestion.question_source_name || null;
@@ -991,6 +992,16 @@ function getTeacherQuestionReleaseBankMeta(bank) {
         }
     }
 
+    let rawDate = firstQuestion.created_at || firstQuestion.updated_at || null;
+    if (!rawDate && questions.length > 0) {
+        const found = questions.find(q => q.created_at || q.updated_at);
+        if (found) {
+            rawDate = found.created_at || found.updated_at;
+        }
+    }
+
+    const uploadDate = formatTeacherQuestionReleaseDate(rawDate);
+
     return {
         kurikulum: firstQuestion.kurikulum?.nama_kurikulum || '-',
         mapel: firstQuestion.mapel?.mata_pelajaran || '-',
@@ -998,7 +1009,8 @@ function getTeacherQuestionReleaseBankMeta(bank) {
         bab: firstQuestion.bab?.nama_bab || '-',
         subBab: firstQuestion.sub_bab?.sub_bab || '-',
         category: firstQuestion.question_category || 'Umum',
-        source
+        source,
+        uploadDate
     };
 }
 
@@ -1068,52 +1080,66 @@ function renderTeacherQuestionReleaseBankCard(bank) {
 
                         <h4 class="mt-2 text-xs font-bold text-gray-800">${escapeTeacherQuestionReleaseHtml(meta.bab !== '-' ? meta.bab : 'Bank Soal')}</h4>
 
-                        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <span class="inline-flex items-center gap-1 text-[9px] text-gray-400">
-                                <span>Kurikulum:</span>
-                                <span class="font-medium text-gray-500">${escapeTeacherQuestionReleaseHtml(meta.kurikulum)}</span>
+                        <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-gray-500">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="text-gray-400">Kurikulum:</span>
+                                <span class="font-medium text-gray-600">${escapeTeacherQuestionReleaseHtml(meta.kurikulum)}</span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1 text-[9px] text-gray-400">
-                                <span>Bab:</span>
-                                <span class="font-medium text-gray-500">${escapeTeacherQuestionReleaseHtml(meta.bab)}</span>
+                            <span class="text-gray-300" aria-hidden="true">•</span>
+
+                            <span class="inline-flex items-center gap-1">
+                                <span class="text-gray-400">Bab:</span>
+                                <span class="font-medium text-gray-600">${escapeTeacherQuestionReleaseHtml(meta.bab)}</span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1 text-[9px] text-gray-400">
-                                <span>Sub Bab:</span>
-                                <span class="font-medium text-gray-500">${escapeTeacherQuestionReleaseHtml(meta.subBab)}</span>
+                            <span class="text-gray-300" aria-hidden="true">•</span>
+
+                            <span class="inline-flex items-center gap-1">
+                                <span class="text-gray-400">Sub Bab:</span>
+                                <span class="font-medium text-gray-600">${escapeTeacherQuestionReleaseHtml(meta.subBab)}</span>
                             </span>
                         </div>
 
-                        <div class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-1">
-                            <i class="fa-solid fa-database text-[9px] text-gray-400"></i>
-                            <span class="text-[9px] font-medium text-gray-500">Sumber:</span>
-                            <span class="text-[9px] font-bold text-gray-700">${escapeTeacherQuestionReleaseHtml(meta.source)}</span>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <div class="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-1">
+                                <i class="fa-solid fa-database text-[9px] text-gray-400"></i>
+                                <span class="text-[9px] font-medium text-gray-500">Sumber:</span>
+                                <span class="text-[9px] font-bold text-gray-700">${escapeTeacherQuestionReleaseHtml(meta.source)}</span>
+                            </div>
+
+                            ${meta.uploadDate ? `
+                                <div class="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-2 py-1">
+                                    <i class="fa-regular fa-clock text-[9px] text-gray-400"></i>
+                                    <span class="text-[9px] font-medium text-gray-500">Tanggal Upload:</span>
+                                    <span class="text-[9px] font-bold text-gray-700">${escapeTeacherQuestionReleaseHtml(meta.uploadDate)}</span>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </button>
 
-                <div class="flex shrink-0 flex-col items-end gap-2">
-                    <span class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-gray-500">
+                <div class="flex shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
+                    <span class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-gray-500 whitespace-nowrap">
                         ${selectedCount}/${questions.length} dipilih
                     </span>
 
                     <button type="button" data-question-release-bank-select-all="${escapeTeacherQuestionReleaseHtml(bank.id)}"
-                        class="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#B9DDF5] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-[#0071BC] hover:bg-[#EAF6FF]">
-                        <i class="fa-solid ${allSelected ? 'fa-square-minus' : 'fa-check-double'} text-[9px]"></i>
-                        ${allSelected ? 'Batal Pilih' : 'Pilih Semua'}
+                        class="inline-flex items-center gap-1.5 rounded-lg border ${allSelected ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400' : 'border-[#0071BC]/30 bg-[#EAF6FF] text-[#0071BC] hover:bg-[#0071BC] hover:text-white'} px-2.5 py-1.5 text-[10px] font-bold shadow-xs cursor-pointer select-none transition-all">
+                        <i class="fa-solid ${allSelected ? 'fa-square-minus' : 'fa-check-double'} text-[10px] pointer-events-none"></i>
+                        <span class="pointer-events-none">${allSelected ? 'Batal Pilih' : 'Pilih Semua'}</span>
                     </button>
                 </div>
             </div>
 
             <div class="${expanded ? '' : 'hidden'} border-t border-gray-100 bg-gray-50/40 px-3 py-3">
-                <div class="mb-3 flex items-center justify-between gap-2 sm:hidden">
-                    <span class="text-[10px] text-gray-400">${selectedCount} dari ${questions.length} soal dipilih</span>
+                <div class="mb-3 flex items-center justify-between gap-2 px-1">
+                    <span class="text-[11px] font-medium text-gray-500">${selectedCount} dari ${questions.length} butir soal dipilih</span>
 
                     <button type="button" data-question-release-bank-select-all="${escapeTeacherQuestionReleaseHtml(bank.id)}"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#B9DDF5] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-[#0071BC]">
-                        <i class="fa-solid ${allSelected ? 'fa-square-minus' : 'fa-check-double'} text-[9px]"></i>
-                        ${allSelected ? 'Batal Pilih' : 'Pilih Semua'}
+                        class="inline-flex items-center gap-1.5 rounded-lg border ${allSelected ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:border-amber-400' : 'border-[#0071BC]/30 bg-white text-[#0071BC] hover:bg-[#EAF6FF]'} px-2.5 py-1 text-[10px] font-semibold cursor-pointer select-none shadow-xs transition-all">
+                        <i class="fa-solid ${allSelected ? 'fa-square-minus' : 'fa-check-double'} text-[10px] pointer-events-none"></i>
+                        <span class="pointer-events-none">${allSelected ? 'Batal Pilih Semua Soal' : 'Pilih Semua Soal'}</span>
                     </button>
                 </div>
 
@@ -1229,6 +1255,14 @@ function renderTeacherQuestionReleaseQuestionCard(question, index) {
                         <span class="text-[9px] text-gray-400">
                             q-${escapeTeacherQuestionReleaseHtml(id)}
                         </span>
+
+                        ${question.created_at ? `
+                            <span class="inline-flex items-center gap-1 text-[9px] text-gray-400">
+                                <span>•</span>
+                                <i class="fa-regular fa-calendar text-[8px]"></i>
+                                <span>${escapeTeacherQuestionReleaseHtml(formatTeacherQuestionReleaseDate(question.created_at))}</span>
+                            </span>
+                        ` : ''}
                     </div>
 
                     <p class="mt-2 text-[11px] leading-relaxed text-gray-700">
@@ -2031,6 +2065,15 @@ function renderTeacherQuestionReleaseReviewBank(bank, bankIndex) {
                                     ${escapeTeacherQuestionReleaseHtml(meta.source)}
                                 </strong>
                             </span>
+
+                            ${meta.uploadDate ? `
+                                <span>
+                                    Tanggal Upload:
+                                    <strong class="text-gray-500">
+                                        ${escapeTeacherQuestionReleaseHtml(meta.uploadDate)}
+                                    </strong>
+                                </span>
+                            ` : ''}
                         </div>
                     </div>
 
@@ -2401,22 +2444,27 @@ function formatTeacherQuestionReleaseDateTime(dateString) {
 }
 
 function formatTeacherQuestionReleaseDate(dateString) {
-    if (!dateString) return '-';
+    if (!dateString) return null;
 
-    const date = new Date(dateString);
+    const safeDateString = typeof dateString === 'string' && dateString.includes(' ') && !dateString.includes('T')
+        ? dateString.replace(' ', 'T')
+        : dateString;
 
-    if (Number.isNaN(date.getTime())) {
-        return '-';
+    const date = new Date(safeDateString);
+    if (isNaN(date.getTime())) {
+        return typeof dateString === 'string' ? dateString : null;
     }
 
-    return new Intl.DateTimeFormat(
-        'id-ID',
-        {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        }
-    ).format(date);
+    const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    const day = date.getDate();
+    const monthName = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${day} ${monthName} ${year}`;
 }
 
 function stripHtmlAndLimit(html, limit = 120) {
