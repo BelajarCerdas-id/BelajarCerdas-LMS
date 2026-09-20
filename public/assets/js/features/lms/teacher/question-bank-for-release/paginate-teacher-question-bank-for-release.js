@@ -48,9 +48,9 @@ function paginateQuestionForRelease(search_year = null, search_class = null, sea
             const containerAssessmentType = document.getElementById('container-dropdown-assessment-type-paginate-question-bank-for-release');
             containerAssessmentType.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Asesmen</label>
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Assessment</label>
                     <select id="dropdown-filter-assessment-type-paginate-question-bank-for-release" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                        <option value="" class="hidden">Filter Tipe Asesmen</option>
+                        <option value="" class="hidden">Filter Tipe Assessment</option>
                         ${response.schoolAssessmentType.map(item => `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`).join('')}
                     </select>
                 </div>
@@ -80,7 +80,7 @@ function paginateQuestionForRelease(search_year = null, search_class = null, sea
                     // Format tanggal mulai dan akhir
                     const startDate = first.school_assessment?.start_date ? `
                         ${formatDate(first.school_assessment?.start_date)}, ${timeFormatter.format(new Date(first.school_assessment?.start_date))}` : 'Tanggal tidak tersedia';
-                    
+
                     const endDate = first.school_assessment?.end_date ? `
                         ${formatDate(first.school_assessment?.end_date)}, ${timeFormatter.format(new Date(first.school_assessment?.end_date))}` : 'Tanggal tidak tersedia';
 

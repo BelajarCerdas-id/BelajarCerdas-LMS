@@ -539,14 +539,14 @@ class StudentAssessmentExamController extends Controller
         if ($startDate && $schoolNow->lt($startDate)) {
             return response()->json([
                 'status' => 'not_started',
-                'message' => 'Asesmen belum dimulai.'
+                'message' => 'Assessment belum dimulai.'
             ], 422);
         }
 
         if ($endDate && $schoolNow->gt($endDate)) {
             return response()->json([
                 'status' => 'expired',
-                'message' => 'Asesmen sudah berakhir.'
+                'message' => 'Assessment sudah berakhir.'
             ], 422);
         }
 
@@ -976,14 +976,14 @@ class StudentAssessmentExamController extends Controller
         if ($isBeforeStart) {
             return response()->json([
                 'status' => 'not_started',
-                'message' => 'Asesmen belum dimulai.'
+                'message' => 'Assessment belum dimulai.'
             ], 422);
         }
 
         if ($isExpired) {
             return response()->json([
                 'status' => 'expired',
-                'message' => 'Asesmen sudah berakhir.'
+                'message' => 'Assessment sudah berakhir.'
             ], 422);
         }
     
@@ -1002,10 +1002,10 @@ class StudentAssessmentExamController extends Controller
             ]
 
         ], [
-            'project_file.required_if' => 'Harap upload file asesmen.',
+            'project_file.required_if' => 'Harap upload file assessment.',
             'project_file.mimes' => 'Format file tidak sesuai.',
             'project_file.max' => 'Ukuran file tidak boleh lebih dari 100 MB.',
-            'project_text.required_if' => 'Harap isi deskripsi asesmen.',
+            'project_text.required_if' => 'Harap isi deskripsi assessment.',
         ]);
 
         if ($validator->fails()) {
@@ -1047,7 +1047,7 @@ class StudentAssessmentExamController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Asesmen berhasil disubmit.',
+            'message' => 'Assessment berhasil disubmit.',
         ]);
     }
 

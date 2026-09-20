@@ -24,7 +24,7 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
     // Simpan state sebelum reload agar pilihan tidak hilang saat filter berubah.
     const previousSelectedAssessment = teacherQuestionReleaseSelectedAssessment;
     const previousSelectedQuestions = new Set(teacherQuestionReleaseSelectedQuestions);
-    const previousSelectedQuestionWeights = {...teacherQuestionReleaseSelectedQuestionWeights};
+    const previousSelectedQuestionWeights = { ...teacherQuestionReleaseSelectedQuestionWeights };
     const previousSelectedQuestionData = new Map(teacherQuestionReleaseSelectedQuestionData);
     const previousStep = teacherQuestionReleaseStep;
 
@@ -198,13 +198,13 @@ function renderTeacherQuestionReleasePreview(question) {
 
                     <div class="space-y-3">
                         ${leftItems.map(item => {
-                            const content =
-                                addClassToTeacherQuestionReleaseImgTags(
-                                    item.options_value || '',
-                                    'max-w-[100px] rounded'
-                                );
+        const content =
+            addClassToTeacherQuestionReleaseImgTags(
+                item.options_value || '',
+                'max-w-[100px] rounded'
+            );
 
-                                return `
+        return `
                                     <div class="px-3 min-h-10 border rounded flex justify-between items-center left-item" data-key="${item.options_key}">
                                         <span>${content}</span>
 
@@ -214,7 +214,7 @@ function renderTeacherQuestionReleasePreview(question) {
                                         </span>
                                     </div>
                                 `;
-                        }).join('')}
+    }).join('')}
                     </div>
                 </div>
 
@@ -223,13 +223,13 @@ function renderTeacherQuestionReleasePreview(question) {
 
                     <div class="space-y-3">
                         ${rightItems.map(item => {
-                            const content =
-                                addClassToTeacherQuestionReleaseImgTags(
-                                    item.options_value || '',
-                                    'max-w-[100px] rounded'
-                                );
+        const content =
+            addClassToTeacherQuestionReleaseImgTags(
+                item.options_value || '',
+                'max-w-[100px] rounded'
+            );
 
-                                return `
+        return `
                                     <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
                                         <span class="font-bold">
                                             ${rightLabelMap[item.options_key] ?? '-'}.
@@ -238,7 +238,7 @@ function renderTeacherQuestionReleasePreview(question) {
                                         ${content}
                                     </div>
                                 `;
-                            }).join('')}
+    }).join('')}
                     </div>
                 </div>
             </div>
@@ -251,13 +251,13 @@ function renderTeacherQuestionReleasePreview(question) {
                 <p class="font-semibold mb-2">Kolom A:</p>
 
                 ${leftItems.map(item => {
-                    const content =
-                        addClassToTeacherQuestionReleaseImgTags(
-                            item.options_value || '',
-                            'max-w-[100px] rounded'
-                        );
+        const content =
+            addClassToTeacherQuestionReleaseImgTags(
+                item.options_value || '',
+                'max-w-[100px] rounded'
+            );
 
-                        return `
+        return `
                             <div class="flex justify-between items-center border rounded p-3">
                                 <span>${content}</span>
 
@@ -267,20 +267,20 @@ function renderTeacherQuestionReleasePreview(question) {
                                 </span>
                             </div>
                         `;
-                    }).join('')}
+    }).join('')}
             </div>
 
             <div class="mt-4 border-t border-gray-400 pt-3 grid grid-cols-1 gap-3 text-sm text-gray-700">
                 <p class="font-semibold mb-2">Kolom B:</p>
 
                 ${rightItems.map(item => {
-                    const content =
-                        addClassToTeacherQuestionReleaseImgTags(
-                            item.options_value || '',
-                            'max-w-[100px] rounded'
-                        );
+        const content =
+            addClassToTeacherQuestionReleaseImgTags(
+                item.options_value || '',
+                'max-w-[100px] rounded'
+            );
 
-                        return `
+        return `
                             <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
                                 <span class="font-bold">
                                     ${rightLabelMap[item.options_key] ?? '-'}.
@@ -289,7 +289,7 @@ function renderTeacherQuestionReleasePreview(question) {
                                 ${content}
                             </div>
                         `;
-                    }).join('')}
+    }).join('')}
             </div>
         </div>
     `;
@@ -319,15 +319,15 @@ function renderTeacherQuestionReleasePreview(question) {
 
                     <tbody>
                         ${items.map(item => {
-                            const answer = item.extra_data?.answer;
+            const answer = item.extra_data?.answer;
 
-                            const content =
-                                addClassToTeacherQuestionReleaseImgTags(
-                                    item.options_value || '',
-                                    'max-w-[100px] sm:max-w-[200px] rounded'
-                                );
+            const content =
+                addClassToTeacherQuestionReleaseImgTags(
+                    item.options_value || '',
+                    'max-w-[100px] sm:max-w-[200px] rounded'
+                );
 
-                                return `
+            return `
                                 <tr>
                                     <td class="border px-4 py-3">
                                         ${content}
@@ -336,20 +336,20 @@ function renderTeacherQuestionReleasePreview(question) {
                                     ${categories.map(category => `
                                         <td class="border text-center">
                                             ${answer === category.options_key
-                                                ? `
+                    ? `
                                                     <div class="flex justify-center items-center">
                                                         <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
                                                             <i class="fa-solid fa-check text-xs"></i>
                                                         </span>
                                                     </div>
                                                     `
-                                                : ''
-                                            }
+                    : ''
+                }
                                         </td>
                                     `).join('')}
                                 </tr>
                             `;
-                        }).join('')}
+        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -382,9 +382,9 @@ function renderTeacherQuestionReleasePreview(question) {
                 <div class="question-bank-preview leading-relaxed text-gray-800">
                     <div>
                         ${addClassToTeacherQuestionReleaseImgTags(
-                            question.questions || '',
-                            'max-w-full md:max-w-[300px] h-auto'
-                        )}
+        question.questions || '',
+        'max-w-full md:max-w-[300px] h-auto'
+    )}
                     </div>
 
                     <div>
@@ -394,7 +394,7 @@ function renderTeacherQuestionReleasePreview(question) {
             </div>
 
             ${question.explanation
-                ? `
+            ? `
                     <div class="bg-green-50 p-5 rounded-xl border border-green-200">
                         <h3 class="text-sm font-semibold text-green-700 mb-2 uppercase tracking-wide">
                             Pembahasan
@@ -559,7 +559,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
     if (containerAssessmentType && Array.isArray(response.schoolAssessmentType)) {
         containerAssessmentType.innerHTML = `
             <select id="dropdown-assessment-type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                <option value="">Pilih Jenis Asesmen</option>
+                <option value="">Pilih Jenis Assessment</option>
                 ${response.schoolAssessmentType.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item.id)}" ${String(searchAssessmentType ?? '') === String(item.id) ? 'selected' : ''}>
                         ${escapeTeacherQuestionReleaseHtml(item.name)}
@@ -674,7 +674,7 @@ function renderTeacherQuestionReleaseAssessments() {
 
     const assessments = teacherQuestionReleaseAssessments || [];
 
-    count.removeClass('bg-red-50 text-red-600').addClass('bg-gray-100 text-gray-500').text(`${assessments.length} asesmen`);
+    count.removeClass('bg-red-50 text-red-600').addClass('bg-gray-100 text-gray-500').text(`${assessments.length} assessment`);
 
     if (!assessments.length) {
         container.addClass('hidden').empty();
@@ -705,7 +705,7 @@ function renderTeacherQuestionReleaseAssessmentCard(assessment) {
     const className = assessment.school_class?.class_name || '-';
     const assessmentType = assessment.school_assessment_type?.name || '-';
 
-    const title = assessment.title || assessment.name || 'Asesmen Tanpa Judul';
+    const title = assessment.title || assessment.name || 'Assessment Tanpa Judul';
     const startDate = formatTeacherQuestionReleaseDateTime(assessment.start_date);
     const endDate = formatTeacherQuestionReleaseDateTime(assessment.end_date);
 
@@ -890,16 +890,16 @@ function renderTeacherQuestionReleaseClassLevels() {
     container.html(`
         <div class="flex flex-wrap items-center gap-2">
             ${levels.map(level => {
-                const checked = Number(teacherQuestionReleaseSelectedClassLevel) === Number(level);
+        const checked = Number(teacherQuestionReleaseSelectedClassLevel) === Number(level);
 
-                return `
+        return `
                     <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 transition-all ${checked ? 'border-[#0071BC] bg-[#EAF6FF] text-[#0071BC]' : 'border-gray-200 bg-white text-gray-600 hover:border-[#B9DDF5]'}">
                         <input type="radio" name="question-release-class-level" value="${level}"
                             class="question-release-class-level-radio h-4 w-4 border-gray-300 text-[#0071BC] focus:ring-[#0071BC]" ${checked ? 'checked' : ''}>
                         <span class="text-xs font-semibold">Kelas ${level}</span>
                     </label>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
     `);
 }
@@ -1145,8 +1145,8 @@ function renderTeacherQuestionReleaseBankCard(bank) {
 
                 <div class="space-y-2">
                     ${questions.map((question, index) =>
-                        renderTeacherQuestionReleaseQuestionCard(question, index)
-                    ).join('')}
+        renderTeacherQuestionReleaseQuestionCard(question, index)
+    ).join('')}
                 </div>
             </div>
         </div>
@@ -1329,25 +1329,25 @@ function renderTeacherQuestionReleaseSelectedQuestions() {
 
     const allQuestions = getTeacherQuestionReleaseAllQuestions();
 
-    const selectedQuestions =Array.from(teacherQuestionReleaseSelectedQuestions).map(id => {
+    const selectedQuestions = Array.from(teacherQuestionReleaseSelectedQuestions).map(id => {
         const currentQuestion = allQuestions.find(
             question => String(question.id) === String(id)
         );
-    
+
         if (currentQuestion) {
             teacherQuestionReleaseSelectedQuestionData.set(
                 String(id),
                 currentQuestion
             );
-    
+
             return currentQuestion;
         }
-    
+
         return teacherQuestionReleaseSelectedQuestionData.get(
             String(id)
         ) || null;
     })
-    .filter(Boolean);
+        .filter(Boolean);
 
     list.html(
         selectedQuestions.map((question, index) =>
@@ -1618,7 +1618,7 @@ function updateTeacherQuestionReleaseQuestionSummary() {
     const warning = $('#question-release-weight-warning');
 
     if (warning.length) {
-        if ( selectedCount > 0 && !isTeacherQuestionReleaseWeightValid()) {
+        if (selectedCount > 0 && !isTeacherQuestionReleaseWeightValid()) {
             warning.removeClass('hidden');
 
             warning.text(
@@ -1705,7 +1705,7 @@ function loadTeacherQuestionReleaseStep2() {
                 list.addClass('hidden').empty();
                 empty.removeClass('hidden');
 
-                $('#question-release-question-bank-count') .text('0 bank soal');
+                $('#question-release-question-bank-count').text('0 bank soal');
 
                 renderTeacherQuestionReleaseSelectedQuestions();
                 updateTeacherQuestionReleaseQuestionSummary();
@@ -1895,7 +1895,7 @@ function renderTeacherQuestionReleaseReview() {
             <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                 <div class="border-b border-gray-100 bg-gray-50 px-4 py-3">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        Asesmen Target
+                        Assessment Target
                     </span>
                 </div>
 
@@ -1939,8 +1939,8 @@ function renderTeacherQuestionReleaseReview() {
                             <div class="text-[10px] text-gray-400">Bobot Rata-rata</div>
                             <div class="mt-1 text-sm font-black text-gray-700">
                                 ${formatTeacherQuestionReleaseWeight(
-                                    selectedCount > 0 ? 100 / selectedCount : 0
-                                )}
+        selectedCount > 0 ? 100 / selectedCount : 0
+    )}
                             </div>
                         </div>
 
@@ -1960,7 +1960,7 @@ function renderTeacherQuestionReleaseReview() {
                             <div class="flex items-start gap-2">
                                 <i class="fa-solid fa-circle-exclamation mt-0.5 text-xs text-red-500"></i>
                                 <p class="text-[10px] leading-relaxed text-red-600">
-                                    Total bobot harus tepat 100 sebelum asesmen dapat dirilis.
+                                    Total bobot harus tepat 100 sebelum assessment dapat dirilis.
                                 </p>
                             </div>
                         </div>
@@ -1996,8 +1996,8 @@ function renderTeacherQuestionReleaseReview() {
 
                 <div class="p-4 sm:p-5 space-y-4">
                     ${selectedBanks.map((bank, bankIndex) =>
-                        renderTeacherQuestionReleaseReviewBank(bank, bankIndex)
-                    ).join('')}
+        renderTeacherQuestionReleaseReviewBank(bank, bankIndex)
+    ).join('')}
                 </div>
             </div>
         </div>
@@ -2635,8 +2635,8 @@ function bindTeacherQuestionReleaseEvents() {
             if (teacherQuestionReleaseSelectedAssessmentHasAnswers) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Asesmen Sudah Dikerjakan',
-                    text: 'Soal tidak dapat dihapus karena sudah ada siswa yang menjawab asesmen ini.',
+                    title: 'Assessment Sudah Dikerjakan',
+                    text: 'Soal tidak dapat dihapus karena sudah ada siswa yang menjawab assessment ini.',
                     confirmButtonText: 'Mengerti',
                     confirmButtonColor: '#0071BC'
                 });
@@ -2985,7 +2985,7 @@ $('#question-release-publish').on('click', function (e) {
     if (!role || !schoolName || !schoolId) return;
 
     if (!teacherQuestionReleaseSelectedAssessment) {
-        alert('Silakan pilih asesmen terlebih dahulu.');
+        alert('Silakan pilih assessment terlebih dahulu.');
         return;
     }
 

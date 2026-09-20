@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Total Asesmen</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Total Assessment</p>
                     <div class="flex items-end justify-between">
                         <h3 class="text-3xl font-black text-slate-800">{{ $stats->total_tugas ?? 0 }}</h3>
                         <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Tugas/Ujian</span>

@@ -26,7 +26,7 @@
                             <!-- ================= HEADER ================= -->
                             <div>
                                 <h2 class="text-base sm:text-lg font-bold text-gray-800">
-                                    Buat Jenis Asesmen
+                                    Buat Jenis Assessment
                                 </h2>
                             </div>
 
@@ -35,7 +35,7 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Nama Asesmen 
+                                        Nama Assessment 
                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <input type="text" name="name" placeholder="Contoh: ASTS, ASAS, Quiz, Homework, Project" 
@@ -45,12 +45,12 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Mode Asesmen
+                                        Mode Assessment
                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="assessment_mode_id"
                                         class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                        <option value="" class="hidden">Pilih Mode Asesmen</option>
+                                        <option value="" class="hidden">Pilih Mode Assessment</option>
                                         @foreach ($getAssessmentMode as $item)
                                             <option value="{{ $item->id }}">{{ $item->name }}</option>
                                         @endforeach
@@ -104,7 +104,7 @@
                             <div class="flex justify-end pt-4">
                                 <button type="button" id="submit-button-create-assessment-type"
                                     class="h-11 px-8 bg-[#0071BC] hover:bg-blue-600 text-white font-semibold text-sm rounded-xl shadow-sm hover:shadow transition-all cursor-pointer disabled:cursor-default">
-                                    Simpan Jenis Asesmen
+                                    Simpan Jenis Assessment
                                 </button>
                             </div>
 
@@ -124,10 +124,10 @@
                             <thead class="thead-table-assessment-type-management hidden bg-gray-50 shadow-inner">
                                 <tr>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
-                                        Nama Asesmen
+                                        Nama Assessment
                                     </th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
-                                        Mode Asesmen
+                                        Mode Assessment
                                     </th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
                                         Kebijakan Remedial
@@ -167,22 +167,22 @@
                                 <div class="flex flex-col gap-6 w-full">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Nama Asesmen
+                                            Nama Assessment
                                             <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                         </label>
                                         <input type="text" id="edit-assessment-type-name" name="name"
-                                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Masukkan Nama Asesmen">
+                                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Masukkan Nama Assessment">
                                         <span id="error-name" class="text-red-500 text-xs mt-1 font-bold"></span>
                                     </div>
     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Mode Asesmen
+                                            Mode Assessment
                                             <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                         </label>
                                         <select id="edit-assessment-mode-id" name="assessment_mode_id"
                                             class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                            <option value="" class="hidden">Pilih Mode Asesmen</option>
+                                            <option value="" class="hidden">Pilih Mode Assessment</option>
                                             @foreach ($getAssessmentMode as $item)
                                                 <option value="{{ $item->id }}">{{ $item->name }}</option>
                                             @endforeach

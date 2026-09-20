@@ -28,8 +28,8 @@
                                 <input type="checkbox" id="check-all" class="cursor-pointer">
                             </th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama Siswa</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Asesmen</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Asesmen</th>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Assessment</th>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Assessment</th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Ujian</th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai</th>
                         </tr>
@@ -42,7 +42,7 @@
 
             <div id="empty-message-teacher-gradebook-assessment-preview" class="w-full h-80 hidden">
                 <span class="flex h-full items-center justify-center text-gray-500">
-                    Tidak ada asesmen yang terdaftar.
+                    Tidak ada Assessment yang terdaftar.
                 </span>
             </div>
         </section>

@@ -108,10 +108,10 @@ function assesmentGradingStudentProject() {
                 assessmentInfo.show();
 
                 if (response.assessment) {
-    
+
                     // MAIN FORM
                     const studentHasSubmitted = submission !== null;
-    
+
                     const form = `
                         <form id="teacher-assessment-grading-student-project-form" autocomplete="OFF">
     
@@ -129,13 +129,13 @@ function assesmentGradingStudentProject() {
                                         </h3>
     
                                         ${assessment.assessment_instruction
-                                            ? `
+                            ? `
                                                 <div class="text-sm text-gray-700 leading-relaxed bg-gray-50 p-2 border border-gray-300 rounded-lg">
                                                     ${assessment.assessment_instruction ?? '-'}
                                                 </div>                
                                             `
-                            
-                                        : ''}
+
+                            : ''}
     
                                         <div class="mt-6">
     
@@ -163,7 +163,7 @@ function assesmentGradingStudentProject() {
                                         </h3>
     
                                         ${studentHasSubmitted
-                                                ? `
+                            ? `
                                                 <div class="text-sm text-gray-700 leading-relaxed">
                                                     ${submission.text_answer ?? 'Tidak ada jawaban teks'}
                                                 </div>
@@ -180,7 +180,7 @@ function assesmentGradingStudentProject() {
     
                                                 </div>
                                             `
-                                                : `
+                            : `
                                                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-700">
     
                                                     <div class="flex items-center gap-2">
@@ -190,7 +190,7 @@ function assesmentGradingStudentProject() {
     
                                                 </div>
                                             `
-                                            }
+                        }
     
                                     </div>
     
@@ -248,7 +248,7 @@ function assesmentGradingStudentProject() {
                             </div>
                         </form>
                     `;
-    
+
                     const $card = $(form);
                     formAssessmentGrading.append($card);
 
@@ -309,7 +309,7 @@ $(document).on('click', '#submit-button-assessment-grading-student-project', fun
         contentType: false,
         success: function (response) {
 
-            $('#alert-success-assesment-grading').html(`
+            $('#alert-success-assessment-grading').html(`
                     <div class=" w-full flex justify-center">
                         <div class="fixed z-9999">
                             <div id="alertSuccess"

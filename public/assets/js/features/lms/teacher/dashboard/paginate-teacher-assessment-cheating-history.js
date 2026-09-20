@@ -28,8 +28,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
                     <select id="dropdown-filter-school-year-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Pilih Tahun Ajaran</option>
                         ${response.tahunAjaran.map(item =>
-                            `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`
-                        ).join('')}
+                `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`
+            ).join('')}
                     </select>
                 </div>
             `;
@@ -42,8 +42,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
                     <select id="dropdown-filter-rombel-class-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Kelas</option>
                         ${response.className.map(item =>
-                            `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`
-                        ).join('')}
+                `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`
+            ).join('')}
                     </select>
                 </div>
             `;
@@ -56,8 +56,8 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
                     <select id="dropdown-filter-mapel-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Mata Pelajaran</option>
                         ${response.subject.map(item =>
-                            `<option value="${item.id}" ${subject_id == item.id ? 'selected' : ''}>${item.name}</option>`
-                        ).join('')}
+                `<option value="${item.id}" ${subject_id == item.id ? 'selected' : ''}>${item.name}</option>`
+            ).join('')}
                     </select>
                 </div>
             `;
@@ -66,12 +66,12 @@ function pagianteTeacherAssessmentHistoryCheating(search_year = null, search_cla
             const containerAssessmentType = document.getElementById('container-dropdown-assessment-type-cheating-history');
             containerAssessmentType.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Asesmen</label>
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Assessment</label>
                     <select id="dropdown-filter-assessment-type-cheating-history" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                        <option value="" class="hidden">Filter Tipe Asesmen</option>
+                        <option value="" class="hidden">Filter Tipe Assessment</option>
                         ${response.schoolAssessmentType.map(item =>
-                            `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`
-                        ).join('')}
+                `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`
+            ).join('')}
                     </select>
                 </div>
             `;

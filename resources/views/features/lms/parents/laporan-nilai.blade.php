@@ -23,7 +23,7 @@
                     <tr class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider">
 
                         <th class="p-4 text-left rounded-tl-xl">
-                            Asesmen
+                            Assessment
                         </th>
 
                         <th class="p-4 text-left">

@@ -116,8 +116,8 @@
                                         </div>
     
                                         <p class="mt-2 text-xs sm:text-sm leading-relaxed text-gray-400">
-                                            Pilih asesmen yang ingin kamu gunakan untuk mengisi soal dari bank soal.
-                                            Gunakan filter di bawah untuk menemukan asesmen dengan lebih cepat.
+                                            Pilih Assessment yang ingin kamu gunakan untuk mengisi soal dari bank soal.
+                                            Gunakan filter di bawah untuk menemukan Assessment dengan lebih cepat.
                                         </p>
                                     </div>
                                 </div>
@@ -130,12 +130,12 @@
                                         <i class="fa-solid fa-filter text-[11px] text-[#0071BC]"></i>
     
                                         <h3 class="text-xs font-bold text-gray-700">
-                                            Filter Asesmen
+                                            Filter Assessment
                                         </h3>
                                     </div>
     
                                     <p class="mt-1 text-[11px] text-gray-400">
-                                        Sesuaikan filter untuk menampilkan asesmen yang ingin kamu cari.
+                                        Sesuaikan filter untuk menampilkan Assessment yang ingin kamu cari.
                                     </p>
                                 </div>
     
@@ -163,12 +163,12 @@
                                         <div id="container-dropdown-class"></div>
                                     </div>
     
-                                    <!-- JENIS ASESMEN -->
+                                    <!-- JENIS Assessment -->
                                     <div>
                                         <label
                                             for="dropdown-filter-assessment-type"
                                             class="block text-sm font-medium text-gray-700 mb-1.5">
-                                            Jenis Asesmen
+                                            Jenis Assessment
                                         </label>
     
                                         <div id="container-dropdown-assessment-type"></div>
@@ -194,11 +194,11 @@
                                 <div class="mb-4 flex items-center justify-between gap-3">
                                     <div>
                                         <h3 class="text-sm font-semibold text-gray-800">
-                                            Asesmen Tersedia
+                                            Assessment Tersedia
                                         </h3>
     
                                         <p class="mt-0.5 text-xs text-gray-400">
-                                            Pilih satu asesmen yang ingin kamu isi dengan soal dari bank soal.
+                                            Pilih satu Assessment yang ingin kamu isi dengan soal dari bank soal.
                                         </p>
                                     </div>
     
@@ -268,17 +268,17 @@
                                     </div>
     
                                     <h3 class="mt-4 text-sm font-bold text-gray-700">
-                                        Belum ada asesmen yang tersedia
+                                        Belum ada Assessment yang tersedia
                                     </h3>
     
                                     <p class="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-gray-400">
-                                        Tidak ada asesmen yang sesuai dengan filter yang kamu pilih.
-                                        Coba ubah tahun ajaran, rombel, jenis asesmen, atau mata pelajaran untuk melihat pilihan lainnya.
+                                        Tidak ada Assessment yang sesuai dengan filter yang kamu pilih.
+                                        Coba ubah tahun ajaran, rombel, jenis Assessment, atau mata pelajaran untuk melihat pilihan lainnya.
                                     </p>
     
                                     <div class="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-[11px] font-medium text-gray-500 border border-gray-200">
                                         <i class="fa-solid fa-circle-info text-[10px] text-gray-400"></i>
-                                        <span>Pastikan asesmen sudah dibuat dan jadwalnya telah ditentukan.</span>
+                                        <span>Pastikan Assessment sudah dibuat dan jadwalnya telah ditentukan.</span>
                                     </div>
                                 </div>
                             </div>
@@ -288,7 +288,7 @@
     
                                 <div class="hidden sm:flex items-center gap-2 text-[11px] text-gray-400">
                                     <i class="fa-solid fa-circle-info text-[10px]"></i>
-                                    <span>Pilih satu asesmen untuk melanjutkan ke langkah berikutnya.</span>
+                                    <span>Pilih satu Assessment untuk melanjutkan ke langkah berikutnya.</span>
                                 </div>
     
                                 <button type="button" id="question-release-next-step-1" disabled class="ml-auto inline-flex items-center justify-center gap-2 
@@ -312,7 +312,7 @@
                                         <div>
                                             <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071BC]">Langkah 2</span>
                                             <h2 class="text-base sm:text-lg font-bold text-gray-800">Pilih Soal dari Bank Soal</h2>
-                                            <p class="text-xs text-gray-500 mt-0.5">Pilih kelas, buka bank soal, lalu tentukan soal yang ingin dimasukkan ke dalam asesmen.</p>
+                                            <p class="text-xs text-gray-500 mt-0.5">Pilih kelas, buka bank soal, lalu tentukan soal yang ingin dimasukkan ke dalam Assessment.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -410,7 +410,7 @@
                                                     <div class="flex items-start justify-between gap-3">
                                                         <div>
                                                             <h3 class="text-sm font-bold text-gray-800">Paket Soal Ujian</h3>
-                                                            <p class="mt-0.5 text-[10px] text-gray-400">Daftar soal yang akan dimasukkan ke asesmen.</p>
+                                                            <p class="mt-0.5 text-[10px] text-gray-400">Daftar soal yang akan dimasukkan ke Assessment.</p>
                                                         </div>
                                                     </div>
     
@@ -683,10 +683,10 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Rombel Kelas</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tahun Ajaran</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Mata Pelajaran</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Asesmen</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Asesmen</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Assessment</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Assessment</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Semester</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Asesmen</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Assessment</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Total Soal</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
                                         <i class="fa-solid fa-ellipsis-vertical"></i>

@@ -232,7 +232,7 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                     // RENDER MCQ / MCMA
                     function renderMCQOptions() {
                         const optionKeys = ['A', 'B', 'C', 'D', 'E'];
-                        
+
                         return options.map((item, index) => {
                             const containsImage = /<img\s+[^>]*src=/.test(item.options_value);
 
@@ -354,15 +354,15 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                         <h4 class="font-bold mb-3">Kolom B</h4>
                                         <div class="space-y-3">
                                             ${rightItems.map(item => {
-                                                const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
+                            const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
 
-                                                return `
+                            return `
                                                     <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
                                                         <span class="font-bold">${rightLabelMap[item.options_key]}.</span>
                                                         ${content}
                                                     </div>
                                                 `;
-                                            }).join('')}
+                        }).join('')}
                                         </div>
                                     </div>
                                 </div>
@@ -390,15 +390,15 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                 <div class="mt-4 lg:hidden border-t border-gray-400 pt-3 grid grid-cols-1 gap-3 text-sm text-gray-700">
                                     <p class="font-semibold mb-2">Kolom B:</p>
                                         ${rightItems.map(item => {
-                                            const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
+                            const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
 
-                                            return `
+                            return `
                                                 <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
                                                     <span class="font-bold">${rightLabelMap[item.options_key]}.</span>
                                                     ${content}
                                                 </div>
                                             `;
-                                        }).join('')}
+                        }).join('')}
                                 </div>
                             </div>
                         `;
@@ -470,33 +470,33 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
 
                                     ${categories.map(cat => {
 
-                                        const selected = userAnswer === cat.options_key;
-                                        const isCorrect = correctAnswer === cat.options_key;
+                                const selected = userAnswer === cat.options_key;
+                                const isCorrect = correctAnswer === cat.options_key;
 
-                                        let cellClass = '';
-                                        let icon = '';
-                                        let badge = '';
+                                let cellClass = '';
+                                let icon = '';
+                                let badge = '';
 
-                                        // Jawaban benar & dipilih
-                                        if (selected && isCorrect) {
-                                            cellClass += ' bg-green-100 border-green-400';
-                                            icon = '<i class="fa-solid fa-check text-green-600"></i>';
-                                            badge = '<span class="text-[10px] text-green-700">jawaban Siswa</span>';
+                                // Jawaban benar & dipilih
+                                if (selected && isCorrect) {
+                                    cellClass += ' bg-green-100 border-green-400';
+                                    icon = '<i class="fa-solid fa-check text-green-600"></i>';
+                                    badge = '<span class="text-[10px] text-green-700">jawaban Siswa</span>';
 
-                                            // Jawaban salah
-                                        } else if (selected && !isCorrect) {
-                                            cellClass += ' bg-red-100 border-red-400';
-                                            icon = '<i class="fa-solid fa-xmark text-red-600"></i>';
-                                            badge = '<span class="text-[10px] text-red-700">Jawaban Siswa</span>';
+                                    // Jawaban salah
+                                } else if (selected && !isCorrect) {
+                                    cellClass += ' bg-red-100 border-red-400';
+                                    icon = '<i class="fa-solid fa-xmark text-red-600"></i>';
+                                    badge = '<span class="text-[10px] text-red-700">Jawaban Siswa</span>';
 
-                                            // Kunci jawaban
-                                        } else if (!selected && isCorrect) {
-                                            cellClass += ' bg-green-50 border-green-300';
-                                            icon = '<i class="fa-solid fa-check text-green-500"></i>';
-                                            badge = '<span class="text-[10px] text-green-600">Jawaban Benar</span>';
-                                        }
+                                    // Kunci jawaban
+                                } else if (!selected && isCorrect) {
+                                    cellClass += ' bg-green-50 border-green-300';
+                                    icon = '<i class="fa-solid fa-check text-green-500"></i>';
+                                    badge = '<span class="text-[10px] text-green-600">Jawaban Benar</span>';
+                                }
 
-                                        return `
+                                return `
                                             <td class="border">
                                                 <div class="flex flex-col items-center justify-center gap-1 py-2 ${cellClass}">
 
@@ -511,7 +511,7 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                                 </div>
                                             </td>
                                         `;
-                                    }).join('')}
+                            }).join('')}
                                 </tr>
                             `;
                         }).join('')}
@@ -568,7 +568,7 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                         Siswa tidak menjawab soal ini.
                                     </div>
                                 `
-                            : ''}
+                                : ''}
 
                             <textarea rows="6"
                                 class="editor w-full border border-gray-300 rounded-xl p-4 text-sm resize-none"
@@ -845,9 +845,9 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                             if (!container) return;
 
                             const pairs = leftItems.filter(i => i.extra_data?.pair_with).map(i => ({
-                                    left: i.options_key,
-                                    right: i.extra_data.pair_with
-                                }));
+                                left: i.options_key,
+                                right: i.extra_data.pair_with
+                            }));
 
                             drawMatchingLines(container, pairs);
                             initMatchingContainer(container);
@@ -934,7 +934,7 @@ $(document).on('click', '#submit-button-assessment-grading-student-answer', func
         contentType: false,
         success: function (response) {
 
-            $('#alert-success-assesment-grading').html(`
+            $('#alert-success-assessment-grading').html(`
                     <div class=" w-full flex justify-center">
                         <div class="fixed z-9999">
                             <div id="alertSuccess"
@@ -1061,7 +1061,7 @@ function drawMatchingLines(container) {
             const x2 = r.left - cRect.left;
             const y2 = r.top + r.height / 2 - cRect.top;
 
-            const correctPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+            const correctPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 
             correctPath.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
 

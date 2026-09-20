@@ -362,9 +362,9 @@ class TeacherQuestionBankReleaseController extends Controller
                 'max:100',
             ],
         ], [
-            'school_assessment_id.required' => 'Harap pilih asesmen.',
-            'school_assessment_id.integer' => 'Asesmen tidak valid.',
-            'school_assessment_id.exists' => 'Asesmen tidak ditemukan.',
+            'school_assessment_id.required' => 'Harap pilih assessment.',
+            'school_assessment_id.integer' => 'Assessment tidak valid.',
+            'school_assessment_id.exists' => 'Assessment tidak ditemukan.',
             'question_id.required' => 'Harap pilih setidaknya 1 soal.',
             'question_id.min' => 'Harap pilih setidaknya 1 soal.',
             'question_id.*.required' => 'Soal tidak valid.',
@@ -394,7 +394,7 @@ class TeacherQuestionBankReleaseController extends Controller
         if (!$assessment) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Asesmen tidak ditemukan atau tidak dapat diakses.',
+                'message' => 'Assessment tidak ditemukan atau tidak dapat diakses.',
             ], 403);
         }
 
@@ -453,7 +453,7 @@ class TeacherQuestionBankReleaseController extends Controller
             if ((int) $question->mapel_id !== (int) $assessment->mapel_id || $questionClassLevel !== $assessmentClassLevel) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Terdapat soal yang tidak sesuai dengan kelas atau mata pelajaran asesmen.',
+                    'message' => 'Terdapat soal yang tidak sesuai dengan kelas atau mata pelajaran assessment.',
                 ], 422);
             }
 
@@ -493,7 +493,7 @@ class TeacherQuestionBankReleaseController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Soal berhasil dirilis ke asesmen.',
+                'message' => 'Soal berhasil dirilis ke assessment.',
                 'data' => [
                     'school_assessment_id' => (int) $assessment->id,
                     'question_count' => $savedQuestions->count(),

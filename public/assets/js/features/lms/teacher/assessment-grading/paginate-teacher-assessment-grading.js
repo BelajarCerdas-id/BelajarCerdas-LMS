@@ -15,7 +15,7 @@ function paginateAssessmentGrading(search_year = null, search_class = null, sear
             search_assessment_type,
             page: page,
         },
-        success: function(response) {
+        success: function (response) {
             $('#tbody-assessment-grading-list').empty();
             $('.pagination-container-teacher-assessment-grading-list').empty();
 
@@ -47,9 +47,9 @@ function paginateAssessmentGrading(search_year = null, search_class = null, sear
             const containerAssessmentType = document.getElementById('container-dropdown-assessment-type');
             containerAssessmentType.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Asesmen</label>
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Assessment</label>
                     <select id="dropdown-assessment-type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                        <option value="" class="hidden">Filter Tipe Asesmen</option>
+                        <option value="" class="hidden">Filter Tipe Assessment</option>
                         ${response.schoolAssessmentType.map(item => `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`).join('')}
                     </select>
                 </div>
@@ -60,7 +60,7 @@ function paginateAssessmentGrading(search_year = null, search_class = null, sear
                 $.each(response.data, function (index, item) {
                     const assessmentGradingStudentList = response.assessmentGradingStudentList.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
                         .replace(':assessmentId', item.id).replace(':mode', item.assessment_category);
-                    
+
                     $('#tbody-assessment-grading-list').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">${index + 1}</td>
@@ -96,7 +96,7 @@ function paginateAssessmentGrading(search_year = null, search_class = null, sear
     });
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
     paginateAssessmentGrading();
 });
 

@@ -161,7 +161,7 @@
                         </h2>
 
                         <p class="text-white/80 max-w-xl">
-                            Guru kamu sedang menonaktifkan tampilan nilai untuk asesmen ini.
+                            Guru kamu sedang menonaktifkan tampilan nilai untuk assessment ini.
                         </p>
 
                     </div>
@@ -194,7 +194,7 @@
                 <a href="{{ route('lms.studentPreviewAssessment.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester]) }}"
                     class="bg-[#0071BC] text-white px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition font-semibold flex items-center justify-center gap-2">
                     <i class="fa-solid fa-house"></i>
-                    Kembali ke halaman asesmen
+                    Kembali ke halaman assessment
                 </a>
 
             </div>

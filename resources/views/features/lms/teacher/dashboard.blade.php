@@ -318,7 +318,7 @@
 
                     </div>
 
-                    {{-- 3. PENGAWASAN ASESMEN --}}
+                    {{-- 3. PENGAWASAN ASSESSMENT --}}
                     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4">
                             <div class="flex items-center gap-3">
@@ -326,8 +326,8 @@
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Asesmen</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas siswa selama pengerjaan asesmen</p>
+                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Assessment</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas siswa selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>

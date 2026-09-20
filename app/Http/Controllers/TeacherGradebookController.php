@@ -184,8 +184,8 @@ class TeacherGradebookController extends Controller
                     'type_id' => $type->id,
                     'type_name' => $type->name,
                     'avg' => round($avg),
-                    'count_done' => count($scores), // total asesmen yang telah siswa selesaikan
-                    'count_total' => $totalAssessments, // total asesmen yang ada
+                    'count_done' => count($scores), // total assessment yang telah siswa selesaikan
+                    'count_total' => $totalAssessments, // total assessment yang ada
                     'details' => $details,
                     'gradebookAssessmentPreview' => '/lms/:role/:schoolName/:schoolId/gradebook/classes/subject-teacher/:subjectTeacherId/assessment-type/:assessmentTypeId/student/:studentId/preview/semester/:semester'
                 ];

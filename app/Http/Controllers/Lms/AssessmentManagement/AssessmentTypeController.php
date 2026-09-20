@@ -66,9 +66,9 @@ class AssessmentTypeController extends Controller
             'is_remedial_allowed' => 'required',
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1|integer|min:1',
         ], [
-            'name.required' => 'Nama asesmen tidak boleh kosong.',
-            'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
-            'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
+            'name.required' => 'Nama assessment tidak boleh kosong.',
+            'name.unique'   => 'Nama assessment telah terdaftar pada sekolah ini.',
+            'assessment_mode_id.required' => 'Mode assessment tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',
             'max_remedial_attempt.min' => 'Jumlah remedial harus lebih dari 0.',
@@ -102,7 +102,7 @@ class AssessmentTypeController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Nama asesmen berhasil ditambahkan.',
+            'message' => 'Nama assessment berhasil ditambahkan.',
             'data'    => $assessmentType,
         ]);
     }
@@ -121,9 +121,9 @@ class AssessmentTypeController extends Controller
             'is_remedial_allowed' => 'required',
             'max_remedial_attempt' => 'required_if:is_remedial_allowed,1|integer|min:1',
         ], [
-            'name.required' => 'Nama asesmen tidak boleh kosong.',
-            'name.unique'   => 'Nama asesmen telah terdaftar pada sekolah ini.',
-            'assessment_mode_id.required' => 'Mode asesmen tidak boleh kosong.',
+            'name.required' => 'Nama assessment tidak boleh kosong.',
+            'name.unique'   => 'Nama assessment telah terdaftar pada sekolah ini.',
+            'assessment_mode_id.required' => 'Mode assessment tidak boleh kosong.',
             'is_remedial_allowed.required' => 'Kebijakan remedial tidak boleh kosong.',
             'max_remedial_attempt.required_if' => 'Jumlah remedial tidak boleh kosong.',
             'max_remedial_attempt.min' => 'Jumlah remedial harus lebih dari 0.',
@@ -175,7 +175,7 @@ class AssessmentTypeController extends Controller
 
         return response()->json([
             'data' => $assessmentType,
-            'message' => 'Status asesmen berhasil diperbarui.',
+            'message' => 'Status assessment berhasil diperbarui.',
         ]);
     }
 }

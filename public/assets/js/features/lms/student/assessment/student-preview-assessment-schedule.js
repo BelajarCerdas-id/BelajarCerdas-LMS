@@ -80,7 +80,7 @@ function changeSemester(semester) {
                     btnStartExam = `
                         <a href="${resultTestHref}">
                             <button class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
-                                Lihat Hasil Asesmen
+                                Lihat Hasil Assessment
                             </button>
                         </a>
                     `;
@@ -91,7 +91,7 @@ function changeSemester(semester) {
                         <button
                             onclick="startExamLocalTime(${assessment.id})"
                             class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
-                            Mulai Asesmen
+                            Mulai Assessment
                         </button>
                     `;
                 }
@@ -145,7 +145,7 @@ function changeSemester(semester) {
 
                                 <div class="mt-4 flex flex-col sm:flex-row sm:justify-between text-sm bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 w-full sm:w-max gap-3 sm:gap-5">
                                     <div class="flex flex-col items-center">
-                                        <span class="opacity-70 text-xs">Mulai Asesmen</span>
+                                        <span class="opacity-70 text-xs">Mulai Assessment</span>
                                         <span class="font-medium">${startDate}</span>
                                     </div>
                                     <div class="flex flex-col items-center">
@@ -170,7 +170,7 @@ function changeSemester(semester) {
 
                 // MODE NON EXAM
                 else {
-                    
+
                     const projectResultTestHref = assessment.projectResultTestHref.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
                         .replace(':curriculumId', curriculumId).replace(':mapelId', mapelId).replace(':assessmentTypeId', assessmentTypeId).replace(':semester', selectedSemester)
                         .replace(':assessmentId', assessment.id);
@@ -190,7 +190,7 @@ function changeSemester(semester) {
                         btnSubmitProject = `
                             <a href="${projectResultTestHref}">
                                 <button class="mt-6 bg-[#43AB3C] w-full py-2 text-sm rounded-md shadow-md text-white font-bold cursor-pointer">
-                                    Lihat Hasil Asesmen
+                                    Lihat Hasil Assessment
                                 </button>
                             </a>
                         `;
@@ -429,8 +429,8 @@ function changeSemester(semester) {
                             `
                                 ${btnSubmitProject}
                             `
-                        
-                            }
+
+                        }
 
                         </div>
                     `;
@@ -493,7 +493,7 @@ function startExamLocalTime(assessmentId) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Belum Mulai',
-                text: 'Sesi Asesmen belum dimulai.'
+                text: 'Sesi Assessment belum dimulai.'
             });
 
             return;
@@ -504,7 +504,7 @@ function startExamLocalTime(assessmentId) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Sudah Selesai',
-                text: 'Sesi Asesmen telah berakhir.'
+                text: 'Sesi Assessment telah berakhir.'
             });
 
             return;
@@ -788,23 +788,23 @@ $(document).on('click', '[id^="btn-submit-project-"]', function (e) {
                 // VALIDATION ERROR
                 if (xhr.status === 422 && response?.errors) {
                     const errors = response.errors;
-                    
+
                     $.each(errors, function (field, messages) {
-    
+
                         if (field === 'project_file') {
-    
+
                             $(`#error-project-file-${assessmentId}`).text(messages[0]);
                             $(`#project-file-${assessmentId}`).addClass('border-red-400 border');
-    
+
                         }
-    
+
                         if (field === 'project_text') {
-    
+
                             $(`#error-project-text-${assessmentId}`).text(messages[0]);
                             $(`#project-text-${assessmentId}`).addClass('border-red-400 border');
-    
+
                         }
-    
+
                     });
                 }
 

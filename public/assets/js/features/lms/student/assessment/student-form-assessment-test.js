@@ -89,12 +89,12 @@ function studentFormAssessment(selectedIndex = 0) {
 
             if (question) {
                 const totalSoal = questions.length;
-    
+
                 let jumlahSoalTerjawab = Object.values(questionsAnswer).filter(q => q.status_answer === 'submitted').length;
-    
+
                 // Cek apakah semua soal sudah dijawab
                 const isAllAnswered = jumlahSoalTerjawab === totalSoal;
-    
+
                 // Helper tambah class img
                 function addClassToImgTags(html, className) {
                     return html
@@ -126,39 +126,39 @@ function studentFormAssessment(selectedIndex = 0) {
 
                     return rounded;
                 }
-    
+
                 // ===== GENERATE OPTIONS =====
                 const generateOptions = (options = []) => {
-    
+
                     if (!Array.isArray(options)) return '';
-    
+
                     const optionKeys = ['A', 'B', 'C', 'D', 'E'];
-    
+
                     const shuffleOptions = [...options];
-    
+
                     return shuffleOptions.map((item, index) => {
-    
+
                         const newKey = optionKeys[index] ?? '';
                         const containsImage = /<img\s+[^>]*src=/.test(item.options_value ?? '');
-    
+
                         let content = item.options_value;
-    
+
                         if (containsImage) {
                             content = addClassToImgTags(content, 'max-w-[300px] rounded my-2');
                         }
-    
+
                         let statusClass = '';
-    
+
                         const userAnswer = questionsAnswer[question.id]?.answer_value ?? [];
                         const correctOption = options.find(opt => opt.is_correct == 1);
                         const correctKey = correctOption?.options_key;
                         const correctKeys = options.filter(opt => opt.is_correct == 1).map(opt => opt.options_key);
-    
+
                         if (isAllAnswered && showAnswer) {
                             if (questionsAnswer[question.id]?.status_answer === 'submitted') {
-    
+
                                 if (questionType === 'mcma') {
-    
+
                                     if (correctKeys.includes(item.options_key) && userAnswer.includes(item.options_key)) {
                                         statusClass = 'bg-green-200 text-green-700 font-bold';
                                     }
@@ -168,9 +168,9 @@ function studentFormAssessment(selectedIndex = 0) {
                                     else if (correctKeys.includes(item.options_key)) {
                                         statusClass = 'bg-green-200 text-green-700 font-bold';
                                     }
-    
+
                                 } else {
-    
+
                                     if (userAnswer === correctKey && item.options_key === correctKey) {
                                         statusClass = 'bg-green-200 text-green-700 font-bold';
                                     } else if (userAnswer !== correctKey && item.options_key === userAnswer) {
@@ -178,13 +178,13 @@ function studentFormAssessment(selectedIndex = 0) {
                                     } else if (item.options_key === correctKey) {
                                         statusClass = 'bg-green-200 text-green-700 font-bold';
                                     }
-    
+
                                 }
                             }
                         } else {
                             const answerValue = questionsAnswer[question.id]?.answer_value;
                             const status = questionsAnswer[question.id]?.status_answer;
-    
+
                             if (status === 'submitted' || status === 'draft') {
                                 if (questionType === 'mcma') {
                                     if (Array.isArray(answerValue) && answerValue.includes(item.options_key)) {
@@ -197,11 +197,11 @@ function studentFormAssessment(selectedIndex = 0) {
                                 }
                             }
                         }
-    
+
                         let optionsValue = '';
-    
+
                         const inputType = questionType === 'mcma' ? 'checkbox' : 'radio';
-    
+
                         // memeriksa apakah soal sudah dijawab oleh pengguna atau jawaban masih ditandai
                         if (!questionsAnswer[question.id] || questionsAnswer[question.id]?.status_answer === 'draft') {
                             if (containsImage) {
@@ -236,20 +236,20 @@ function studentFormAssessment(selectedIndex = 0) {
                                 `;
                             }
                         }
-    
+
                         // Render opsi jawaban
                         return `
                             ${optionsValue}
                         `;
                     }).join('');
                 };
-    
+
                 const generateEssay = (weight) => {
                     const teacherFeedback = questionsAnswer[question.id]?.teacher_feedback ?? '';
                     const score = questionsAnswer[question.id]?.question_score ?? null;
 
                     let renderEssay = '';
-    
+
                     if (!questionsAnswer[question.id] || questionsAnswer[question.id]?.status_answer === 'draft') {
                         renderEssay = `
                             <div class="space-y-3">
@@ -288,12 +288,12 @@ function studentFormAssessment(selectedIndex = 0) {
                                         </div>
 
                                         ${score !== null ?
-                                            `
+                                `
                                                 <div class="mt-3 text-sm font-semibold text-gray-700">
                                                     Score: ${score} / ${weight}
                                                 </div>`
-                                            : ''
-                                        }
+                                : ''
+                            }
 
                                     </div>
 
@@ -302,17 +302,17 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     return renderEssay;
                 };
-    
+
                 // Render Nomor Soal
                 const nomorSoalHTML = questions.map((item, index) => {
-    
+
                     let statusClassNumberQuestions = '';
                     const answer = questionsAnswer[item.id];
                     const itemType = item?.lms_question_bank?.tipe_soal?.toLowerCase();
-    
+
                     // === ESSAY (manual grading) ===
                     if (itemType === 'essay') {
                         if (answer?.status_answer === 'submitted') {
@@ -320,7 +320,7 @@ function studentFormAssessment(selectedIndex = 0) {
                         } else if (answer?.status_answer === 'draft') {
                             statusClassNumberQuestions = '!bg-[#F79D65] text-white font-bold';
                         }
-    
+
                     } else {
                         if (isAllAnswered && showAnswer) {
                             if (answer?.status_answer === 'submitted') {
@@ -331,7 +331,7 @@ function studentFormAssessment(selectedIndex = 0) {
                                     statusClassNumberQuestions = '!bg-red-200 text-red-600 font-bold';
                                 }
                             }
-    
+
                         } else {
                             if (answer?.status_answer === 'submitted') {
                                 statusClassNumberQuestions = '!bg-[#0071BC] text-white font-bold';
@@ -341,7 +341,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             }
                         }
                     }
-    
+
                     return `                    
                         <input type="radio" id="nomor${index}" name="nomorSoal" class="hidden">
                         <label for="nomor${index}" 
@@ -351,16 +351,16 @@ function studentFormAssessment(selectedIndex = 0) {
                         </label>
                     `;
                 }).join('');
-    
+
                 function generateMatching(leftItems, rightItems) {
-    
+
                     const rightLabelMap = {};
                     rightItems.forEach((item, index) => {
                         rightLabelMap[item.options_key] = String.fromCharCode(65 + index);
                     });
-    
+
                     let correctAnswer = '';
-    
+
                     if (isAllAnswered && showAnswer) {
                         correctAnswer = `
                             <div class="relative matching-container bg-green-50 border border-green-200 rounded-2xl p-6 mt-8 shadow-sm">
@@ -400,15 +400,15 @@ function studentFormAssessment(selectedIndex = 0) {
                                         <h4 class="font-semibold mb-4">Kolom B</h4>
                                         <div class="space-y-3">
                                             ${rightItems.map(item => {
-                                                const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
-    
-                                                return `
+                            const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
+
+                            return `
                                                     <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
                                                         <span class="font-bold">${rightLabelMap[item.options_key]}.</span>
                                                         ${content}
                                                     </div>
                                                 `;
-                                            }).join('')}
+                        }).join('')}
                                         </div>
                                     </div>
                                 </div>
@@ -416,7 +416,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     return `
                         <div class="relative matching-container bg-white rounded-2xl shadow-md border border-gray-100 p-6">
                             <div class="flex items-center justify-between mb-6">
@@ -522,17 +522,17 @@ function studentFormAssessment(selectedIndex = 0) {
                                 <tbody>
                                     ${items.map(item => {
 
-                                        const correctAnswer = item.extra_data?.answer;
-                                        const userAnswer = existingAnswer[item.options_key];
+                        const correctAnswer = item.extra_data?.answer;
+                        const userAnswer = existingAnswer[item.options_key];
 
-                                        let rowClass = '';
-                                        if (isReviewMode) {
-                                            rowClass = userAnswer === correctAnswer ? 'bg-green-50' : 'bg-red-50';
-                                        }
+                        let rowClass = '';
+                        if (isReviewMode) {
+                            rowClass = userAnswer === correctAnswer ? 'bg-green-50' : 'bg-red-50';
+                        }
 
-                                        const content = addClassToImgTags(item.options_value, 'max-w-[200px] w-full rounded');
+                        const content = addClassToImgTags(item.options_value, 'max-w-[200px] w-full rounded');
 
-                                        return `
+                        return `
                                             <tr class="${rowClass}">
                                                 <td class="border px-4 py-3">
                                                     ${content}
@@ -540,36 +540,36 @@ function studentFormAssessment(selectedIndex = 0) {
 
                                                 ${categories.map(cat => {
 
-                                            const selected = userAnswer === cat.options_key;
-                                            const isCorrect = correctAnswer === cat.options_key;
+                            const selected = userAnswer === cat.options_key;
+                            const isCorrect = correctAnswer === cat.options_key;
 
-                                            let cellClass = '';
-                                            let icon = '';
-                                            let badge = '';
+                            let cellClass = '';
+                            let icon = '';
+                            let badge = '';
 
-                                            if (isReviewMode) {
+                            if (isReviewMode) {
 
-                                                // Jawaban benar & dipilih
-                                                if (selected && isCorrect) {
-                                                    cellClass += ' bg-green-100 border-green-400';
-                                                    icon = '<i class="fa-solid fa-check text-green-600"></i>';
-                                                    badge = '<span class="text-[10px] text-green-700">Jawabanmu</span>';
+                                // Jawaban benar & dipilih
+                                if (selected && isCorrect) {
+                                    cellClass += ' bg-green-100 border-green-400';
+                                    icon = '<i class="fa-solid fa-check text-green-600"></i>';
+                                    badge = '<span class="text-[10px] text-green-700">Jawabanmu</span>';
 
-                                                // Jawaban salah
-                                                } else if (selected && !isCorrect) {
-                                                    cellClass += ' bg-red-100 border-red-400';
-                                                    icon = '<i class="fa-solid fa-xmark text-red-600"></i>';
-                                                    badge = '<span class="text-[10px] text-red-700">Jawabanmu</span>';
+                                    // Jawaban salah
+                                } else if (selected && !isCorrect) {
+                                    cellClass += ' bg-red-100 border-red-400';
+                                    icon = '<i class="fa-solid fa-xmark text-red-600"></i>';
+                                    badge = '<span class="text-[10px] text-red-700">Jawabanmu</span>';
 
-                                                // Kunci jawaban
-                                                } else if (!selected && isCorrect) {
-                                                    cellClass += ' bg-green-50 border-green-300';
-                                                    icon = '<i class="fa-solid fa-check text-green-500"></i>';
-                                                    badge = '<span class="text-[10px] text-green-600">Jawaban Benar</span>';
-                                                }
-                                            }
+                                    // Kunci jawaban
+                                } else if (!selected && isCorrect) {
+                                    cellClass += ' bg-green-50 border-green-300';
+                                    icon = '<i class="fa-solid fa-check text-green-500"></i>';
+                                    badge = '<span class="text-[10px] text-green-600">Jawaban Benar</span>';
+                                }
+                            }
 
-                                            return `
+                            return `
                                                 <td class="border">
                                                     <div class="flex flex-col items-center justify-center gap-1 py-2 ${cellClass}">
 
@@ -586,23 +586,23 @@ function studentFormAssessment(selectedIndex = 0) {
                                                     </div>
                                                 </td>
                                                 `;
-                                        }).join('')}
+                        }).join('')}
                                             </tr>
                                         `;
-                                    }).join('')}
+                    }).join('')}
                                 </tbody>
                             </table>
                         </div>
                     `;
                 }
-    
+
                 let submitAnswerType = '';
-    
+
                 const options = question?.lms_question_bank?.lms_question_option ?? [];
-    
+
                 const leftItems = options.filter(item => item.options_key.startsWith('LEFT'));
                 const rightItems = options.filter(item => item.options_key.startsWith('RIGHT'));
-    
+
                 if (questionType === 'essay') {
                     submitAnswerType = generateEssay(weight);
                 } else if (questionType === 'matching') {
@@ -612,13 +612,13 @@ function studentFormAssessment(selectedIndex = 0) {
                 } else {
                     submitAnswerType = generateOptions(question?.lms_question_bank?.lms_question_option);
                 }
-    
+
                 const isAnswered = !!questionsAnswer[question.id] && questionsAnswer[question.id]?.status_answer === 'submitted';
-    
+
                 const isCorrect = !!questionsAnswer[question.id]?.is_correct; // jadikan boolean true or false
-    
+
                 let submitButtonAnswerHTML = '';
-    
+
                 submitButtonAnswerHTML = isAnswered
                     ? `
                         <button type="button" class="bg-gray-200 px-6 py-2.5 rounded-md
@@ -632,9 +632,9 @@ function studentFormAssessment(selectedIndex = 0) {
                             Simpan Jawaban
                         </button>
                     `;
-    
+
                 let btnMarkAnswerHTML = '';
-    
+
                 btnMarkAnswerHTML = isAnswered
                     ? `
                         <button type="button" class="bg-gray-200 px-6 py-2.5 rounded-md
@@ -648,7 +648,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             Tandai Jawaban
                         </button>
                     `;
-                
+
                 let explanationButtonHTML = '';
 
                 if (isAllAnswered && showAnswer) {
@@ -659,9 +659,9 @@ function studentFormAssessment(selectedIndex = 0) {
                         </button>
                     `;
                 }
-    
+
                 let buttonCorrectOrWrongHTML = '';
-    
+
                 if (questionType !== 'essay') {
                     buttonCorrectOrWrongHTML = isAllAnswered && showAnswer
                         ? (isCorrect
@@ -669,22 +669,22 @@ function studentFormAssessment(selectedIndex = 0) {
                             : `<button class="border border-gray-300 px-5 py-2.5 text-xs lg:text-sm text-center bg-red-200 text-red-600 font-bold opacity-70 rounded-md" disabled>Jawaban Salah</button>`)
                         : `<button class="border border-gray-300 px-5 py-2.5 text-xs lg:text-sm font-semibold text-center bg-gray-200 opacity-70 rounded-md" disabled>Jawaban Benar/Salah</button>`;
                 }
-    
+
                 // QUESTION SPLIT IMAGE
                 const splitQuestions = question?.lms_question_bank?.questions.split('<img');
                 const questionTextOnly = splitQuestions[0];
-    
+
                 let questionImage = '', textAfterImage = '';
-    
+
                 if (splitQuestions.length > 1) {
                     const imgSplit = splitQuestions[1].split('>'); // pisahkan tag <img> dan sisa teks
                     const imgTag = imgSplit[0]; // bagian src dan atribut gambar
                     const restText = imgSplit.slice(1).join('>'); // gabungkan sisa setelah tag img
-    
+
                     questionImage = `<img class="w-full sm:max-w-[45%]" ${imgTag}>`; // Susun tag <img> lengkap dengan class tambahan
                     textAfterImage = restText.trim(); // Hapus spasi berlebih pada teks setelah gambar
                 }
-    
+
                 // Gabungkan menjadi HTML: bungkus gambar dan teks
                 const questionImageAndTextAfter = `
                     <div class="flex flex-col gap-4 items-start">
@@ -692,9 +692,9 @@ function studentFormAssessment(selectedIndex = 0) {
                         <div>${textAfterImage}</div>
                     </div>
                 `;
-    
+
                 function generateModeInfo() {
-    
+
                     if (isAfter && !isAllAnswered) {
                         return `
                             <div class="mb-6 p-5 rounded-2xl bg-red-50 border border-red-200">
@@ -704,7 +704,7 @@ function studentFormAssessment(selectedIndex = 0) {
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-red-800 text-sm">
-                                            Asesmen Telah Selesai
+                                            Assessment Telah Selesai
                                         </h3>
                                         <p class="text-xs text-red-700 mt-1">
                                             Waktu pengerjaan telah berakhir. Jawaban tidak dapat diubah.
@@ -714,7 +714,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     // ===== CASE 1: Review Only =====
                     if (isAllAnswered && !showScore && showAnswer) {
                         return `
@@ -736,7 +736,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     // ===== CASE 2: Score Only =====
                     if (isAllAnswered && showScore && !showAnswer) {
                         return `
@@ -758,7 +758,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     // ===== CASE 3: Full Access =====
                     if (isAllAnswered && showScore && showAnswer) {
                         return `
@@ -779,7 +779,7 @@ function studentFormAssessment(selectedIndex = 0) {
                             </div>
                         `;
                     }
-    
+
                     // ===== CASE 4: Locked =====
                     if (isAllAnswered) {
                         return `
@@ -793,34 +793,34 @@ function studentFormAssessment(selectedIndex = 0) {
                                             Menunggu Publikasi
                                         </h3>
                                         <p class="text-xs text-gray-600 mt-1">
-                                            Hasil Asesmen belum tersedia.
+                                            Hasil Assessment belum tersedia.
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         `;
                     }
-    
+
                     return '';
                 }
-    
+
                 // tampilkan link result test ketika semua pertanyaan sudah dijawab
                 let linkResultTest = '';
                 const resultTestHref = response.resultTestHref.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumId', curriculumId)
                     .replace(':mapelId', mapelId).replace(':assessmentTypeId', assessmentTypeId).replace(':semester', semester).replace(':assessmentId', assessmentId);
-    
+
                 if (isAllAnswered || isAfter) {
                     linkResultTest = `
                         <div class="mt-10 pt-6 border-t border-gray-100">
                             <a href="${resultTestHref}" 
                             class="w-full flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 transition text-white text-sm font-semibold py-3 rounded-xl shadow-md">
                                 <i class="fas fa-chart-line"></i>
-                                Lihat Nilai Asesmen
+                                Lihat Nilai Assessment
                             </a>
                         </div>
                     `;
                 }
-    
+
                 const form = `
                     <form id="assessment-test-submit-form">
                         <div class="max-w-450 mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-14 items-stretch">
@@ -895,7 +895,7 @@ function studentFormAssessment(selectedIndex = 0) {
     
                                     <h3 class="bg-[#0071BC] text-white text-center text-sm py-3 
                                         rounded-2xl font-semibold mb-8">
-                                        Kartu Asesmen Siswa
+                                        Kartu Assessment Siswa
                                     </h3>
     
                                     <div class="border border-gray-200 rounded-2xl p-6 flex justify-between items-center 
@@ -924,13 +924,13 @@ function studentFormAssessment(selectedIndex = 0) {
                     </form>
                 `;
                 formAssessment.append(form);
-    
+
                 if (questionType === 'matching') {
-    
+
                     const existingAnswer = questionsAnswer[question.id]?.answer_value;
-    
+
                     studentPairs = {};
-    
+
                     if (existingAnswer) {
                         try {
                             studentPairs = typeof existingAnswer === 'string' ? JSON.parse(existingAnswer) : existingAnswer;
@@ -938,96 +938,96 @@ function studentFormAssessment(selectedIndex = 0) {
                             studentPairs = {};
                         }
                     }
-    
+
                     setTimeout(() => {
-    
+
                         const activeContainer = Array.from(document.querySelectorAll('.matching-container'))
                             .find(el => el.offsetParent !== null);
-    
+
                         if (!activeContainer) return;
-    
+
                         Object.entries(studentPairs).forEach(([leftKey, rightKey]) => {
-    
+
                             const rightEl = activeContainer.querySelector(`.matching-right[data-key="${rightKey}"]`);
                             const leftEl = activeContainer.querySelector(`.matching-left[data-key="${leftKey}"]`);
-    
+
                             if (!rightEl || !leftEl) return;
-    
+
                             const rightLabel = rightEl.querySelector('.match-letter')
                                 .textContent.trim().replace('.', '');
-    
+
                             leftEl.querySelector('.match-label').textContent = rightLabel;
                         });
-    
+
                         drawStudentMatchingLines();
                         drawCorrectMatchingLines();
-    
+
                     }, 150);
                 }
-    
+
                 if (isAfter) {
                     $('input[type="radio"], input[type="checkbox"]').removeClass('cursor-pointer').addClass('cursor-default').prop('disabled', true);
                     $('label.checked-option').removeClass('cursor-pointer').addClass('cursor-default').css('pointer-events', 'none');
-    
+
                     $('.matching-container').addClass('pointer-events-none opacity-70');
-    
+
                     $('#btn-submit-save-answer').hide();
                     $('#btn-submit-draft-answer').hide();
                 } else if (isBefore) {
                     $('.question-content').addClass('blur-xs');
                     $('.submit-answer-type').addClass('blur-xs');
-    
+
                     $('#btn-submit-save-answer').hide();
                     $('#btn-submit-draft-answer').hide();
                 }
-    
+
                 $('#btn-submit-end-assessment-test').show();
                 $('#btn-submit-exit-assessment-test').hide();
-    
+
                 // jika semua soal sudah terjawab maka hentikan bersihkan timer per soal
                 if (isAllAnswered || isAfter) {
                     examFinished = true;
-    
+
                     stopQuestionTimer();
                     resetAllQuestionDurations();
                     stopTimer();
-    
+
                     document.getElementById('timer-assessment-test').textContent = 'Waktu Habis';
-    
+
                     $('#btn-submit-end-assessment-test').hide();
                     $('#btn-submit-exit-assessment-test').show();
-    
+
                 } else if (isAnswered) {
                     stopQuestionTimer();
                     startTimer();
-    
+
                 } else if (examStarted && isActive) {
                     startQuestionTimer(question.id);
-    
+
                 } else if (!examStarted && isActive) {
                     confirmStartExam();
                 }
-    
+
                 $('#answer_duration').val(questionDurations[question.id] || 0);
                 $('#total_exam_duration').val(getTotalExamDuration());
-    
+
                 // Set aktif pertama
                 $(`#nomor${selectedIndex}`).prop('checked', true);
-    
+
                 $(document).off('click', '.nomor-soal').on('click', '.nomor-soal', function () {
                     saveQuestionDuration();
-    
+
                     const index = parseInt($(this).data('index'));
                     currentQuestionIndex = index;
                     studentFormAssessment(index);
                 });
-    
+
                 // Inisialisasi CKEditor jika ada
                 const editorContainer = document.getElementById('container-assessment-test-form');
                 const uploadUrl = editorContainer.getAttribute('data-upload-url');
                 const deleteUrl = editorContainer.getAttribute('data-delete-url');
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
+
                 const editors = formAssessment.find('.editor');
                 editors.each((index, textarea) => {
                     ClassicEditor.create(textarea, {
@@ -1040,25 +1040,25 @@ function studentFormAssessment(selectedIndex = 0) {
                     })
                         .then(editor => {
                             previousImageUrlsMap[index] = [];
-    
+
                             const soalId = editor.sourceElement.id.split('_')[1];
-    
+
                             $(`#userAnswer${soalId}`).val(editor.getData());
-    
+
                             const isSubmitted = questionsAnswer[soalId]?.status_answer === 'submitted';
-    
+
                             if (isSubmitted || isAfter) {
                                 editor.enableReadOnlyMode('assessment-lock');
                             }
-    
+
                             // Hapus text error ketika konten CKEditor berubah
                             editor.model.document.on('change:data', () => {
                                 const currentContent = editor.getData();
-    
+
                                 const imageUrls = Array.from(currentContent.matchAll(/<img[^>]+src="([^">]+)"/g)).map(match => match[1]);
-    
+
                                 const removedImages = previousImageUrlsMap[index].filter(url => !imageUrls.includes(url));
-    
+
                                 removedImages.forEach(url => {
                                     fetch(deleteUrl, {
                                         method: 'POST',
@@ -1072,17 +1072,17 @@ function studentFormAssessment(selectedIndex = 0) {
                                         .then(data => console.log('Gambar berhasil dihapus:', data))
                                         .catch(error => console.error('Error saat menghapus gambar:', error));
                                 });
-    
+
                                 previousImageUrlsMap[index] = imageUrls;
                             });
                             editorInstances.push({ element: textarea, instance: editor });
-    
+
                             editor.model.document.on('change:data', () => {
                                 const textarea = editor.sourceElement;
-    
+
                                 const value = editor.getData();
                                 $(`#userAnswer${soalId}`).val(value);
-    
+
                                 $('#error-answer_value').text('');
                             });
                         })
@@ -1090,7 +1090,7 @@ function studentFormAssessment(selectedIndex = 0) {
                 });
 
                 $('#empty-message-assessment-form').hide();
-                
+
             } else {
                 examFinished = true;
                 $('#btn-submit-end-assessment-test').hide();
@@ -1107,8 +1107,8 @@ $(document).ready(function () {
         if (response.status === 'not_started') {
             Swal.fire({
                 icon: 'warning',
-                title: 'Asesmen Belum Dimulai',
-                text: 'Sesi Asesmen belum dimulai. Silakan kembali saat waktu Asesmen telah dimulai.',
+                title: 'Assessment Belum Dimulai',
+                text: 'Sesi Assessment belum dimulai. Silakan kembali saat waktu Assessment telah dimulai.',
                 confirmButtonText: 'OK',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1123,8 +1123,8 @@ $(document).ready(function () {
         if (response.status === 'expired') {
             Swal.fire({
                 icon: 'warning',
-                title: 'Asesmen Telah Berakhir',
-                text: 'Waktu pengerjaan Asesmen telah berakhir.',
+                title: 'Assessment Telah Berakhir',
+                text: 'Waktu pengerjaan Assessment telah berakhir.',
                 confirmButtonText: 'OK',
             });
             return;
@@ -1184,11 +1184,11 @@ function confirmStartExam() {
     if (document.getElementById("timer-assessment-test")) {
 
         Swal.fire({
-            title: 'Konfirmasi Mulai Asesmen',
-            text: "Klik 'Mulai Asesmen' untuk masuk mode fullscreen dan mulai timer!",
+            title: 'Konfirmasi Mulai Assessment',
+            text: "Klik 'Mulai Assessment' untuk masuk mode fullscreen dan mulai timer!",
             icon: 'info',
             showCancelButton: true,
-            confirmButtonText: 'Mulai Asesmen',
+            confirmButtonText: 'Mulai Assessment',
             cancelButtonText: 'Batal',
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -1286,7 +1286,7 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
 function successAssessmentTest() {
     Swal.fire({
         icon: 'success',
-        title: 'Asesmen Berhasil Diselesaikan',
+        title: 'Assessment Berhasil Diselesaikan',
         text: 'Semua jawaban telah dikirim.',
     });
 
@@ -1397,7 +1397,7 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
 
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Waktu Asesmen Habis',
+                            title: 'Waktu Assessment Habis',
                             text: response.message,
                             allowOutsideClick: false,
                             allowEscapeKey: false
@@ -1526,11 +1526,11 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
     e.preventDefault();
 
     Swal.fire({
-        title: 'Konfirmasi Akhiri Asesmen',
-        text: "Apakah kamu yakin ingin mengakhiri Asesmen?",
+        title: 'Konfirmasi Akhiri Assessment',
+        text: "Apakah kamu yakin ingin mengakhiri Assessment?",
         icon: 'info',
         showCancelButton: true,
-        confirmButtonText: 'Akhiri Asesmen',
+        confirmButtonText: 'Akhiri Assessment',
         cancelButtonText: 'Batal',
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -1554,7 +1554,7 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
 $(document).on('click', '#btn-submit-exit-assessment-test', function (e) {
     e.preventDefault();
 
-    // jika Asesmen sudah selesai -> langsung keluar
+    // jika Assessment sudah selesai -> langsung keluar
     if (examFinished) {
         window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
         return;

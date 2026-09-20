@@ -25,10 +25,10 @@
                             <!-- HEADER -->
                             <div class="space-y-1">
                                 <h2 class="text-base sm:text-lg font-bold text-gray-800">
-                                    Atur Bobot Asesmen
+                                    Atur Bobot Assessment
                                 </h2>
                                 <p class="text-xs sm:text-sm text-gray-500">
-                                    Tentukan bobot nilai untuk setiap jenis asesmen. Total bobot seluruh asesmen harus mencapai 100%.
+                                    Tentukan bobot nilai untuk setiap jenis assessment. Total bobot seluruh assessment harus mencapai 100%.
                                 </p>
                             </div>
 
@@ -37,12 +37,12 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Tipe Asesmen
+                                        Tipe Assessment
                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="assessment_type_id"
                                         class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                        <option value="" class="hidden">Pilih Tipe Asesmen</option>
+                                        <option value="" class="hidden">Pilih Tipe Assessment</option>
                                         @foreach ($assessmentType as $item)
                                             <option value="{{ $item->id }}">{{ $item->name }}</option>
                                         @endforeach
@@ -67,10 +67,10 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                        Bobot Asesmen (%)
+                                        Bobot Assessment (%)
                                         <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
-                                    <input type="number" name="weight" min="0" max="100" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Masukkan bobot nilai asesmen">
+                                    <input type="number" name="weight" min="0" max="100" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all" placeholder="Masukkan bobot nilai assessment">
                                     <span id="error-weight" class="text-red-500 text-xs mt-1 font-bold"></span>
                                     <p class="text-xs text-gray-400 relative pt-2">Bobot antara 1–100</p>
                                 </div>
@@ -81,7 +81,7 @@
                             <div class="flex justify-end pt-4">
                                 <button type="button" id="submit-button-create-assessment-weight"
                                     class="bg-[#0071BC] hover:bg-blue-600 text-white font-semibold text-sm px-8 h-11 rounded-xl shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Simpan Bobot Asesmen
+                                    Simpan Bobot Assessment
                                 </button>
                             </div>
                         </div>
@@ -122,10 +122,10 @@
                             <thead class="thead-table-assessment-weight-management hidden bg-gray-50 shadow-inner">
                                 <tr>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
-                                        Nama Asesmen
+                                        Nama Assessment
                                     </th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
-                                        Bobot Asesmen
+                                        Bobot Assessment
                                     </th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
                                         Tahun Ajaran
@@ -161,12 +161,12 @@
 
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">
-                                            Tipe Asesmen
+                                            Tipe Assessment
                                             <sup class="text-red-500">&#42;</sup>
                                         </label>
                                         <select id="edit-assessment-type-id" name="assessment_type_id"
                                             class="mt-2 w-full h-11 rounded-full border border-gray-200 px-4 text-xs shadow-sm outline-none cursor-pointer">
-                                            <option value="" class="hidden">Pilih Tipe Asesmen</option>
+                                            <option value="" class="hidden">Pilih Tipe Assessment</option>
                                             @foreach ($assessmentType as $item)
                                                 <option value="{{ $item->id }}">{{ $item->name }}</option>
                                             @endforeach
@@ -191,11 +191,11 @@
 
                                     <div>
                                         <label class="text-sm font-semibold text-gray-700">
-                                            Bobot Asesmen (%)
+                                            Bobot Assessment (%)
                                             <sup class="text-red-500">&#42;</sup>
                                         </label>
                                         <input type="number" id="edit-weight" name="weight" min="0" max="100" class="mt-2 w-full h-11 rounded-full border 
-                                            border-gray-200 px-4 text-xs shadow-sm outline-none" placeholder="Masukkan bobot nilai asesmen">
+                                            border-gray-200 px-4 text-xs shadow-sm outline-none" placeholder="Masukkan bobot nilai assessment">
                                         <span id="error-weight" class="text-red-500 text-xs mt-1 font-bold"></span>
                                     </div>
                                 </div>

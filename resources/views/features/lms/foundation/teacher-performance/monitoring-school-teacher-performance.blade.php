@@ -40,7 +40,7 @@
 
                                     <p class="mt-5 max-w-3xl text-sm sm:text-base text-white/80 leading-relaxed">
                                         Memantau aktivitas pembelajaran guru melalui jumlah
-                                        assessmen dan materi yang dibuat serta dipublikasikan
+                                        assessment dan materi yang dibuat serta dipublikasikan
                                         kepada siswa di seluruh sekolah dalam naungan yayasan.
                                     </p>
                                 </div>
@@ -178,7 +178,7 @@
                                 <div class="relative flex items-start justify-between gap-4">
                                     <div>
                                         <p class="text-sm font-medium text-slate-500">
-                                            Assessmen Terpublikasi
+                                            Assessment Terpublikasi
                                         </p>
 
                                         <div class="mt-2 flex items-baseline gap-2">
@@ -191,7 +191,7 @@
                                             </span>
                                         </div>
                                         <p class="mt-2 text-xs text-slate-500">
-                                            Assessmen yang sudah terkirim.
+                                            Assessment yang sudah terkirim.
                                         </p>
                                     </div>
 
@@ -266,7 +266,7 @@
                                             </p>
 
                                             <span class="text-xs font-medium text-orange-600">
-                                                Assessmen + Materi
+                                                Assessment + Materi
                                             </span>
                                         </div>
 
@@ -303,7 +303,7 @@
                             </h2>
 
                             <p class="mt-1 text-sm text-slate-500">
-                                Ringkasan aktivitas assessmen dan materi dari setiap sekolah.
+                                Ringkasan aktivitas assessment dan materi dari setiap sekolah.
                             </p>
                         </div>
                     </div>
@@ -367,7 +367,7 @@
                                     </th>
 
                                     <th colspan="2" class="border border-slate-200 px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-600">
-                                        Assessmen
+                                        Assessment
                                     </th>
 
                                     <th colspan="2" class="border border-slate-200 px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -377,7 +377,7 @@
 
                                 <tr class="bg-slate-50">
                                     <th class="border border-slate-200 px-4 py-3 text-center text-xs font-semibold text-slate-500">
-                                        Asesmen
+                                        Assessment
                                     </th>
 
                                     <th class="border border-slate-200 px-4 py-3 text-center text-xs font-semibold text-slate-500">
@@ -472,7 +472,7 @@
                             </h3>
 
                             <p class="mt-2 text-sm leading-6 text-base-content/60">
-                                Belum ada data assessmen atau materi pembelajaran yang tercatat
+                                Belum ada data assessment atau materi pembelajaran yang tercatat
                                 pada tahun ajaran yang dipilih.
                             </p>
                         </div>
@@ -493,7 +493,7 @@
                         </h2>
 
                         <p class="mt-1 text-xs text-slate-500 sm:text-sm">
-                            Persentase assessmen dan materi yang telah dipublikasikan
+                            Persentase assessment dan materi yang telah dipublikasikan
                             dibandingkan dengan jumlah yang dibuat.
                         </p>
 
@@ -518,7 +518,7 @@
                             </p>
 
                             <p class="mt-2 max-w-md px-4 text-center text-sm leading-6 text-slate-400 sm:text-base">
-                                Data assessmen dan materi dari setiap sekolah sedang diproses.
+                                Data assessment dan materi dari setiap sekolah sedang diproses.
                             </p>
                         </div>
 
@@ -540,7 +540,7 @@
 
                             <!-- Empty Description -->
                             <p class="mt-2 max-w-md px-4 text-center text-sm leading-6 text-slate-400 sm:text-base">
-                                Belum ada assessmen atau materi yang tercatat pada tahun ajaran ini.
+                                Belum ada assessment atau materi yang tercatat pada tahun ajaran ini.
                             </p>
                         </div>
                     </div>

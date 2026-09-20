@@ -72,7 +72,7 @@
 
             <div id="empty-message-assessment-grading-student-list" class="w-full h-80 hidden">
                 <span class="flex h-full items-center justify-center text-gray-500">
-                    Tidak ada siswa yang terdaftar pada asesmen ini.
+                    Tidak ada siswa yang terdaftar pada assessment ini.
                 </span>
             </div>
         </section>

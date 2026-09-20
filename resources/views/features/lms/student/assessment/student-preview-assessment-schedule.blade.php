@@ -49,7 +49,7 @@
 
                     <div id="empty-message-load-assessment-schedule" class="w-full h-96 hidden">
                         <span class="flex h-full items-center justify-center text-gray-500">
-                            Tidak ada asesmen yang terjadwal.
+                            Tidak ada assessment yang terjadwal.
                         </span>
                     </div>
                 </section>

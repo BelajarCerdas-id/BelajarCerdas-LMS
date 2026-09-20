@@ -29,11 +29,15 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
             const containerDropdownTahunAjaran = document.getElementById('container-dropdown-tahun-ajaran');
             containerDropdownTahunAjaran.innerHTML = `
                 <div class="flex flex-col w-full">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Tahun Ajaran</label>
-                    <select id="dropdown-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Tahun Ajaran
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                         <option value="" class="hidden">Pilih Tahun Ajaran</option>
                         ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
                     </select>
+                    <span id="error-dropdown-tahun-ajaran" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
             `;
 
@@ -41,11 +45,15 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
             const containerDropdownClass = document.getElementById('container-dropdown-class');
             containerDropdownClass.innerHTML = `
                 <div class="flex flex-col w-full">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Kelas</label>
-                    <select id="dropdown-filter-class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
-                        <option value="" class="hidden">Filter Kelas</option>
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Kelas
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-filter-class" name="class_level" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Pilih Kelas</option>
                         ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
                     </select>
+                    <span id="error-dropdown-filter-class" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
             `;
 
@@ -53,16 +61,40 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
             const containerDropdownSubject = document.getElementById('container-dropdown-subject-rombel-class');
             containerDropdownSubject.innerHTML = `
                 <div class="flex flex-col w-full">
-                    <label class="text-sm font-medium text-gray-700 mb-1.5">Mata Pelajaran</label>
-                    <select id="dropdown-filter-mapel" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
-                        <option value="" class="hidden">Mata Pelajaran</option>
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Mata Pelajaran
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-filter-mapel" name="filter_mapel_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Pilih Mata Pelajaran</option>
                         ${response.subject.map(item => `<option value="${item.id}" ${mapel_id == item.id ? 'selected' : ''}>${item.name}</option>`).join('')}
                     </select>
+                    <span id="error-dropdown-filter-mapel" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
             `;
 
             const listContainer = $('#grid-rombel-class-list');
             listContainer.empty();
+
+            const isMapelPicked = Boolean(mapel_id || (MODE && PARENT && PARENT.mapel_id));
+
+            if (!isMapelPicked) {
+                listContainer.html(`
+                    <div class="col-span-full py-8 px-4 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <i class="fas fa-book-open text-blue-500 text-2xl mb-2"></i>
+                        <p class="text-sm font-semibold text-gray-700">Pilih Mata Pelajaran Terlebih Dahulu</p>
+                        <p class="text-xs text-gray-400 mt-1">Daftar target rombel kelas akan ditampilkan setelah mata pelajaran dipilih.</p>
+                    </div>
+                `);
+                $('#empty-message-rombel-class-assessment-management-list').hide();
+                $('#toggle-select-rombel').hide();
+                setupReview();
+                updateRombelSelectedCount();
+                updateAcademicInfoBadge();
+                return;
+            }
+
+            $('#toggle-select-rombel').show();
 
             if (response.rombel.length > 0) {
 
@@ -106,9 +138,11 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
                 setupReview();
                 updateRombelSelectedCount();
                 applyModePrefill();
+                updateAcademicInfoBadge();
                 $('#empty-message-rombel-class-assessment-management-list').hide();
             } else {
                 $('#empty-message-rombel-class-assessment-management-list').show();
+                updateAcademicInfoBadge();
             }
         },
         error: function (err) {
@@ -130,7 +164,7 @@ function applyModePrefill() {
 
     const className = PARENT.school_class?.class_name || '';
     const classLevel = parseInt(className.match(/\d+/)?.[0]);
-    
+
     if (!MODE || !PARENT) return;
 
     // TITLE
@@ -211,7 +245,7 @@ function applyModePrefill() {
     // HEADER INFO
     $('#container').prepend(`
         <div class="mb-6 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm">
-            Mode <b>${MODE.toUpperCase()}</b> dari asesmen: <b>${PARENT.title}</b>
+            Mode <b>${MODE.toUpperCase()}</b> dari assessment: <b>${PARENT.title}</b>
         </div>
     `);
 }
@@ -257,6 +291,24 @@ function setupAssessmentMode() {
     if (initialMode) applyAssessmentMode(initialMode);
 }
 
+function updateAcademicInfoBadge() {
+    const badge = document.getElementById('badge-academic-info-status');
+    if (!badge) return;
+
+    const tahunAjaran = $('#dropdown-tahun-ajaran').val();
+    const kelas = $('#dropdown-filter-class').val();
+    const mapel = $('#dropdown-filter-mapel').val();
+    const semester = $('#semester').val();
+
+    if (tahunAjaran && kelas && mapel && semester) {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit transition-all duration-200';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500 text-[11px]"></i><span>Informasi akademik lengkap</span>';
+    } else {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 w-fit transition-all duration-200';
+        badge.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500 text-[11px]"></i><span>Pilih semua informasi akademik</span>';
+    }
+}
+
 function setupReview() {
     const form = document.getElementById('create-assessment-form');
     if (!form) return;
@@ -268,13 +320,21 @@ function setupReview() {
         const rombelNames = Array.from(checkedRombel).map(cb => cb.dataset.rombelName);
         const subjectNames = Array.from(checkedRombel).map(cb => cb.dataset.mapelName);
 
+        const selectedMapelText = document.querySelector('#dropdown-filter-mapel option:selected')?.text;
+        const displaySubject = (selectedMapelText && selectedMapelText !== 'Pilih Mata Pelajaran' && selectedMapelText !== 'Mata Pelajaran')
+            ? selectedMapelText
+            : (subjectNames.length ? subjectNames.join(', ') : '-');
+
+        const semesterVal = document.getElementById('semester')?.value;
+        const semesterDisplay = semesterVal ? `Semester ${semesterVal}` : '-';
+
         document.getElementById('review-class').textContent = rombelNames.length ? rombelNames.join(', ') : '-';
 
-        document.getElementById('review-subject').textContent = subjectNames.length ? subjectNames.join(', ') : '-';
+        document.getElementById('review-subject').textContent = displaySubject;
 
         document.getElementById('review-tahun-ajaran').textContent = document.querySelector('#dropdown-tahun-ajaran')?.value || '-';
 
-        document.getElementById('review-semester').textContent = document.getElementById('semester')?.value || '-';
+        document.getElementById('review-semester').textContent = semesterDisplay;
 
         document.getElementById('review-title').textContent = form.querySelector('input[name="title"]')?.value || '-';
 
@@ -319,7 +379,18 @@ $(document).on('change', '#dropdown-filter-class', function () {
 
 $(document).on('change', '#dropdown-filter-mapel', function () {
     formAssessment($('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val(), $(this).val());
-})
+});
+
+// Clear validation errors dynamically on change
+$(document).on('change', '#dropdown-tahun-ajaran, #dropdown-filter-class, #dropdown-filter-mapel, #semester', function () {
+    const val = $(this).val();
+    const id = $(this).attr('id');
+    if (val) {
+        $(this).removeClass('border-red-400 border');
+        $(`#error-${id}`).text('');
+    }
+    updateAcademicInfoBadge();
+});
 
 document.addEventListener('change', function (e) {
 
@@ -393,7 +464,7 @@ document.getElementById('toggle-select-rombel').addEventListener('click', functi
             );
         }
     });
-    
+
     updateRombelSelectedCount();
 
     this.innerText = allSelected ? 'Select All' : 'Unselect All';
@@ -599,6 +670,7 @@ function handleAssessmentTypeUI(mode) {
 const assesmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
 
 assesmentTypeSelect.addEventListener('change', function () {
+
     const selectedOption = this.options[this.selectedIndex];
     const mode = selectedOption.dataset.mode;
 

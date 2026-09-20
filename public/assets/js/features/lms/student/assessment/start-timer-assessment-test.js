@@ -76,7 +76,7 @@ function startTimer() {
                     if (response?.status === 'not_started') {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Asesmen Belum Dimulai',
+                            title: 'Assessment Belum Dimulai',
                             text: response.message,
                             confirmButtonText: 'OK'
                         });
@@ -86,7 +86,7 @@ function startTimer() {
                     if (response?.status === 'expired') {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Asesmen Telah Berakhir',
+                            title: 'Assessment Telah Berakhir',
                             text: response.message,
                             confirmButtonText: 'OK'
                         });

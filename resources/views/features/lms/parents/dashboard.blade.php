@@ -467,8 +467,8 @@
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-md leading-tight">Histori Pelanggaran Asesmen</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas anak selama pengerjaan asesmen</p>
+                                    <h3 class="font-bold text-blue-950 text-md leading-tight">Histori Pelanggaran Assessment</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas anak selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>
@@ -541,7 +541,7 @@
                                             <i class="fas fa-shield"></i>
                                         </div>
                                         <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
-                                        <p class="text-xs font-medium text-slate-500 mt-1">Tidak ada pelanggaran asesmen.</p>
+                                        <p class="text-xs font-medium text-slate-500 mt-1">Tidak ada pelanggaran assessment.</p>
                                     </div>
                                 </div>
                                 @endif

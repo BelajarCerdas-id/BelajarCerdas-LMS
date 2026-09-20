@@ -327,8 +327,8 @@
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Asesmen</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitasmu selama pengerjaan asesmen</p>
+                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Assessment</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitasmu selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>
@@ -343,7 +343,7 @@
                                         <i class="fas fa-shield-check"></i>
                                     </div>
                                     <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
-                                    <p class="text-xs font-medium text-slate-500 mt-1">Kamu menyelesaikan asesmen dengan jujur dan tertib.</p>
+                                    <p class="text-xs font-medium text-slate-500 mt-1">Kamu menyelesaikan assessment dengan jujur dan tertib.</p>
                                 </div>
                             </div>
                         </div>

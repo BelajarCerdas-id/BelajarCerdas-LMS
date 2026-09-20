@@ -45,7 +45,7 @@
                                 Assessment Title
                                 <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                             </label>
-                            <input type="text" id="edit-assessment-title" name="title" value="" placeholder="Masukkan Judul Asesmen"
+                            <input type="text" id="edit-assessment-title" name="title" value="" placeholder="Masukkan Judul Assessment"
                                 class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20">
                             <span id="error-title" class="text-red-500 text-xs font-semibold"></span>
                         </div>

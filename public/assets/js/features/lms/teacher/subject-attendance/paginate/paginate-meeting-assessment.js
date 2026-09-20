@@ -47,18 +47,18 @@ function paginateAssessmentList() {
                 // LOOP DATA
                 if (response.data.length > 0) {
                     $.each(response.data, function (index, item) {
-    
-                        const assessmentType = item.school_assessment_type?.name ?? 'Asesmen';
-    
-                        const title = item.title ?? 'Judul asesmen tidak tersedia';
-    
+
+                        const assessmentType = item.school_assessment_type?.name ?? 'Assessment';
+
+                        const title = item.title ?? 'Judul Assessment tidak tersedia';
+
                         const startDate = formatDate(item.start_date);
-    
+
                         const endDate = formatDate(item.end_date);
 
                         const assessmentGradingStudentList = response.assessmentGradingStudentList.replace(':role', role).replace(':schoolName', schoolName)
                             .replace(':schoolId', schoolId).replace(':assessmentId', item.id).replace(':mode', item.assessment_category);
-    
+
                         const card = `
                             <a href="${assessmentGradingStudentList}">
                                 <div class="cursor-pointer flex items-center gap-4 p-4 rounded-2xl border border-gray-300 bg-slate-50 hover:bg-white hover:border-amber-300 hover:shadow-md transition-all shrink-0 group">
@@ -108,10 +108,10 @@ function paginateAssessmentList() {
                                 </div>
                             </a>
                         `;
-    
+
                         assessmentList.append(card);
                     });
-                        $('#empty-message-assessment-list').hide();
+                    $('#empty-message-assessment-list').hide();
                 } else {
                     $('#empty-message-assessment-list').show();
                 }

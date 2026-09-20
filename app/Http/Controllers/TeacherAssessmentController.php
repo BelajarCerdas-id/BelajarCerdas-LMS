@@ -152,6 +152,8 @@ class TeacherAssessmentController extends Controller
         $rules = [
             'school_class_id' => 'required|array|min:1',
             'school_class_id.*' => 'required|integer',
+            'mapel_id' => 'required|array|min:1',
+            'mapel_id.*' => 'required|integer',
             'title' => 'required',
             'assessment_instruction' => 'required',
             'assessment_type_id' => 'required|integer|exists:school_assessment_types,id',
@@ -161,9 +163,10 @@ class TeacherAssessmentController extends Controller
         ];
         $messages = [
             'school_class_id.required' => 'Harap pilih kelas.',
-            'title.required' => 'Harap isi judul asesmen.',
+            'mapel_id.required' => 'Harap pilih mata pelajaran.',
+            'title.required' => 'Harap isi judul Assessment.',
             'assessment_instruction' => 'Instruksi tidak boleh kosong.',
-            'assessment_type_id.required' => 'Harap pilih tipe asesmen.',
+            'assessment_type_id.required' => 'Harap pilih tipe Assessment.',
             'semester.required' => 'Harap pilih semester.',
             'start_date.required' => 'Harap pilih tanggal mulai.',
             'end_date.required' => 'Harap pilih tanggal selesai.',
@@ -187,7 +190,7 @@ class TeacherAssessmentController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'assessment_type_id' => ['Mode asesmen tidak ditemukan.']
+                    'assessment_type_id' => ['Mode Assessment tidak ditemukan.']
                 ],
             ], 422);
         }
@@ -223,7 +226,7 @@ class TeacherAssessmentController extends Controller
                     return response()->json([
                         'status' => 'error',
                         'errors' => [
-                            'assessment_type_id' => ['Asesmen utama belum tersedia.']
+                            'assessment_type_id' => ['Assessment utama belum tersedia.']
                         ],
                     ], 422);
                 }
@@ -237,7 +240,7 @@ class TeacherAssessmentController extends Controller
                         return response()->json([
                             'status' => 'error',
                             'errors' => [
-                                'assessment_type_id' => ['Remedial tidak diizinkan untuk tipe asesmen ini.']
+                                'assessment_type_id' => ['Remedial tidak diizinkan untuk tipe Assessment ini.']
                             ],
                         ], 422);
                     }
@@ -296,7 +299,7 @@ class TeacherAssessmentController extends Controller
                         return response()->json([
                             'status' => 'error',
                             'errors' => [
-                                'assessment_type_id' => ['Tipe asesmen telah terdaftar pada rombel kelas ini.']
+                                'assessment_type_id' => ['Tipe Assessment telah terdaftar pada rombel kelas ini.']
                             ],
                         ], 422);
                     }
@@ -518,7 +521,7 @@ class TeacherAssessmentController extends Controller
         ];
 
         $messages = [
-            'title.required' => 'Harap isi judul asesmen.',
+            'title.required' => 'Harap isi judul Assessment.',
             'assessment_instruction.required' => 'Instruksi tidak boleh kosong.',
             'semester.required' => 'Harap pilih semester.',
             'start_date.required' => 'Harap pilih tanggal mulai.',
@@ -532,7 +535,7 @@ class TeacherAssessmentController extends Controller
             $hasExisting = $request->input("existing_files") == 1;
 
             $rules['assessment_value_file'] = $hasExisting ? 'nullable|mimes:pdf,mp4|max:100000' : 'required|mimes:pdf,mp4|max:100000';
-            $messages['assessment_value_file.required'] = 'Harap isi file asesmen.';
+            $messages['assessment_value_file.required'] = 'Harap isi file Assessment.';
             $messages['assessment_value_file.mimes'] = 'Format file tidak sesuai.';
             $messages['assessment_value_file.max'] = 'File telah melebihi kapasitas yang ditentukan.';
         }
