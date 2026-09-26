@@ -133,6 +133,7 @@
                         </div>
                     </div>
                 </div>
+                
 
                 <div class="xl:col-span-4 space-y-8">
                     <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full min-h-[500px]">
