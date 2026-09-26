@@ -23,14 +23,11 @@
                 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
             ]) }}" method="GET" class="flex items-center gap-3">
                 <div class="relative">
-                    <select name="tahun_ajaran" onchange="this.form.submit()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer appearance-none pr-10">
+                    <select name="tahun_ajaran" onchange="this.form.submit()" class="h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer transition-all hover:border-gray-400">
                         @foreach($tahunAjaranList ?? [] as $tahun)
                             <option value="{{ $tahun }}" {{ ($filterTahun ?? '') == $tahun ? 'selected' : '' }}>TA. {{ $tahun }}</option>
                         @endforeach
                     </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-400">
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </div>
                 </div>
             </form>
         </div>
@@ -52,7 +49,7 @@
                     </div>
                 </div>
                 <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Total Asesmen</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Total Assessment</p>
                     <div class="flex items-end justify-between">
                         <h3 class="text-3xl font-black text-slate-800">{{ $stats->total_tugas ?? 0 }}</h3>
                         <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Tugas/Ujian</span>

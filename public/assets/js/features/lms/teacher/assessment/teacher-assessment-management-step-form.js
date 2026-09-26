@@ -71,6 +71,63 @@ nextBtn.addEventListener("click", function (e) {
     const schoolId = container.dataset.schoolId;
     if (!role || !schoolName || !schoolId) return;
 
+    // VALIDASI STEP 1: Pastikan semua informasi akademik sudah dipilih sebelum lanjut ke langkah berikutnya
+    if (currentStep === 1) {
+        let hasAcademicError = false;
+
+        const tahunAjaran = $('#dropdown-tahun-ajaran').val();
+        const kelas = $('#dropdown-filter-class').val();
+        const mapel = $('#dropdown-filter-mapel').val();
+        const semester = $('#semester').val();
+
+        // Reset error messages dan highlight untuk academic info
+        $('#error-dropdown-tahun-ajaran, #error-dropdown-filter-class, #error-dropdown-filter-mapel, #error-semester').text('');
+        $('#dropdown-tahun-ajaran, #dropdown-filter-class, #dropdown-filter-mapel, #semester').removeClass('border-red-400 border');
+
+        if (!tahunAjaran) {
+            $('#error-dropdown-tahun-ajaran').text('Harap pilih tahun ajaran.');
+            $('#dropdown-tahun-ajaran').addClass('border-red-400 border');
+            hasAcademicError = true;
+        }
+
+        if (!kelas) {
+            $('#error-dropdown-filter-class').text('Harap pilih kelas.');
+            $('#dropdown-filter-class').addClass('border-red-400 border');
+            hasAcademicError = true;
+        }
+
+        if (!mapel) {
+            $('#error-dropdown-filter-mapel').text('Harap pilih mata pelajaran.');
+            $('#dropdown-filter-mapel').addClass('border-red-400 border');
+            hasAcademicError = true;
+        }
+
+        if (!semester) {
+            $('#error-semester').text('Harap pilih semester.');
+            $('#semester').addClass('border-red-400 border');
+            hasAcademicError = true;
+        }
+
+        if (hasAcademicError) {
+            const academicSection = document.getElementById('academic-info-section') || container;
+            academicSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+
+        // Cek juga Target Rombel jika belum ada yang dipilih
+        const selectedRombelCount = $('.rombel-checkbox:checked').length;
+        if (selectedRombelCount === 0) {
+            $('#error-school_class_id').removeClass('hidden').text('Harap pilih setidaknya satu rombel kelas.');
+            const rombelSection = document.getElementById('target-rombel-section');
+            if (rombelSection) {
+                rombelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return;
+        } else {
+            $('#error-school_class_id').addClass('hidden').text('');
+        }
+    }
+
     const form = $('#create-assessment-form')[0];
     const formData = new FormData(form);
     formData.append('step', currentStep);

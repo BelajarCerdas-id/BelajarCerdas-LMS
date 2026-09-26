@@ -143,10 +143,10 @@ function managementAcademic() {
                             key: 'assessment_types',
                             title: 'Assessment Type Management',
                             icon: 'fa-solid fa-clipboard-list',
-                            description: 'Jenis Asesmen',
+                            description: 'Jenis Assessment',
                             items: [
-                                'Jenis Asesmen',
-                                'Manajemen Asesmen',
+                                'Jenis Assessment',
+                                'Manajemen Assessment',
                             ],
                             link: {
                                 href: lmsAssessmentTypeManagement,
@@ -156,9 +156,9 @@ function managementAcademic() {
                             key: 'assessment_weight',
                             title: 'Assessment Weight',
                             icon: 'fa-solid fa-scale-balanced',
-                            description: 'Pengaturan bobot nilai tiap jenis asesmen',
+                            description: 'Pengaturan bobot nilai tiap jenis assessment',
                             items: [
-                                'Kelola Bobot Asesmen',
+                                'Kelola Bobot Assessment',
                             ],
                             link: {
                                 href: lmsAssessmentWeightManagement,

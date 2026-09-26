@@ -26,9 +26,8 @@ function teacherAcademicTranscript(selectedClass = null) {
             const containerDropdownClass = document.getElementById('container-dropdown-class-paginate-question-bank-for-release');
             containerDropdownClass.innerHTML = `
                 <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Kelas</label>
-                    <select id="dropdown-filter-class-paginate-question-bank-for-release" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-24 cursor-pointer
-                        outline-none">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Kelas</label>
+                    <select id="dropdown-filter-class-paginate-question-bank-for-release" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                         <option value="" class="hidden">Filter Kelas</option>
                         ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
                     </select>

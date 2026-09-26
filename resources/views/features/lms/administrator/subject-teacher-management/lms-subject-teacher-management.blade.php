@@ -5,19 +5,19 @@
 ]);
 
 @if (Auth::user()->role === 'Administrator' || Auth::user()->role === 'Admin Sekolah')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition cursor-pointer-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-insert-data-teacher-mapel"></div>
             <div id="alert-success-edit-data-teacher-mapel"></div>
 
-            <main class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <main class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
-                    class="space-y-8 border-b border-gray-300 pb-8">
+                    class="space-y-8 border-b border-gray-100 pb-8">
 
                     <!-- Header -->
                     <div>
-                        <h1 class="text-md md:text-xl font-bold opacity-70">
+                        <h1 class="text-base sm:text-lg font-bold text-gray-800">
                             Subject Teacher Management
                         </h1>
                         <p class="mt-1 text-sm text-gray-500">
@@ -30,75 +30,74 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                                 <!--- Kurikulum --->
                                 <div class="flex flex-col order-1">
-                                    <label class="mb-2 text-sm">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Kurikulum
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="kurikulum_id" id="id_kurikulum"
-                                        class="w-full bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 focus:border cursor-pointer">
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
                                         <option value="" class="hidden">Pilih Kurikulum</option>
                                         @foreach ($getCurriculum as $item)
                                             <option value="{{ $item->id }}">{{ $item->nama_kurikulum }}</option>
                                         @endforeach
                                     </select>
-                                    <span id="error-kurikulum_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                    <span id="error-kurikulum_id" class="text-red-500 font-bold text-xs pt-1"></span>
                                 </div>
 
                                 <!--- Mapel --->
                                 <div class="flex flex-col order-2">
-                                    <label class="mb-2 text-sm">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Mata Pelajaran
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="mapel_id" id="id_mapel"
-                                        class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                         <option class="hidden">Pilih Mata Pelajaran</option>
                                     </select>
-                                    <span id="error-mapel_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                    <span id="error-mapel_id" class="text-red-500 font-bold text-xs pt-1"></span>
                                 </div>
 
                                 <!--- Kelas --->
                                 <div class="flex flex-col order-2">
-                                    <label class="mb-2 text-sm">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Kelas
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select name="kelas_id" id="id_kelas"
-                                        class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                         <option class="hidden">Pilih Kelas</option>
                                     </select>
-                                    <span id="error-kelas_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                    <span id="error-kelas_id" class="text-red-500 font-bold text-xs pt-1"></span>
                                 </div>
             
                                 <!-- rombel class -->
                                 <div class="flex flex-col order-2">
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Rombel Kelas
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <select id="school_class_id" name="school_class_id"
-                                        class="bg-white shadow-lg h-12 text-sm border-gray-200 border outline-none rounded-md px-2 opacity-50 focus:border cursor-default" disabled>
+                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 opacity-50 cursor-default disabled:bg-gray-50 disabled:border-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed" disabled>
                                             <option>Pilih Rombel Kelas</option>
                                     </select>
-                                    <span id="error-school_class_id" class="text-red-500 font-bold text-xs pt-2"></span>
+                                    <span id="error-school_class_id" class="text-red-500 font-bold text-xs pt-1"></span>
                                 </div>
                                 
                                 <!-- search teacher -->
                                 <div class="flex flex-col order-2">
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Guru
-                                        <sup class="text-red-500">&#42;</sup>
+                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                     </label>
                                     <input
-                                        type="text" name="teacher" placeholder="Masukkan akun guru sekolah" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm 
-                                            outline-none">
-                                    <span id="error-teacher" class="text-red-500 font-bold text-xs pt-2"></span>
+                                        type="text" name="teacher" placeholder="Masukkan akun guru sekolah" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 transition-all">
+                                    <span id="error-teacher" class="text-red-500 font-bold text-xs pt-1"></span>
                                 </div>
                             </div>
 
                             <div class="mt-6 flex justify-end">
                                 <button id="submit-button-create-subject-teacher" type="button"
-                                    class="inline-flex items-center gap-2 rounded-lg bg-[#0071BC] px-6 py-2.5 text-sm font-bold text-white cursor-pointer disabled:cursor-default">
+                                    class="inline-flex items-center gap-2 rounded-xl bg-[#0071BC] hover:bg-blue-600 h-11 px-8 text-sm font-semibold text-white shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                                         Simpan
                                 </button>
                             </div>

@@ -215,15 +215,31 @@ class TeacherContentReleaseController extends Controller
             'mapel_id'        => 'required',
             'lms_content_id'  => 'required',
             'semester'        => 'required',
-            'pertemuan'       => 'required',
-            'meeting_date'    => 'required',
+
+            'pertemuan'       => 'required|array|min:1',
+            'pertemuan.*'     => 'required|integer|min:1|max:16',
+
+            'meeting_date'    => 'required|array|min:1',
+            'meeting_date.*'  => 'required|date',
         ], [
             'school_class_id.required' => 'Harap pilih kelas.',
             'mapel_id.required'        => 'Mapel tidak ditemukan.',
             'lms_content_id.required'  => 'Harap pilih materi.',
             'semester.required'        => 'Harap pilih semester.',
-            'pertemuan.required'       => 'Harap pilih pertemuan.',
-            'meeting_date.required'    => 'Harap pilih tanggal.',
+
+            'pertemuan.required'       => 'Harap pilih minimal satu pertemuan.',
+            'pertemuan.array'          => 'Format pertemuan tidak valid.',
+            'pertemuan.min'            => 'Harap pilih minimal satu pertemuan.',
+            'pertemuan.*.required'     => 'Pertemuan tidak valid.',
+            'pertemuan.*.integer'      => 'Pertemuan tidak valid.',
+            'pertemuan.*.min'          => 'Pertemuan tidak valid.',
+            'pertemuan.*.max'          => 'Pertemuan maksimal sampai pertemuan 16.',
+
+            'meeting_date.required'    => 'Tanggal release wajib diisi.',
+            'meeting_date.array'       => 'Format tanggal release tidak valid.',
+            'meeting_date.min'         => 'Harap pilih minimal satu tanggal release.',
+            'meeting_date.*.required' => 'Tanggal release wajib diisi.',
+            'meeting_date.*.date'      => 'Format tanggal release tidak valid.',
         ]);
 
         if ($validator->fails()) {
@@ -241,51 +257,86 @@ class TeacherContentReleaseController extends Controller
             $classId = $request->school_class_id;
             $mapelId = $request->mapel_id;
 
-            $meetingDate = Carbon::parse($request->meeting_date)->format('Y-m-d');
-
             $content = LmsContent::find($request->lms_content_id);
 
             if (!$content) {
+                DB::rollBack();
+
                 return response()->json([
+                    'status' => 'error',
                     'errors' => [
-                        'lms_content_id' => ['Materi tidak ditemukan.']
+                        'lms_content_id' => [
+                            'Materi tidak ditemukan.'
+                        ]
                     ]
                 ], 422);
             }
 
             // Validasi materi sesuai mapel
             if ($content->mapel_id != $mapelId) {
+                DB::rollBack();
+
                 return response()->json([
                     'status' => 'error',
                     'errors' => [
-                        'lms_content_id' => ['Materi tidak sesuai dengan mata pelajaran rombel.']
+                        'lms_content_id' => [
+                            'Materi tidak sesuai dengan mata pelajaran rombel.'
+                        ]
                     ]
                 ], 422);
             }
 
-            LmsMeetingContent::updateOrCreate([
-                'school_class_id' => $classId,
-                'mapel_id' => $mapelId,
-                'semester' => $request->semester,
-                'meeting_number' => $request->pertemuan,
-                'school_partner_id' => $schoolId,
-                'service_id' => $content->service_id,
-            ], [
-                'teacher_id' => $user->id,
-                'lms_content_id' => $request->lms_content_id,
-                'meeting_date' => $meetingDate,
-                'is_active' => $request->is_active,
-            ]);
+            foreach ($request->pertemuan as $index => $pertemuan) {
 
+                $meetingDate = $request->meeting_date[$index] ?? null;
+
+                if (!$meetingDate) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'status' => 'error',
+                        'errors' => [
+                            "meeting_date.$index" => [
+                                "Tanggal release untuk pertemuan {$pertemuan} wajib diisi."
+                            ]
+                        ]
+                    ], 422);
+                }
+
+                $meetingDate = Carbon::parse($meetingDate)
+                    ->format('Y-m-d H:i:s');
+
+                LmsMeetingContent::updateOrCreate(
+                    [
+                        'school_class_id'   => $classId,
+                        'mapel_id'          => $mapelId,
+                        'semester'          => $request->semester,
+                        'meeting_number'    => $pertemuan,
+                        'school_partner_id' => $schoolId,
+                        'service_id'        => $content->service_id,
+                    ],
+                    [
+                        'teacher_id'       => $user->id,
+                        'lms_content_id'   => $request->lms_content_id,
+                        'meeting_date'     => $meetingDate,
+                        'is_active'        => $request->is_active,
+                    ]
+                );
+            }
+
+            // Commit SETELAH semua pertemuan selesai diproses
             DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Data berhasil disimpan.',
+            ]);
 
         } catch (QueryException $e) {
 
             DB::rollBack();
 
-            // MySQL duplicate
             if ($e->getCode() === '23000') {
-
                 return response()->json([
                     'status' => 'error',
                     'errors' => [
@@ -298,11 +349,6 @@ class TeacherContentReleaseController extends Controller
 
             throw $e;
         }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data berhasil disimpan.',
-        ]);
     }
 
     // function edit teacher content for release

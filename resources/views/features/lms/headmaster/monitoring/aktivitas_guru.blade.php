@@ -123,7 +123,7 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-slate-800 text-lg leading-tight">Target Kinerja Bpk/Ibu {{ $guruTerpilih->nama_lengkap }}</h3>
-                            <p class="text-xs font-medium text-slate-500 mt-1">Detail jatah materi & asesmen per mata pelajaran yang diajar</p>
+                            <p class="text-xs font-medium text-slate-500 mt-1">Detail jatah materi & assessment per mata pelajaran yang diajar</p>
                         </div>
                     </div>
                 </div>

@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Assessment Management'])
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <!-- alert success create assessment -->
             <div id="alert-success-create-assessment"></div>
@@ -17,7 +17,7 @@
                             <div class="mb-10">
                                 <h1 class="text-2xl font-bold text-gray-800">Create Assessment</h1>
                                 <p class="text-gray-500 mt-1 text-sm">
-                                    Buat asesmen dan atur jadwal serta pengaturannya
+                                    Buat Assessment dan atur jadwal serta pengaturannya
                                 </p>
                             </div>
 
@@ -76,11 +76,17 @@
                                     <div class="space-y-8">
 
                                         <!-- Academic Information -->
-                                        <div class="border border-gray-300 rounded-xl p-6">
-                                            <h2 class="text-lg text-[#0071BC] font-bold mb-6">
-                                                <i class="fas fa-graduation-cap mr-2"></i>
-                                                Academic Information
-                                            </h2>
+                                        <div id="academic-info-section" class="border border-gray-300 rounded-xl p-6">
+                                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
+                                                <h2 class="text-lg text-[#0071BC] font-bold">
+                                                    <i class="fas fa-graduation-cap mr-2"></i>
+                                                    Academic Information
+                                                </h2>
+                                                <span id="badge-academic-info-status" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 w-fit">
+                                                    <i class="fa-solid fa-circle-exclamation text-amber-500 text-[11px]"></i>
+                                                    <span>Harap Periksa Pilihan Anda!</span>
+                                                </span>
+                                            </div>
 
                                             <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
 
@@ -101,11 +107,11 @@
 
                                                 <!-- Semester -->
                                                 <div>
-                                                    <label class="block text-sm font-medium text-gray-600 mb-1">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                         Semester
-                                                        <sup class="text-red-500">&#42;</sup>
+                                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                     </label>
-                                                    <select id="semester" name="semester" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm cursor-pointer outline-none">
+                                                    <select id="semester" name="semester" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                                                             <option value="" hidden>Pilih Semester</option>
                                                             <option value="1">Semester 1</option>
                                                             <option value="2">Semester 2</option>
@@ -116,7 +122,7 @@
                                         </div>
 
                                         <!-- Target Rombel -->
-                                        <div class="border border-gray-300 rounded-xl p-6 bg-white">
+                                        <div id="target-rombel-section" class="border border-gray-300 rounded-xl p-6 bg-white">
                                             <div class="flex justify-between items-center mb-6">
                                                 <h2 class="text-lg text-[#0071BC] font-bold">
                                                     <i class="fas fa-users mr-2"></i>
@@ -162,23 +168,23 @@
                                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
                                                 <div>
-                                                    <label class="block text-sm font-medium">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                         Assessment Title
-                                                        <sup class="text-red-500">&#42;</sup>
+                                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                     </label>
-                                                    <input type="text" name="title" class="mt-2 w-full border border-gray-300 rounded-lg px-4 h-12 outline-none text-sm" 
-                                                        placeholder="Masukkan Judul Asesmen">
+                                                    <input type="text" name="title" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20" 
+                                                        placeholder="Masukkan Judul Assessment">
                                                     <span id="error-title" class="text-red-500 text-xs mt-1 font-bold"></span>
                                                 </div>
         
                                                 <div>
-                                                    <label class="block text-sm font-medium">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                                         Assessment Type
-                                                        <sup class="text-red-500">&#42;</sup>
+                                                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
                                                     </label>
                                                     <select name="assessment_type_id"
-                                                        class="mt-2 w-full border border-gray-300 rounded-lg px-4 h-12 outline-none text-sm cursor-pointer">
-                                                        <option value="" class="hidden">Pilih Tipe Asesmen</option>
+                                                        class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                                                        <option value="" class="hidden">Pilih Tipe Assessment</option>
                                                         @foreach ($schoolAssessmentType as $item)
                                                             <option value="{{ $item->id }}" data-mode="{{ $item->assessmentMode->code }}">{{ $item->name }}</option>
                                                         @endforeach
@@ -216,7 +222,7 @@
                                                         Duration (minutes)
                                                         <sup class="text-red-500">&#42;</sup>
                                                     </label>
-                                                    <input type="number" name="duration" placeholder="Masukkan Durasi Asesmen" 
+                                                    <input type="number" name="duration" placeholder="Masukkan Durasi Assessment" 
                                                         class="mt-2 w-full border border-gray-300 rounded-lg px-4 py-2 outline-none text-sm">
                                                     <span id="error-duration" class="text-red-500 text-xs mt-1 font-bold"></span>
                                                 </div>
@@ -242,7 +248,7 @@
                                                     <div class="relative">
                                                         <input 
                                                             type="text" id="start-date" name="start_date" 
-                                                                class="w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
+                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
                                                                 disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih Tanggal">
                                                         <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
                                                             <i class="fa-regular fa-calendar-days text-sm"></i>
@@ -259,7 +265,7 @@
                                                     <div class="relative">
                                                         <input 
                                                             type="text" id="end-date" name="end_date"
-                                                                class=" w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
+                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
                                                                 disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih Tanggal">
                                                         <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
                                                             <i class="fa-regular fa-calendar-days text-sm"></i>
@@ -431,7 +437,7 @@
                                         <div class="p-4 bg-gray-100 rounded-xl">
                                             <h3 class="font-semibold mb-2">Assessment Details</h3>
                                             <p><strong>Judul:</strong> <span id="review-title"></span></p>
-                                            <p><strong>Tipe Asesmen:</strong> <span id="review-type"></span></p>
+                                            <p><strong>Tipe Assessment:</strong> <span id="review-type"></span></p>
                                             <p><strong>Instruction:</strong> <span id="review-instruction"></span></p>
                                             <p id="review-duration-wrapper">
                                                 <strong>Durasi:</strong> <span id="review-duration"></span> Menit
@@ -536,10 +542,10 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Rombel Kelas</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tahun Ajaran</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Mata Pelajaran</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Asesmen</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Asesmen</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Assessment</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Assessment</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Semester</th>
-                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Asesmen</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Assessment</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">
                                         <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -556,7 +562,7 @@
 
                     <div id="empty-message-teacher-assessment-management-list" class="w-full h-96 hidden">
                         <span class="flex h-full items-center justify-center text-gray-500">
-                            Tidak ada asesmen yang terdaftar.
+                            Tidak ada Assessment yang terdaftar.
                         </span>
                     </div>
                 </section>
@@ -571,10 +577,10 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js') }}"></script> <!--- form teacher assessment management ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}"></script> <!--- teacher assessment management step form ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}"></script> <!--- paginate teacher assessment management ---->
-<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js') }}"></script> <!--- assessment file upload preview ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/form-teacher-assessment-management.js')) : time() }}"></script> <!--- form teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/teacher-assessment-management-step-form.js')) : time() }}"></script> <!--- teacher assessment management step form ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/paginate-teacher-assessment-management.js')) : time() }}"></script> <!--- paginate teacher assessment management ---->
+<script src="{{ asset('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js')) ? filemtime(public_path('assets/js/features/lms/teacher/assessment/assessment-file-upload-preview.js')) : time() }}"></script> <!--- assessment file upload preview ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

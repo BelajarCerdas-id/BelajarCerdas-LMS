@@ -9,7 +9,7 @@ function schoolTeacherPerformanceChartLoad(search_academic_year) {
     const foundationId = container.dataset.foundationId;
 
     if (!role) return;
-    
+
     const loadingEl = document.getElementById('school-teacher-performance-chart-loading');
     const canvasEl = document.getElementById('school-teacher-performance-chart');
     const emptyEl = document.getElementById('empty-message-school-teacher-performance-chart');
@@ -108,7 +108,7 @@ function renderSchoolTeacherPerformanceChart(canvasEl, labels, assessmentData, c
             labels: labels,
             datasets: [
                 {
-                    label: 'Assessmen',
+                    label: 'Assessment',
                     data: assessmentData,
                     borderWidth: 1,
                     borderRadius: 6
@@ -176,7 +176,7 @@ function renderSchoolTeacherPerformanceChart(canvasEl, labels, assessmentData, c
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return `${ context.dataset.label }: ${ context.raw }% `;
+                            return `${context.dataset.label}: ${context.raw}% `;
                         }
                     }
                 }

@@ -115,6 +115,7 @@ class LmsHandler
                             'nama_sekolah' => $row['nama_sekolah'],
                             'kepsek_id' => $user->id,
                             'jenjang_sekolah' => $row['jenjang_sekolah'],
+                            'timezone' => $row['timezone'],
                         ]);
 
                         $schoolPartners->put($schoolPartner->npsn, $schoolPartner);
@@ -124,6 +125,7 @@ class LmsHandler
                         $schoolPartner->update([
                             'nama_sekolah' => $row['nama_sekolah'],
                             'jenjang_sekolah' => $row['jenjang_sekolah'],
+                            'timezone' => $row['timezone'],
                         ]);
 
                         if ($row['role_account'] === 'Kepala Sekolah') {
@@ -423,8 +425,11 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
-                'unique:user_accounts,email',
                 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+            ],
+            '*.timezone' => [
+                'required',
+                'in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura'
             ],
             '*.password_akun'    => 'required',
             '*.enrollment_type'  => 'required',
@@ -449,13 +454,14 @@ class LmsHandler
 
             '*.email_akun.required'       => 'Email akun tidak boleh kosong.',
             '*.email_akun.email'          => 'Format email tidak valid.',
-            '*.email_akun.unique'          => 'Email akun telah terdaftar.',
             '*.email_akun.regex'          => 'Format email tidak valid.',
 
             '*.password_akun.required'    => 'Password akun tidak boleh kosong.',
 
             '*.enrollment_type.required'  => 'Enrollment type tidak boleh kosong.',
             '*.jenjang_sekolah.required'  => 'Jenjang Sekolah tidak boleh kosong.',
+            '*.timezone.required'         => 'Timezone tidak boleh kosong.',
+            '*.timezone.in'               => 'Timezone harus berupa Asia/Jakarta, Asia/Makassar, atau Asia/Jayapura.',
             '*.role_account.required'     => 'Role akun tidak boleh kosong.',
             '*.nama_sekolah.required'     => 'Nama sekolah tidak boleh kosong.',
             '*.npsn.required'             => 'NPSN tidak boleh kosong.',

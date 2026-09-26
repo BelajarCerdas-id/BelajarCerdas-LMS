@@ -24,7 +24,7 @@ function startQuestionTimer(soalId) {
         const now = Date.now();
         const duration = Math.ceil((now - questionStartTime) / 1000);
 
-        const examDuration = getTotalExamDuration();
+        const examDuration = Math.max(0, getTotalExamDuration());
 
         const totalDuration = Math.min(
             questionDurations[currentQuestionId] + duration,
@@ -54,7 +54,7 @@ function saveQuestionDuration() {
     const now = Date.now();
     const duration = Math.ceil((now - questionStartTime) / 1000);
 
-    const examDuration = getTotalExamDuration();
+    const examDuration = Math.max(0, getTotalExamDuration());
 
     const totalDuration = Math.min(
         questionDurations[currentQuestionId] + duration,

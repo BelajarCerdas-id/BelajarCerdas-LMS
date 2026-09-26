@@ -5,10 +5,10 @@
 ]);
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
-            <div id="alert-success-assesment-grading"></div>
+            <div id="alert-success-assessment-grading"></div>
 
             <main>
                 <section id="container-assessment-grading-student-answer" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
@@ -26,7 +26,7 @@
 
                 <div id="empty-message-school-assessment-question" class="w-full h-80 hidden">
                     <span class="flex h-full items-center justify-center text-gray-500">
-                        Tidak ada soal yang terdaftar pada asesmen ini.
+                        Tidak ada soal yang terdaftar pada Assessment ini.
                     </span>
                 </div>
             </main>

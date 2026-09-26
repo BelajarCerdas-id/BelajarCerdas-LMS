@@ -521,8 +521,7 @@
                             <div class="flex flex-wrap items-center gap-3">
 
                                 <!-- Periode -->
-                                <select id="chartPeriod" class="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold cursor-pointer outline-none
-                                    disabled:cursor-default disabled:opacity-50 disabled:bg-slate-50" disabled>
+                                <select id="chartPeriod" class="h-11 rounded-xl border border-gray-300 bg-white px-4 pr-10 text-sm font-medium text-gray-700 cursor-pointer outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 disabled:cursor-default disabled:opacity-50 disabled:bg-gray-50" disabled>
                                     <option value="daily">Harian</option>
                                     <option value="weekly">Mingguan</option>
                                     <option value="monthly" selected>Bulanan</option>
@@ -530,8 +529,7 @@
                                 </select>
 
                                 <!-- Bulan -->
-                                <select id="chartMonth" class="hidden h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold cursor-pointer outline-none
-                                    disabled:cursor-default disabled:opacity-50 disabled:bg-slate-50" disabled>
+                                <select id="chartMonth" class="hidden h-11 rounded-xl border border-gray-300 bg-white px-4 pr-10 text-sm font-medium text-gray-700 cursor-pointer outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 disabled:cursor-default disabled:opacity-50 disabled:bg-gray-50" disabled>
                                     <option value="1">Januari</option>
                                     <option value="2">Februari</option>
                                     <option value="3">Maret</option>
@@ -759,7 +757,7 @@
                                     <div id="filter-tahun-ajaran-wrapper" class="hidden">
                                         <select
                                             id="filter-tahun-ajaran"
-                                            class="select select-bordered w-full rounded-xl bg-white font-medium text-slate-700 cursor-pointer">
+                                            class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 pr-10 text-sm font-medium text-gray-700 outline-none hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                                             <!-- Ajax -->
                                         </select>
                                     </div>

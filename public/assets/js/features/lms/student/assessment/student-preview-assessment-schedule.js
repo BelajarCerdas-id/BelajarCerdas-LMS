@@ -51,12 +51,16 @@ function changeSemester(semester) {
 
             assessments.forEach(assessment => {
 
-                const startDate = assessment.start_date ? formatDate(assessment.start_date) : '-';
-                const endDate = assessment.end_date ? formatDate(assessment.end_date) : '-';
+                const timezone = assessment.timezone;
+                const timezoneLabel = assessment.timezone_label;
+
+                const startDate = assessment.start_date_iso ? formatDate(assessment.start_date_iso, timezone, timezoneLabel) : '-';
+                const endDate = assessment.end_date_iso ? formatDate(assessment.end_date_iso, timezone, timezoneLabel) : '-';
 
                 const now = new Date();
-                const start = parseLocalDateTime(assessment.start_date);
-                const end = parseLocalDateTime(assessment.end_date);
+
+                const start = parseSchoolDateTime(assessment.start_date_iso);
+                const end = parseSchoolDateTime(assessment.end_date_iso);
 
                 const total_questions = assessment.total_questions;
                 const total_answers = assessment.total_answers;
@@ -76,7 +80,7 @@ function changeSemester(semester) {
                     btnStartExam = `
                         <a href="${resultTestHref}">
                             <button class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
-                                Lihat Hasil Asesmen
+                                Lihat Hasil Assessment
                             </button>
                         </a>
                     `;
@@ -87,7 +91,7 @@ function changeSemester(semester) {
                         <button
                             onclick="startExamLocalTime(${assessment.id})"
                             class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
-                            Mulai Asesmen
+                            Mulai Assessment
                         </button>
                     `;
                 }
@@ -141,7 +145,7 @@ function changeSemester(semester) {
 
                                 <div class="mt-4 flex flex-col sm:flex-row sm:justify-between text-sm bg-white/10 backdrop-blur-md rounded-lg px-4 py-3 w-full sm:w-max gap-3 sm:gap-5">
                                     <div class="flex flex-col items-center">
-                                        <span class="opacity-70 text-xs">Mulai Asesmen</span>
+                                        <span class="opacity-70 text-xs">Mulai Assessment</span>
                                         <span class="font-medium">${startDate}</span>
                                     </div>
                                     <div class="flex flex-col items-center">
@@ -166,7 +170,7 @@ function changeSemester(semester) {
 
                 // MODE NON EXAM
                 else {
-                    
+
                     const projectResultTestHref = assessment.projectResultTestHref.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId)
                         .replace(':curriculumId', curriculumId).replace(':mapelId', mapelId).replace(':assessmentTypeId', assessmentTypeId).replace(':semester', selectedSemester)
                         .replace(':assessmentId', assessment.id);
@@ -186,7 +190,7 @@ function changeSemester(semester) {
                         btnSubmitProject = `
                             <a href="${projectResultTestHref}">
                                 <button class="mt-6 bg-[#43AB3C] w-full py-2 text-sm rounded-md shadow-md text-white font-bold cursor-pointer">
-                                    Lihat Hasil Asesmen
+                                    Lihat Hasil Assessment
                                 </button>
                             </a>
                         `;
@@ -425,8 +429,8 @@ function changeSemester(semester) {
                             `
                                 ${btnSubmitProject}
                             `
-                        
-                            }
+
+                        }
 
                         </div>
                     `;
@@ -440,62 +444,67 @@ function changeSemester(semester) {
     });
 }
 
-function formatDate(dateString) {
+function parseSchoolDateTime(dateString) {
 
-    const months = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
+    if (!dateString) return null;
 
-    const date = parseLocalDateTime(dateString);
+    const date = new Date(dateString);
+
+    return Number.isNaN(date.getTime())
+        ? null
+        : date;
+}
+
+function formatDate(dateString, timezone, timezoneLabel) {
+
+    if (!dateString || !timezone) return '-';
+
+    const date = parseSchoolDateTime(dateString);
 
     if (!date) return '-';
 
-    const day = date.getDate();
-    const monthName = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
+    const parts = new Intl.DateTimeFormat('id-ID', {
+        timeZone: timezone,
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23'
+    }).formatToParts(date);
 
-    return `${day} ${monthName} ${year} (${hour}:${minute})`;
-}
+    const values = {};
 
-function parseLocalDateTime(dateStr) {
+    parts.forEach(part => {
+        if (part.type !== 'literal') {
+            values[part.type] = part.value;
+        }
+    });
 
-    if (!dateStr) return null;
-
-    const [datePart, timePart] = dateStr.split(' ');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
-
-    return new Date(year, month - 1, day, hour, minute);
+    return `${values.day} ${values.month} ${values.year} (${values.hour}:${values.minute} ${timezoneLabel ?? timezone})`;
 }
 
 function startExamLocalTime(assessmentId) {
 
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {
 
-        const now = new Date();
-        const start = parseLocalDateTime(response.start_date);
-        const end = parseLocalDateTime(response.end_date);
-
-        if (now < start) {
+        if (response.status === 'not_started') {
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Belum Mulai',
-                text: 'Sesi Asesmen belum dimulai.'
+                text: 'Sesi Assessment belum dimulai.'
             });
 
             return;
         }
 
-        if (now > end) {
+        if (response.status === 'expired') {
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Sudah Selesai',
-                text: 'Sesi Asesmen telah berakhir.'
+                text: 'Sesi Assessment telah berakhir.'
             });
 
             return;
@@ -779,23 +788,23 @@ $(document).on('click', '[id^="btn-submit-project-"]', function (e) {
                 // VALIDATION ERROR
                 if (xhr.status === 422 && response?.errors) {
                     const errors = response.errors;
-                    
+
                     $.each(errors, function (field, messages) {
-    
+
                         if (field === 'project_file') {
-    
+
                             $(`#error-project-file-${assessmentId}`).text(messages[0]);
                             $(`#project-file-${assessmentId}`).addClass('border-red-400 border');
-    
+
                         }
-    
+
                         if (field === 'project_text') {
-    
+
                             $(`#error-project-text-${assessmentId}`).text(messages[0]);
                             $(`#project-text-${assessmentId}`).addClass('border-red-400 border');
-    
+
                         }
-    
+
                     });
                 }
 

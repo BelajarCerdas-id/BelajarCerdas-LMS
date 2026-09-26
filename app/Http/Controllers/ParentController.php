@@ -173,10 +173,10 @@ class ParentController extends Controller
 
             if ($studentClassId && $studentUserId) {
 
-                // SEMUA ASESMEN
+                // SEMUA ASSESSMENT
                 $semuaTugas = \App\Models\SchoolAssessment::with('Mapel')->where('school_class_id', $studentClassId)->get();
 
-                // ASESMEN YANG SUDAH DIKERJAKAN SISWA
+                // ASSESSMENT YANG SUDAH DIKERJAKAN SISWA
                 $tugasSiswaSelesai = \App\Models\StudentAssessmentSummary::where('student_id', $studentUserId)->pluck('root_assessment_id')->toArray();
 
                 // SEMUA MATERI

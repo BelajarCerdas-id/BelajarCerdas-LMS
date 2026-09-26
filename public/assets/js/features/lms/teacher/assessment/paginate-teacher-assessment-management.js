@@ -25,9 +25,9 @@ function paginateTeacherAssessmentManagement(search_year = null, search_class = 
             // Dropdown Tahun Ajaran
             const containerDropdownTahunAjaran = document.getElementById('container-dropdown-assessment-management-tahun-ajaran');
             containerDropdownTahunAjaran.innerHTML = `
-                <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Tahun Ajaran</label>
-                    <select id="dropdown-assessment-management-filter-tahun-ajaran" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-6 cursor-pointer outline-none">
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tahun Ajaran</label>
+                    <select id="dropdown-assessment-management-filter-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                         <option value="" class="hidden">Pilih Tahun Ajaran</option>
                         ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
                     </select>
@@ -37,9 +37,9 @@ function paginateTeacherAssessmentManagement(search_year = null, search_class = 
             // Dropdown Kelas
             const containerDropdownClass = document.getElementById('container-dropdown-assessment-management-class');
             containerDropdownClass.innerHTML = `
-                <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Kelas</label>
-                    <select id="dropdown-assessment-management-filter-class" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-24 cursor-pointer outline-none">
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Kelas</label>
+                    <select id="dropdown-assessment-management-filter-class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                         <option value="" class="hidden">Filter Kelas</option>
                         ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
                     </select>
@@ -49,10 +49,10 @@ function paginateTeacherAssessmentManagement(search_year = null, search_class = 
             // Dropdown Assessment Type
             const containerAssessmentType = document.getElementById('container-dropdown-assessment-type');
             containerAssessmentType.innerHTML = `
-                <div class="flex flex-col w-full mb-2">
-                    <label class="text-sm font-medium text-gray-600 mb-1">Filter Tipe Asesmen</label>
-                    <select id="dropdown-assessment-type" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-24 cursor-pointer outline-none">
-                        <option value="" class="hidden">Filter Tipe Asesmen</option>
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">Filter Tipe Assessment</label>
+                    <select id="dropdown-assessment-type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Filter Tipe Assessment</option>
                         ${response.schoolAssessmentType.map(item => `<option value="${item.id}" ${search_assessment_type == item.id ? 'selected' : ''}>${item.name}</option>`).join('')}
                     </select>
                 </div>
@@ -80,7 +80,7 @@ function paginateTeacherAssessmentManagement(search_year = null, search_class = 
                     // Format tanggal mulai dan akhir
                     const startDate = item.start_date ? `${formatDate(item.start_date)}, ${timeFormatter.format(new Date(item.start_date))}` : 'Tanggal tidak tersedia';
                     const endDate = item.end_date ? `${formatDate(item.end_date)}, ${timeFormatter.format(new Date(item.end_date))}` : 'Tanggal tidak tersedia';
-                    
+
                     const assessmentManagementEdit = response.assessmentManagementEdit.replace(':role', role).replace(':schoolId', schoolId).replace(':schoolName', schoolName)
                         .replace(':assessmentId', item.id)
 

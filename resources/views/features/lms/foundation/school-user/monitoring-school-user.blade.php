@@ -205,24 +205,18 @@
                                 <!-- School Selector -->
                                 <div class="w-full sm:w-64">
     
-                                    <label for="school-user-by-school-select" class="mb-2 block text-xs font-semibold text-slate-500">
+                                    <label for="school-user-by-school-select" class="mb-1.5 block text-sm font-medium text-gray-700">
                                         Pilih Sekolah
                                     </label>
     
                                     <div class="relative">
     
-                                        <select id="school-user-by-school-select" class="w-full appearance-none rounded-xl border border-slate-200 
-                                            bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm outline-none transition 
-                                            hover:border-slate-300 cursor-pointer">
+                                        <select id="school-user-by-school-select" class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 pr-10 text-sm font-medium text-gray-700 shadow-sm outline-none transition hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                             <option value="">
                                                 Semua Sekolah
                                             </option>
                                         </select>
-    
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

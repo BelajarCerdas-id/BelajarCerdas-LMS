@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Profil Akun']);
 
 @if (Auth::user()->StudentProfile)
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!--- alert success --->
             <div id="alert-success-update-personal-information"></div>
@@ -199,8 +199,8 @@
         </div>
     </div>
 @elseif (Auth::user()->OfficeProfile)
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!--- alert success --->
             <div id="alert-success-update-personal-information"></div>
@@ -336,9 +336,8 @@
         </div>
     </div>
 @elseif (Auth::user()->SchoolStaffProfile)
-    <div class="relative left-0 w-full {{ Auth::user()->role === 'Admin Sekolah' ? 'md:left-62.5 md:w-[calc(100%-250px)]' : 'md:left-72.5 md:w-[calc(100%-290px)]' }} 
-        transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 w-full {{ Auth::user()->role === 'Admin Sekolah' ? 'md:left-62.5 md:w-[calc(100%-250px)]' : 'md:left-72.5 md:w-[calc(100%-290px)]' }} min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!--- alert success --->
             <div id="alert-success-update-personal-information"></div>
@@ -522,8 +521,8 @@
         </div>
     </div>
 @elseif (Auth::user()->ParentProfile)
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
             <main>
                 <section class="flex flex-col lg:flex-row gap-14">
 
@@ -659,8 +658,8 @@
         </div>
     </div>
 @elseif (Auth::user()->SchoolFoundationProfile)
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!--- alert success --->
             <div id="alert-success-update-personal-information"></div>

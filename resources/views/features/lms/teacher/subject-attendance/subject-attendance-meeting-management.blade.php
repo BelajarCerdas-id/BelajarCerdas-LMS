@@ -6,7 +6,7 @@
 
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
 
         <!---- alert success from ajax ---->
         <div id="alert-success-insert-data-announcement"></div>
@@ -59,7 +59,7 @@
             </div>
         </section>
 
-        <div class="my-10 sm:my-12 lg:my-15 mx-3 sm:mx-5 lg:mx-7.5">
+        <div class="mt-6 mb-10 mx-3 sm:mx-5 lg:mx-7.5">
             <main>
                 <section id="container" data-role="{{ $role }}" data-school-id="{{ $schoolId }}" data-school-name="{{ $schoolName }}" 
                     data-subject-teacher-id="{{ $subjectTeacherId }}" data-meeting-number="{{ $meetingNumber }}" data-semester="{{ $semester }}">
@@ -79,7 +79,7 @@
                                 <button onclick="switchTab('tugas')" id="btn-tab-tugas" class="tab-btn px-6 py-3.5 font-semibold text-sm rounded-t-2xl border-t 
                                     border-x border-slate-200/60 bg-slate-100 text-slate-500 relative z-0 -mb-px hover:bg-white hover:text-indigo-500 
                                     flex items-center gap-2 transition-all shadow-inner cursor-pointer">
-                                    <i class="fas fa-tasks"></i> Asesmen
+                                    <i class="fas fa-tasks"></i> Assessment
                                 </button>
                             </div>
 
@@ -188,11 +188,11 @@
                                                 <div class="min-w-0">
 
                                                     <h3 class="font-bold text-slate-800 text-base sm:text-lg leading-tight wrap-break-word">
-                                                        Asesmen
+                                                        Assessment
                                                     </h3>
 
                                                     <p class="text-xs text-slate-500 font-medium">
-                                                        Kelola dan nilai asesmen siswa pada pertemuan ini
+                                                        Kelola dan nilai assessment siswa pada pertemuan ini
                                                     </p>
 
                                                 </div>
@@ -208,7 +208,7 @@
                                                         hover:bg-amber-500 hover:text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 shadow-sm
                                                         hover:shadow-md flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer">
                                                         <i class="fas fa-plus"></i>
-                                                        Jadwalkan Asesmen
+                                                        Jadwalkan Assessment
                                                     </button>
                                                 </a>
                                             </div>
@@ -225,7 +225,7 @@
                                                     <i class="fa-solid fa-filter text-[#0071BC]"></i>
 
                                                     <h3 class="text-sm sm:text-base font-semibold text-gray-800">
-                                                        Filter Asesmen
+                                                        Filter Assessment
                                                     </h3>
 
                                                 </div>
@@ -235,11 +235,10 @@
                                             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
                                                 <select id="assessmentTypeFilter"
-                                                    class="w-full bg-white shadow-sm rounded-xl h-12 border border-gray-300
-                                                    text-sm px-4 cursor-pointer outline-none">
+                                                    class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                                     <option value="">
-                                                        Semua Jenis Asesmen
+                                                        Semua Jenis Assessment
                                                     </option>
 
                                                 </select>
@@ -263,11 +262,11 @@
                                                 <i class="fas fa-clipboard-check text-3xl sm:text-4xl mb-4 text-slate-300"></i>
 
                                                 <p class="text-sm font-bold text-slate-600">
-                                                    Belum Ada Asesmen
+                                                    Belum Ada Assessment
                                                 </p>
 
                                                 <p class="text-xs text-slate-400 mt-1 max-w-xs">
-                                                    Klik tombol jadwalkan asesmen untuk membuat asesmen.
+                                                    Klik tombol jadwalkan assessment untuk membuat assessment.
                                                 </p>
 
                                             </div>
@@ -448,12 +447,11 @@
 
                                 <!-- TYPE -->
                                 <div>
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                         Jenis Pengumuman
                                     </label>
 
-                                    <select name="type" class="w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white outline-none text-sm font-medium 
-                                        text-slate-700 cursor-pointer">
+                                    <select name="type" class="w-full h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white outline-none text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                         <option value="" class="hidden">Pilih jenis pengumuman</option>
                                         <option value="info">Info Biasa</option>

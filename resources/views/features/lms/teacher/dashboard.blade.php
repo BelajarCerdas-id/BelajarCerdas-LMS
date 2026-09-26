@@ -318,7 +318,7 @@
 
                     </div>
 
-                    {{-- 3. PENGAWASAN ASESMEN --}}
+                    {{-- 3. PENGAWASAN ASSESSMENT --}}
                     <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4">
                             <div class="flex items-center gap-3">
@@ -326,8 +326,8 @@
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Asesmen</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas siswa selama pengerjaan asesmen</p>
+                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Assessment</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas siswa selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>
@@ -342,10 +342,10 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-                                    <div id="container-dropdown-school-year-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer [&_select]:appearance-none"></div>
-                                    <div id="container-dropdown-rombel-class-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer [&_select]:appearance-none"></div>
-                                    <div id="container-dropdown-subject-teacher-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer [&_select]:appearance-none"></div>
-                                    <div id="container-dropdown-assessment-type-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer [&_select]:appearance-none"></div>
+                                    <div id="container-dropdown-school-year-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer"></div>
+                                    <div id="container-dropdown-rombel-class-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer"></div>
+                                    <div id="container-dropdown-subject-teacher-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer"></div>
+                                    <div id="container-dropdown-assessment-type-cheating-history" class="w-full relative [&_select]:w-full [&_select]:border-2 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:px-4 [&_select]:py-2.5 [&_select]:text-sm [&_select]:font-medium [&_select]:text-slate-700 [&_select]:focus:ring-4 [&_select]:focus:ring-blue-900/10 [&_select]:focus:border-blue-900 [&_select]:outline-none [&_select]:transition-all [&_select]:bg-white [&_select]:cursor-pointer"></div>
                                 </div>
                             </div>
 

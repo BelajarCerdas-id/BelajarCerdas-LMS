@@ -85,8 +85,8 @@
 
                                     <!-- Periode -->
                                     <select id="chartPeriod"
-                                        class="h-11 px-4 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm 
-                                        transition-all duration-200 hover:border-slate-300 focus:outline-none focus:ring-0 focus:border-slate-300 cursor-pointer
+                                        class="h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm 
+                                        transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer
                                         hidden">
 
                                         <option value="daily">Harian</option>
@@ -98,8 +98,8 @@
 
                                     <!-- Bulan -->
                                     <select id="chartMonth"
-                                        class="hidden h-11 px-4 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm 
-                                        transition-all duration-200 hover:border-slate-300 focus:outline-none focus:ring-0 focus:border-slate-300 cursor-pointer">
+                                        class="hidden h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm 
+                                        transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
 
                                         <option value="1">Januari</option>
                                         <option value="2">Februari</option>
@@ -118,8 +118,8 @@
 
                                     <!-- Tahun -->
                                     <select id="chartYear"
-                                        class="hidden h-11 px-4 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm 
-                                        transition-all duration-200 hover:border-slate-300 focus:outline-none focus:ring-0 focus:border-slate-300 cursor-pointer">
+                                        class="hidden h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm 
+                                        transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
                                         <!-- show data in ajax -->
                                     </select>
                                 </div>

@@ -9,8 +9,8 @@
 
 @if (Auth::user()->role === 'Siswa')
 
-<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-    <div class="my-15 mx-7.5">
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+    <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
         <section class="bg-white border border-gray-200 rounded-xl shadow-lg p-0 lg:p-6">
 
@@ -28,7 +28,7 @@
                                 Kamu Belum Mengerjakan
                             </h2>
                             <h1 class="text-3xl font-bold">
-                                Asesmen Ini
+                                Assessment Ini
                             </h1>
 
                             <a href="{{ route('lms.studentPreviewAssessment.mode.view', [$role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, 'susulan', $assessmentId]) }}">
@@ -43,7 +43,7 @@
                         <!-- BELUM DIPUBLISH -->
                         <div class="flex flex-col items-center xl:items-start text-center xl:text-left">
                             <h2 class="text-xl font-semibold">
-                                Hasil Asesmen Sedang Diproses
+                                Hasil Assessment Sedang Diproses
                             </h2>
 
                             <h1 class="text-3xl font-bold mt-2">
@@ -456,7 +456,7 @@
                             </p>
                         @else
                             <p class="text-white/80 max-w-xl">
-                                Guru kamu sedang menonaktifkan tampilan nilai untuk asesmen ini.
+                                Guru kamu sedang menonaktifkan tampilan nilai untuk assessment ini.
                                 Silakan tunggu hingga nilai resmi diumumkan.
                             </p>
                         @endif
@@ -478,7 +478,7 @@
                 <a href="{{ route('lms.studentPreviewAssessment.view', [ $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId]) }}"
                     class="bg-[#0071BC] text-white px-6 py-3 rounded-xl shadow-lg hover:scale-105 transition font-semibold flex items-center justify-center gap-2">
                     <i class="fa-solid fa-house"></i>
-                    Kembali ke halaman asesmen
+                    Kembali ke halaman assessment
                 </a>
 
                 <a href="{{ route('lms.studentAssessmentExan.view', [ $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId]) }}">

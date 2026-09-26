@@ -2,6 +2,8 @@ let currentQuestionIndex = 0;
 let showLoading = false;
 let isReviewMode = false;
 let isResultMode = false;
+let selectedLeft = null;
+let studentPairs = {};
 
 const containerTkaPracticeTest = $('#container-tka-practice-test-form');
 const role = containerTkaPracticeTest.data('role');
@@ -1163,25 +1165,25 @@ $(document).on('click', '#btn-submit-save-answer', function (e) {
         },
 
         error: function (xhr) {
-
             if (xhr.status === 422) {
-
                 const response = xhr.responseJSON;
 
-                // VALIDATION
-                if (response.errors) {
+                $('#status_answer').val('draft');
 
+                if (response.errors) {
                     $('.text-red-500').text('');
 
                     $.each(response.errors, function (field, messages) {
                         $(`#error-${field}`).text(messages[0]);
                     });
                 }
+
+                selectedLeft = null;
+                $('.matching-left').removeClass('bg-blue-100 border-blue-500');
             }
 
             isProcessing = false;
             btn.prop('disabled', false);
-
         }
 
     });

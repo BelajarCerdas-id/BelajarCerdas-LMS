@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role === 'Kepala Sekolah')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5 space-y-8">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5 space-y-8">
 
             <!-- ALERT SUCCESS -->
             <div id="alert-success-create-feedback"></div>
@@ -262,8 +262,8 @@
 
                                 <div class="relative">
 
-                                    <select id="search_teacher" class="h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white pl-4 pr-12 
-                                        text-sm text-slate-700 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none 
+                                    <select id="search_teacher" class="h-11 w-full appearance-none rounded-xl border border-gray-300 bg-white pl-4 pr-12 
+                                        text-sm text-gray-700 transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none 
                                         cursor-pointer">
 
                                         <option value="">
@@ -272,7 +272,7 @@
 
                                     </select>
 
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex w-12 items-center justify-center border-l border-slate-200">
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex w-12 items-center justify-center border-l border-gray-200">
                                         <i class="fa-solid fa-user-group text-slate-400"></i>
                                     </div>
 
@@ -291,8 +291,8 @@
 
                                     <select
                                         id="search_status"
-                                        class="h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white pl-4 pr-12 text-sm text-slate-700 
-                                            transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none cursor-pointer">
+                                        class="h-11 w-full appearance-none rounded-xl border border-gray-300 bg-white pl-4 pr-12 text-sm text-gray-700 
+                                            transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
 
                                         <option value="">
                                             Semua Status
@@ -308,7 +308,7 @@
 
                                     </select>
 
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex w-12 items-center justify-center border-l border-slate-200">
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex w-12 items-center justify-center border-l border-gray-200">
                                         <i class="fa-solid fa-circle-check text-slate-400"></i>
                                     </div>
 
@@ -326,8 +326,8 @@
 
                                     <select
                                         id="search_feedback"
-                                        class="h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white pl-4 pr-12 text-sm text-slate-700
-                                            transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none cursor-pointer">
+                                        class="h-11 w-full appearance-none rounded-xl border border-gray-300 bg-white pl-4 pr-12 text-sm text-gray-700
+                                            transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
 
                                         <option value="">
                                             Semua Feedback

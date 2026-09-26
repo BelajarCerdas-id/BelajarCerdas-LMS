@@ -27,9 +27,8 @@ function assessmentWeightManagement(search_year = null, page = 1) {
                 const containerDropdownTahunAjaran = document.getElementById('container-dropdown-assessment-weight-tahun-ajaran');
                 containerDropdownTahunAjaran.innerHTML = `
                     <div class="flex flex-col w-full mb-2">
-                        <label class="text-sm font-medium text-gray-600 mb-1">Filter Tahun Ajaran</label>
-                        <select id="dropdown-assessment-weight-filter-tahun-ajaran" class="w-full bg-white shadow-lg rounded-md h-12 border border-gray-300 text-sm pr-6 cursor-pointer
-                            outline-none">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Filter Tahun Ajaran</label>
+                        <select id="dropdown-assessment-weight-filter-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
                             <option value="" class="hidden">Pilih Tahun Ajaran</option>
                             ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
                         </select>

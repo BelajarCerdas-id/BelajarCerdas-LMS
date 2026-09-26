@@ -1,8 +1,8 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Revenue'])
 
 @if (Auth::user()->role == 'Finance')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-10 mx-6 space-y-6">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-6 space-y-6">
 
             <main id="container" data-role="{{ $role }}">
 
@@ -163,14 +163,14 @@
 
                         <!-- Period -->
                         <select id="chartPeriod"
-                            class="h-11 px-4 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 hidden">
+                            class="hidden h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
                             <option value="monthly" selected>Bulanan</option>
                             <option value="yearly">Tahunan</option>
                         </select>
 
                         <!-- Year -->
                         <select id="chartYear"
-                            class="hidden h-11 px-4 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700">
+                            class="hidden h-11 px-4 pr-10 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none cursor-pointer">
                         </select>
 
                     </div>

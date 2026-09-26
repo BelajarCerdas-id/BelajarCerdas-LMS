@@ -86,11 +86,11 @@ class AssessmentWeightController extends Controller
             'school_year' => 'required',
             'weight' => 'required|integer|min:1|max:100',
         ], [
-            'assessment_type_id' => 'Harap pilih tipe asesmen.',
+            'assessment_type_id' => 'Harap pilih tipe assessment.',
             'school_year' => 'Harap pilih tahun ajaran.',
-            'weight.required' => 'Bobot asesmen tidak boleh kosong.',
-            'weight.min' => 'Bobot asesmen harus lebih dari 0.',
-            'weight.max' => 'Bobot asesmen tidak boleh lebih dari 100.',
+            'weight.required' => 'Bobot assessment tidak boleh kosong.',
+            'weight.min' => 'Bobot assessment harus lebih dari 0.',
+            'weight.max' => 'Bobot assessment tidak boleh lebih dari 100.',
         ]);
 
         if ($validator->fails()) {
@@ -106,7 +106,7 @@ class AssessmentWeightController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.']
+                    'assessment_type_id' => ['Bobot pada assessment di tahun ajaran ini telah terdaftar.']
                 ]
             ], 422);
         }
@@ -119,7 +119,7 @@ class AssessmentWeightController extends Controller
             return response()->json([
                 'status' => 'error',
                 'error_type' => 'weight_limit_exceeded',
-                'message' => 'Total bobot semua jenis asesmen tidak boleh melebihi 100%. Silakan sesuaikan bobot yang ada.',
+                'message' => 'Total bobot semua jenis assessment tidak boleh melebihi 100%. Silakan sesuaikan bobot yang ada.',
             ], 422);
         }
 
@@ -150,11 +150,11 @@ class AssessmentWeightController extends Controller
             'school_year' => 'required',
             'weight' => 'required|integer|min:1|max:100',
         ], [
-            'assessment_type_id' => 'Harap pilih tipe asesmen.',
+            'assessment_type_id' => 'Harap pilih tipe assessment.',
             'school_year' => 'Harap pilih tahun ajaran.',
-            'weight.required' => 'Bobot asesmen tidak boleh kosong.',
-            'weight.min' => 'Bobot asesmen harus lebih dari 0.',
-            'weight.max' => 'Bobot asesmen tidak boleh lebih dari 100.',
+            'weight.required' => 'Bobot assessment tidak boleh kosong.',
+            'weight.min' => 'Bobot assessment harus lebih dari 0.',
+            'weight.max' => 'Bobot assessment tidak boleh lebih dari 100.',
         ]);
 
         if ($validator->fails()) {
@@ -171,7 +171,7 @@ class AssessmentWeightController extends Controller
             return response()->json([
                 'status' => 'error',
                 'errors' => [
-                    'assessment_type_id' => ['Bobot pada asesmen di tahun ajaran ini telah terdaftar.']
+                    'assessment_type_id' => ['Bobot pada assessment di tahun ajaran ini telah terdaftar.']
                 ]
             ], 422);
         }
@@ -188,7 +188,7 @@ class AssessmentWeightController extends Controller
             return response()->json([
                 'status' => 'error',
                 'error_type' => 'weight_limit_exceeded',
-                'message' => 'Total bobot semua jenis asesmen tidak boleh melebihi 100%. Silakan sesuaikan bobot yang ada.',
+                'message' => 'Total bobot semua jenis assessment tidak boleh melebihi 100%. Silakan sesuaikan bobot yang ada.',
             ], 422);
         }
 

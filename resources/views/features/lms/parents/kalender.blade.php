@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Kalender Akademik'])
-<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] p-6 md:p-10 bg-slate-50 min-h-screen">
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] p-4 sm:p-6 md:p-8 xl:p-10 bg-white min-h-screen">
     <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
         <h2 class="text-2xl font-bold text-slate-800 mb-8"><i class="fas fa-calendar-alt text-[#0071BC] mr-2"></i> Agenda & Acara Sekolah</h2>
         <div class="relative border-l-4 border-slate-100 ml-4 space-y-8">

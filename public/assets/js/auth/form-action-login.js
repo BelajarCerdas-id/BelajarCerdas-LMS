@@ -1,7 +1,10 @@
 let isProcessing = false;
 let attemptErrorTimer = null;
-$('#submit-button').on('click', function (e) {
-    e.preventDefault();
+
+function handleLoginSubmit(e) {
+    if (e) {
+        e.preventDefault();
+    }
 
     if (isProcessing) return; // abaikan jika sedang proses
 
@@ -10,7 +13,7 @@ $('#submit-button').on('click', function (e) {
     const form = $('#form-login')[0]; // ambil DOM Form-nya
     const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
 
-    const btn = $(this);
+    const btn = $('#submit-button');
     btn.prop('disabled', true); // Disable button UI
 
     $.ajax({
@@ -54,13 +57,13 @@ $('#submit-button').on('click', function (e) {
 
                 // jika ada error maka tampilkan error
                 containerError.removeClass('hidden');
-                textError.text(xhr.responseJSON.message)
+                textError.text(xhr.responseJSON.message);
 
                 // tambahkan event click untuk menutup error
-                closeError.on('click', function () {
+                closeError.off('click').on('click', function () {
                     containerError.addClass('hidden');
                     textError.text('');
-                })
+                });
 
                 // set timeout untuk menyembunyikan error
                 attemptErrorTimer = setTimeout(() => {
@@ -69,9 +72,9 @@ $('#submit-button').on('click', function (e) {
                 }, 3000);
 
                 // hapus error ketika user mengetik
-                $('#form-login input').on('input', function () {
-                    $('#container-error-attempt-login').addClass('hidden');
-                    $('#text-error-attempt-login').text('');
+                $('#form-login input').off('input.loginError').on('input.loginError', function () {
+                    containerError.addClass('hidden');
+                    textError.text('');
                 });
 
             // jika akun tidak aktif, tampilkan error
@@ -97,4 +100,22 @@ $('#submit-button').on('click', function (e) {
             btn.prop('disabled', false);
         }
     });
+}
+
+// Handle form submit (supports Enter key submission from any input field inside the form)
+$('#form-login').on('submit', function (e) {
+    handleLoginSubmit(e);
+});
+
+// Handle submit button click
+$('#submit-button').on('click', function (e) {
+    handleLoginSubmit(e);
+});
+
+// Explicit Enter key handler on form inputs for complete reliability
+$('#form-login input').on('keydown', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        handleLoginSubmit(e);
+    }
 });

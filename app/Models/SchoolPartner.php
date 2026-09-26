@@ -15,6 +15,7 @@ class SchoolPartner extends Model
         'school_foundation_id',
         'jenjang_sekolah',
         'logo',
+        'timezone',
     ];
 
     public function Transactions()
@@ -156,5 +157,5 @@ class SchoolPartner extends Model
     public function SchoolFoundationFinanceAccess()
     {
         return $this->hasMany(SchoolFoundationFinanceAccess::class, 'school_partner_id');
-    }
+    }           
 }

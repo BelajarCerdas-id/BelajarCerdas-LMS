@@ -436,7 +436,7 @@ class HeadmasterController extends Controller
                     continue;
                 }
 
-                // B. LOGIKA ASESMEN
+                // B. LOGIKA ASSESSMENT
                 $assessments = SchoolAssessment::where('school_class_id', $kelas->id)->get();
                 $jumlahTugas = $assessments->count();
                 $totalTugasGlobal += $jumlahTugas;

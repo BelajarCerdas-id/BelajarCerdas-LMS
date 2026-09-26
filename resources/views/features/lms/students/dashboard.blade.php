@@ -1,7 +1,7 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Beranda Siswa'])
 
 @if (Auth::user()->role === 'Siswa')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-slate-50 min-h-screen pb-12">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20 bg-white min-h-screen pb-12">
 
         <div id="alert-success-answer-daily-reflection"></div>
 
@@ -327,8 +327,8 @@
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Asesmen</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitasmu selama pengerjaan asesmen</p>
+                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Assessment</h3>
+                                    <p class="text-xs text-slate-500 font-medium">Log aktivitasmu selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>
@@ -343,7 +343,7 @@
                                         <i class="fas fa-shield-check"></i>
                                     </div>
                                     <p class="text-sm font-bold text-blue-950">Aman & Terkendali</p>
-                                    <p class="text-xs font-medium text-slate-500 mt-1">Kamu menyelesaikan asesmen dengan jujur dan tertib.</p>
+                                    <p class="text-xs font-medium text-slate-500 mt-1">Kamu menyelesaikan assessment dengan jujur dan tertib.</p>
                                 </div>
                             </div>
                         </div>
@@ -906,7 +906,7 @@
         </dialog>
     </div>
 @else
-    <div class="flex flex-col min-h-screen items-center justify-center bg-slate-50">
+    <div class="flex flex-col min-h-screen items-center justify-center bg-white">
         <div class="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-amber-100">
             <i class="fas fa-lock text-4xl text-amber-400"></i>
         </div>
@@ -920,7 +920,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/daily-reflection/daily-reflection-form.js') }}"></script>
-s
+
 <!--- PUSHER LISTENER ---->
 <script src="{{ asset('assets/js/pusher-listener/student/daily-reflection/daily-reflection-form-listener.js') }}"></script> <!--- pusher listener student daily reflection form ---->
 

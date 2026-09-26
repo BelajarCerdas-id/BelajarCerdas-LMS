@@ -14,9 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Trust all proxies to ensure aaPanel passes HTTPS correctly
         $middleware->trustProxies(at: '*');
 
-        // Append the Debugbar toggle to the web middleware group
+        // Append the Debugbar toggle and User Activity tracking to the web middleware group
         $middleware->web(append: [
             \App\Http\Middleware\ToggleDebugbar::class,
+            \App\Http\Middleware\TrackUserActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

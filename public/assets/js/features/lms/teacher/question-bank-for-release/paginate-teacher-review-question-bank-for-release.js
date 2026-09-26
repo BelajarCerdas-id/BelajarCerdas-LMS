@@ -31,6 +31,10 @@ function paginateQuestionForReleaseDetail() {
 
                         // Mengiterasi setiap opsi dari soal tersebut
                         function addClassToImgTags(html, className) {
+                            if (!html || typeof html !== 'string') {
+                                return html ?? '';
+                            }
+
                             return html
                                 .replace(/<img\b(?![^>]*class=)[^>]*>/g, (imgTag) => {
                                     // Tambahkan class jika belum ada atribut class
@@ -84,13 +88,14 @@ function paginateQuestionForReleaseDetail() {
                         }).join('');
 
                         // Ambil videoId yang sesuai dengan index pada masing" options soal
-                        const videoId = response.videoIds[index];
+                        const videoId = response.videoIds ? response.videoIds[index] : null;
 
-                        const imageInExplanation = /<img\s+[^>]*src=/.test(question.lms_question_bank?.explanation);
+                        let explanationContent = question.lms_question_bank?.explanation ?? '';
+                        const hasImageInExplanation = /<img\s+[^>]*src=/.test(explanationContent);
 
                         // Tambahkan class img jika ada gambar
-                        if (imageInExplanation) {
-                            imageInExplanation = addClassToImgTags(imageInExplanation, 'max-w-[350px] rounded my-2');
+                        if (hasImageInExplanation) {
+                            explanationContent = addClassToImgTags(explanationContent, 'max-w-[350px] rounded my-2');
                         }
 
                         // Tampilkan video jika explanation itu adalah link video, jika tidak tampilkan explanation teks
@@ -101,7 +106,7 @@ function paginateQuestionForReleaseDetail() {
                                     allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                             </div>
                         </div>
-                    ` : `<div class="max-w-7xl flex flex-col items-start gap-4">${imageInExplanation ? question.lms_question_bank?.explanation : question.lms_question_bank?.explanation}</div>`;
+                    ` : `<div class="max-w-7xl flex flex-col items-start gap-4">${explanationContent}</div>`;
 
                         // untuk memisahkan teks sebelum dengan img dan text setelah img
                         const questionContent = question.lms_question_bank?.questions ?? '';

@@ -274,7 +274,7 @@ class TeacherGradeLedgerController extends Controller
         $schoolNameSafe = str_replace(['/', '\\'], '-', $schoolName);
         $tahunAjaranSafe = str_replace(['/', '\\'], '-', $tahunAjaran);
 
-        $fileName = "Leger Nilai - {$schoolNameSafe} - {$schoolClass} - Semester {$semester} - {$tahunAjaranSafe}.xlsx";
+        $fileName = "Ledger Nilai - {$schoolNameSafe} - {$schoolClass} - Semester {$semester} - {$tahunAjaranSafe}.xlsx";
 
         return Excel::download(new GradeLedgerExport($students, $subjects, $schoolName, $schoolClass, $semester, $tahunAjaran), $fileName);
     }

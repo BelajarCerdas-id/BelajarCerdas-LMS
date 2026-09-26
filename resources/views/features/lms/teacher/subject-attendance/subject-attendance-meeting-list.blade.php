@@ -5,7 +5,7 @@
 ]);
 
 @if (Auth::user()->role === 'Guru')
-    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
         <section>
             <div class="bg-white px-6 py-6 md:px-8 border-b border-slate-200 shadow-sm relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-125 h-125 bg-linear-to-bl from-slate-50 to-transparent rounded-full -translate-y-1/2 
@@ -49,7 +49,7 @@
             </div>
         </section>
 
-        <div class="my-15 mx-7.5">
+        <div class="mt-6 mb-10 mx-7.5">
             <main>
                 <section>
                     <!-- TOP NAV -->

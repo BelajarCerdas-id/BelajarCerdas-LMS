@@ -6,8 +6,8 @@
 
 
 @if (Auth::user()->role === 'Administrator')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
-        <div class="my-15 mx-7.5">
+    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+        <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-7.5">
 
             <!-- ALERT SUCCESS -->
             <div id="alert-success-create-finance-access-link"></div>
@@ -273,9 +273,7 @@
                                             <i class="fa-solid fa-school text-slate-400"></i>
                                         </div>
 
-                                        <select id="finance-school-id" name="school_partner_id" class="select select-bordered w-full border-slate-300 bg-slate-50 
-                                            pl-11 text-sm transition-all focus:border-[#4189E0] focus:bg-white focus:outline-none focus:ring-2 
-                                            focus:ring-primary/10 cursor-pointer">
+                                        <select id="finance-school-id" name="school_partner_id" class="w-full h-11 rounded-xl border border-gray-300 bg-white pl-11 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
 
                                             <option value="" class="hidden">Pilih sekolah</option>
 

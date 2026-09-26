@@ -1,9 +1,21 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.min.css";
 
 window.Swal = Swal;
-window.ClassicEditor = ClassicEditor;
 window.flatpickr = flatpickr;
+
+// Code-split CKEditor: lazy-load on demand when ClassicEditor.create is called
+let classicEditorPromise = null;
+window.ClassicEditor = {
+    create: async (...args) => {
+        if (!classicEditorPromise) {
+            classicEditorPromise = import('@ckeditor/ckeditor5-build-classic').then((module) => {
+                window.ClassicEditor = module.default;
+                return module.default;
+            });
+        }
+        const ClassicEditor = await classicEditorPromise;
+        return ClassicEditor.create(...args);
+    },
+};

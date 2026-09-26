@@ -66,7 +66,7 @@
 
                     <button id="btn-submit-end-assessment-test" class="bg-[#F64650] text-white px-4 py-2 md:px-5 md:py-3 rounded-lg shadow cursor-pointer hidden w-full md:w-auto">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                        Akhiri Asesmen
+                        Akhiri Assessment
                     </button>
 
                     <button id="btn-submit-exit-assessment-test" class="bg-[#F64650] text-white px-4 py-2 md:px-5 md:py-3 rounded-lg shadow cursor-pointer hidden w-full md:w-auto">

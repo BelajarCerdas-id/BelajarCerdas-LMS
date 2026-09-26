@@ -5,8 +5,8 @@
 ]);
 
 @if (Auth::user()->role === 'Guru')
-<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
-    <div class="my-10 mx-6">
+<div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+    <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-6">
 
         <div id="alert-success-final-score-input"></div>
 
@@ -28,8 +28,8 @@
                                 <input type="checkbox" id="check-all" class="cursor-pointer">
                             </th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama Siswa</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Asesmen</th>
-                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Asesmen</th>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tipe Assessment</th>
+                            <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Judul Assessment</th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tanggal Ujian</th>
                             <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nilai</th>
                         </tr>
@@ -42,7 +42,7 @@
 
             <div id="empty-message-teacher-gradebook-assessment-preview" class="w-full h-80 hidden">
                 <span class="flex h-full items-center justify-center text-gray-500">
-                    Tidak ada asesmen yang terdaftar.
+                    Tidak ada Assessment yang terdaftar.
                 </span>
             </div>
         </section>

@@ -178,4 +178,45 @@ class UserAccount extends Authenticatable
     {
         return $this->hasOne(SchoolFoundationProfile::class, 'user_id');
     }
+
+    public function UserActivities()
+    {
+        return $this->hasMany(UserActivity::class, 'user_id');
+    }
+
+    /**
+     * Dapatkan model SchoolPartner yang berasosiasi dengan user
+     */
+    public function getSchoolAttribute()
+    {
+        return $this->StudentProfile?->SchoolPartner
+            ?? $this->SchoolStaffProfile?->SchoolPartner
+            ?? $this->ParentProfile?->SchoolPartner
+            ?? $this->SchoolPartner;
+    }
+
+    /**
+     * Dapatkan school_partner_id user
+     */
+    public function getSchoolPartnerIdAttribute()
+    {
+        return $this->StudentProfile?->school_partner_id
+            ?? $this->SchoolStaffProfile?->school_partner_id
+            ?? $this->ParentProfile?->school_partner_id
+            ?? $this->SchoolPartner?->id;
+    }
+
+    /**
+     * Dapatkan nama lengkap user dari profile terkait
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->StudentProfile?->nama_lengkap
+            ?? $this->SchoolStaffProfile?->nama_lengkap
+            ?? $this->ParentProfile?->nama_lengkap
+            ?? $this->OfficeProfile?->nama_lengkap
+            ?? $this->SchoolFoundationProfile?->nama_lengkap
+            ?? $this->email;
+    }
 }
+

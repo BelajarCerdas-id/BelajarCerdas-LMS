@@ -63,7 +63,7 @@ function teacherGradebookAssessmentPreview() {
                         <div class="flex items-center gap-2 text-[#4189E0] text-sm font-medium">
                             <i class="fa-solid fa-check-double"></i>
                             <span>
-                                <span id="selected-count">0</span> asesmen dipilih
+                                <span id="selected-count">0</span> assessment dipilih
                             </span>
                         </div>
 
@@ -99,7 +99,7 @@ function teacherGradebookAssessmentPreview() {
                     // Format tanggal mulai dan akhir
                     const startDate = item.start_date ? `${formatDate(item.start_date)}, ${timeFormatter.format(new Date(item.start_date))}` : 'Tanggal tidak tersedia';
                     const endDate = item.end_date ? `${formatDate(item.end_date)}, ${timeFormatter.format(new Date(item.end_date))}` : 'Tanggal tidak tersedia';
-                    
+
                     $('#tbody-teacher-gradebook-assessment-preview').append(`
                         <tr>
                             <td class="border border-gray-300 px-3 py-2 text-center">
