@@ -426,6 +426,10 @@
                                                         <button type="button" id="question-release-normalize-weight" class="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-gray-500 hover:bg-gray-50">
                                                             Ratakan Bobot
                                                         </button>
+
+                                                        <button type="button" id="question-release-ratio-weight" class="rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0071BC] hover:bg-[#D5EEFF] transition-colors">
+                                                            <i class="fa-solid fa-sliders text-[9px] mr-1"></i> Atur Rasio Tipe
+                                                        </button>
                                                     </div>
                                                 </div>
     
@@ -638,6 +642,76 @@
                         </div>
                     </div>
         
+                    <form method="dialog" class="modal-backdrop">
+                        <button>close</button>
+                    </form>
+                </dialog>
+
+                <!-- MODAL ATUR RASIO BOBOT TIPE SOAL -->
+                <dialog id="modal-question-release-ratio-weight" class="modal">
+                    <div class="modal-box max-w-lg p-0 overflow-hidden bg-white rounded-2xl shadow-2xl">
+                        <!-- Header -->
+                        <div class="bg-[#0071BC] text-white px-5 py-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 text-white">
+                                    <i class="fa-solid fa-sliders text-sm"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-sm text-white">Atur Rasio Bobot per Tipe Soal</h3>
+                                    <p class="text-[10px] text-white/80 mt-0.5">Tentukan persentase distribusi bobot untuk setiap tipe soal</p>
+                                </div>
+                            </div>
+                            <form method="dialog">
+                                <button class="text-white/70 hover:text-white transition text-xs">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-5 max-h-[60vh] overflow-y-auto space-y-4">
+                            <div class="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-100">
+                                <span class="font-semibold text-gray-700">Tipe Soal & Jumlah</span>
+                                <span class="font-semibold text-gray-700">Persentase (%)</span>
+                            </div>
+
+                            <!-- Dynamic List Container -->
+                            <div id="ratio-weight-type-list" class="space-y-2.5">
+                                <!-- Injected via JS -->
+                            </div>
+
+                            <!-- Total & Validation Bar -->
+                            <div class="mt-4 rounded-xl bg-gray-50 p-3.5 border border-gray-200">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-semibold text-gray-700">Total Rasio:</span>
+                                    <div class="flex items-center gap-2">
+                                        <span id="ratio-weight-total-percentage" class="font-bold text-sm text-gray-800">0%</span>
+                                        <span id="ratio-weight-status-badge" class="rounded-md px-2 py-0.5 text-[10px] font-semibold bg-gray-200 text-gray-700">0 / 100</span>
+                                    </div>
+                                </div>
+                                <p id="ratio-weight-helper-text" class="mt-1 text-[10px] text-gray-400">Total persentase harus tepat 100%.</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="px-5 py-3.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+                            <button type="button" id="btn-quick-equalize-ratio" class="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition">
+                                <i class="fa-solid fa-scale-balanced mr-1 text-[10px]"></i> Bagi Rata
+                            </button>
+
+                            <div class="flex items-center gap-2">
+                                <form method="dialog">
+                                    <button class="rounded-xl border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition">
+                                        Batal
+                                    </button>
+                                </form>
+                                <button type="button" id="btn-apply-ratio-weight" disabled class="rounded-xl bg-[#0071BC] px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#005F9E] transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                    Terapkan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <form method="dialog" class="modal-backdrop">
                         <button>close</button>
                     </form>

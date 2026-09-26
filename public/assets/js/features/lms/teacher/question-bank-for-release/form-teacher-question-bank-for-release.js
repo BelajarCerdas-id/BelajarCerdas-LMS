@@ -11,6 +11,7 @@ let teacherQuestionReleaseExpandedBanks = new Set();
 let teacherQuestionReleaseSelectedClassLevel = null;
 let teacherQuestionReleaseLoading = false;
 let teacherQuestionReleaseSelectedAssessmentHasAnswers = false;
+let teacherQuestionReleaseLastRatios = {};
 
 function formQuestionForRelease(search_year = null, search_class = null, search_assessment_type = null, search_subject = null, search_semester = null, search_question = null, kurikulum_id = null, kelas_id = null, mapel_id = null, bab_id = null, sub_bab_id = null, preserveSelection = false) {
     const container = document.getElementById('container-form-teacher-question-bank-for-release');
@@ -40,6 +41,7 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
         teacherQuestionReleaseSelectedQuestions.clear();
         teacherQuestionReleaseSelectedQuestionWeights = {};
         teacherQuestionReleaseSelectedQuestionData.clear();
+        teacherQuestionReleaseLastRatios = {};
     }
 
     $('.question-release-panel, #question-release-panel-1, #question-release-panel-2, #question-release-panel-3').addClass('hidden');
@@ -619,6 +621,7 @@ function hydrateTeacherQuestionReleaseAssessmentSelection(assessment) {
     teacherQuestionReleaseSelectedQuestions.clear();
     teacherQuestionReleaseSelectedQuestionWeights = {};
     teacherQuestionReleaseSelectedQuestionData.clear();
+    teacherQuestionReleaseLastRatios = {};
 
     if (!assessment) return;
 
@@ -1542,6 +1545,207 @@ function resetTeacherQuestionReleaseWeights() {
 
     if (teacherQuestionReleaseStep === 3) {
         loadTeacherQuestionReleaseStep3();
+    }
+}
+
+function getTeacherQuestionReleaseTypeBreakdown() {
+    const allQuestions = getTeacherQuestionReleaseAllQuestions();
+    const groups = {};
+
+    teacherQuestionReleaseSelectedQuestions.forEach(id => {
+        const strId = String(id);
+        let question = teacherQuestionReleaseSelectedQuestionData.get(strId);
+        if (!question) {
+            question = allQuestions.find(item => String(item.id) === strId);
+            if (question) {
+                teacherQuestionReleaseSelectedQuestionData.set(strId, question);
+            }
+        }
+
+        const type = (question && (question.tipe_soal || question.question_type || question.type))
+            ? (question.tipe_soal || question.question_type || question.type)
+            : 'Lainnya';
+        const typeKey = String(type).trim().toUpperCase();
+
+        if (!groups[typeKey]) {
+            groups[typeKey] = {
+                key: typeKey,
+                label: type,
+                ids: []
+            };
+        }
+
+        groups[typeKey].ids.push(strId);
+    });
+
+    return Object.values(groups);
+}
+
+function openTeacherQuestionReleaseRatioModal() {
+    if (!teacherQuestionReleaseSelectedQuestions.size) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Soal Terlebih Dahulu',
+                text: 'Silakan pilih butir soal dari bank soal sebelum mengatur rasio bobot.',
+                confirmButtonColor: '#0071BC'
+            });
+        }
+        return;
+    }
+
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+    const list = $('#ratio-weight-type-list');
+    list.empty();
+
+    const n = breakdown.length;
+    const baseDefault = n > 0 ? Math.floor(100 / n) : 100;
+    const remainder = n > 0 ? 100 - baseDefault * n : 0;
+
+    breakdown.forEach((group, index) => {
+        let defaultVal = teacherQuestionReleaseLastRatios[group.key];
+        if (defaultVal === undefined || defaultVal === null) {
+            defaultVal = baseDefault + (index === n - 1 ? remainder : 0);
+        }
+
+        const typeLower = group.key.toLowerCase();
+        const badgeColor = typeLower.includes('essay') || typeLower.includes('uraian')
+            ? 'bg-amber-50 text-amber-600 border border-amber-200'
+            : typeLower.includes('mcma') || typeLower.includes('majemuk') || typeLower.includes('kompleks')
+            ? 'bg-purple-50 text-purple-600 border border-purple-200'
+            : typeLower.includes('jodoh')
+            ? 'bg-pink-50 text-pink-600 border border-pink-200'
+            : typeLower.includes('benar')
+            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+            : 'bg-blue-50 text-blue-600 border border-blue-200';
+
+        list.append(`
+            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-[#CFEAFF] hover:shadow-xs transition">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="rounded-md px-2 py-0.5 text-[10px] font-bold ${badgeColor}">
+                            ${group.label}
+                        </span>
+                        <span class="text-xs font-semibold text-gray-700">${group.ids.length} butir soal</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-gray-400" id="preview-ratio-calc-${group.key}">
+                        ~0.00 / butir
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <input type="number"
+                        min="0"
+                        max="100"
+                        step="any"
+                        data-type-key="${group.key}"
+                        data-type-count="${group.ids.length}"
+                        value="${defaultVal}"
+                        class="ratio-type-input w-20 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center text-xs font-bold text-[#0071BC] outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-[#EAF6FF]">
+                    <span class="text-xs font-bold text-gray-400">%</span>
+                </div>
+            </div>
+        `);
+    });
+
+    updateTeacherQuestionReleaseRatioCalculations();
+
+    const modal = document.getElementById('modal-question-release-ratio-weight');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+    }
+}
+
+function updateTeacherQuestionReleaseRatioCalculations() {
+    let totalPercentage = 0;
+    const inputs = $('.ratio-type-input');
+
+    inputs.each(function () {
+        const val = parseFloat($(this).val()) || 0;
+        totalPercentage += val;
+
+        const count = parseInt($(this).data('type-count')) || 1;
+        const key = $(this).data('type-key');
+        const perItem = count > 0 ? (val / count).toFixed(2) : '0.00';
+
+        $(`#preview-ratio-calc-${key}`).text(`Total bobot: ${val} • ~${perItem} / butir`);
+    });
+
+    totalPercentage = Number(totalPercentage.toFixed(2));
+    const isExact = Math.abs(totalPercentage - 100) < 0.01;
+
+    $('#ratio-weight-total-percentage').text(`${totalPercentage}%`);
+
+    const statusBadge = $('#ratio-weight-status-badge');
+    const helperText = $('#ratio-weight-helper-text');
+    const applyBtn = $('#btn-apply-ratio-weight');
+
+    if (isExact) {
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-red-100 text-red-600')
+            .addClass('bg-emerald-100 text-emerald-700').text('100% Pas');
+        helperText.removeClass('text-red-500 text-gray-400')
+            .addClass('text-emerald-600').text('Rasio total sudah 100%. Siap diterapkan.');
+        applyBtn.prop('disabled', false);
+    } else {
+        const diff = Number((100 - totalPercentage).toFixed(2));
+        const diffText = diff > 0 ? `Kurang ${diff}%` : `Lebih ${Math.abs(diff)}%`;
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-emerald-100 text-emerald-700')
+            .addClass('bg-red-100 text-red-600').text(diffText);
+        helperText.removeClass('text-emerald-600 text-gray-400')
+            .addClass('text-red-500').text(`Total persentase harus 100% (${diffText}).`);
+        applyBtn.prop('disabled', true);
+    }
+}
+
+function applyTeacherQuestionReleaseWeightsByRatio() {
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+    const ratios = {};
+
+    $('.ratio-type-input').each(function () {
+        const key = String($(this).data('type-key'));
+        ratios[key] = parseFloat($(this).val()) || 0;
+    });
+
+    breakdown.forEach(group => {
+        const typeWeight = ratios[group.key] || 0;
+        const count = group.ids.length;
+        if (!count) return;
+
+        const baseWeight = Math.floor((typeWeight / count) * 100) / 100;
+        const remainder = Number((typeWeight - baseWeight * count).toFixed(2));
+
+        group.ids.forEach((id, index) => {
+            const finalWeight = Number(
+                (baseWeight + (index === count - 1 ? remainder : 0)).toFixed(2)
+            );
+            teacherQuestionReleaseSelectedQuestionWeights[id] = finalWeight;
+        });
+    });
+
+    teacherQuestionReleaseLastRatios = ratios;
+
+    const modal = document.getElementById('modal-question-release-ratio-weight');
+    if (modal && typeof modal.close === 'function') {
+        modal.close();
+    }
+
+    renderTeacherQuestionReleaseSelectedQuestions();
+    updateTeacherQuestionReleaseQuestionSummary();
+    updateTeacherQuestionReleaseStepper();
+    updateTeacherQuestionReleasePublishButton();
+
+    if (teacherQuestionReleaseStep === 3) {
+        loadTeacherQuestionReleaseStep3();
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Rasio Berhasil Diterapkan',
+            text: 'Bobot soal telah disesuaikan berdasarkan rasio tipe soal.',
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 }
 
@@ -2672,6 +2876,46 @@ function bindTeacherQuestionReleaseEvents() {
         '#question-release-normalize-weight, #question-release-reset-weight',
         function () {
             resetTeacherQuestionReleaseWeights();
+        }
+    );
+
+    $(document).on(
+        'click.teacherQuestionRelease',
+        '#question-release-ratio-weight',
+        function () {
+            openTeacherQuestionReleaseRatioModal();
+        }
+    );
+
+    $(document).on(
+        'input.teacherQuestionRelease',
+        '.ratio-type-input',
+        function () {
+            updateTeacherQuestionReleaseRatioCalculations();
+        }
+    );
+
+    $(document).on(
+        'click.teacherQuestionRelease',
+        '#btn-quick-equalize-ratio',
+        function () {
+            const inputs = $('.ratio-type-input');
+            const n = inputs.length;
+            if (!n) return;
+            const base = Math.floor(100 / n);
+            const rem = 100 - base * n;
+            inputs.each(function (idx) {
+                $(this).val(base + (idx === n - 1 ? rem : 0));
+            });
+            updateTeacherQuestionReleaseRatioCalculations();
+        }
+    );
+
+    $(document).on(
+        'click.teacherQuestionRelease',
+        '#btn-apply-ratio-weight',
+        function () {
+            applyTeacherQuestionReleaseWeightsByRatio();
         }
     );
 
