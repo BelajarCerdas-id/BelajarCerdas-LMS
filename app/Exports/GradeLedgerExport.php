@@ -33,7 +33,7 @@ class GradeLedgerExport implements FromCollection, WithStyles, ShouldAutoSize, W
 
     public function title(): string
     {
-        return 'Leger Nilai - ' . $this->schoolClass;
+        return 'Ledger Nilai - ' . $this->schoolClass;
     }
 
     public function registerEvents(): array
@@ -57,7 +57,7 @@ class GradeLedgerExport implements FromCollection, WithStyles, ShouldAutoSize, W
                 $sheet->mergeCells("A3:{$lastColumn}3");
 
                 $sheet->setCellValue("A1", strtoupper($this->schoolName));
-                $sheet->setCellValue("A2", "LEGER NILAI - SEMESTER {$this->semester}");
+                $sheet->setCellValue("A2", "LEDGER NILAI - SEMESTER {$this->semester}");
                 $sheet->setCellValue("A3", "TAHUN AJARAN {$this->tahunAjaran}");
 
                 $sheet->getStyle("A1:A3")->applyFromArray([

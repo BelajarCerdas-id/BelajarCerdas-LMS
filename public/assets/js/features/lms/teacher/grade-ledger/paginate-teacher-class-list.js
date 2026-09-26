@@ -114,7 +114,7 @@ function teacherClassList(search_year = null, search_class = null, search_subjec
                                 <a href="${teacherGradeLedger}"
                                 class="w-full inline-flex items-center justify-center gap-2 text-sm bg-[#0071BC] text-white py-2 rounded-lg hover:bg-[#005a96] transition">
                                     <i class="fa-solid fa-book-open"></i>
-                                    Lihat Leger Nilai
+                                    Lihat Ledger Nilai
                                 </a>
                             </div>
 

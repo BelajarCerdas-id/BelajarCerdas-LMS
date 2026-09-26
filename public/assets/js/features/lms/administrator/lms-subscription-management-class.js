@@ -34,86 +34,96 @@ function managementClassSchoolSubscription(search_class = null, search_year = nu
                     const schoolIdentity = response.schoolIdentity;
 
                     const totalSiswa = response.data.reduce((total, kelas) => {
-                        return total + kelas.student_school_class_count;
+                        return total + (kelas.student_school_class_count || 0);
                     }, 0);
 
-                    schoolDetailCard.innerHTML = `
-                        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+                    if (schoolDetailCard && schoolIdentity) {
+                        schoolDetailCard.innerHTML = `
+                            <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
 
-                            <!-- KIRI : ICON + NAMA SEKOLAH -->
-                            <div class="flex items-center gap-4">
-                                <div class="w-14 h-14 rounded-2xl bg-[#EEF6FF] flex items-center justify-center text-[#0071BC] text-2xl shadow-sm">
-                                    <i class="fa-solid fa-school"></i>
+                                <!-- KIRI : ICON + NAMA SEKOLAH -->
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 rounded-2xl bg-[#EEF6FF] flex items-center justify-center text-[#0071BC] text-2xl shadow-sm">
+                                        <i class="fa-solid fa-school"></i>
+                                    </div>
+
+                                    <div>
+                                        <h2 class="text-lg font-bold text-gray-800 leading-tight">
+                                            ${schoolIdentity.nama_sekolah}
+                                        </h2>
+                                        <p class="text-sm text-gray-500">
+                                            Detail langganan LMS sekolah
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <h2 class="text-lg font-bold text-gray-800 leading-tight">
-                                        ${schoolIdentity.nama_sekolah}
-                                    </h2>
-                                    <p class="text-sm text-gray-500">
-                                        Detail langganan LMS sekolah
-                                    </p>
+                                <!-- KANAN : INFO SEKOLAH -->
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full lg:w-auto">
+
+                                    <div class="bg-gray-50 rounded-xl p-4 min-w-40 h-max">
+                                        <p class="text-xs text-gray-500 mb-1">NPSN</p>
+                                        <p class="font-semibold text-gray-800">${schoolIdentity.npsn}</p>
+                                    </div>
+
+                                    <div class="bg-gray-50 rounded-xl p-4 min-w-40 h-max">
+                                        <p class="text-xs text-gray-500 mb-1">NIK Kepala Sekolah</p>
+                                        <p class="font-semibold text-gray-800">${schoolIdentity.user_account?.school_staff_profile?.nik ?? '-'}</p>
+                                    </div>
+
+                                    <div class="bg-[#EEF6FF] rounded-xl p-4 min-w-40">
+                                        <p class="text-xs text-[#0071BC] mb-1">Total Siswa Aktif</p>
+                                        <p class="font-bold text-2xl text-[#0071BC]">${totalSiswa}</p>
+                                    </div>
+
                                 </div>
                             </div>
-
-                            <!-- KANAN : INFO SEKOLAH -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full lg:w-auto">
-
-                                <div class="bg-gray-50 rounded-xl p-4 min-w-40 h-max">
-                                    <p class="text-xs text-gray-500 mb-1">NPSN</p>
-                                    <p class="font-semibold text-gray-800">${schoolIdentity.npsn}</p>
-                                </div>
-
-                                <div class="bg-gray-50 rounded-xl p-4 min-w-40 h-max">
-                                    <p class="text-xs text-gray-500 mb-1">NIK Kepala Sekolah</p>
-                                    <p class="font-semibold text-gray-800">${schoolIdentity.user_account?.school_staff_profile?.nik}</p>
-                                </div>
-
-                                <div class="bg-[#EEF6FF] rounded-xl p-4 min-w-40">
-                                    <p class="text-xs text-[#0071BC] mb-1">Total Siswa Aktif</p>
-                                    <p class="font-bold text-2xl text-[#0071BC]">${totalSiswa}</p>
-                                </div>
-
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    }
                     // tampilkan option tahun ajaran
                     const containerDropdownTahunAjaran = document.getElementById('container-dropdown-tahun-ajaran');
                     let optionTahunAjaran = '';
 
-                    response.tahunAjaran.forEach((item, index) => {
-                        optionTahunAjaran += `
-                        <option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>
-                    `;
-                    });
+                    if (response.tahunAjaran) {
+                        response.tahunAjaran.forEach((item, index) => {
+                            optionTahunAjaran += `
+                            <option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>
+                        `;
+                        });
+                    }
 
-                    containerDropdownTahunAjaran.innerHTML = `
-                        <div class="flex justify-end w-full mb-6">
-                            <select id="dropdown-filter-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                <option value="" class="hidden">Filter Tahun Ajaran</option>
-                                ${optionTahunAjaran}
-                            </select>
-                        </div>
-                    `;
+                    if (containerDropdownTahunAjaran) {
+                        containerDropdownTahunAjaran.innerHTML = `
+                            <div class="flex justify-end w-full mb-6">
+                                <select id="dropdown-filter-tahun-ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                    <option value="" class="hidden">Filter Tahun Ajaran</option>
+                                    ${optionTahunAjaran}
+                                </select>
+                            </div>
+                        `;
+                    }
 
                     // tampilkan option class
                     const containerDropdownClass = document.getElementById('container-dropdown-class');
                     let optionClass = '';
 
-                    response.className.forEach((item, index) => {
-                        optionClass += `
-                            <option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>
-                        `;
-                    });
+                    if (response.className) {
+                        response.className.forEach((item, index) => {
+                            optionClass += `
+                                <option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>
+                            `;
+                        });
+                    }
 
-                    containerDropdownClass.innerHTML = `
-                        <div class="flex justify-end w-full mb-6">
-                            <select id="dropdown-filter-class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                                <option value="" class="hidden">Filter Kelas</option>
-                                ${optionClass}
-                            </select>
-                        </div>
-                    `;
+                    if (containerDropdownClass) {
+                        containerDropdownClass.innerHTML = `
+                            <div class="flex justify-end w-full mb-6">
+                                <select id="dropdown-filter-class" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
+                                    <option value="" class="hidden">Filter Kelas</option>
+                                    ${optionClass}
+                                </select>
+                            </div>
+                        `;
+                    }
 
                     $.each(response.data, function (index, item) {
                         let lmsManagementStudents = '';
@@ -223,15 +233,17 @@ $(document).ready(function () {
 });
 
 $(document).on('change', '#dropdown-filter-class', function () {
-    managementClassSchoolSubscription($(this).val(), $('#dropdown-filter-year').val());
+    const yearVal = $('#dropdown-filter-tahun-ajaran').val() || $('#dropdown-filter-year').val();
+    managementClassSchoolSubscription($(this).val(), yearVal);
 });
 
-$(document).on('change', '#dropdown-filter-tahun-ajaran', function () {
+$(document).on('change', '#dropdown-filter-tahun-ajaran, #dropdown-filter-year', function () {
     managementClassSchoolSubscription($('#dropdown-filter-class').val(), $(this).val());
 });
 
 // activate class
 $(document).on('change', '.toggle-activate-class', function () {
+    let checkbox = $(this);
     let id = $(this).data('id'); // Ambil ID class dari atribut data-id di checkbox
     let status = $(this).is(':checked') ? 'active' : 'inactive'; // Jika toggle ON maka active, kalau OFF maka inactive
 
@@ -245,7 +257,8 @@ $(document).on('change', '.toggle-activate-class', function () {
             status_class: status // Kirim status baru (active/inactive)
         },
         success: function (response) {
-            managementClassSchoolSubscription($('#dropdown-filter-class').val(), $('#dropdown-filter-year').val());
+            const yearVal = $('#dropdown-filter-tahun-ajaran').val() || $('#dropdown-filter-year').val();
+            managementClassSchoolSubscription($('#dropdown-filter-class').val(), yearVal);
         },
         error: function (xhr) {
             alert('Gagal mengubah status.');
@@ -260,7 +273,7 @@ $(document).off('click', '.btn-create-class').on('click', '.btn-create-class', f
     e.preventDefault();
 
     // buka modal
-    const modal = document.getElementById('my_modal_1');
+    const modal = document.getElementById('my_modal_1') || document.getElementById('modal-create-class-lms-subscription');
     if (modal) modal.showModal();
 });
 
@@ -304,7 +317,7 @@ $('#submit-button-create-class').on('click', function (e) {
         processData: false,
         contentType: false,
         success: function (response) {
-            const modal = document.getElementById('my_modal_1');
+            const modal = document.getElementById('my_modal_1') || document.getElementById('modal-create-class-lms-subscription');
 
             if (modal) {
                 modal.close();
@@ -336,7 +349,8 @@ $('#submit-button-create-class').on('click', function (e) {
 
                 $('#form-create-class-lms-subscription')[0].reset();
 
-                managementClassSchoolSubscription($('#dropdown-filter-class').val(), $('#dropdown-filter-year').val());
+                const yearVal = $('#dropdown-filter-tahun-ajaran').val() || $('#dropdown-filter-year').val();
+                managementClassSchoolSubscription($('#dropdown-filter-class').val(), yearVal);
 
                 isProcessing = false;
                 btn.prop('disabled', false);
@@ -460,7 +474,8 @@ $('#submit-button-edit-class').on('click', function (e) {
 
                 $('#form-edit-class-lms-subscription')[0].reset();
 
-                managementClassSchoolSubscription($('#dropdown-filter-class').val(), $('#dropdown-filter-year').val());
+                const yearVal = $('#dropdown-filter-tahun-ajaran').val() || $('#dropdown-filter-year').val();
+                managementClassSchoolSubscription($('#dropdown-filter-class').val(), yearVal);
 
                 isProcessing = false;
                 btn.prop('disabled', false);

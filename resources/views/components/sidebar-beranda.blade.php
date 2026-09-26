@@ -459,7 +459,7 @@
         </div>
     </div>
 
-@elseif(Auth::user()->role === 'Administrator')
+@elseif(in_array(strtolower(Auth::user()->role), ['administrator', 'admin']))
     <aside class="sidebar-beranda-administrator hidden md:flex flex-col h-screen overflow-hidden">
         <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="block shrink-0">
             <div class="logo_details h-16 sm:h-18 flex items-center justify-center px-4 border-b border-white/10">
@@ -467,15 +467,24 @@
             </div>
         </a>
         <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
-            <div class="dropdown-menu">
-                <li class="list-item pb-2">
-                    <div class="content-menu flex items-center gap-3 px-3 py-2">
-                        <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                        <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href text-[14px]">
-                            Beranda
-                        </a>
-                    </div>
-                </li>
+            <li class="list-item pb-2 px-1">
+                <div class="content-menu flex items-center gap-3 px-3 py-2">
+                    <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
+                    <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href text-[14px]">
+                        Beranda
+                    </a>
+                </div>
+            </li>
+
+            <!-- Menu Analytics -->
+            <li class="list-item pb-2 px-1">
+                <div class="content-menu flex items-center gap-3 px-3 py-2">
+                    <i class="fa-solid fa-chart-line text-[15px] w-5 text-center"></i>
+                    <a href="{{ route('lms.office.analytics.view', Auth::user()->role) }}" class="link-href text-[14px]">
+                        Site Analytics
+                    </a>
+                </div>
+            </li>
 
                 <!-- Menu Library -->
                 <li class="list-item pb-4 px-4">
@@ -802,6 +811,15 @@
                             <div class="content-menu text-sm flex items-center gap-3">
                                 <i class="fas fa-house"></i>
                                 <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Beranda</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3 {{ request()->routeIs('lms.office.analytics.view') ? 'text-[#0071BC] font-bold' : '' }}">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <a href="{{ route('lms.office.analytics.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Site Analytics</a>
                             </div>
                         </div>
                     </li>

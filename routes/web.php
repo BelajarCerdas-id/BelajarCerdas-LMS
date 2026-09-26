@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\Administrator\FoundationManagementController;
+use App\Http\Controllers\Administrator\UserAnalyticsController;
 use App\Http\Controllers\Foundation\FoundationDashboardController;
 use App\Http\Controllers\Foundation\SchoolUserController;
 use App\Http\Controllers\Foundation\StudentReflectionController;
@@ -248,6 +249,19 @@ Route::middleware([AuthMiddleware::class])->group(function () {
     
         // OFFICES DASHBOARD
         Route::get('/lms/{role}/dashboard', [DashboardController::class, 'index'])->name('lms.office.dashboard.view');
+
+        // =========================================================
+        // SITE ADMIN ANALYTICS DASHBOARD & TRACKING APIs
+        // =========================================================
+        Route::get('/lms/{role}/analytics', [UserAnalyticsController::class, 'index'])->name('lms.office.analytics.view');
+
+        Route::prefix('administrator/analytics')->group(function () {
+            Route::get('/kpi', [UserAnalyticsController::class, 'kpiSummary'])->name('admin.analytics.kpi');
+            Route::get('/charts', [UserAnalyticsController::class, 'chartData'])->name('admin.analytics.charts');
+            Route::get('/logs', [UserAnalyticsController::class, 'activityLogs'])->name('admin.analytics.logs');
+            Route::get('/schools', [UserAnalyticsController::class, 'schoolLeaderboard'])->name('admin.analytics.schools');
+            Route::get('/live-users', [UserAnalyticsController::class, 'liveOnlineUsers'])->name('admin.analytics.liveUsers');
+        });
     
         // =========================================================
         // ROUTES SYLLABUS-SERVICES

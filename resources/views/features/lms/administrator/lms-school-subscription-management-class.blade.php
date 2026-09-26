@@ -31,6 +31,11 @@
                             </div>
                         </div>
 
+                        <!-- DETAIL SEKOLAH -->
+                        <div id="school-detail-card" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8 hidden">
+                            <!-- show data in ajax -->
+                        </div>
+
                         <!-- FILTER CONTAINER -->
                         <div class="my-6 bg-white shadow-sm border border-gray-300 rounded-2xl p-6">
                             <div class="flex items-center justify-between mb-4">
@@ -45,26 +50,9 @@
                             </div>
                         </div>
 
-                        <!---- TABLE LIST CLASS ---->
-                        <div class="overflow-x-auto mt-6 pb-20">
-                            <table id="table-management-class-list" class="min-w-full text-sm border-collapse">
-                                <thead class="thead-table-management-class-list bg-gray-50 shadow-inner">
-                                    <tr>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">No</th>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Fase</th>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tingkat Kelas</th>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Nama Kelas</th>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Tahun Ajaran</th>
-                                        <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-management-class-list">
-                                    <!-- show data in ajax -->
-                                </tbody>
-                            </table>
+                        <div id="grid-management-class-list" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                            <!-- show data in ajax -->
                         </div>
-
-                        <div class="pagination-container-management-class-list flex justify-center my-10"></div>
 
                         <div id="empty-message-management-class-list" class="w-full h-80 hidden">
                             <span class="flex h-full items-center justify-center text-gray-500">

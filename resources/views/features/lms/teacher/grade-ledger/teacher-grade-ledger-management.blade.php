@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'headerSideNav' => 'Leger Nilai',
+    'headerSideNav' => 'Ledger Nilai',
     'linkBackButton' => route('lms.teacherClassListGradeLedger.view', [$role, $schoolName, $schoolId]),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
 ]);

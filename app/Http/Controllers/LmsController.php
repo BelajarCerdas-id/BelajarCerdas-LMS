@@ -280,38 +280,18 @@ class LmsController extends Controller
         // (Hanya dari tabel teacher_mapels sesuai user yang login)
         // ========================================================
         $latestAcademicYear = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)
-        ->join('school_classes', 'teacher_mapels.school_class_id', '=', 'school_classes.id')->where('school_classes.school_partner_id', $schoolId)
-        ->max('school_classes.tahun_ajaran');
+            ->join('school_classes', 'teacher_mapels.school_class_id', '=', 'school_classes.id')
+            ->where('school_classes.school_partner_id', $schoolId)
+            ->max('school_classes.tahun_ajaran');
         
-        $daftarKelas = TeacherMapel::where('user_id', $teacherId)->where('is_active', true)->whereHas('SchoolClass', function ($q) use ($schoolId, $latestAcademicYear) {
-            $q->where('school_partner_id', $schoolId)->where('tahun_ajaran', $latestAcademicYear);
-        })
-        ->whereHas('Mapel', function ($q) use ($schoolId) {
-            // MAPEL KHUSUS SEKOLAH
-            $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
-                $q1->where('school_partner_id', $schoolId)
-                    ->where('is_active', 1);
+        $daftarKelas = TeacherMapel::where('user_id', $teacherId)
+            ->where('is_active', true)
+            ->whereHas('SchoolClass', function ($q) use ($schoolId, $latestAcademicYear) {
+                $q->where('school_partner_id', $schoolId)->where('tahun_ajaran', $latestAcademicYear);
             })
-
-            // ATAU MAPEL GLOBAL
-            ->orWhere(function ($q2) use ($schoolId) {
-                $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
-
-                    // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
-                    ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
-                        $sq->where('school_partner_id', $schoolId);
-                });
-            });
-        })->with(['Mapel', 'SchoolClass' => function ($q) {
-                $q->withCount(['StudentSchoolClass as student_school_class_count' => function ($q) {
-                    $q->where('student_class_status', 'active')
-                    ->where(function ($sub) {
-                        $sub->whereNull('academic_action')
-                            ->orWhere('academic_action', '');
-                    });
-                }]);
-            }
-        ])->get();
+            ->with(['SchoolClass:id,class_name,tahun_ajaran'])
+            ->get()
+            ->unique('school_class_id');
 
         // -- JADWAL & KELAS --
         $totalKelas = \Illuminate\Support\Facades\DB::table('lesson_schedule_items')
@@ -423,33 +403,39 @@ class LmsController extends Controller
         // ========================================================
         // 2. POLLING DARI GURU ITU SENDIRI (TAB: Polling Kelas Saya)
         // ========================================================
-        $recentPolls = \App\Models\Poll::where('school_partner_id', $schoolId)
+        $recentPolls = \App\Models\Poll::with('PollOptions')
+            ->where('school_partner_id', $schoolId)
             ->where('author_id', $userId) 
             ->orderBy('created_at', 'desc')
             ->take(4) 
-            ->get()
-            ->map(function($poll) {
-                if ($poll->class_id) {
-                    $kelas = \Illuminate\Support\Facades\DB::table('school_classes')->where('id', $poll->class_id)->first();
-                    $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
-                } else {
-                    $poll->nama_kelas = 'Semua Kelas (Global)';
-                }
-                return $poll;
-            });
+            ->get();
 
-        // Render data grafik untuk polling buatan sendiri
+        // Batch ambil nama kelas untuk polling buatan sendiri
+        $pollClassIds = $recentPolls->pluck('class_id')->filter()->unique();
+        $schoolClassesMap = $pollClassIds->isNotEmpty()
+            ? \Illuminate\Support\Facades\DB::table('school_classes')
+                ->whereIn('id', $pollClassIds)
+                ->pluck('class_name', 'id')
+            : collect();
+
+        // Batch ambil jumlah vote untuk semua opsi polling sekaligus
+        $allOptionIds = $recentPolls->flatMap(fn($p) => $p->PollOptions->pluck('id'))->unique();
+        $voteCounts = $allOptionIds->isNotEmpty()
+            ? \Illuminate\Support\Facades\DB::table('poll_votes')
+                ->whereIn('poll_option_id', $allOptionIds)
+                ->groupBy('poll_option_id')
+                ->select('poll_option_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+                ->pluck('total', 'poll_option_id')
+            : collect();
+
         foreach ($recentPolls as $poll) {
-            $options = \App\Models\PollOption::where('poll_id', $poll->id)->get();
+            $poll->nama_kelas = $poll->class_id ? ($schoolClassesMap[$poll->class_id] ?? 'Kelas Dihapus') : 'Semua Kelas (Global)';
             $labels = [];
             $votes = [];
             
-            foreach ($options as $opt) {
+            foreach ($poll->PollOptions as $opt) {
                 $labels[] = $opt->option_text;
-                $count = \Illuminate\Support\Facades\DB::table('poll_votes')
-                            ->where('poll_option_id', $opt->id)
-                            ->count();
-                $votes[] = $count; 
+                $votes[] = $voteCounts[$opt->id] ?? 0;
             }
             
             $poll->chart_labels = json_encode($labels);
@@ -480,30 +466,42 @@ class LmsController extends Controller
                       ->orWhereIn('class_id', $classIdsYangDiajarGuru); 
             })
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($poll) use ($userId) {
-                if ($poll->class_id) {
-                    $kelas = \Illuminate\Support\Facades\DB::table('school_classes')->where('id', $poll->class_id)->first();
-                    $poll->nama_kelas = $kelas ? $kelas->class_name : 'Kelas Dihapus';
-                } else {
-                    $poll->nama_kelas = 'Semua Kelas (Global)';
-                }
+            ->get();
 
-                $voteRecord = \Illuminate\Support\Facades\DB::table('poll_votes')
-                    ->where('poll_id', $poll->id)
-                    ->where('user_id', $userId)
-                    ->first();
-                
-                if ($voteRecord) {
-                    $poll->has_voted = true;
-                    $poll->voted_option_id = $voteRecord->poll_option_id; 
-                } else {
-                    $poll->has_voted = false;
-                    $poll->voted_option_id = null;
-                }
-                
-                return $poll;
-            });
+        // Batch ambil nama kelas untuk polling sekolah
+        $sekolahPollClassIds = $pollingDariSekolah->pluck('class_id')->filter()->unique();
+        $sekolahClassesMap = $sekolahPollClassIds->isNotEmpty()
+            ? \Illuminate\Support\Facades\DB::table('school_classes')
+                ->whereIn('id', $sekolahPollClassIds)
+                ->pluck('class_name', 'id')
+            : collect();
+
+        // Batch cek status vote user ini untuk semua polling sekolah sekaligus
+        $sekolahPollIds = $pollingDariSekolah->pluck('id');
+        $userVotesMap = $sekolahPollIds->isNotEmpty()
+            ? \Illuminate\Support\Facades\DB::table('poll_votes')
+                ->whereIn('poll_id', $sekolahPollIds)
+                ->where('user_id', $userId)
+                ->pluck('poll_option_id', 'poll_id')
+            : collect();
+
+        $pollingDariSekolah->transform(function($poll) use ($sekolahClassesMap, $userVotesMap) {
+            if ($poll->class_id) {
+                $poll->nama_kelas = $sekolahClassesMap[$poll->class_id] ?? 'Kelas Dihapus';
+            } else {
+                $poll->nama_kelas = 'Semua Kelas (Global)';
+            }
+
+            if (isset($userVotesMap[$poll->id])) {
+                $poll->has_voted = true;
+                $poll->voted_option_id = $userVotesMap[$poll->id];
+            } else {
+                $poll->has_voted = false;
+                $poll->voted_option_id = null;
+            }
+
+            return $poll;
+        });
 
         return view('features.lms.teacher.dashboard', compact(
             'role',

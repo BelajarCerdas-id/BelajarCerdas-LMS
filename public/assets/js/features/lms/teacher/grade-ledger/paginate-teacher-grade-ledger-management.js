@@ -31,7 +31,7 @@ function teacherGradeLedger(semester = 1) {
                     <div>
                         <h1 class="text-xl font-bold flex items-center gap-2">
                             <i class="fa-solid fa-book-open"></i>
-                            Leger Nilai
+                            Ledger Nilai
                         </h1>
 
                         <!-- WRAPPER -->
@@ -39,7 +39,7 @@ function teacherGradeLedger(semester = 1) {
 
                             <!-- INFO -->
                             <div class="flex flex-wrap items-center gap-2 text-sm text-blue-100">
-                                <span>Leger Nilai</span>
+                                <span>Ledger Nilai</span>
 
                                 <i class="fa-solid fa-circle text-[5px] hidden sm:inline"></i>
                                 <span>${teacherMapel.school_class?.class_name}</span>
