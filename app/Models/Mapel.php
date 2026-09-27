@@ -117,4 +117,13 @@ public function topikMateri()
     {
         return $this->hasMany(TeacherDailyAgenda::class, 'school_class_id');
     }
+    public function academicDocuments()
+        {
+            return $this->hasMany(
+                AcademicDocument::class,
+                'mapel_id',
+                'id'
+            );
+        }
+
 }

@@ -1328,6 +1328,119 @@
                     </div>
                 </li>
 
+                {{-- ====================================================== --}}
+{{-- REGISTRASI GURU --}}
+{{-- ====================================================== --}}
+<li class="list-item">
+
+    <div class="dropdown-menu w-full flex flex-col items-start">
+
+        {{-- TOGGLE REGISTRASI GURU --}}
+        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+
+            {{-- ICON --}}
+            <i class="fa-solid fa-user-plus text-[15px] w-5 text-center"></i>
+
+            {{-- NAMA MENU --}}
+            <span class="text-[14px]">
+                Informasi Guru
+            </span>
+
+            {{-- CHEVRON --}}
+            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+
+        </div>
+
+
+        {{-- ================================================== --}}
+        {{-- DROPDOWN CONTENT --}}
+        {{-- ================================================== --}}
+        <div class="content-dropdown pl-6 pr-3.5 w-full">
+
+
+            {{-- ================================================== --}}
+            {{-- 1. ANALISIS CP HINGGA ATP --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Analisis CP hingga ATP
+
+                </a>
+
+            </div>
+
+{{-- ================================================== --}}
+{{-- 2. PROTA DAN PROSEM --}}
+{{-- ================================================== --}}
+<div class="flex flex-col py-2 mt-1">
+
+    <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem.tampilan', [
+            'role' => Auth::user()->role,
+            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id,
+        ]) }}"
+       class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+        PROTA & PROSEM
+
+    </a>
+
+</div>
+
+            {{-- ================================================== --}}
+            {{-- 3. ANALISIS RPPM DAN RPPM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm.tampilan', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                 RPP & RPPM
+
+                </a>
+
+            </div>
+
+
+
+            {{-- ================================================== --}}
+            {{-- 4. REFLEKSI GURU --}}
+            {{-- ================================================== --}}
+
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksi-guru.tampilan', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id,
+                    ]) }}"
+                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Refleksi Guru
+
+                </a>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+</li>
+
                 <li class="list-item">
                     <div class="dropdown-menu w-full flex flex-col items-start">
 
@@ -1987,6 +2100,117 @@
                         <span> Beranda </span>
                     </a>
                 </li>
+                {{-- ====================================================== --}}
+{{-- REGISTRASI GURU --}}
+{{-- ====================================================== --}}
+<li class="list-item">
+
+    <div class="dropdown-menu w-full flex flex-col items-start">
+
+        {{-- TOGGLE REGISTRASI GURU --}}
+        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+
+            {{-- ICON --}}
+            <i class="fa-solid fa-user-plus text-[15px] w-5 text-center"></i>
+
+            {{-- NAMA MENU --}}
+            <span class="text-[14px]">
+                Informasi Guru
+            </span>
+
+            {{-- CHEVRON --}}
+            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+
+        </div>
+
+
+        {{-- ================================================== --}}
+        {{-- DROPDOWN CONTENT --}}
+        {{-- ================================================== --}}
+        <div class="content-dropdown pl-6 pr-3.5 w-full">
+
+
+            {{-- ================================================== --}}
+            {{-- 1. ANALISIS CP HINGGA ATP --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Analisis CP hingga ATP
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 2. PROTA DAN PROSEM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    PROTA & PROSEM
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 3. ANALISIS RPPM DAN RPPM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                     RPP ^ RPPM
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 4. REFLEKSI GURU --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Refleksi Guru
+
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</li>
                 <li class="list-menu-sidebar-dekstop-student">
                     <a href="{{ route('lms.academicManagement.view', [
                             'role' => Auth::user()->role,
@@ -2442,6 +2666,118 @@
                     </div>
                 </li>
 
+                 {{-- ====================================================== --}}
+{{-- REGISTRASI GURU --}}
+{{-- ====================================================== --}}
+<li class="list-item">
+
+    <div class="dropdown-menu w-full flex flex-col items-start">
+
+        {{-- TOGGLE REGISTRASI GURU --}}
+        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+
+            {{-- ICON --}}
+            <i class="fa-solid fa-user-plus text-[15px] w-5 text-center"></i>
+
+            {{-- NAMA MENU --}}
+            <span class="text-[14px]">
+                Informasi Guru
+            </span>
+
+            {{-- CHEVRON --}}
+            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+
+        </div>
+
+
+        {{-- ================================================== --}}
+        {{-- DROPDOWN CONTENT --}}
+        {{-- ================================================== --}}
+        <div class="content-dropdown pl-6 pr-3.5 w-full">
+
+
+            {{-- ================================================== --}}
+            {{-- 1. ANALISIS CP HINGGA ATP --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Analisis CP hingga ATP
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 2. PROTA DAN PROSEM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    PROTA & PROSEM
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 3. ANALISIS RPPM DAN RPPM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    RPP & RPPM
+
+                </a>
+
+            </div>
+
+
+            {{-- ================================================== --}}
+            {{-- 4. REFLEKSI GURU --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                    Refleksi Guru
+
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</li>
+
                 @if (Auth::user()->role == 'Wakil Kepala Sekolah')
                     <li class="list-item mt-1">
                         <div class="dropdown-menu w-full flex flex-col items-start">
@@ -2874,6 +3210,41 @@
                                     Refleksi Harian
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
+                            <i class="fa-solid fa-chart-line text-[15px] w-5 text-center"></i>
+                            <span class="text-[14px]">Ekstrakurikuler</span>
+                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-6 pr-3.5 w-full">
+                            <div class="flex flex-col py-2 mt-1">
+                                <a href="{{ route('lms.student-vice-principal.extracurricular-management.view', [
+                                    'role' => Auth::user()->role,
+                                    'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                ]) }}"
+                                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    List Ekstrakurikuler
+                                </a>
+                            </div>
+                           <div class="flex flex-col py-2 mt-1">
+                            <a href="{{ route('lms.student-vice-principal.extracurricular-management.kelengkapan', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                            ]) }}"
+                            class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                                Kelengkapan
+
+                            </a>
+                        </div>
                         </div>
                     </div>
                 </li>
