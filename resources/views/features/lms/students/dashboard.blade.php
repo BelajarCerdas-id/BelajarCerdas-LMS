@@ -625,7 +625,332 @@
                         </div>
                     </div>
 
+                    {{-- -ekskull --}}{{-- C. EKSTRAKURIKULER --}}
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+
+                        {{-- Header --}}
+                        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-blue-100">
+                            <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                                <i class="fas fa-people-group"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="font-bold text-green-800 text-lg">
+                                    Ekstrakurikuler
+                                </h3>
+                                <p class="text-xs text-slate-500">
+                                    Informasi kehadiran kegiatan ekstrakurikuler
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-6 max-h-[650px] overflow-y-auto custom-scrollbar pr-2">
+
+                            {{-- ===================== --}}
+                            {{-- PRAMUKA --}}
+                            {{-- ===================== --}}
+                            <div class="border border-slate-200 rounded-2xl p-5 hover:shadow-md transition">
+
+                                <div class="flex justify-between items-center mb-4">
+
+                                    <div class="flex items-center gap-3">
+
+                                            <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                                                <i class="fas fa-campground text-xl"></i>
+                                            </div>
+
+                                            <div>
+                                                <h4 class="font-bold text-slate-800 text-lg">
+                                                    Pramuka
+                                                </h4>
+
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold uppercase animate-pulse mt-1">
+                                                    Wajib
+                                                </span>
+                                            </div>
+
+                                        </div>
+
+                                        {{-- Rekap --}}
+                                        <div class="text-right">
+
+                                            <div class="text-xs text-slate-400 font-semibold">
+                                                Kehadiran
+                                            </div>
+
+                                            <div class="text-2xl font-black text-green-600">
+                                                8<span class="text-slate-400">/12</span>
+                                            </div>
+
+                                            <div class="text-[11px] text-slate-500">
+                                                66.7%
+                                            </div>
+
+                                        </div>
+
+                                    <div class="text-xs text-slate-500 font-semibold">
+                                        Semester Ganjil
+                                    </div>
+
+                                </div>
+
+                                <div class="overflow-x-auto custom-scrollbar">
+
+                                    <table class="min-w-[900px] w-full text-center border-separate border-spacing-x-2 border-spacing-y-2">
+
+                                        <thead>
+                                            <tr>
+                                                @for($i=1;$i<=12;$i++)
+                                                    <th class="pb-2">
+                                                        <div class="bg-slate-100 rounded-xl py-2 px-3 text-xs font-semibold text-slate-600 whitespace-nowrap shadow-sm">
+                                                            Minggu {{ $i }}
+                                                        </div>
+                                                    </th>
+                                                @endfor
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <tr>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-xl font-bold text-yellow-600">I</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                            {{-- ===================== --}}
+                            {{-- FOTOGRAFI --}}
+                            {{-- ===================== --}}
+                            <div class="border border-slate-200 rounded-2xl p-5 hover:shadow-md transition">
+
+                                <div class="flex justify-between items-center mb-4">
+
+                                     <div class="flex items-center gap-3">
+
+                                        <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                                            <i class="fas fa-camera-retro text-xl"></i>
+                                        </div>
+
+                                        <div>
+
+                                            <h4 class="font-bold text-slate-800 text-lg">
+                                                Fotografi
+                                            </h4>
+
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase mt-1">
+                                                Ekskul Pilihan
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    {{-- Rekap --}}
+                                    <div class="text-right">
+
+                                        <div class="text-xs text-slate-400 font-semibold">
+                                            Kehadiran
+                                        </div>
+
+                                        <div class="text-2xl font-black text-blue-600">
+                                            10<span class="text-slate-400">/12</span>
+                                        </div>
+
+                                        <div class="text-[11px] text-slate-500">
+                                            83.3%
+                                        </div>
+
+                                    </div>
+
+                                    <div class="text-xs text-slate-500 font-semibold">
+                                        Semester Ganjil
+                                    </div>
+
+                                </div>
+
+                                <div class="overflow-x-auto custom-scrollbar">
+
+                                    <table class="min-w-[900px] w-full text-center border-separate border-spacing-x-2 border-spacing-y-2">
+
+                                        <thead>
+                                            <tr>
+                                                @for($i=1;$i<=12;$i++)
+                                                    <th class="pb-2">
+                                                        <div class="bg-slate-100 rounded-xl py-2 px-3 text-xs font-semibold text-slate-600 whitespace-nowrap shadow-sm">
+                                                            Minggu {{ $i }}
+                                                        </div>
+                                                    </th>
+                                                @endfor
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            <tr>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-yellow-50 border border-yellow-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-xl font-bold text-yellow-600">I</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div class="h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center transition hover:scale-105 hover:shadow-md">
+                                                        <span class="text-2xl font-bold text-green-600">✓</span>
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
                 </div>
+
+                
+
 
             </div>
         </div>

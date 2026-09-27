@@ -319,10 +319,22 @@ class ParentController extends Controller
         }
 
         // QUERY CHEATING
-        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
-        ->where('status', 'cheating')->where('student_id', $studentUserId);
+$cheatingHistory = collect();
 
-        $cheatingHistory = $query->latest()->get();
+if ($studentUserId) {
+
+    $cheatingHistory = StudentAssessmentAttempt::with([
+        'UserAccount.StudentProfile',
+        'SchoolAssessment.Mapel',
+        'SchoolAssessment.SchoolClass',
+        'SchoolAssessment.SchoolAssessmentType'
+    ])
+    ->where('status', 'cheating')
+    ->where('student_id', $studentUserId)
+    ->latest()
+    ->get();
+
+}
 
         // ANNOUNCEMENT
         $announcements = Announcement::query()->with('author')->where('school_partner_id', $schoolId)->where(function ($query) {

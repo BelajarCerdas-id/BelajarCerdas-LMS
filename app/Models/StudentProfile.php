@@ -16,6 +16,7 @@ class StudentProfile extends Model
         'nisn',
         'enrollment_type',
         'school_partner_id',
+        'parent_id',
     ];
 
     public function UserAccount() {
@@ -30,5 +31,21 @@ class StudentProfile extends Model
     public function Parent()
     {
         return $this->belongsTo(UserAccount::class, 'parent_id');
+    }
+
+    public function extracurriculars()
+    {
+        return $this->hasMany(
+            ExtracurricularStudent::class,
+            'student_profile_id'
+        );
+    }
+
+    public function extracurricularAttendances()
+    {
+        return $this->hasMany(
+            ExtracurricularAttendance::class,
+            'student_profile_id'
+        );
     }
 }
