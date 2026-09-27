@@ -977,7 +977,13 @@ function getTeacherQuestionReleaseBankGroups() {
         groups.get(key).questions.push(question);
     });
 
-    return Array.from(groups.values());
+    const bankGroups = Array.from(groups.values());
+
+    bankGroups.forEach(group => {
+        group.questions.sort((a, b) => Number(a.id) - Number(b.id));
+    });
+
+    return bankGroups;
 }
 
 function getTeacherQuestionReleaseBankMeta(bank) {

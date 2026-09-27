@@ -278,7 +278,7 @@ class TeacherQuestionBankReleaseController extends Controller
             $query->where('school_partner_id', $schoolId)->orWhereNull('school_partner_id');
         })->when($mapelIds->isNotEmpty(), function ($query) use ($mapelIds) {
             $query->whereIn('mapel_id', $mapelIds);
-        })->orderByDesc('created_at');
+        })->orderByDesc('created_at')->orderBy('id', 'asc');
 
         if ($request->filled('search_question')) {
             $questionQuery->where('questions', 'LIKE', '%' . $request->search_question . '%');
