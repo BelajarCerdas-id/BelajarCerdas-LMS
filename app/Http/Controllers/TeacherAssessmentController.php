@@ -290,20 +290,7 @@ class TeacherAssessmentController extends Controller
                     }
                 }
 
-                // MAIN (EXAM)
-                $exists = SchoolAssessment::where('school_class_id', $classId)->where('mapel_id', $mapelId)->where('semester', $request->semester)
-                    ->where('assessment_type_id', $request->assessment_type_id)->where('school_partner_id', $schoolId)->where('assessment_category', $currentMode)->exists();
-
-                if ($assessmentMode->code == 'exam' && $currentMode === 'main') {
-                    if ($exists) {
-                        return response()->json([
-                            'status' => 'error',
-                            'errors' => [
-                                'assessment_type_id' => ['Tipe Assessment telah terdaftar pada rombel kelas ini.']
-                            ],
-                        ], 422);
-                    }
-                }
+                // MAIN (EXAM): Diperbolehkan membuat assessment dengan tipe yang sama pada rombel kelas ini
             }
         } else if ($step == 2) {
             if ($assessmentMode->code === 'project') {
@@ -326,6 +313,10 @@ class TeacherAssessmentController extends Controller
                 }
             }
         }
+
+        return response()->json([
+            'status' => 'success',
+        ]);
     }
 
     // function teacher assessment management store

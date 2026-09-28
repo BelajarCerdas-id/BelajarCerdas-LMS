@@ -6,16 +6,48 @@ let attemptStatusChecked = false;
 let lastCheatReport = 0;
 let isPageReloading = false;
 let antiCheatCooldown = true;
+let isWarningModalOpen = false;
+let antiCheatInitialized = false;
+let blurTimeout = null;
 
-// function untuk menampilkan modal jika waktu habis
+// Helper: Check if HTML5 Fullscreen API is supported by the device / browser
+function isFullscreenSupported() {
+    const doc = document;
+    const el = doc.documentElement;
+    return !!(
+        doc.fullscreenEnabled ||
+        doc.webkitFullscreenEnabled ||
+        doc.mozFullScreenEnabled ||
+        doc.msFullscreenEnabled ||
+        el.requestFullscreen ||
+        el.webkitRequestFullscreen ||
+        el.mozRequestFullScreen ||
+        el.msRequestFullscreen
+    );
+}
+
+// Helper: Get active fullscreen element across all vendor prefixes
+function getFullscreenElement() {
+    return (
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement ||
+        null
+    );
+}
+
+// Function to display modal when exam time expires
 function emptyTime() {
+    isWarningModalOpen = true;
     Swal.fire({
         icon: 'error',
         title: 'Oops...',
         text: 'Maaf, waktu ujian kamu sudah habis.',
+        allowOutsideClick: false,
+        allowEscapeKey: false
     });
 }
-
 
 function startTimer() {
     if (!containerFormAssessment.length) return;
@@ -32,18 +64,14 @@ function startTimer() {
         if (remaining > 0) {
             runCountdown(remaining);
         } else {
-
             clearInterval(countdown);
             countdown = null;
 
-            timerExam.textContent = 'Waktu Habis';
+            if (timerExam) timerExam.textContent = 'Waktu Habis';
 
             finalExamDuration = getTotalExamDuration();
-
             saveQuestionDuration();
-
             emptyTime();
-
             autoSubmitUnSavedQuestions();
 
             localStorage.removeItem(EXPIRE_KEY);
@@ -64,7 +92,6 @@ function startTimer() {
                 localStorage.setItem(EXPIRE_KEY, expireTime);
 
                 const remaining = Math.ceil((expireTime - Date.now()) / 1000);
-
                 if (remaining > 0) {
                     runCountdown(remaining);
                 }
@@ -72,23 +99,28 @@ function startTimer() {
             error: function (xhr) {
                 if (xhr.status === 422) {
                     const response = xhr.responseJSON;
-
                     if (response?.status === 'not_started') {
+                        isWarningModalOpen = true;
                         Swal.fire({
                             icon: 'warning',
                             title: 'Assessment Belum Dimulai',
                             text: response.message,
                             confirmButtonText: 'OK'
+                        }).then(() => {
+                            isWarningModalOpen = false;
                         });
                         return;
                     }
 
                     if (response?.status === 'expired') {
+                        isWarningModalOpen = true;
                         Swal.fire({
                             icon: 'warning',
                             title: 'Assessment Telah Berakhir',
                             text: response.message,
                             confirmButtonText: 'OK'
+                        }).then(() => {
+                            isWarningModalOpen = false;
                         });
                         return;
                     }
@@ -110,16 +142,11 @@ function startTimer() {
                 clearInterval(countdown);
                 countdown = null;
 
-                timerExam.textContent = 'Waktu Habis';
+                if (timerExam) timerExam.textContent = 'Waktu Habis';
 
-                // simpan durasi terakhir soal yang sedang dibuka
                 saveQuestionDuration();
-
                 finalExamDuration = getTotalExamDuration();
-
                 emptyTime();
-
-                // auto submit dulu
                 autoSubmitUnSavedQuestions();
 
                 localStorage.removeItem(START_KEY);
@@ -129,13 +156,14 @@ function startTimer() {
     }
 
     function updateTimerDisplay(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
+        if (!timerExam) return;
+        const safeSeconds = Math.max(0, seconds);
+        const hours = Math.floor(safeSeconds / 3600);
+        const minutes = Math.floor((safeSeconds % 3600) / 60);
+        const secs = safeSeconds % 60;
         timerExam.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 }
-
 
 function stopTimer() {
     clearInterval(countdown);
@@ -160,224 +188,211 @@ function stopTimer() {
 }
 
 function getTotalExamDuration() {
-
     const START_KEY = `timer_assessment_test_start_${assessmentId}`;
     const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
 
     const startTime = parseInt(localStorage.getItem(START_KEY));
     const expireTime = parseInt(localStorage.getItem(EXPIRE_KEY));
-
     if (!startTime || !expireTime) return 0;
 
     const now = Date.now();
-
     const totalDuration = Math.floor((expireTime - startTime) / 1000);
     const remaining = Math.max(0, Math.floor((expireTime - now) / 1000));
-    const usedDuration = totalDuration - remaining;
-
-    return usedDuration;
+    return totalDuration - remaining;
 }
 
-
 function cheatingDetection() {
-
     if (cheatingListenerAttached) return;
-
     cheatingListenerAttached = true;
 
+    // Visibility change detection (works on PC, Android, and iOS Safari)
     document.addEventListener("visibilitychange", function () {
-
-        if (examFinished) return;
-        if (isPageReloading) return;
+        if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
 
         if (document.hidden) {
-            reportCheating();
+            reportCheating('visibility_hidden');
         }
-
     });
 
+    // Pagehide listener for mobile app switching / multitasking (especially iOS Safari)
+    window.addEventListener("pagehide", function () {
+        if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
+        reportCheating('page_hide');
+    });
 }
 
 function checkAttemptStatus() {
-
     if (attemptStatusChecked) return;
-
     attemptStatusChecked = true;
 
-    if (examFinished) return;
-    if (isPageReloading) return;
-    if (antiCheatCooldown) return;
+    if (examFinished || isPageReloading || antiCheatCooldown) return;
 
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/attempt-status`,
         method: 'GET',
         success: function (res) {
-
             if (examFinished) return;
 
             if (res.status === 'warning') {
-
+                isWarningModalOpen = true;
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan!',
                     text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/3)`,
                     allowOutsideClick: false,
                     allowEscapeKey: false,
+                    confirmButtonText: isFullscreenSupported() ? 'Masuk Fullscreen' : 'Lanjutkan Ujian',
                     reverseButtons: true
                 }).then((result) => {
+                    isWarningModalOpen = false;
                     if (result.isConfirmed) {
                         examStarted = true;
                         enterFullscreen();
                     }
+                    setTimeout(() => {
+                        antiCheatCooldown = false;
+                    }, 1000);
                 });
-
             }
 
             if (res.status === 'blocked') {
-
                 examFinished = true;
-
                 finalExamDuration = getTotalExamDuration();
-
                 saveQuestionDuration();
-
                 stopTimer();
                 stopQuestionTimer();
 
+                isWarningModalOpen = true;
                 Swal.fire({
                     icon: 'error',
                     title: 'Ujian dihentikan',
-                    text: 'Terlalu sering meninggalkan halaman.'
+                    text: 'Terlalu sering meninggalkan halaman.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
                 });
 
                 autoSubmitUnSavedQuestions();
             }
-
         }
     });
-
 }
 
 function enterFullscreen() {
+    if (!isFullscreenSupported()) {
+        antiCheatCooldown = false;
+        return Promise.resolve();
+    }
 
     const el = document.documentElement;
-
-    if (el.requestFullscreen) {
-        el.requestFullscreen();
+    try {
+        if (el.requestFullscreen) {
+            return el.requestFullscreen().catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+            return el.webkitRequestFullscreen();
+        } else if (el.mozRequestFullScreen) {
+            return el.mozRequestFullScreen();
+        } else if (el.msRequestFullscreen) {
+            return el.msRequestFullscreen();
+        }
+    } catch (e) {
+        // Suppress unhandled exceptions if user interaction policy rejected request
     }
-    else if (el.webkitRequestFullscreen) { // Safari
-        el.webkitRequestFullscreen();
-    }
-    else if (el.msRequestFullscreen) { // IE
-        el.msRequestFullscreen();
-    }
-
 }
 
 function detectFullscreenExit() {
-
-    document.addEventListener("fullscreenchange", function () {
-
-        if (document.fullscreenElement) {
-
-            // fullscreen aktif -> anti cheat ON
+    const handleFullscreenChange = function () {
+        const fsEl = getFullscreenElement();
+        if (fsEl) {
             antiCheatCooldown = false;
             return;
         }
 
-        if (examFinished) return;
-        if (isPageReloading) return;
-        if (antiCheatCooldown) return;
+        if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
 
-        // keluar fullscreen
-        reportCheating();
+        // Only report if fullscreen was actually supported on this device
+        if (isFullscreenSupported()) {
+            reportCheating('fullscreen_exit');
+        }
+    };
 
-    });
-
+    // Standard + vendor-prefixed fullscreen events (iPadOS, older Chrome, etc.)
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
 }
 
-document.addEventListener("fullscreenchange", function () {
-
-    if (document.fullscreenElement) {
-        antiCheatCooldown = false;
-    }
-
-});
-
 function detectKeyboardCheating() {
-
     document.addEventListener("keydown", function (e) {
+        if (examFinished || isPageReloading || antiCheatCooldown) return;
 
-        if (examFinished) return;
-        if (isPageReloading) return;
+        const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+        const key = e.key ? e.key.toLowerCase() : '';
 
-        // CTRL + T
-        if (e.ctrlKey && e.key === "t") {
+        // DevTools shortcuts (F12, Ctrl/Cmd + Shift + I/J/C)
+        if (e.key === "F12" || (isCmdOrCtrl && e.shiftKey && ['i', 'j', 'c'].includes(key))) {
             e.preventDefault();
-            reportCheating();
+            reportCheating('devtools_shortcut');
+            return;
         }
 
-        // CTRL + W
-        if (e.ctrlKey && e.key === "w") {
-            e.preventDefault();
-            reportCheating();
-        }
-
-        // CTRL + TAB
-        if (e.ctrlKey && e.key === "Tab") {
-            e.preventDefault();
-            reportCheating();
-        }
-
-        // ALT + TAB
-        if (e.altKey && e.key === "Tab") {
-            reportCheating();
-        }
-
-        // F11
+        // F11 (Fullscreen toggle)
         if (e.key === "F11") {
             e.preventDefault();
-            reportCheating();
+            reportCheating('f11_shortcut');
+            return;
         }
 
-        // ESC
-        if (e.key === "Escape") {
-            reportCheating();
+        // ESC (Exit Fullscreen)
+        if (e.key === "Escape" || e.key === "Esc") {
+            if (isFullscreenSupported() && getFullscreenElement()) {
+                reportCheating('escape_exit');
+            }
+            return;
         }
 
-        // CTRL + C
-        if (e.ctrlKey && e.key === "c") {
+        // Browser navigation / Tab management shortcuts (Ctrl/Cmd + T, W, N)
+        if (isCmdOrCtrl && (key === 't' || key === 'w' || key === 'n')) {
             e.preventDefault();
+            reportCheating('tab_shortcut');
+            return;
         }
 
-        // CTRL + V
-        if (e.ctrlKey && e.key === "v") {
+        // Tab navigation shortcuts (Ctrl/Cmd + Tab, Alt + Tab)
+        if ((isCmdOrCtrl && e.key === "Tab") || (e.altKey && e.key === "Tab")) {
+            reportCheating('alt_or_ctrl_tab');
+            return;
+        }
+
+        // View source or Save shortcuts (Ctrl/Cmd + U, S, P)
+        if (isCmdOrCtrl && (key === 'u' || key === 's' || key === 'p')) {
             e.preventDefault();
+            return;
         }
 
-        // CTRL + X
-        if (e.ctrlKey && e.key === "x") {
-            e.preventDefault();
+        // Copy, Paste, Cut outside of inputs
+        if (isCmdOrCtrl && ['c', 'v', 'x', 'a'].includes(key)) {
+            const activeEl = document.activeElement;
+            const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+            if (!isInput) {
+                e.preventDefault();
+            }
         }
-
-    });
-
+    }, true);
 }
 
 function disableCopyPaste() {
+    const blockUnlessInput = function (e) {
+        const activeEl = document.activeElement;
+        const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+        if (!isInput) {
+            e.preventDefault();
+        }
+    };
 
-    document.addEventListener("copy", function (e) {
-        e.preventDefault();
-    });
-
-    document.addEventListener("paste", function (e) {
-        e.preventDefault();
-    });
-
-    document.addEventListener("cut", function (e) {
-        e.preventDefault();
-    });
-
+    document.addEventListener("copy", blockUnlessInput);
+    document.addEventListener("paste", blockUnlessInput);
+    document.addEventListener("cut", blockUnlessInput);
 }
 
 function disableRightClick() {
@@ -387,38 +402,76 @@ function disableRightClick() {
 }
 
 function disableTextSelection() {
-    document.body.style.userSelect = "none";
+    if (document.getElementById('anti-cheat-selection-lock')) return;
+    const style = document.createElement('style');
+    style.id = 'anti-cheat-selection-lock';
+    style.textContent = `
+        body {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important;
+        }
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            -webkit-touch-callout: default !important;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 function detectWindowBlur() {
-
     window.addEventListener("blur", function () {
+        if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
+        if (document.hidden) return; // Handled by visibilitychange
 
-        if (examFinished) return;
-        if (isPageReloading) return;
+        // Check if blur was triggered by interactive form input (e.g. mobile select dropdown, virtual keyboard)
+        const activeEl = document.activeElement;
+        if (activeEl) {
+            const tag = activeEl.tagName;
+            if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || activeEl.isContentEditable) {
+                return;
+            }
+            if (activeEl.closest && (activeEl.closest('.swal2-container') || activeEl.closest('dialog') || activeEl.closest('.modal'))) {
+                return;
+            }
+        }
 
-        // jika tab memang disembunyikan, sudah ditangani visibilitychange
-        if (document.hidden) return;
+        if (blurTimeout) clearTimeout(blurTimeout);
 
-        reportCheating();
+        // 250ms buffer: filter out transient mobile browser picker/keyboard blurs
+        blurTimeout = setTimeout(() => {
+            if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
+            if (document.hidden) return;
+            if (document.hasFocus && document.hasFocus()) return;
 
+            reportCheating('window_blur');
+        }, 250);
     });
 
+    window.addEventListener("focus", function () {
+        if (blurTimeout) {
+            clearTimeout(blurTimeout);
+            blurTimeout = null;
+        }
+    });
 }
 
 function enforceFullscreenAfterReload() {
-
     if (examFinished) return;
+    if (!isFullscreenSupported()) return; // Skip for devices without Fullscreen API (e.g. iPhone)
 
     const START_KEY = `timer_assessment_test_start_${assessmentId}`;
     const examWasStarted = localStorage.getItem(START_KEY);
 
-    // jika ujian belum dimulai, jangan paksa fullscreen
     if (!examWasStarted) return;
+    if (getFullscreenElement()) return;
 
-    // jika sudah fullscreen, tidak perlu apa-apa
-    if (document.fullscreenElement) return;
-
+    isWarningModalOpen = true;
     Swal.fire({
         icon: 'warning',
         title: 'Mode Fullscreen Wajib',
@@ -426,26 +479,26 @@ function enforceFullscreenAfterReload() {
         allowOutsideClick: false,
         allowEscapeKey: false,
         confirmButtonText: 'Masuk Fullscreen'
-    }).then(() => {
-        enterFullscreen();
+    }).then((result) => {
+        isWarningModalOpen = false;
+        if (result.isConfirmed) {
+            enterFullscreen();
+        }
     });
-
 }
 
-function reportCheating() {
-
-    if (examFinished) return;
-    if (isPageReloading) return;
-    if (antiCheatCooldown) return;
+function reportCheating(reason = 'unspecified') {
+    if (examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen) return;
 
     const now = Date.now();
 
-    // cooldown 1 detik supaya tidak double trigger
-    if (now - lastCheatReport < 1000) {
+    // 1500ms cooldown to avoid cascading/duplicate triggers from related events
+    if (now - lastCheatReport < 1500) {
         return;
     }
 
     lastCheatReport = now;
+    antiCheatCooldown = true;
 
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/report-tab-switch`,
@@ -453,63 +506,82 @@ function reportCheating() {
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
+        data: {
+            reason: reason
+        },
         success: function (res) {
-
             if (examFinished) return;
 
             if (res.status === 'warning') {
-
+                isWarningModalOpen = true;
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan!',
                     text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/3)`,
                     allowOutsideClick: false,
                     allowEscapeKey: false,
+                    confirmButtonText: isFullscreenSupported() ? 'Masuk Fullscreen' : 'Lanjutkan Ujian',
                     reverseButtons: true
                 }).then((result) => {
+                    isWarningModalOpen = false;
                     if (result.isConfirmed) {
                         examStarted = true;
                         enterFullscreen();
                     }
+                    setTimeout(() => {
+                        antiCheatCooldown = false;
+                    }, 1000);
                 });
-
             }
 
             if (res.status === 'blocked') {
-
                 examFinished = true;
-
                 finalExamDuration = getTotalExamDuration();
-
                 saveQuestionDuration();
-
                 stopTimer();
                 stopQuestionTimer();
 
+                isWarningModalOpen = true;
                 Swal.fire({
                     icon: 'error',
                     title: 'Ujian dihentikan',
-                    text: 'Terlalu sering meninggalkan halaman.'
+                    text: 'Terlalu sering meninggalkan halaman.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
                 });
 
                 autoSubmitUnSavedQuestions();
             }
-
+        },
+        error: function () {
+            // Restore antiCheatCooldown on error
+            setTimeout(() => {
+                antiCheatCooldown = false;
+            }, 2000);
         }
     });
-
 }
 
 function initAntiCheatSystem() {
+    if (antiCheatInitialized) return;
+    antiCheatInitialized = true;
 
-    cheatingDetection(); // visibility change
-    detectFullscreenExit(); // keluar fullscreen
-    detectKeyboardCheating(); // shortcut
-    detectWindowBlur(); // alt tab
+    cheatingDetection();
+    detectFullscreenExit();
+    detectKeyboardCheating();
+    detectWindowBlur();
 
     disableCopyPaste();
     disableRightClick();
     disableTextSelection();
 
     enforceFullscreenAfterReload();
+
+    // If device doesn't support HTML5 fullscreen (e.g. iPhone), activate anti-cheat after brief buffer
+    setTimeout(() => {
+        const START_KEY = `timer_assessment_test_start_${assessmentId}`;
+        if (!isFullscreenSupported() && localStorage.getItem(START_KEY)) {
+            antiCheatCooldown = false;
+        }
+    }, 1500);
 }
