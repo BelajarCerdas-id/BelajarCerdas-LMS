@@ -5,9 +5,12 @@ namespace App\Services\LMS;
 use App\Events\BankSoalLmsUploaded;
 use App\Models\LmsQuestionBank;
 use App\Models\LmsQuestionOption;
+use App\Models\SchoolAssessmentQuestion;
+use App\Models\SchoolQuestionBank;
 use App\Services\DocxExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpWord\IOFactory;
@@ -410,39 +413,62 @@ class BankSoalWordImportService
         $docxPath = $result['docx_path'];
         $outputHtmlPath = $result['output_html_path'];
         $fileName = $result['file_name'] ?? ($request->file('bulkUpload-lms')?->getClientOriginalName());
+        $schoolPartnerId = $request->school_partner_id;
 
         Log::info("[BankSoalImport] Memulai transaksi insert ke database. Total soal valid: " . count($validSoalData));
         $createBankSoal = null;
-        
-        foreach ($validSoalData as $index => $dataSoal) {
-            $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
-            $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
-            $schoolPartnerId = $request->school_partner_id;
 
-            // Lewati pengecekan duplikat jika tipe soal adalah PG_KOMPLEKS atau ESSAY
-            if (!in_array($type, ['pg_kompleks', 'essay', 'mcq'])) {
-                $existingQuestionQuery = $schoolPartnerId
-                    ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)
-                    : LmsQuestionBank::where('questions', $dataSoal['QUESTION']);
+        DB::beginTransaction();
 
-                $existingQuestion = $existingQuestionQuery->first(['id']);
+        try {
+            // Overwrite jika file_name sudah ada di database untuk sekolah/konteks yang sama
+            if (!empty($fileName)) {
+                $existingQuestionsQuery = LmsQuestionBank::where('file_name', $fileName);
+                if ($schoolPartnerId) {
+                    $existingQuestionsQuery->where('school_partner_id', $schoolPartnerId);
+                } else {
+                    $existingQuestionsQuery->whereNull('school_partner_id');
+                }
 
-                // Tampilkan ID database dari variabel $existingQuestion->id
-                if ($existingQuestion) {
-                    Log::info("[BankSoalImport] Soal urutan dokumen $index terdeteksi duplikat dengan data di database (DB ID: {$existingQuestion->id}), dilewati.");
-                    continue;
+                $existingQuestions = $existingQuestionsQuery->get();
+                if ($existingQuestions->isNotEmpty()) {
+                    $existingIds = $existingQuestions->pluck('id')->toArray();
+                    Log::info("[BankSoalImport] Menimpa data lama untuk file_name: {$fileName}. Menghapus " . count($existingIds) . " soal lama.");
+
+                    LmsQuestionOption::whereIn('question_id', $existingIds)->delete();
+                    SchoolQuestionBank::whereIn('question_id', $existingIds)->delete();
+                    SchoolAssessmentQuestion::whereIn('question_bank_id', $existingIds)->delete();
+                    LmsQuestionBank::whereIn('id', $existingIds)->delete();
                 }
             }
 
-            $queryStatus = LmsQuestionBank::where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))->where('status_bank_soal', 'Unpublish');
-            if ($request->sub_bab_id) {
-                $queryStatus->where('sub_bab_id', $request->sub_bab_id);
-            } else {
-                $queryStatus->whereNull('sub_bab_id');
-            }
-            $statusBankSoal = $queryStatus->exists() ? 'Unpublish' : 'Publish';
+            foreach ($validSoalData as $index => $dataSoal) {
+                $type = strtolower(trim(strip_tags($dataSoal['TYPE'] ?? '')));
+                $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
 
-            try {
+                // Lewati pengecekan duplikat jika tipe soal adalah PG_KOMPLEKS atau ESSAY
+                if (!in_array($type, ['pg_kompleks', 'essay', 'mcq', 'mcma'])) {
+                    $existingQuestionQuery = $schoolPartnerId
+                        ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)
+                        : LmsQuestionBank::where('questions', $dataSoal['QUESTION']);
+
+                    $existingQuestion = $existingQuestionQuery->first(['id']);
+
+                    // Tampilkan ID database dari variabel $existingQuestion->id
+                    if ($existingQuestion) {
+                        Log::info("[BankSoalImport] Soal urutan dokumen $index terdeteksi duplikat dengan data di database (DB ID: {$existingQuestion->id}), dilewati.");
+                        continue;
+                    }
+                }
+
+                $queryStatus = LmsQuestionBank::where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))->where('status_bank_soal', 'Unpublish');
+                if ($request->sub_bab_id) {
+                    $queryStatus->where('sub_bab_id', $request->sub_bab_id);
+                } else {
+                    $queryStatus->whereNull('sub_bab_id');
+                }
+                $statusBankSoal = $queryStatus->exists() ? 'Unpublish' : 'Publish';
+
                 $createBankSoal = LmsQuestionBank::create([
                     'user_id'           => $userId,
                     'school_partner_id' => $schoolPartnerId ?? null,
@@ -463,10 +489,6 @@ class BankSoalWordImportService
                     'file_name'         => $fileName,
                 ]);
                 Log::info("[BankSoalImport] Soal insert sukses (ID: {$createBankSoal->id}, Tipe: {$type}).");
-            } catch (\Exception $e) {
-                Log::error("[BankSoalImport] Gagal insert soal utama ke database.", ['error' => $e->getMessage()]);
-                continue;
-            }
 
             // INSERT OPSI JAWABAN
             try {
@@ -537,6 +559,18 @@ class BankSoalWordImportService
                 Log::error("[BankSoalImport] Gagal insert opsi jawaban untuk soal ID {$createBankSoal->id}.", ['error' => $e->getMessage()]);
             }
         }
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error("[BankSoalImport] Gagal import bank soal: " . $e->getMessage());
+        @unlink($docxPath);
+        @unlink($outputHtmlPath);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gagal mengunggah bank soal: ' . $e->getMessage(),
+        ], 500);
+    }
 
         if ($createBankSoal) {
             Log::info("[BankSoalImport] Menjalankan broadcast event BankSoalLmsUploaded.");

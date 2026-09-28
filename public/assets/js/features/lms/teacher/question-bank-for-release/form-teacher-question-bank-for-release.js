@@ -931,7 +931,10 @@ function getTeacherQuestionReleaseRelevantQuestions() {
 }
 
 function getTeacherQuestionReleaseBankKey(question) {
-    return [
+    const rawFileName = question.file_name || question.fileName || question.filename || '';
+    const fileName = (rawFileName && String(rawFileName).trim()) ? String(rawFileName).trim() : '';
+
+    const parts = [
         question.kurikulum_id ?? 'null',
         question.kelas_id ?? 'null',
         question.mapel_id ?? 'null',
@@ -939,12 +942,24 @@ function getTeacherQuestionReleaseBankKey(question) {
         question.sub_bab_id ?? 'null',
         question.question_category ?? 'null',
         question.school_partner_id ?? 'null'
-    ].join('-');
+    ];
+
+    if (fileName) {
+        parts.push(fileName);
+    }
+
+    return parts.join('-');
 }
 
 function getTeacherQuestionReleaseBankName(question) {
     const mapel = question.mapel?.mata_pelajaran || '-';
     const kelas = question.kelas?.kelas || '-';
+    const rawFileName = question.file_name || question.fileName || question.filename || null;
+    const fileName = (rawFileName && String(rawFileName).trim()) ? String(rawFileName).trim() : null;
+
+    if (fileName) {
+        return `Bank Soal ${mapel} • ${kelas} (${fileName})`;
+    }
 
     return `Bank Soal ${mapel} • ${kelas}`;
 }
@@ -960,6 +975,9 @@ function getTeacherQuestionReleaseBankGroups() {
         const key = getTeacherQuestionReleaseBankKey(question);
 
         if (!groups.has(key)) {
+            const rawFileName = question.file_name || question.fileName || question.filename || null;
+            const fileName = (rawFileName && String(rawFileName).trim()) ? String(rawFileName).trim() : null;
+
             groups.set(key, {
                 id: key,
                 kurikulum_id: question.kurikulum_id ?? null,
@@ -969,6 +987,7 @@ function getTeacherQuestionReleaseBankGroups() {
                 sub_bab_id: question.sub_bab_id ?? null,
                 question_category: question.question_category ?? null,
                 school_partner_id: question.school_partner_id ?? null,
+                file_name: fileName,
                 name: getTeacherQuestionReleaseBankName(question),
                 questions: []
             });
@@ -1010,6 +1029,16 @@ function getTeacherQuestionReleaseBankMeta(bank) {
     }
 
     const uploadDate = formatTeacherQuestionReleaseDate(rawDate);
+    let fileName = bank.file_name || bank.fileName || bank.filename || (firstQuestion.file_name && String(firstQuestion.file_name).trim()) || (firstQuestion.fileName && String(firstQuestion.fileName).trim()) || null;
+    if (!fileName && questions.length > 0) {
+        const foundFile = questions.find(q => q.file_name || q.fileName || q.filename);
+        if (foundFile) {
+            fileName = foundFile.file_name || foundFile.fileName || foundFile.filename;
+        }
+    }
+    if (fileName && typeof fileName === 'string') {
+        fileName = fileName.trim();
+    }
 
     return {
         kurikulum: firstQuestion.kurikulum?.nama_kurikulum || '-',
@@ -1019,7 +1048,8 @@ function getTeacherQuestionReleaseBankMeta(bank) {
         subBab: firstQuestion.sub_bab?.sub_bab || '-',
         category: firstQuestion.question_category || 'Umum',
         source,
-        uploadDate
+        uploadDate,
+        fileName
     };
 }
 
@@ -1085,9 +1115,15 @@ function renderTeacherQuestionReleaseBankCard(bank) {
                             <span class="rounded-md bg-[#EAF6FF] px-2 py-1 text-[10px] font-semibold text-[#0071BC]">${escapeTeacherQuestionReleaseHtml(meta.mapel)}</span>
                             <span class="rounded-md bg-purple-50 px-2 py-1 text-[10px] font-semibold text-purple-600">${escapeTeacherQuestionReleaseHtml(meta.category)}</span>
                             <span class="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-medium text-gray-500">${escapeTeacherQuestionReleaseHtml(meta.kelas)}</span>
+                            ${meta.fileName ? `
+                                <span class="rounded-md bg-blue-50 border border-blue-200 px-2 py-1 text-[10px] font-semibold text-[#0071BC] flex items-center gap-1">
+                                    <i class="fa-regular fa-file-word text-[10px]"></i>
+                                    <span>${escapeTeacherQuestionReleaseHtml(meta.fileName)}</span>
+                                </span>
+                            ` : ''}
                         </div>
 
-                        <h4 class="mt-2 text-xs font-bold text-gray-800">${escapeTeacherQuestionReleaseHtml(meta.bab !== '-' ? meta.bab : 'Bank Soal')}</h4>
+                        <h4 class="mt-2 text-xs font-bold text-gray-800">${escapeTeacherQuestionReleaseHtml(meta.fileName ? (meta.bab !== '-' ? `${meta.bab} (${meta.fileName})` : meta.fileName) : (meta.bab !== '-' ? meta.bab : 'Bank Soal'))}</h4>
 
                         <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-gray-500">
                             <span class="inline-flex items-center gap-1">
@@ -1108,6 +1144,13 @@ function renderTeacherQuestionReleaseBankCard(bank) {
                                 <span class="text-gray-400">Sub Bab:</span>
                                 <span class="font-medium text-gray-600">${escapeTeacherQuestionReleaseHtml(meta.subBab)}</span>
                             </span>
+
+                            <span class="text-gray-300" aria-hidden="true">•</span>
+
+                            <span class="inline-flex items-center gap-1">
+                                <span class="text-gray-400">File:</span>
+                                <span class="font-medium ${meta.fileName ? 'text-[#0071BC] font-semibold' : 'text-gray-600'}">${escapeTeacherQuestionReleaseHtml(meta.fileName || '-')}</span>
+                            </span>
                         </div>
 
                         <div class="mt-2 flex flex-wrap items-center gap-2">
@@ -1115,6 +1158,12 @@ function renderTeacherQuestionReleaseBankCard(bank) {
                                 <i class="fa-solid fa-database text-[9px] text-gray-400"></i>
                                 <span class="text-[9px] font-medium text-gray-500">Sumber:</span>
                                 <span class="text-[9px] font-bold text-gray-700">${escapeTeacherQuestionReleaseHtml(meta.source)}</span>
+                            </div>
+
+                            <div class="inline-flex items-center gap-1.5 rounded-lg ${meta.fileName ? 'bg-blue-50/70 border border-blue-100' : 'bg-gray-50'} px-2 py-1">
+                                <i class="fa-regular fa-file-lines text-[9px] ${meta.fileName ? 'text-[#0071BC]' : 'text-gray-400'}"></i>
+                                <span class="text-[9px] font-medium text-gray-500">File:</span>
+                                <span class="text-[9px] font-bold ${meta.fileName ? 'text-[#0071BC]' : 'text-gray-700'}">${escapeTeacherQuestionReleaseHtml(meta.fileName || '-')}</span>
                             </div>
 
                             ${meta.uploadDate ? `
@@ -1264,6 +1313,14 @@ function renderTeacherQuestionReleaseQuestionCard(question, index) {
                         <span class="text-[9px] text-gray-400">
                             q-${escapeTeacherQuestionReleaseHtml(id)}
                         </span>
+
+                        ${(question.file_name || question.fileName) ? `
+                            <span class="inline-flex items-center gap-1 text-[9px] text-[#0071BC]">
+                                <span>•</span>
+                                <i class="fa-regular fa-file-lines text-[8px]"></i>
+                                <span>${escapeTeacherQuestionReleaseHtml(question.file_name || question.fileName)}</span>
+                            </span>
+                        ` : ''}
 
                         ${question.created_at ? `
                             <span class="inline-flex items-center gap-1 text-[9px] text-gray-400">
@@ -2084,7 +2141,10 @@ function renderTeacherQuestionReleaseReview() {
                     bab_id: question.bab_id ?? null,
                     sub_bab_id: question.sub_bab_id ?? null,
                     question_category: question.question_category ?? null,
-                    school_partner_id: question.school_partner_id ?? null,
+                    file_name: (() => {
+                        const raw = question.file_name || question.fileName || question.filename || null;
+                        return (raw && String(raw).trim()) ? String(raw).trim() : null;
+                    })(),
                     name: getTeacherQuestionReleaseBankName(question),
                     questions: []
                 });
@@ -2241,10 +2301,16 @@ function renderTeacherQuestionReleaseReviewBank(bank, bankIndex) {
                             <span class="rounded-md bg-gray-100 px-2 py-1 text-[9px] font-medium text-gray-500">
                                 ${escapeTeacherQuestionReleaseHtml(meta.kelas)}
                             </span>
+                            ${meta.fileName ? `
+                                <span class="rounded-md bg-blue-50 border border-blue-200 px-2 py-1 text-[9px] font-semibold text-[#0071BC] flex items-center gap-1">
+                                    <i class="fa-regular fa-file-word text-[9px]"></i>
+                                    <span>${escapeTeacherQuestionReleaseHtml(meta.fileName)}</span>
+                                </span>
+                            ` : ''}
                         </div>
 
                         <h4 class="mt-1.5 text-xs font-bold text-gray-800">
-                            ${escapeTeacherQuestionReleaseHtml(meta.bab !== '-' ? meta.bab : 'Bank Soal')}
+                            ${escapeTeacherQuestionReleaseHtml(meta.fileName ? (meta.bab !== '-' ? `${meta.bab} (${meta.fileName})` : meta.fileName) : (meta.bab !== '-' ? meta.bab : 'Bank Soal'))}
                         </h4>
 
                         <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-gray-400">
@@ -2266,6 +2332,13 @@ function renderTeacherQuestionReleaseReviewBank(bank, bankIndex) {
                                 Sub Bab:
                                 <strong class="text-gray-500">
                                     ${escapeTeacherQuestionReleaseHtml(meta.subBab)}
+                                </strong>
+                            </span>
+
+                            <span>
+                                File:
+                                <strong class="${meta.fileName ? 'text-[#0071BC]' : 'text-gray-500'}">
+                                    ${escapeTeacherQuestionReleaseHtml(meta.fileName || '-')}
                                 </strong>
                             </span>
 
