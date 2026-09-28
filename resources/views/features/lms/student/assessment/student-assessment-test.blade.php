@@ -1,8 +1,8 @@
 @include('components.navbar-assessment-test')
 
 @if (Auth::user()->role === 'Siswa')
-    <main>
-        <section id="container-assessment-test-form" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-curriculum-id="{{ $curriculumId }}" 
+    <main translate="no" class="notranslate">
+        <section id="container-assessment-test-form" translate="no" class="notranslate" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-curriculum-id="{{ $curriculumId }}" 
             data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}" data-semester="{{ $semester }}" data-assessment-id="{{ $assessmentId }}"
             data-upload-url="{{ route('assessment-test.storeImage', ['_token' => csrf_token()]) }}"
             data-delete-url="{{ route('assessment-test.deleteImage') }}">

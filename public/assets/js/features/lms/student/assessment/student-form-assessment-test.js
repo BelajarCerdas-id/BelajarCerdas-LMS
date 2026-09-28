@@ -20,15 +20,9 @@ let questionStartTime = null;
 let questions = [];
 let questionsAnswer = {};
 let examStarted = false;
+let cachedFormResponse = null;
 
-function studentFormAssessment(selectedIndex = 0) {
-
-    if (!containerFormAssessment.length) return;
-
-    $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}`,
-        method: 'GET',
-        success: function (response) {
+function renderAssessmentFormContent(selectedIndex, response) {
 
             const formAssessment = $('#form-assessment-test');
             formAssessment.empty();
@@ -623,15 +617,32 @@ function studentFormAssessment(selectedIndex = 0) {
                     ? `
                         <button type="button" class="bg-gray-200 px-6 py-2.5 rounded-md
                             shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold opacity-70 cursor-default" disabled>
-                            Simpan Jawaban
+                            Sudah Disimpan
                         </button>
                     `
                     : `
-                        <button type="button" id="btn-submit-save-answer" data-status-answer="submitted" class="bg-[#43AB3C] text-white px-6 py-2.5 rounded-md
-                            shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold cursor-pointer">
-                            Simpan Jawaban
+                        <button type="button" id="btn-submit-save-answer" data-status-answer="submitted" class="bg-[#43AB3C] hover:bg-[#399632] text-white px-6 py-2.5 rounded-md
+                            shadow-md hover:shadow-lg transition-all duration-200 text-sm font-semibold cursor-pointer flex items-center justify-center gap-2">
+                            <span>Simpan Jawaban</span>
+                            ${selectedIndex < questions.length - 1 ? '<i class="fa-solid fa-arrow-right text-xs"></i>' : ''}
                         </button>
                     `;
+
+                const btnPrevHTML = selectedIndex > 0
+                    ? `
+                        <button type="button" class="btn-nav-question flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-100 px-5 py-2.5 rounded-md font-semibold text-sm transition cursor-pointer" data-index="${selectedIndex - 1}">
+                            <i class="fa-solid fa-arrow-left text-xs"></i> Soal Sebelumnya
+                        </button>
+                    `
+                    : '';
+
+                const btnNextHTML = selectedIndex < questions.length - 1
+                    ? `
+                        <button type="button" class="btn-nav-question flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-100 px-5 py-2.5 rounded-md font-semibold text-sm transition cursor-pointer" data-index="${selectedIndex + 1}">
+                            Soal Selanjutnya <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    `
+                    : '';
 
                 let btnMarkAnswerHTML = '';
 
@@ -822,7 +833,7 @@ function studentFormAssessment(selectedIndex = 0) {
                 }
 
                 const form = `
-                    <form id="assessment-test-submit-form">
+                    <form id="assessment-test-submit-form" translate="no" class="notranslate">
                         <div class="max-w-450 mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-14 items-stretch">
     
                             <!-- ================= LEFT ================= -->
@@ -855,13 +866,13 @@ function studentFormAssessment(selectedIndex = 0) {
                                     </div>
     
                                     <!-- Question -->
-                                    <div class="question-content mb-6 text-sm sm:text-[15px] leading-relaxed text-gray-700">
+                                    <div class="question-content notranslate mb-6 text-sm sm:text-[15px] leading-relaxed text-gray-700" translate="no">
                                         <div class="mb-4 list-style">${questionTextOnly}</div>
                                         <div class="list-style">${questionImageAndTextAfter}</div>
                                     </div>
     
                                     <!-- Answer -->
-                                    <div class="submit-answer-type space-y-4 grow">
+                                    <div class="submit-answer-type notranslate space-y-4 grow" translate="no">
                                         ${submitAnswerType}
                                     </div>
     
@@ -875,7 +886,11 @@ function studentFormAssessment(selectedIndex = 0) {
                                     <input type="hidden" name="status_attempt" id="status_attempt" value="submitted">
     
                                     <!-- Buttons -->
-                                    <div class="flex flex-col sm:flex-row sm:justify-end items-stretch sm:items-center gap-3 sm:gap-6 mt-8 pt-6 border-t border-gray-100">
+                                    <div class="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 sm:gap-4 mt-8 pt-6 border-t border-gray-100">
+                                        <div>
+                                            ${btnPrevHTML}
+                                        </div>
+                                        <div class="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
                                         ${buttonCorrectOrWrongHTML}
                                     
                                         ${explanationButtonHTML}
@@ -883,7 +898,10 @@ function studentFormAssessment(selectedIndex = 0) {
                                         ${btnMarkAnswerHTML}
     
                                         ${submitButtonAnswerHTML}
+
+                                        ${btnNextHTML}
                                     </div>
+                                </div>
     
                                 </div>
                             </div>
@@ -1022,6 +1040,16 @@ function studentFormAssessment(selectedIndex = 0) {
                     studentFormAssessment(index);
                 });
 
+                $(document).off('click', '.btn-nav-question').on('click', '.btn-nav-question', function (e) {
+                    e.preventDefault();
+                    saveQuestionDuration();
+                    const targetIndex = parseInt($(this).data('index'));
+                    if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < questions.length) {
+                        currentQuestionIndex = targetIndex;
+                        studentFormAssessment(targetIndex);
+                    }
+                });
+
                 // Inisialisasi CKEditor jika ada
                 const editorContainer = document.getElementById('container-assessment-test-form');
                 const uploadUrl = editorContainer.getAttribute('data-upload-url');
@@ -1097,6 +1125,23 @@ function studentFormAssessment(selectedIndex = 0) {
                 $('#btn-submit-exit-assessment-test').show();
                 $('#empty-message-assessment-form').show();
             }
+}
+
+function studentFormAssessment(selectedIndex = 0, forceFetch = false) {
+
+    if (!containerFormAssessment.length) return;
+
+    if (cachedFormResponse && !forceFetch) {
+        renderAssessmentFormContent(selectedIndex, cachedFormResponse);
+        return;
+    }
+
+    $.ajax({
+        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}`,
+        method: 'GET',
+        success: function (response) {
+            cachedFormResponse = response;
+            renderAssessmentFormContent(selectedIndex, cachedFormResponse);
         }
     });
 }
@@ -1277,12 +1322,6 @@ $(document).on('change', 'input[name^="pg_kompleks_"]', function () {
     $('#error-answer_value').text('');
 });
 
-$(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', function (e) {
-    const btn = $(this);
-    const status = btn.text().toLowerCase().includes('tandai') ? 'draft' : 'submitted';
-    $('#status_answer').val(status);
-});
-
 function successAssessmentTest() {
     Swal.fire({
         icon: 'success',
@@ -1304,43 +1343,68 @@ function resetQuestionDuration(questionId) {
     $('#answer_duration').val(0);
 }
 
-let isProcessing = false;
-
-// Submit form jawaban
+// Submit form jawaban (Simpan Jawaban & Tandai Jawaban di Background)
 $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', function (e) {
     e.preventDefault();
-    if (isProcessing) return; // Abaikan jika sedang proses
 
-    isProcessing = true; // Tandai sedang diproses
+    const btn = $(this);
+    const statusAnswer = btn.data('status-answer') || (btn.text().toLowerCase().includes('tandai') ? 'draft' : 'submitted');
 
-    const containerFormAssessment = $('#container-assessment-test-form');
-    const role = containerFormAssessment.data('role');
-    const schoolName = containerFormAssessment.data('school-name');
-    const schoolId = containerFormAssessment.data('school-id');
-    const curriculumId = containerFormAssessment.data('curriculum-id');
-    const mapelId = containerFormAssessment.data('mapel-id');
-    const assessmentTypeId = containerFormAssessment.data('assessment-type-id');
-    const semester = containerFormAssessment.data('semester');
-    const assessmentId = containerFormAssessment.data('assessment-id');
+    const form = $('#assessment-test-submit-form')[0];
+    if (!form) return;
 
-    const status = $(this).data('status-answer'); // draft / submitted
-    const statusAnswer = status;
+    const formData = new FormData(form);
+    formData.set('status_answer', statusAnswer);
+
+    const questionId = formData.get('school_assessment_question_id');
+    const answerVal = formData.get('answer_value');
+
+    // Validasi: jika 'submitted', jawaban tidak boleh kosong
+    if (statusAnswer === 'submitted' && (!answerVal || answerVal.trim() === '' || answerVal === '[]' || answerVal === '{}')) {
+        $('#error-answer_value').text('Harap pilih atau isi jawaban terlebih dahulu.');
+        return;
+    }
+
+    $('#error-answer_value').text('');
 
     saveQuestionDuration();
+    stopQuestionTimer();
+    resetQuestionDuration(questionId);
 
-    const form = $('#assessment-test-submit-form')[0]; // ambil DOM Form-nya
-    const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
-
-    formData.append('status_answer', statusAnswer);
     const totalQuestions = questions.length;
     const totalSubmitted = Object.values(questionsAnswer).filter(q => q.status_answer === 'submitted').length;
     if (totalSubmitted + 1 === totalQuestions && statusAnswer === 'submitted') {
         formData.append('total_exam_duration', getTotalExamDuration());
     }
 
-    const btn = $(this);
-    btn.prop('disabled', true);
+    // 1. Optimistic Local Update
+    let parsedVal = answerVal;
+    try {
+        parsedVal = JSON.parse(answerVal);
+    } catch (err) {}
 
+    const updatedAnswerData = {
+        school_assessment_question_id: questionId,
+        status_answer: statusAnswer,
+        answer_value: parsedVal,
+        is_correct: questionsAnswer[questionId]?.is_correct ?? false,
+    };
+
+    questionsAnswer[questionId] = updatedAnswerData;
+    if (cachedFormResponse && cachedFormResponse.questionsAnswer) {
+        cachedFormResponse.questionsAnswer[questionId] = updatedAnswerData;
+    }
+
+    // 2. Berpindah ke soal berikutnya secara otomatis jika Simpan Jawaban
+    const shouldGoNext = (statusAnswer === 'submitted' && currentQuestionIndex < questions.length - 1);
+    if (shouldGoNext) {
+        currentQuestionIndex = currentQuestionIndex + 1;
+    }
+
+    // Render soal seketika (0ms delay dari cache memori)
+    studentFormAssessment(currentQuestionIndex);
+
+    // 3. Simpan ke database di background secara asynchronous
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/answer`,
         method: 'POST',
@@ -1351,38 +1415,19 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
         processData: false,
         contentType: false,
         success: function (response) {
-            stopQuestionTimer();
-            resetQuestionDuration(formData.get('school_assessment_question_id'));
+            if (response.is_all_answered) {
+                examFinished = true;
+                stopTimer();
+                stopQuestionTimer();
 
-            $.get(`/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}`, function (data) {
+                localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
+                localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
+                localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
 
-                const totalQuestions = data.data.length;
-
-                const totalSubmitted = Object.values(data.questionsAnswer).filter(q => q.status_answer === 'submitted').length;
-
-                if (totalSubmitted === totalQuestions) {
-
-                    examFinished = true;
-
-                    stopTimer(); // hentikan timer global
-                    stopQuestionTimer(); // hentikan timer per pertanyaan
-
-                    localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-                    localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
-
-                    successAssessmentTest();
-                    studentFormAssessment(currentQuestionIndex);
-                    saveQuestionDuration();
-
-                    localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
-
-                } else {
-                    studentFormAssessment(currentQuestionIndex);
-                }
-            });
-
-            isProcessing = false;
-            btn.prop('disabled', false);
+                successAssessmentTest();
+                studentFormAssessment(currentQuestionIndex, true);
+                saveQuestionDuration();
+            }
         },
         error: function (xhr) {
             if (xhr.status === 422) {
@@ -1390,11 +1435,8 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
 
                 // EXAM EXPIRED
                 if (response?.status === 'expired') {
-
                     finalExamDuration = getTotalExamDuration();
-
                     autoSubmitUnSavedQuestions(function () {
-
                         Swal.fire({
                             icon: 'warning',
                             title: 'Waktu Assessment Habis',
@@ -1402,29 +1444,28 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
                             allowOutsideClick: false,
                             allowEscapeKey: false
                         }).then(() => {
-                            location.reload(); // atau redirect ke halaman selesai
+                            location.reload();
                         });
-
                     });
-
                     return;
                 }
 
-                // VALIDATION ERROR
-                if (xhr.status === 422 && response?.errors) {
-                    const errors = response.errors;
-
-                    $.each(errors, function (field, messages) {
+                if (response?.errors) {
+                    $.each(response.errors, function (field, messages) {
                         $(`#error-${field}`).text(messages[0]);
                     });
-
                 }
             }
 
-            $('#status_answer').val('draft');
-
-            isProcessing = false;
-            btn.prop('disabled', false);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyimpan',
+                text: 'Terjadi kendala saat menyimpan jawaban ke server. Silakan periksa kembali jawaban Anda.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000
+            });
         }
     });
 });

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" class="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no" class="notranslate light" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
     <meta name="color-scheme" content="light">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">

@@ -51,6 +51,7 @@ class BankSoalWordImportService
         $allWordValidationErrors = [];
         $validSoalData = []; 
         $uploadedFile = $request->file('bulkUpload-lms');
+        $fileName = $uploadedFile ? $uploadedFile->getClientOriginalName() : null;
 
         $docxPath = storage_path('app/tmp_soal.docx');
         $outputHtmlPath = storage_path('app/converted_soal.html');
@@ -375,6 +376,7 @@ class BankSoalWordImportService
             'docx_path'          => $docxPath,
             'output_html_path'   => $outputHtmlPath,
             'media_images'       => $mediaImages,
+            'file_name'          => $fileName,
         ];
     }
 
@@ -407,6 +409,7 @@ class BankSoalWordImportService
         $validSoalData = $result['valid_soal_data'];
         $docxPath = $result['docx_path'];
         $outputHtmlPath = $result['output_html_path'];
+        $fileName = $result['file_name'] ?? ($request->file('bulkUpload-lms')?->getClientOriginalName());
 
         Log::info("[BankSoalImport] Memulai transaksi insert ke database. Total soal valid: " . count($validSoalData));
         $createBankSoal = null;
@@ -416,17 +419,19 @@ class BankSoalWordImportService
             $answers = $normalizeAnswers($dataSoal['ANSWER'] ?? null);
             $schoolPartnerId = $request->school_partner_id;
 
-            // 1. Ubah query exists() menjadi first(['id']) untuk mengambil data ID
-            $existingQuestionQuery = $schoolPartnerId
-                ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)
-                : LmsQuestionBank::where('questions', $dataSoal['QUESTION']);
+            // Lewati pengecekan duplikat jika tipe soal adalah PG_KOMPLEKS atau ESSAY
+            if (!in_array($type, ['pg_kompleks', 'essay', 'mcq'])) {
+                $existingQuestionQuery = $schoolPartnerId
+                    ? LmsQuestionBank::where('questions', $dataSoal['QUESTION'])->where('school_partner_id', $schoolPartnerId)
+                    : LmsQuestionBank::where('questions', $dataSoal['QUESTION']);
 
-            $existingQuestion = $existingQuestionQuery->first(['id']);
+                $existingQuestion = $existingQuestionQuery->first(['id']);
 
-            // 2. Tampilkan ID database dari variabel $existingQuestion->id
-            if ($existingQuestion) {
-                Log::info("[BankSoalImport] Soal urutan dokumen $index terdeteksi duplikat dengan data di database (DB ID: {$existingQuestion->id}), dilewati.");
-                continue;
+                // Tampilkan ID database dari variabel $existingQuestion->id
+                if ($existingQuestion) {
+                    Log::info("[BankSoalImport] Soal urutan dokumen $index terdeteksi duplikat dengan data di database (DB ID: {$existingQuestion->id}), dilewati.");
+                    continue;
+                }
             }
 
             $queryStatus = LmsQuestionBank::where('tipe_soal', trim(strip_tags($dataSoal['TYPE'])))->where('status_bank_soal', 'Unpublish');
@@ -455,6 +460,7 @@ class BankSoalWordImportService
                     'status_bank_soal'  => $statusBankSoal,
                     'question_source'   => $schoolPartnerId ? 'school' : 'default',
                     'question_category' => $request->question_category,
+                    'file_name'         => $fileName,
                 ]);
                 Log::info("[BankSoalImport] Soal insert sukses (ID: {$createBankSoal->id}, Tipe: {$type}).");
             } catch (\Exception $e) {
