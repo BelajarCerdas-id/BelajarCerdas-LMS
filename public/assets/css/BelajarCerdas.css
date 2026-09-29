@@ -299,6 +299,25 @@ input[type="checkbox"]:checked+label.checked-option {
     background-color: rgba(0, 0, 0, 0.09);
 }
 
+.session-hourglass.animate {
+    animation: hourglass-flip 2.5s ease-in-out infinite;
+    transform-origin: center;
+}
+
+@keyframes hourglass-flip {
+    0%, 35% {
+        transform: rotate(0deg);
+    }
+
+    50%, 85% {
+        transform: rotate(180deg);
+    }
+
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
 .progress-shimmer {
 
     background: linear-gradient(90deg,

@@ -17,6 +17,7 @@ class StudentTkaAttempt extends Model
         'student_id',
         'kelas_id',
         'mapel_id',
+        'tka_tryout_session_id',
         'question_order',
         'total_question',
         'status',
@@ -26,6 +27,11 @@ class StudentTkaAttempt extends Model
     public function StudentTkaAnswer()
     {
         return $this->hasMany(StudentTkaAnswer::class, 'attempt_id');
+    }
+
+    public function StudentTkaTryoutAnswer()
+    {
+        return $this->hasMany(TkaTryoutAnswer::class, 'attempt_id');
     }
 
     public function UserAccount()
@@ -41,5 +47,10 @@ class StudentTkaAttempt extends Model
     public function Mapel()
     {
         return $this->belongsTo(Mapel::class, 'mapel_id');
+    }
+
+    public function TkaTryoutSession()
+    {
+        return $this->belongsTo(TkaTryoutSession::class, 'tka_tryout_session_id');
     }
 }

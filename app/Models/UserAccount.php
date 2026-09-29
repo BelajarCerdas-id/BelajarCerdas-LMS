@@ -173,10 +173,35 @@ class UserAccount extends Authenticatable
     {
         return $this->hasMany(LmsContentRead::class, 'student_id');
     }
-    
+
     public function SchoolFoundationProfile()
     {
         return $this->hasOne(SchoolFoundationProfile::class, 'user_id');
+    }
+
+    public function TkaTryoutPeriod()
+    {
+        return $this->hasMany(TkaTryoutPeriod::class, 'user_id');
+    }
+
+    public function TkaTryouPeriodSchOverride()
+    {
+        return $this->hasMany(TkaTryoutPeriodSchOverride::class, 'user_id');
+    }
+
+    public function TkaTryoutSession()
+    {
+        return $this->hasMany(TkaTryoutSession::class, 'user_id');
+    }
+
+    public function TkaTryoutSessionSubject()
+    {
+        return $this->hasMany(TkaTryoutSubject::class, 'user_id');
+    }
+
+    public function TkaTryoutSessionStudent()
+    {
+        return $this->hasMany(TkaTryoutSessionStudent::class, 'student_id');
     }
 
     public function UserActivities()

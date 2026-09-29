@@ -112,9 +112,14 @@ public function topikMateri()
     {
         return $this->hasMany(StudentTkaAttempt::class, 'mapel_id');
     }
-    
+
     public function TeacherDailyAgenda()
     {
         return $this->hasMany(TeacherDailyAgenda::class, 'school_class_id');
+    }
+    
+    public function SchoolTkaTryoutSessionSubject()
+    {
+        return $this->hasMany(TkaTryoutSubject::class, 'subject_id');
     }
 }

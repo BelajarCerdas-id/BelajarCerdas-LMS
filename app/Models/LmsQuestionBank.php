@@ -49,6 +49,11 @@ class LmsQuestionBank extends Model
         return $this->hasMany(StudentTkaAnswer::class, 'question_id');
     }
 
+    public function StudentTkaTryoutAnswer()
+    {
+        return $this->hasMany(TkaTryoutAnswer::class, 'question_id');
+    }
+
     public function UserAccount()
     {
         return $this->belongsTo(UserAccount::class, 'user_id');

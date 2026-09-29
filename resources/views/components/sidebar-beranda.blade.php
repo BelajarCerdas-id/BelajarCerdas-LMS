@@ -48,6 +48,18 @@
                     </a>
                 </li>
 
+                <li class="list-menu-sidebar-dekstop-student">
+                    <a href="{{ route('lms.student.tka-tryout-period.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                        ]) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
+                        <i class="fa-solid fa-stopwatch"></i>
+                        <span>Tryout Tka</span>
+                    </a>
+                </li>
+                
                 <!-- Menu Library -->
                 <!-- LIBRARY -->
                 <li class="list-item">
@@ -64,7 +76,9 @@
 
                         <!-- MAIN MENU -->
                         <a href="{{ route('teacher.library') }}"
-                        class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
+                        class="{{ $isLibraryActive
+                                ? 'cursor-pointer flex items-center justify-between px-4 py-3 bg-[#FFFFFF26] rounded-lg transition'
+                                : 'cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition' }}">
 
                             <div class="flex items-center gap-3">
                                 <i class="fa-solid fa-book"></i>
@@ -111,8 +125,8 @@
                             </a>
                         </div>
                     </div>
-                    </li>
-                </ul>
+                </li>
+            </ul>
 
             <!-- FOOTER -->
             <div class="mt-auto">
@@ -352,92 +366,89 @@
                     </li>
 
                     <li class="list-menu-sidebar-mobile-student">
-                        <a href="{{ route('lms.student.view', [ 
-                            'role' => Auth::user()->role,
+                        <a href="{{ route('lms.student.view', [
+                            'role'       => Auth::user()->role,
                             'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
-                            'schoolId' => Auth::user()->StudentProfile->SchoolPartner->id
+                            'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
                         ]) }}"
                         class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
                             <i class="fa-solid fa-school-flag"></i>
                             <span>LMS</span>
                         </a>
                     </li>
-                    <li class="list-menu-sidebar-dekstop-student">
+
+                    <li class="list-menu-sidebar-mobile-student">
+                        <a href="{{ route('lms.student.tka-tryout-period.view', [
+                            'role'       => Auth::user()->role,
+                            'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
+                            'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
+                        ]) }}"
+                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+                            <i class="fa-solid fa-stopwatch"></i>
+                            <span>Tryout TKA</span>
+                        </a>
+                    </li>
+
+                    <!-- LIBRARY -->
+                    @php
+                        $isLibraryActive =
+                            request()->routeIs('student.library') ||
+                            request()->routeIs('teacher.library') ||
+                            request()->routeIs('teacher.library.ppt') ||
+                            request()->routeIs('teacher.library.lks') ||
+                            request()->routeIs('teacher.library.video') ||
+                            request()->routeIs('student.tka-subject-list.view');
+                    @endphp
+
+                    <li class="list-menu-sidebar-mobile-student">
                         <div class="flex flex-col">
 
-                            <!-- MENU LIBRARY -->
-                            <a href="{{ route('student.library') }}" 
-                            class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-                            
+                            <!-- MAIN MENU LIBRARY -->
+                            <a href="{{ route('student.library') }}"
+                            class="flex items-center justify-between gap-3 px-4 py-3 text-md hover:bg-gray-200 transition">
+
                                 <div class="flex items-center gap-3">
                                     <i class="fa-solid fa-book"></i>
                                     <span>Library</span>
                                 </div>
 
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                                <i class="fa-solid fa-chevron-down text-xs {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
                             </a>
-                        <!-- LIBRARY -->
-                        <li class="list-item">
 
-                            <div class="flex flex-col">
+                            <!-- DROPDOWN LIBRARY -->
+                            <div class="{{ $isLibraryActive
+                                    ? 'ml-7 mt-1 flex flex-col gap-1'
+                                    : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
 
-                                @php
-                                    $isLibraryActive =
-                                        request()->routeIs('teacher.library') ||
-                                        request()->routeIs('teacher.library.ppt') ||
-                                        request()->routeIs('teacher.library.lks') ||
-                                        request()->routeIs('teacher.library.video') ||
-                                        request()->routeIs('student.tka-subject-list.view');
-                                @endphp
-
-                                <!-- MAIN MENU -->
-                                <a href="{{ route('teacher.library') }}"
-                                class="cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition">
-
-                                    <div class="flex items-center gap-3">
-                                        <i class="fa-solid fa-book"></i>
-                                        <span>Library</span>
-                                    </div>
-
-                                    <i class="fa-solid fa-chevron-down text-xs
-                                        {{ $isLibraryActive ? 'rotate-180' : '' }}"></i>
-
+                                <a href="{{ route('teacher.library.ppt') }}"
+                                class="{{ request()->routeIs('teacher.library.ppt')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#0071BC] text-white'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-gray-200' }}">
+                                    Power Point
                                 </a>
 
-                                <!-- DROPDOWN -->
-                                <div class="{{ $isLibraryActive
-                                        ? 'ml-7 mt-1 flex flex-col gap-1'
-                                        : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+                                <a href="{{ route('teacher.library.lks') }}"
+                                class="{{ request()->routeIs('teacher.library.lks')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#0071BC] text-white'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-gray-200' }}">
+                                    LKPD
+                                </a>
 
-                                    <a href="{{ route('teacher.library.ppt') }}"
-                                    class="{{ request()->routeIs('teacher.library.ppt')
-                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                        Power Point
-                                    </a>
+                                <a href="{{ route('teacher.library.video') }}"
+                                class="{{ request()->routeIs('teacher.library.video')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#0071BC] text-white'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-gray-200' }}">
+                                    Video
+                                </a>
 
-                                    <a href="{{ route('teacher.library.lks') }}"
-                                    class="{{ request()->routeIs('teacher.library.lks')
-                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                        LKPD
-                                    </a>
-
-                                    <a href="{{ route('teacher.library.video') }}"
-                                    class="{{ request()->routeIs('teacher.library.video')
-                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                        Video
-                                    </a>
-
-                                    <a href="{{ route('student.tka-subject-list.view', [
-                                            'role' => Auth::user()->role,
-                                        ]) }}"
-                                    class="{{ request()->routeIs('student.tka-subject-list.view')
-                                            ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                            : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
-                                        Simulasi Soal TKA
-                                    </a>
+                                <a href="{{ route('student.tka-subject-list.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}"
+                                class="{{ request()->routeIs('student.tka-subject-list.view')
+                                        ? 'px-3 py-2 text-sm rounded-md bg-[#0071BC] text-white'
+                                        : 'px-3 py-2 text-sm rounded-md hover:bg-gray-200' }}">
+                                    Simulasi Soal TKA
+                                </a>
                             </div>
                         </div>
                     </li>
@@ -468,13 +479,37 @@
         </a>
         <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
             <li class="list-item pb-2 px-1">
-                <div class="content-menu flex items-center gap-3 px-3 py-2">
+                <div class="content-menu flex items-center gap-2.5 px-3 py-2">
                     <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
                     <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="link-href text-[14px]">
                         Beranda
                     </a>
                 </div>
             </li>
+
+                <li class="list-item pb-4">
+                    <div class="dropdown-menu">
+                        <div class="content-menu text-sm flex items-center gap-2.5 px-3.75">
+                            <div class="">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[14px]">Management Curriculum</a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item pb-4">
+                    <div class="dropdown-menu">
+                        <div class="content-menu text-sm flex items-center gap-3 px-3.75">
+                            <div class="">
+                                <i class="fa-solid fa-stopwatch"></i>
+                            </div>
+                            <a href="{{ route('lms.office.tka-tryout-period-management.view', [
+                                'role' => Auth::user()->role
+                            ]) }}" class="link-href flex flex-col text-[14px]">Tryout TKA</a>
+                        </div>
+                    </div>
+                </li>
 
             <!-- Menu Analytics -->
             <li class="list-item pb-2 px-1">
@@ -503,7 +538,7 @@
                         <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
                             <i class="fa-solid fa-book text-[14px]"></i>
                             <span class="text-[14px]">Library</span>
-                            <i class="fas fa-chevron-down absolute right-0 text-[14px] rotate-180"></i>
+                            <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
                         </div>
 
                         <div class="content-dropdown px-2 w-full !block">
@@ -517,17 +552,6 @@
                                 class="link-href flex py-2 text-[13px]">
                                 Topik Management
                             </a>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="list-item pb-4">
-                    <div class="dropdown-menu">
-                        <div class="content-menu text-sm flex items-center gap-3 px-3.75">
-                            <div class="">
-                                <i class="fa-solid fa-layer-group"></i>
-                            </div>
-                            <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[14px]">Management Curriculum</a>
                         </div>
                     </div>
                 </li>
@@ -827,6 +851,30 @@
 
                     <li class="list-item m-2 pb-3">
                         <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
+                                <div class="">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-4">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3">
+                                <div class="">
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                </div>
+                                <a href="{{ route('lms.office.tka-tryout-period-management.view', [
+                                    'role' => Auth::user()->role
+                                ]) }}" class="link-href flex flex-col text-[13px]">Tryout TKA</a>
+                            </div>
+                        </div>
+                    </li>
+                    
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
                             <div class="content-menu text-sm flex items-center gap-3 {{ request()->routeIs('lms.office.analytics.view') ? 'text-[#0071BC] font-bold' : '' }}">
                                 <i class="fa-solid fa-chart-line"></i>
                                 <a href="{{ route('lms.office.analytics.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Site Analytics</a>
@@ -843,37 +891,26 @@
                         </div>
                     </li>
 
-                        <li class="list-item m-2 pb-3 px-0.5">
-                            <div class="dropdown-menu w-full flex flex-col items-start">
+                    <li class="list-item m-2 pb-3 px-0.5">
+                        <div class="dropdown-menu w-full flex flex-col items-start">
 
-                                <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
-                                    <i class="fa-solid fa-book text-[14px]"></i>
-                                    <span class="text-[14px]">Library</span>
-                                    <i class="fas fa-chevron-down absolute right-0 text-[14px] rotate-180"></i>
-                                </div>
-
-                                <div class="content-dropdown px-2 w-full !block">
-
-                                    <a href="{{ route('library.administrator') }}"
-                                        class="link-href block py-2 text-[13px]">
-                                        Library
-                                    </a>
-
-                                    <a href="{{ route('topik.management') }}"
-                                        class="link-href flex py-2 text-[13px]">
-                                        Topik Management
-                                    </a>
-                                </div>
+                            <div class="toggle-menu-sidebar w-full flex items-center gap-3.5 relative cursor-pointer">
+                                <i class="fa-solid fa-book text-[14px]"></i>
+                                <span class="text-[14px]">Library</span>
+                                <i class="fas fa-chevron-down absolute right-0 text-[14px]"></i>
                             </div>
-                        </li>
 
-                    <li class="list-item m-2 pb-3">
-                        <div class="dropdown-menu">
-                            <div class="content-menu text-sm flex items-center gap-3">
-                                <div class="">
-                                    <i class="fa-solid fa-layer-group"></i>
-                                </div>
-                                <a href="{{ route('kurikulum.view') }}" class="link-href flex flex-col text-[13px]">Management Curriculum</a>
+                            <div class="content-dropdown px-2 w-full !block">
+
+                                <a href="{{ route('library.administrator') }}"
+                                    class="link-href block py-2 text-[13px]">
+                                    Library
+                                </a>
+
+                                <a href="{{ route('topik.management') }}"
+                                    class="link-href flex py-2 text-[13px]">
+                                    Topik Management
+                                </a>
                             </div>
                         </div>
                     </li>
@@ -3264,6 +3301,14 @@
                                 ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                     Kehadiran & Presensi
                                 </a>
+                                <a href="{{ route('lms.parent.tka-tryout-monitoring.view', [
+                                    'role' => Auth::user()->role,
+                                    'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
+                                    'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                    'studentId' => $studentId
+                                ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                    Hasil Tryout TKA
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -3579,6 +3624,14 @@
                                         'studentId' => $studentId
                                     ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
                                         Kehadiran & Presensi
+                                    </a>
+                                    <a href="{{ route('lms.parent.tka-tryout-monitoring.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->ParentProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->ParentProfile->SchoolPartner->id,
+                                        'studentId' => $studentId
+                                    ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                                        Hasil Tryout TKA
                                     </a>
                                 </div>
                             </div>

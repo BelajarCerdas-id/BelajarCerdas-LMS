@@ -48,15 +48,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\Administrator\FoundationManagementController;
+use App\Http\Controllers\Administrator\TkaTryout\TkaTryoutPeriodController;
+use App\Http\Controllers\Administrator\TkaTryout\TkaTryoutPeriodSchoolOverrideController;
+use App\Http\Controllers\Administrator\TkaTryout\TkaTryoutPeriodSessionController;
+use App\Http\Controllers\Administrator\TkaTryout\TkaTryoutPeriodSubjectController;
 use App\Http\Controllers\Administrator\UserAnalyticsController;
 use App\Http\Controllers\Administrator\AssessmentDebugController;
 use App\Http\Controllers\Foundation\FoundationDashboardController;
 use App\Http\Controllers\Foundation\SchoolUserController;
 use App\Http\Controllers\Foundation\StudentReflectionController;
 use App\Http\Controllers\Foundation\TeacherPerformanceController;
+use App\Http\Controllers\Lms\MajorSubject\MajorSubjectController;
+use App\Http\Controllers\Lms\StudentSubjectSelection\StudentSubjectSelectionController;
 use App\Http\Controllers\OfficeManagementController;
+use App\Http\Controllers\Parent\TkaTryout\ParentTkaTryoutController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\ProfileAccountContorller;
+use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutPeriodController;
+use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutSessionController;
+use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutTestController;
 use App\Http\Controllers\StudentVicePrincipalController;
 use App\Http\Controllers\TeacherDailyAgendaController;
 
@@ -251,6 +261,65 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // OFFICES DASHBOARD
         Route::get('/lms/{role}/dashboard', [DashboardController::class, 'index'])->name('lms.office.dashboard.view');
 
+        // ROUTES TKA TRYOUT MANAGEMENT (Administrator)
+        // tka tryout period maangement
+        // views
+        Route::get('/lms/{role}/tka-tryout-management', [TkaTryoutPeriodController::class, 'index'])->name('lms.office.tka-tryout-period-management.view');
+        Route::get('/lms/{role}/tka-tryout-management/period-form', [TkaTryoutPeriodController::class, 'viewTkaTryoutForm'])->name('lms.office.tka-tryout-period-form.view');
+        Route::get('/lms/{role}/tka-tryout-management/period-school-override-form/{periodId}', [TkaTryoutPeriodSchoolOverrideController::class, 'index'])->name('lms.office.tka-tryout-period-school-override-form.view');
+
+        // load kpi & filter
+        Route::get('/lms/{role}/tka-tryout-management/load-filter', [TkaTryoutPeriodController::class, 'loadFilter'])->name('lms.office.tka-tryout-period-managment.load-filter');
+        Route::get('/lms/{role}/tka-tryout-management/load-kpi', [TkaTryoutPeriodController::class, 'loadKpi'])->name('lms.office.tka-tryout-period-managment.load-kpi');
+
+        // crud
+        Route::post('/lms/{role}/tka-tryout-management/submit-periode-form', [TkaTryoutPeriodController::class, 'tkaTryoutPeriodCreate'])->name('lms.office.tka-tryout-period-submit-form');
+        Route::post('/lms/{role}/tka-tryout-management/update-periode-form/{periodId}', [TkaTryoutPeriodController::class, 'tkaTryoutPeriodUpdate'])->name('lms.office.tka-tryout-period-update-form');
+        Route::post('/lms/{role}/tka-tryout-management/period-school-override-form/{periodOverrideId}/submit', [TkaTryoutPeriodSchoolOverrideController::class, 'tkaTryoutPeriodSchoolOverrideCreate'])->name('lms.office.tka-tryout-period-school-override-form.create');
+        Route::post('/lms/{role}/tka-tryout-management/period-school-override-form/{periodOverrideId}/{schoolOverrideId}/update', [TkaTryoutPeriodSchoolOverrideController::class, 'tkaTryoutPeriodSchoolOverrideUpdate'])->name('lms.office.tka-tryout-period-school-override-form.submit');
+
+        // paginate
+        Route::get('/lms/{role}/tka-tryout-management/paginate', [TkaTryoutPeriodController::class, 'paginateTkaTryoutPeriod'])->name('lms.office.tka-tryout-period-managment.paginate');
+        Route::get('/lms/{role}/tka-tryout-management/period-school-override/{periodOverrideId}/paginate', [TkaTryoutPeriodController::class, 'paginateTkaTryoutPeriodSchoolOVerride'])->name('lms.office.tka-tryout-period-school-override.paginate');
+
+        // tka tryout period session
+        // views (defaul & override)
+        Route::get('/lms/{role}/tka-tryout-management/session-form/{periodId}', [TkaTryoutPeriodSessionController::class, 'index'])->name('lms.office.tka-tryout-session-form.view');
+        Route::get('/lms/{role}/tka-tryout-management/session-form/{periodOverrideId}/school-override', [TkaTryoutPeriodSessionController::class, 'indexOverride'])->name('lms.office.tka-tryout-session-form-school-override.view');
+        Route::get('/lms/{role}/tka-tryout-management/session-form/{periodId}/manage-students/{sessionId}', [TkaTryoutPeriodSessionController::class, 'manageStudent'])->name('lms.office.tka-tryout-session-manage-student.view');
+
+        // manage user form
+        Route::get('/lms/{role}/tka-tryout-management/session-form/{periodId}/manage-students/{sessionId}/{schoolId}/form', [TkaTryoutPeriodSessionController::class, 'manageStudentForm'])->name('lms.office.tka-tryout-session-manage-student.form');
+
+        // crud
+        Route::post('/lms/{role}/tka-tryout-management/session-form/{periodId}/submit', [TkaTryoutPeriodSessionController::class, 'tkaTryoutPeriodSessionCreate'])->name('lms.office.tka-tryout-session-submit-form.create');
+        Route::post('/lms/{role}/tka-tryout-management/session-form/{periodOverrideId}/override/submit', [TkaTryoutPeriodSessionController::class, 'tkaTryoutPeriodSessionOverrideCreate'])->name('lms.office.tka-tryout-override-session-submit-form.create');
+        Route::post('/lms/{role}/tka-tryout-management/session-form/{periodId}/{sessionId}/update', [TkaTryoutPeriodSessionController::class, 'tkaTryoutPeriodSessionUpdate'])->name('lms.office.tka-tryout-session-submit-form.update');
+        Route::post('/lms/{role}/tka-tryout-management/session-form/override/{periodOverrideId}/{sessionId}/update', [TkaTryoutPeriodSessionController::class, 'tkaTryoutPeriodSessionOverrideUpdate'])->name('lms.office.tka-tryout-session-override.update');
+        Route::post('/lms/{role}/tka-tryout-management/session-form/{periodId}/manage-students/{sessionId}/submit-form', [TkaTryoutPeriodSessionController::class, 'manageStudentSubmitForm'])->name('lms.office.tka-tryout-session-manage-student.submit-form');
+
+        // paginate
+        Route::get('/lms/{role}/tka-tryout-management/session/{periodId}/paginate', [TkaTryoutPeriodSessionController::class, 'paginateTkaTryoutPeriodSession'])->name('lms.office.tka-tryout-session.paginate');
+        Route::get('/lms/{role}/tka-tryout-management/session/override/{periodOverrideId}/paginate', [TkaTryoutPeriodSessionController::class, 'paginateTkaTryoutPeriodSessionOverride'])->name('lms.office.tka-tryout-session-override.paginate');
+
+        // tka tryout period subject
+        // views
+        Route::get('/lms/{role}/tka-tryout-management/assign-subject-form/{periodId}', [TkaTryoutPeriodSubjectController::class, 'index'])->name('lms.office.tka-tryout-subject-form.view');
+        Route::get('/lms/{role}/tka-tryout-management/assign-subject-form/{periodOverrideId}/school-override', [TkaTryoutPeriodSubjectController::class, 'indexOverride'])->name('lms.office.tka-tryout-subject-form-school-override.view');
+
+        // form
+        Route::get('/lms/{role}/tka-tryout-management/assign-subject-form/{periodId}/load-form', [TkaTryoutPeriodSubjectController::class, 'tkaTryoutPeriodSubjectForm'])->name('lms.office.tka-tryout-subject-form.load-data');
+
+        // crud
+        Route::post('/lms/{role}/tka-tryout-management/assign-subject-form/{periodId}/submit-form', [TkaTryoutPeriodSubjectController::class, 'tkaTryoutPeriodSubjectSubmitForm'])->name('lms.office.tka-tryout-subject-form.submit');
+        Route::post('/lms/{role}/tka-tryout-management/assign-subject-form/{periodId}/{tkaTryoutSubjectId}/edit', [TkaTryoutPeriodSubjectController::class, 'tkaTryoutPeriodSubjectEdit'])->name('lms.office.tka-tryout-subject.edit');
+        Route::put('/lms/{role}/tka-tryout-management/assign-subject-form/{periodId}/{tkaTryoutSubjectId}/activate', [TkaTryoutPeriodSubjectController::class, 'tkaTryoutPeriodSubjectOverrideActivate'])->name('lms.office.tka-tryout-subject.activate');
+        Route::put('/lms/{role}/tka-tryout-management/assign-subject-form/override/{periodOverrideId}/{tkaTryoutSubjectId}/activate', [TkaTryoutPeriodSubjectController::class, 'tkaTryoutPeriodSubjectOverrideActivate'])->name('lms.office.tka-tryout-subject-override.activate');
+
+        // paginate
+        Route::get('/lms/{role}/tka-tryout-management/subject-list/{periodId}/paginate', [TkaTryoutPeriodSubjectController::class, 'paginateTkaTryoutPeriodSubject'])->name('lms.office.tka-tryout-subject.paginate');
+        Route::get('/lms/{role}/tka-tryout-management/subject-list/override/{periodOverrideId}/paginate', [TkaTryoutPeriodSubjectController::class, 'paginateTkaTryoutPeriodOverrideSubject'])->name('lms.office.tka-tryout-override-subject.paginate');
+
         // =========================================================
         // SITE ADMIN ANALYTICS DASHBOARD & TRACKING APIs
         // =========================================================
@@ -420,6 +489,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::put('/lms/school-subscription/management-class/{id}/activate-major', [MajorController::class, 'lmsActivateMajor'])->name('lms.major.activate');
         Route::put('/lms/school-subscription/management-class/{id}/activate-class', [ClassController::class, 'lmsActivateClass'])->name('lms.class.activate');
         Route::put('/lms/school-subscription/management-class/{id}/activate-student-in-class', [StudentSchoolClassController::class, 'lmsActivateStudentInClass'])->name('lms.studentInClass.activate');
+
+        // routes load subject conversion
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-class/{classId}/management-students/load-subject-conversion', [StudentSchoolClassController::class, 'loadSubjectConversion'])->name('lms.managementStudents.loadSubjectConversion');
     
         // routes promote class, repeat class, move class, move major
         Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/promote-class', [StudentSchoolClassController::class, 'lmsManagementPromoteClass'])->name('lms.managementPromoteClass.create');
@@ -458,6 +530,26 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // paginate users by major and no major
         Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-class/{classId}/management-majors/{majorId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.major');
         Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/role-account/{managedRole}/management-class/{classId}/management-students/paginate', [StudentSchoolClassController::class, 'paginateLmsSchoolSubscriptionUsers'])->name('lms.SchoolSubscriptionUsers.paginate.noMajor');
+
+        // ROUTES MAJOR SUBJECT MANAGEMENT
+        // views
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/major-subject-management', [MajorSubjectController::class, 'index'])->name('lms.majorSubjectManagement.view.schoolPartner');
+
+        // load data form
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/major-subject-management/load-data-form', [MajorSubjectController::class, 'loadMajorSubjectForm'])->name('lms.majorSubjectManagement.loadDataForm');
+
+        // crud
+        Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/major-subject-management/submit-form', [MajorSubjectController::class, 'majorSubjectSubmitForm'])->name('lms.majorSubjectManagement.submitForm');
+
+        // ROUTES STUDENT SUBJECT SELECTION
+        // views
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/student-subject-selection', [StudentSubjectSelectionController::class, 'index'])->name('lms.studentSubjectSelection.view.schoolPartner');
+
+        // load data form
+        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/student-subject-selection/load-data-form', [StudentSubjectSelectionController::class, 'loadStudentSubjectSelectionForm'])->name('lms.studentSubjectSelection.loadDataForm');
+
+        // crud
+        Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/student-subject-selection/submit-form', [StudentSubjectSelectionController::class, 'studentSubjectSelectionSubmitForm'])->name('lms.studentSubjectSelection.submitForm');
     
         // =========================================================
         // ROUTES QUESTION BANK MANAGEMENT
@@ -763,6 +855,37 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         
         // polling siswa
         Route::post('/lms/student/polling/vote', [StudentDashboardController::class, 'submitVote'])->name('lms.studentPolling.vote');
+
+        // ROUTES TRYOUT TKA (STUDENT)
+        // PERIOD LIST
+        // views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list', [StudentTkaTryoutPeriodController::class, 'index'])->name('lms.student.tka-tryout-period.view');
+
+        // check period
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/check', [StudentTkaTryoutPeriodController::class, 'checkPeriod'])->name('student.tka-tryout.period.check');
+
+        // paginate
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/paginate', [StudentTkaTryoutPeriodController::class, 'paginatePeriodList'])->name('lms.student.tka-tryout-period.paginate');
+
+        // SESSION LIST
+        // views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list', [StudentTkaTryoutSessionController::class, 'index'])->name('lms.student.tka-tryout-session.view');
+
+        // paginate
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list/paginate', [StudentTkaTryoutSessionController::class, 'paginateSessionList'])->name('lms.student.tka-tryout-session.paginate');
+
+        // TRYOUT TKA TEST
+        // views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list/{sessionId}/subject/{subjectId}/test', [StudentTkaTryoutTestController::class, 'index'])->name('lms.student.tka-tryout-test.view');
+
+        // form
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list/{sessionId}/subject/{subjectId}/test/form', [StudentTkaTryoutTestController::class, 'studentTkaTryoutTestForm'])->name('lms.student.tka-tryout-test.form');
+
+        // start test
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list/{sessionId}/subject/{subjectId}/test/form/start', [StudentTkaTryoutTestController::class, 'studentTkaTryoutStartTest'])->name('lms.student.tka-tryout-test.start');
+
+        // submit answer
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/tryout-tka/period-list/{periodId}/session-list/{sessionId}/subject/{subjectId}/test/form/submit-answer/{attemptId}', [StudentTkaTryoutTestController::class, 'studentTkaTryoutSubmitAnswer'])->name('lms.student.tka-tryout-test.submit-answer');
     
         // =========================================================
         // ROUTES TEACHER LMS
@@ -1058,7 +1181,16 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::get('/ortu/kehadiran/student/{studentId?}', [ParentController::class, 'kehadiran'])->name('ortu.kehadiran');
         Route::get('/ortu/jadwal-pelajaran/student/{studentId?}', [ParentController::class, 'jadwalPelajaran'])->name('ortu.jadwal-pelajaran');
         Route::get('/ortu/kalender-akademik/student/{studentId?}', [ParentController::class, 'kalenderAkademik'])->name('ortu.kalender-akademik');
-        
+
+        // parent tka tryout monitoring (result & schedule)
+        // views
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/tka-tryout-monitoring/student/{studentId?}', [ParentTkaTryoutController::class, 'index'])->name('lms.parent.tka-tryout-monitoring.view');
+
+        // paginate
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/tka-tryout-monitoring/student/{studentId?}/load-student-information', [ParentTkaTryoutController::class, 'loadStudentInformation'])->name('lms.parent.tka-tryout-student-information.load');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/tka-tryout-monitoring/student/{studentId?}/load-schedule', [ParentTkaTryoutController::class, 'loadTkaTryoutSchedule'])->name('lms.parent.tka-tryout-student-schedule.load');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/tka-tryout-monitoring/student/{studentId?}/load-result', [ParentTkaTryoutController::class, 'loadTkaTryoutResult'])->name('lms.parent.tka-tryout-student-result.load');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/parent/tka-tryout-monitoring/student/{studentId?}/load-insight', [ParentTkaTryoutController::class, 'loadTkaTryoutInsight'])->name('lms.parent.tka-tryout-student-insight.load');
         
         // ROUTES SCHOOL PARTNER
         // validate

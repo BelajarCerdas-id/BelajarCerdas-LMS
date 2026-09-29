@@ -157,5 +157,10 @@ class SchoolPartner extends Model
     public function SchoolFoundationFinanceAccess()
     {
         return $this->hasMany(SchoolFoundationFinanceAccess::class, 'school_partner_id');
-    }           
+    }               
+
+    public function TkaTryoutPeriodSchOverride()
+    {
+        return $this->hasMany(TkaTryoutPeriodSchOverride::class, 'school_partner_id');
+    }
 }
