@@ -41,7 +41,7 @@ class TeacherAssessmentController extends Controller
         $parent = null;
 
         if ($parentAssessmentId) {
-            $parent = SchoolAssessment::with(['SchoolClass', 'Mapel'])->find($parentAssessmentId);
+            $parent = SchoolAssessment::with(['SchoolClass.Kelas', 'Mapel'])->find($parentAssessmentId);
         }
 
         return view('features.lms.teacher.assessment.teacher-assessment', compact('role', 'schoolName', 'schoolId', 'schoolAssessmentType', 'mode', 'parent', 'parentAssessmentId'));
@@ -51,92 +51,130 @@ class TeacherAssessmentController extends Controller
     public function teacherFormAssessmentManagement(Request $request, $role, $schoolName, $schoolId)
     {
         $teacherId = Auth::id();
-
-        // VALIDASI SCHOOL
         $schoolPartner = SchoolPartner::findOrFail($schoolId);
-        $jenjang = strtoupper($schoolPartner->jenjang_sekolah);
+        $jenjang = strtoupper(trim($schoolPartner->jenjang_sekolah));
 
-        // DEFAULT LEVEL BERDASARKAN JENJANG
         $startLevelMap = [
-            'SD'  => 1,  'MI'  => 1,
-            'SMP' => 7,  'MTS' => 7,
-            'SMA' => 10, 'SMK' => 10,
-            'MA'  => 10, 'MAK' => 10,
+            'SD' => 1,
+            'MI' => 1,
+            'SMP' => 7,
+            'MTS' => 7,
+            'SMA' => 10,
+            'SMK' => 10,
+            'MA' => 10,
+            'MAK' => 10,
         ];
 
         $defaultLevel = $startLevelMap[$jenjang] ?? 1;
+        $searchSubject = $request->filled('mapel_id') ? (int) $request->mapel_id : null;
 
-        $searchSubject = $request->filled('mapel_id') ? $request->mapel_id : null;
-
-        // TEACHER MAPEL
-        $baseQuery = TeacherMapel::where('user_id', $teacherId)
-            ->where('is_active', true)
-            ->whereHas('SchoolClass', function ($q) use ($schoolId) {
-                $q->where('school_partner_id', $schoolId);
-            })
-            ->whereHas('Mapel', function ($q) use ($schoolId) {
-                // MAPEL KHUSUS SEKOLAH
-                $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
-                    $q1->where('school_partner_id', $schoolId)
-                        ->where('is_active', 1);
-                })
-
-                // ATAU MAPEL GLOBAL
-                ->orWhere(function ($q2) use ($schoolId) {
-                    $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')
-
-                        // JANGAN AMBIL JIKA ADA SCHOOL OVERRIDE
-                        ->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
-                            $sq->where('school_partner_id', $schoolId);
-                    });
+        $baseQuery = TeacherMapel::query()->where('user_id', $teacherId)->where('is_active', true)->whereHas('SchoolClass', function ($q) use ($schoolId) {
+            $q->where('school_partner_id', $schoolId);
+        })->whereHas('Mapel', function ($q) use ($schoolId) {
+            $q->whereHas('SchoolMapel', function ($q1) use ($schoolId) {
+                $q1->where('school_partner_id', $schoolId)->where('is_active', 1);
+            })->orWhere(function ($q2) use ($schoolId) {
+                $q2->whereNull('school_partner_id')->where('status_mata_pelajaran', 'active')->whereDoesntHave('SchoolMapel', function ($sq) use ($schoolId) {
+                    $sq->where('school_partner_id', $schoolId);
                 });
-            })->with(['Mapel', 'SchoolClass' => function ($q) {
-                    $q->withCount(['StudentSchoolClass as student_school_class_count' => function ($q) {
-                        $q->where('student_class_status', 'active')
-                        ->where(function ($sub) {
-                            $sub->whereNull('academic_action')
-                                ->orWhere('academic_action', '');
+            });
+        })->with(['Mapel', 'SchoolClass.Kelas', 'SchoolClass' => function ($q) {
+            $q->withCount(['StudentSchoolClass as student_school_class_count' => function ($q) {
+                $q->where('student_class_status', 'active')->where(function ($sub) {
+                            $sub->whereNull('academic_action')->orWhere('academic_action', '');
                         });
-                    }]);
-                }
-            ]);
+                    }
+                ]);
+            }
+        ]);
 
         $allData = $baseQuery->get();
 
-        // TAHUN AJARAN
-        $tahunAjaran = $allData->pluck('SchoolClass.tahun_ajaran')->unique()->sortDesc()->values();
+        $tahunAjaran = $allData->map(fn($item) => $item->SchoolClass?->tahun_ajaran)->filter()->unique()->sortDesc()->values();
 
-        $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
+        $searchYear = $request->filled('search_year') ? $request->search_year : null;
 
-        $dataByYear = $allData->where('SchoolClass.tahun_ajaran', $searchYear)->values();
+        if (!$searchYear && $request->filled('search_class')) {
+            $requestedClass = $this->resolveClassLevel($request->search_class);
 
-        // LEVEL KELAS UNIK
-        $classLevels = $dataByYear->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+            $matchingData = $allData->filter(function ($item) use ($requestedClass, $searchSubject) {
+                if (!$item->SchoolClass) {
+                    return false;
+                }
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+                $kelasName = $item->SchoolClass?->Kelas?->kelas
+                    ?? $item->SchoolClass?->class_name
+                    ?? '';
 
-        // FILTER ROMBEL SESUAI LEVEL
-        $dataByClass = $dataByYear->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+                preg_match('/\d+/', $kelasName, $matches);
 
-        // AMBIL MAPEL GURU
-        $subjects = $dataByClass->unique('mapel_id')->map(function ($item) {
+                if (!isset($matches[0]) || (int) $matches[0] !== (int) $requestedClass) {
+                    return false;
+                }
+
+                return $searchSubject === null || (int) $item->mapel_id === (int) $searchSubject;
+            });
+
+            $searchYear = $matchingData->pluck('SchoolClass.tahun_ajaran')->filter()->sortDesc()->first();
+        }
+
+        $searchYear = $searchYear ?? ($tahunAjaran->first() ?? null);
+
+        $dataByYear = $allData->filter(function ($item) use ($searchYear) {
+            return $item->SchoolClass && $item->SchoolClass->tahun_ajaran == $searchYear;
+        })->values();
+
+        $classOptions = $dataByYear->map(function ($item) {
+            $kelasName = $item->SchoolClass?->Kelas?->kelas ?? $item->SchoolClass?->class_name ?? '';
+
+            preg_match('/\d+/', $kelasName, $matches);
+
+            if (empty($matches[0])) {
+                return null;
+            }
+
+            $level = (int) $matches[0];
+
+            return [
+                'value' => $level,
+                'label' => str_starts_with(strtolower(trim($kelasName)), 'kelas ') ? trim($kelasName) : 'Kelas ' . $level,
+            ];
+        })->filter()->unique('value')->sortBy('value')->values();
+
+        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classOptions->first()['value'] ?? $defaultLevel);
+
+        $dataByClass = $dataByYear->filter(function ($item) use ($selectedClass) {
+            if (!$item->SchoolClass) {
+                return false;
+            }
+
+            $kelasName = $item->SchoolClass?->Kelas?->kelas ?? $item->SchoolClass?->class_name ?? '';
+
+            preg_match('/\d+/', $kelasName, $matches);
+
+            return isset($matches[0]) && (int) $matches[0] === (int) $selectedClass;
+        })->values();
+
+        $subjects = $dataByClass->filter(fn($item) => !is_null($item->mapel_id))->unique('mapel_id')->map(function ($item) {
             return [
                 'id' => $item->mapel_id,
-                'name' => $item->Mapel->mata_pelajaran ?? '-',
+                'name' => $item->Mapel?->mata_pelajaran ?? '-',
             ];
         })->values();
 
-        $schoolClasses = $dataByClass->when($searchSubject, function ($collection) use ($searchSubject) {
-            return $collection->where('mapel_id', $searchSubject);
+        $schoolClasses = $dataByClass->when(!is_null($searchSubject), function ($collection) use ($searchSubject) {
+            return $collection->filter(function ($item) use ($searchSubject) {
+                return (int) $item->mapel_id === (int) $searchSubject;
+            });
         })->values();
 
         return response()->json([
             'tahunAjaran' => $tahunAjaran,
             'selectedYear' => $searchYear,
             'selectedClass' => $selectedClass,
-            'className' => $classLevels,
-            'rombel' => $schoolClasses,
+            'classOptions' => $classOptions,
             'subject' => $subjects,
+            'rombel' => $schoolClasses,
         ]);
     }
     

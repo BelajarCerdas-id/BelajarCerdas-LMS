@@ -10,7 +10,7 @@
 
             <main class="bg-white rounded-2xl shadow-lg p-8 border border-gray-300">
                 <section id="container" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
-                    data-mode="{{ $mode }}" data-parent="{{ $parent }}" class="border-b border-gray-200 pb-10">
+                    data-mode="{{ $mode }}" data-parent="{{ json_encode($parent) }}" class="border-b border-gray-200 pb-10">
                     <div>
                         <div>
                             <!-- HEADER -->
@@ -248,7 +248,7 @@
                                                     <div class="relative">
                                                         <input 
                                                             type="text" id="start-date" name="start_date" 
-                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
+                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white px-3 py-4 text-sm shadow-sm outline-none
                                                                 disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih Tanggal">
                                                         <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
                                                             <i class="fa-regular fa-calendar-days text-sm"></i>
@@ -265,7 +265,7 @@
                                                     <div class="relative">
                                                         <input 
                                                             type="text" id="end-date" name="end_date"
-                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white border border-gray-300 rounded-lg px-3 py-4 text-sm shadow-sm outline-none
+                                                                class="border border-gray-300 rounded-xl p-6 w-full bg-white not-only:px-3 py-4 text-sm shadow-sm outline-none
                                                                 disabled:bg-gray-100 disabled:text-gray-400 transition duration-200" placeholder="Pilih Tanggal">
                                                         <span class="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
                                                             <i class="fa-regular fa-calendar-days text-sm"></i>

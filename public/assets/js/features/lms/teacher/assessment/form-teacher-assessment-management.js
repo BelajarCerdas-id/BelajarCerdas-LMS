@@ -1,4 +1,4 @@
-function formAssessment(search_year = null, search_class = null, mapel_id = null) {
+function formAssessment(search_year = null, search_class = null, mapel_id = null, school_class_id = null) {
     const container = document.getElementById('container');
     if (!container) return;
 
@@ -7,6 +7,9 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
     const schoolId = container.dataset.schoolId;
     const MODE = container.dataset.mode;
     const PARENT = JSON.parse(container.dataset.parent || 'null');
+    const selectedMapelId = MODE && PARENT ? (PARENT.mapel_id ?? PARENT.mapel?.id ?? mapel_id) : mapel_id;
+    const parentClassName = PARENT?.school_class?.kelas?.kelas ?? PARENT?.school_class?.class_name ?? '';
+    const parentClassLevel = parentClassName.match(/\d+/)?.[0] ?? null;
     if (!role || !schoolName || !schoolId) return;
 
     $.ajax({
@@ -14,8 +17,8 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
         method: 'GET',
         data: {
             search_year,
-            search_class: MODE ? PARENT?.school_class?.class_name : search_class,
-            mapel_id: MODE ? PARENT?.mapel?.id : mapel_id,
+            search_class: MODE ? parentClassLevel : search_class,
+            mapel_id: selectedMapelId,
         },
         success: function (response) {
             enableFlatpickrCreate(); // inisialisasi flatpickr
@@ -43,6 +46,7 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
 
             // Dropdown Kelas
             const containerDropdownClass = document.getElementById('container-dropdown-class');
+            const classOptions = response.classOptions || [];
             containerDropdownClass.innerHTML = `
                 <div class="flex flex-col w-full">
                     <label class="text-sm font-medium text-gray-700 mb-1.5">
@@ -51,7 +55,9 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
                     </label>
                     <select id="dropdown-filter-class" name="class_level" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                         <option value="" class="hidden">Pilih Kelas</option>
-                        ${response.className.map(item => `<option value="${item}" ${response.selectedClass == item ? 'selected' : ''}>Kelas ${item}</option>`).join('')}
+                            ${classOptions.map(item => `
+                                <option value="${item.value}"${Number(response.selectedClass) === Number(item.value) ? 'selected' : ''}>${item.label}</option>
+                            `).join('')}
                     </select>
                     <span id="error-dropdown-filter-class" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
@@ -59,6 +65,7 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
 
             // dropdown mapel rombel kelas
             const containerDropdownSubject = document.getElementById('container-dropdown-subject-rombel-class');
+            const subjects = response.subject || [];
             containerDropdownSubject.innerHTML = `
                 <div class="flex flex-col w-full">
                     <label class="text-sm font-medium text-gray-700 mb-1.5">
@@ -67,7 +74,9 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
                     </label>
                     <select id="dropdown-filter-mapel" name="filter_mapel_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
                         <option value="" class="hidden">Pilih Mata Pelajaran</option>
-                        ${response.subject.map(item => `<option value="${item.id}" ${mapel_id == item.id ? 'selected' : ''}>${item.name}</option>`).join('')}
+                            ${subjects.map(item => `
+                                <option value="${item.id}" ${String(selectedMapelId) === String(item.id) ? 'selected' : ''}>${item.name}</option>
+                            `).join('')}
                     </select>
                     <span id="error-dropdown-filter-mapel" class="text-red-500 text-xs mt-1 font-bold"></span>
                 </div>
@@ -76,7 +85,7 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
             const listContainer = $('#grid-rombel-class-list');
             listContainer.empty();
 
-            const isMapelPicked = Boolean(mapel_id || (MODE && PARENT && PARENT.mapel_id));
+            const isMapelPicked = Boolean(selectedMapelId);
 
             if (!isMapelPicked) {
                 listContainer.html(`
@@ -97,12 +106,10 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
             $('#toggle-select-rombel').show();
 
             if (response.rombel.length > 0) {
-
                 (response.rombel || []).forEach((item) => {
-
                     if (MODE && PARENT) {
                         if (item.school_class?.id != PARENT.school_class_id) {
-                            return; // skip semua selain parent
+                            return;
                         }
                     }
 
@@ -114,11 +121,11 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
                                         ${item.school_class?.class_name ?? ''}
                                     </div>
                                     <div class="text-xs text-gray-500 mt-1">
-                                        ${item.school_class.student_school_class_count ?? 0} Siswa Aktif
+                                        ${item.school_class?.student_school_class_count ?? 0} Siswa Aktif
                                     </div>
                                 </div>
 
-                                <input type="checkbox" name="school_class_id[]" value="${item.school_class?.id ?? ''}" data-mapel="${item.mapel?.id}" 
+                                <input type="checkbox" name="school_class_id[]" value="${item.school_class?.id ?? ''}" data-mapel="${item.mapel?.id}"
                                     data-rombel-name="${item.school_class?.class_name ?? ''}" data-mapel-name="${item.mapel?.mata_pelajaran ?? ''}"
                                     class="rombel-checkbox text-blue-600 cursor-pointer">
                             </div>
@@ -135,14 +142,18 @@ function formAssessment(search_year = null, search_class = null, mapel_id = null
                     listContainer.append(rombelClassList);
                 });
 
-                setupReview();
-                updateRombelSelectedCount();
-                applyModePrefill();
-                updateAcademicInfoBadge();
                 $('#empty-message-rombel-class-assessment-management-list').hide();
             } else {
                 $('#empty-message-rombel-class-assessment-management-list').show();
-                updateAcademicInfoBadge();
+            }
+
+            setupReview();
+            updateRombelSelectedCount();
+            updateAcademicInfoBadge();
+
+            // Prefill data assessment induk
+            if (MODE && PARENT) {
+                applyModePrefill();
             }
         },
         error: function (err) {
@@ -159,15 +170,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function applyModePrefill() {
     const container = document.getElementById('container');
-    const MODE = container.dataset.mode;
-    const PARENT = JSON.parse(container.dataset.parent);
 
-    const className = PARENT.school_class?.class_name || '';
-    const classLevel = parseInt(className.match(/\d+/)?.[0]);
+    if (!container) return;
+
+    const MODE = container.dataset.mode;
+    const PARENT = JSON.parse(container.dataset.parent || 'null');
 
     if (!MODE || !PARENT) return;
 
-    // TITLE
+    const className = PARENT.school_class?.Kelas?.kelas ?? PARENT.school_class?.class_name ?? '';
+    const classLevel = className.match(/\d+/)?.[0] ?? '';
+    const classId = PARENT.school_class_id ?? PARENT.school_class?.id ?? '';
+    const mapelId = PARENT.mapel_id ?? PARENT.mapel?.id ?? '';
+
     const prefixMap = {
         remedial: 'remedial',
         susulan: 'susulan',
@@ -176,56 +191,48 @@ function applyModePrefill() {
 
     $('input[name="title"]').val(`${prefixMap[MODE]} - ${PARENT.title}`);
 
-    $('#dropdown-tahun-ajaran').val(PARENT.school_class?.tahun_ajaran).prop('disabled', true);
-
+    $('#dropdown-tahun-ajaran').val(PARENT.school_class?.tahun_ajaran ?? '').prop('disabled', true);
     $('#dropdown-filter-class').val(classLevel).prop('disabled', true);
-
-    // MAPEL
-    $('#dropdown-filter-mapel').val(PARENT.mapel_id).prop('disabled', true);
+    $('#dropdown-filter-mapel').val(mapelId).prop('disabled', true);
 
     $('#mode').val(MODE);
     $('#parent-assessment-id').val(PARENT.id);
 
-    // SEMESTER
     $('#semester').val(PARENT.semester).prop('disabled', true);
     $('#semester-hidden').val(PARENT.semester);
 
-    // INSTRUCTION (optional copy)
-    $('textarea[name="assessment_instruction"]').val(PARENT.assessment_instruction);
+    $('textarea[name="assessment_instruction"]').val(PARENT.assessment_instruction ?? '');
 
-    // DURATION
-    $('input[name="duration"]').val(PARENT.duration);
+    $('input[name="duration"]').val(PARENT.duration ?? '');
 
-    // reset dulu
     $('#create-assessment-form input[data-mapel-id]').remove();
 
     let selectedMapelIds = [];
 
     $('.rombel-checkbox').each(function () {
-        const classId = $(this).val();
-        const mapelId = PARENT.mapel_id;
 
-        if (classId == PARENT.school_class_id && mapelId == $(this).data('mapel')) {
+        const checkboxClassId = $(this).val();
+        const checkboxMapelId = $(this).data('mapel');
+
+        if (String(checkboxClassId) === String(classId) && String(checkboxMapelId) === String(mapelId)) {
             $(this).prop('checked', true);
+
             selectedMapelIds.push(mapelId);
         }
     });
 
-    // unique
     selectedMapelIds = [...new Set(selectedMapelIds)];
 
-    // inject hidden SEKALI
-    selectedMapelIds.forEach(mapelId => {
-        $('#create-assessment-form').append(
-            `<input type="hidden" name="mapel_id[]" value="${mapelId}" data-mapel-id="${mapelId}">`
-        );
+    selectedMapelIds.forEach(function (selectedMapelId) {
+
+        $('#create-assessment-form').append(`
+            <input type="hidden" name="mapel_id[]" value="${selectedMapelId}" data-mapel-id="${selectedMapelId}">
+        `);
     });
 
-    // update counter setelah check
     updateRombelSelectedCount();
 
-    // DISABLE setelah checked
-    $('.rombel-checkbox').on('click', function (e) {
+    $('.rombel-checkbox').off('click.modePrefill').on('click.modePrefill', function (e) {
         e.preventDefault();
         return false;
     });
@@ -233,19 +240,23 @@ function applyModePrefill() {
     $('#toggle-select-rombel').hide();
 
     $('select[name="assessment_type_id"]').val(PARENT.assessment_type_id).prop('disabled', true);
+
     $('#assessment-type-hidden').val(PARENT.assessment_type_id);
 
-    setupAssessmentMode();
+    $('select[name="assessment_type_id"]').trigger('change');
 
     const selectedOption = $('select[name="assessment_type_id"] option:selected')[0];
-    const mode = selectedOption?.dataset.mode;
 
-    handleAssessmentTypeUI(mode);
+    const assessmentMode = selectedOption?.dataset.mode;
 
-    // HEADER INFO
+    handleAssessmentTypeUI(assessmentMode);
+
+    $('#container .mode-prefill-alert').remove();
+
     $('#container').prepend(`
-        <div class="mb-6 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm">
-            Mode <b>${MODE.toUpperCase()}</b> dari assessment: <b>${PARENT.title}</b>
+        <div class="mode-prefill-alert mb-6 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+            Mode <b>${MODE.toUpperCase()}</b> dari assessment:
+            <b>${PARENT.title}</b>
         </div>
     `);
 }
@@ -320,7 +331,7 @@ function setupReview() {
         const rombelNames = Array.from(checkedRombel).map(cb => cb.dataset.rombelName);
         const subjectNames = Array.from(checkedRombel).map(cb => cb.dataset.mapelName);
 
-        const selectedMapelText = document.querySelector('#dropdown-filter-mapel option:selected')?.text;
+        const selectedMapelText = $('#dropdown-filter-mapel option:selected').text();
         const displaySubject = (selectedMapelText && selectedMapelText !== 'Pilih Mata Pelajaran' && selectedMapelText !== 'Mata Pelajaran')
             ? selectedMapelText
             : (subjectNames.length ? subjectNames.join(', ') : '-');
