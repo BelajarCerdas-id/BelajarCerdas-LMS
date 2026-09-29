@@ -118,6 +118,11 @@ class StudentAssessmentExamController extends Controller
 
         $cacheKey = "assessment-{$user->id}-{$sourceAssessmentId}-{$publishedQuestionIds}-{$semester}-{$shuffleQuestions}-test";
 
+        $forceRefresh = request()->boolean('force_refresh') || request()->filled('force_refresh');
+        if ($forceRefresh) {
+            Cache::forget($cacheKey);
+        }
+
         if (Cache::has($cacheKey)) {
 
             $cachedIds = Cache::get($cacheKey);
@@ -154,7 +159,7 @@ class StudentAssessmentExamController extends Controller
         }
 
         // SHUFFLE OPTIONS
-        $questions->transform(function ($question) use ($user, $assessmentId, $semester, $shuffleOptions) {
+        $questions->transform(function ($question) use ($user, $assessmentId, $semester, $shuffleOptions, $forceRefresh) {
 
             $type = strtoupper($question->LmsQuestionBank->tipe_soal ?? '');
 
@@ -219,6 +224,10 @@ class StudentAssessmentExamController extends Controller
                 $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
 
                 $matchingCacheKey = "assessment-match-{$user->id}-{$assessmentId}-{$question->id}-{$publishedRightIds}-{$semester}-{$shuffleOptions}";
+
+                if ($forceRefresh) {
+                    Cache::forget($matchingCacheKey);
+                }
 
                 if (Cache::has($matchingCacheKey)) {
 
@@ -494,6 +503,17 @@ class StudentAssessmentExamController extends Controller
         $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
         $now = TimezoneHelper::now($timezone);
 
+        $attempt = StudentAssessmentAttempt::where('student_id', $user->id)
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
+
+        if ($attempt && $attempt->expire_time) {
+            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                $endDate = $attemptExpire->copy()->addMinute();
+            }
+        }
+
         $status = 'active';
 
         if ($startDate && $now->lt($startDate)) {
@@ -507,6 +527,12 @@ class StudentAssessmentExamController extends Controller
             'questionsAnswer' => $questionsAnswer,
             'schoolAssessment' => $schoolAssessment,
             'user' => $user,
+            'attempt' => $attempt ? [
+                'status' => $attempt->status,
+                'tab_switch_count' => $attempt->tab_switch_count,
+                'start_time' => $attempt->start_time ? $attempt->start_time->timestamp * 1000 : null,
+                'expire_time' => $attempt->expire_time ? $attempt->expire_time->timestamp * 1000 : null,
+            ] : null,
             'start_date' => $startDate?->format('Y-m-d H:i:s'),
             'end_date' => $endDate?->format('Y-m-d H:i:s'),
             'start_date_iso' => $startDate?->format('Y-m-d\TH:i:sP'),
@@ -535,6 +561,17 @@ class StudentAssessmentExamController extends Controller
         $startDate = TimezoneHelper::parse($assessment->start_date, $timezone);
         $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
         $schoolNow = TimezoneHelper::now($timezone);
+
+        $attempt = StudentAssessmentAttempt::where('student_id', $userId)
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
+
+        if ($attempt && $attempt->expire_time) {
+            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                $endDate = $attemptExpire->copy()->addMinute();
+            }
+        }
 
         if ($startDate && $schoolNow->lt($startDate)) {
             return response()->json([
@@ -646,6 +683,17 @@ class StudentAssessmentExamController extends Controller
 
         $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
         $now = TimezoneHelper::now($timezone);
+
+        $attempt = StudentAssessmentAttempt::where('student_id', $userId)
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
+
+        if ($attempt && $attempt->expire_time) {
+            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                $endDate = $attemptExpire->copy()->addMinute();
+            }
+        }
 
         $isExpired = $endDate && $now->greaterThan($endDate);
 
@@ -1058,6 +1106,35 @@ class StudentAssessmentExamController extends Controller
 
         // GET ASSESSMENT
         $schoolAssessment = SchoolAssessment::with('SchoolClass')->find($assessmentId);
+
+        if (!$schoolAssessment) {
+            abort(404, 'Assessment tidak ditemukan.');
+        }
+
+        // Cek jika siswa memiliki attempt yang masih aktif (in_progress) dan waktu belum kadaluarsa
+        $attempt = StudentAssessmentAttempt::where('student_id', $user->id)
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
+
+        $schoolPartner = SchoolPartner::find($schoolAssessment->school_partner_id);
+        $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+        $endDate = TimezoneHelper::parse($schoolAssessment->end_date, $timezone);
+        $now = TimezoneHelper::now($timezone);
+
+        if ($attempt && $attempt->expire_time) {
+            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                $endDate = $attemptExpire->copy()->addMinute();
+            }
+        }
+
+        $isExpired = $endDate && $now->greaterThan($endDate);
+
+        if ($attempt && $attempt->status === 'in_progress' && !$isExpired) {
+            return redirect()->route('lms.studentAssessmentExam.view', [
+                $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId
+            ]);
+        }
 
         // ROOT (untuk summary)
         $rootAssessmentId = $schoolAssessment->parent_assessment_id ?? $schoolAssessment->id;

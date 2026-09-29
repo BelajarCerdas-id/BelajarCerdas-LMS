@@ -62,7 +62,12 @@
                 </div>
 
                 <!-- BUTTON GROUP -->
-                <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto items-center">
+
+                    <button type="button" id="btn-refresh-exam-questions" class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-[#0071BC] border border-blue-200 px-4 py-2 md:px-5 md:py-3 rounded-lg shadow-xs cursor-pointer text-sm font-semibold transition w-full md:w-auto" title="Refresh semua soal dari database">
+                        <i class="fa-solid fa-rotate text-sm transition-transform"></i>
+                        <span>Refresh Soal</span>
+                    </button>
 
                     <button id="btn-submit-end-assessment-test" class="bg-[#F64650] text-white px-4 py-2 md:px-5 md:py-3 rounded-lg shadow cursor-pointer hidden w-full md:w-auto">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>

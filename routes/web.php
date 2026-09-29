@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HeadmasterController;
 use App\Http\Controllers\Administrator\FoundationManagementController;
 use App\Http\Controllers\Administrator\UserAnalyticsController;
+use App\Http\Controllers\Administrator\AssessmentDebugController;
 use App\Http\Controllers\Foundation\FoundationDashboardController;
 use App\Http\Controllers\Foundation\SchoolUserController;
 use App\Http\Controllers\Foundation\StudentReflectionController;
@@ -261,6 +262,21 @@ Route::middleware([AuthMiddleware::class])->group(function () {
             Route::get('/logs', [UserAnalyticsController::class, 'activityLogs'])->name('admin.analytics.logs');
             Route::get('/schools', [UserAnalyticsController::class, 'schoolLeaderboard'])->name('admin.analytics.schools');
             Route::get('/live-users', [UserAnalyticsController::class, 'liveOnlineUsers'])->name('admin.analytics.liveUsers');
+        });
+
+        // =========================================================
+        // SITE ADMIN ASSESSMENT & ATTEMPTS DEBUGGER
+        // =========================================================
+        Route::get('/lms/{role}/assessment-debug', [AssessmentDebugController::class, 'index'])->name('lms.office.assessmentDebug.view');
+
+        Route::prefix('administrator/assessment-debug')->group(function () {
+            Route::get('/data', [AssessmentDebugController::class, 'getAttempts'])->name('admin.assessmentDebug.data');
+            Route::post('/{id}/unlock', [AssessmentDebugController::class, 'unlock'])->name('admin.assessmentDebug.unlock');
+            Route::post('/{id}/update-status', [AssessmentDebugController::class, 'updateStatus'])->name('admin.assessmentDebug.updateStatus');
+            Route::post('/{id}/update-attempts', [AssessmentDebugController::class, 'updateTabSwitchCount'])->name('admin.assessmentDebug.updateAttempts');
+            Route::post('/{id}/update', [AssessmentDebugController::class, 'updateAttempt'])->name('admin.assessmentDebug.update');
+            Route::post('/{id}/reset-answers', [AssessmentDebugController::class, 'resetAnswers'])->name('admin.assessmentDebug.resetAnswers');
+            Route::delete('/{id}', [AssessmentDebugController::class, 'deleteAttempt'])->name('admin.assessmentDebug.delete');
         });
     
         // =========================================================

@@ -59,25 +59,12 @@ function startTimer() {
 
     const expireTime = localStorage.getItem(EXPIRE_KEY);
 
-    if (expireTime) {
+    if (expireTime && parseInt(expireTime) > Date.now()) {
         const remaining = Math.floor((parseInt(expireTime) - Date.now()) / 1000);
-        if (remaining > 0) {
-            runCountdown(remaining);
-        } else {
-            clearInterval(countdown);
-            countdown = null;
-
-            if (timerExam) timerExam.textContent = 'Waktu Habis';
-
-            finalExamDuration = getTotalExamDuration();
-            saveQuestionDuration();
-            emptyTime();
-            autoSubmitUnSavedQuestions();
-
-            localStorage.removeItem(EXPIRE_KEY);
-            localStorage.removeItem(START_KEY);
-        }
+        runCountdown(remaining);
     } else {
+        // Jika expireTime di localStorage sudah lewat atau belum ada,
+        // SELALU verifikasi dengan server terlebih dahulu (karena admin bisa saja baru membuka kunci / memperpanjang durasi)
         startNewCountdown();
     }
 
@@ -94,6 +81,19 @@ function startTimer() {
                 const remaining = Math.ceil((expireTime - Date.now()) / 1000);
                 if (remaining > 0) {
                     runCountdown(remaining);
+                } else {
+                    clearInterval(countdown);
+                    countdown = null;
+
+                    if (timerExam) timerExam.textContent = 'Waktu Habis';
+
+                    finalExamDuration = getTotalExamDuration();
+                    saveQuestionDuration();
+                    emptyTime();
+                    autoSubmitUnSavedQuestions();
+
+                    localStorage.removeItem(EXPIRE_KEY);
+                    localStorage.removeItem(START_KEY);
                 }
             },
             error: function (xhr) {

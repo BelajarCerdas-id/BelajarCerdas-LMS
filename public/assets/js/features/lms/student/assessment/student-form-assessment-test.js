@@ -815,12 +815,14 @@ function renderAssessmentFormContent(selectedIndex, response) {
                     return '';
                 }
 
-                // tampilkan link result test ketika semua pertanyaan sudah dijawab
+                // tampilkan link result test ketika semua pertanyaan sudah dijawab (hanya jika attempt bukan in_progress)
                 let linkResultTest = '';
                 const resultTestHref = response.resultTestHref.replace(':role', role).replace(':schoolName', schoolName).replace(':schoolId', schoolId).replace(':curriculumId', curriculumId)
                     .replace(':mapelId', mapelId).replace(':assessmentTypeId', assessmentTypeId).replace(':semester', semester).replace(':assessmentId', assessmentId);
 
-                if (isAllAnswered || isAfter) {
+                const isAttemptActive = response.attempt?.status === 'in_progress';
+
+                if ((isAllAnswered && !isAttemptActive) || isAfter) {
                     linkResultTest = `
                         <div class="mt-10 pt-6 border-t border-gray-100">
                             <a href="${resultTestHref}" 
@@ -860,9 +862,16 @@ function renderAssessmentFormContent(selectedIndex, response) {
                                             </span>
                                         </div>
     
-                                        <span class="text-sm text-gray-500 font-medium">
-                                            ${selectedIndex + 1} / ${questions.length}
-                                        </span>
+                                        <div class="flex items-center gap-3">
+                                            <button type="button" class="btn-refresh-questions-action flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#0071BC] border border-blue-200 text-xs font-semibold transition cursor-pointer shadow-xs" title="Refresh semua soal dari database">
+                                                <i class="fa-solid fa-rotate text-xs"></i>
+                                                <span>Refresh Soal</span>
+                                            </button>
+
+                                            <span class="text-sm text-gray-500 font-medium">
+                                                ${selectedIndex + 1} / ${questions.length}
+                                            </span>
+                                        </div>
                                     </div>
     
                                     <!-- Question -->
@@ -1002,8 +1011,8 @@ function renderAssessmentFormContent(selectedIndex, response) {
                 $('#btn-submit-end-assessment-test').show();
                 $('#btn-submit-exit-assessment-test').hide();
 
-                // jika semua soal sudah terjawab maka hentikan bersihkan timer per soal
-                if (isAllAnswered || isAfter) {
+                // jika semua soal sudah terjawab dan attempt sudah disubmit/selesai, maka bersihkan timer
+                if ((isAllAnswered && !isAttemptActive) || isAfter) {
                     examFinished = true;
 
                     stopQuestionTimer();
@@ -1136,8 +1145,10 @@ function studentFormAssessment(selectedIndex = 0, forceFetch = false) {
         return;
     }
 
+    const refreshUrl = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}` + (forceFetch ? `?force_refresh=1&_t=${Date.now()}` : '');
+
     $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}`,
+        url: refreshUrl,
         method: 'GET',
         success: function (response) {
             cachedFormResponse = response;
@@ -1145,6 +1156,70 @@ function studentFormAssessment(selectedIndex = 0, forceFetch = false) {
         }
     });
 }
+
+// Handler Refresh Soal (Memuat ulang semua soal langsung dari database)
+$(document).on('click', '#btn-refresh-exam-questions, .btn-refresh-questions-action', function (e) {
+    e.preventDefault();
+
+    const $allBtns = $('#btn-refresh-exam-questions, .btn-refresh-questions-action');
+    const $icons = $allBtns.find('i');
+
+    $allBtns.prop('disabled', true).addClass('opacity-50 cursor-not-allowed pointer-events-none');
+    $icons.addClass('fa-spin');
+
+    // Simpan durasi soal yang sedang dikerjakan sebelum refresh
+    if (typeof saveQuestionDuration === 'function') {
+        saveQuestionDuration();
+    }
+
+    // Reset cache respons lokal
+    cachedFormResponse = null;
+
+    const targetIndex = (typeof currentQuestionIndex === 'number' && currentQuestionIndex >= 0) ? currentQuestionIndex : 0;
+
+    const refreshUrl = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}?force_refresh=1&_t=${Date.now()}`;
+
+    $.ajax({
+        url: refreshUrl,
+        method: 'GET',
+        success: function (response) {
+            cachedFormResponse = response;
+            const validIndex = (response.data && targetIndex < response.data.length) ? targetIndex : 0;
+            currentQuestionIndex = validIndex;
+            renderAssessmentFormContent(validIndex, cachedFormResponse);
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Soal Diperbarui',
+                    text: 'Seluruh butir soal berhasil diperbarui dari database.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+            }
+        },
+        error: function (xhr) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memperbarui Soal',
+                    text: 'Terjadi kendala saat memuat ulang soal dari server.',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+        },
+        complete: function () {
+            $allBtns.prop('disabled', false).removeClass('opacity-50 cursor-not-allowed pointer-events-none');
+            $icons.removeClass('fa-spin');
+        }
+    });
+});
 
 $(document).ready(function () {
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {

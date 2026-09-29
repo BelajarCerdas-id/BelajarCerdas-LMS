@@ -8,6 +8,7 @@ use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentSchoolClass;
@@ -136,6 +137,16 @@ class StudentAssessmentController extends Controller
             $totalAnswers = StudentAssessmentAnswer::where('student_id', $user->id)->where('school_assessment_id', $assessment->id)->where('status_answer', 'submitted')->count();
     
             $submission = StudentProjectSubmission::where('student_id', $user->id)->where('school_assessment_id', $assessment->id)->first();
+
+            $attempt = StudentAssessmentAttempt::where('student_id', $user->id)->where('school_assessment_id', $assessment->id)->first();
+
+            $examEndDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+            if ($attempt && $attempt->expire_time) {
+                $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+                if ($attemptExpire && (!$examEndDate || $attemptExpire->gt($examEndDate))) {
+                    $examEndDate = $attemptExpire->copy()->addMinute();
+                }
+            }
     
             return [
                 'id' => $assessment->id,
@@ -143,9 +154,9 @@ class StudentAssessmentController extends Controller
                 'timezone' => $timezone,
                 'timezone_label' => $timezoneLabel,
                 'start_date' => TimezoneHelper::format($assessment->start_date, $timezone),
-                'end_date' => TimezoneHelper::format($assessment->end_date, $timezone),
+                'end_date' => $examEndDate ? $examEndDate->format('Y-m-d H:i') : TimezoneHelper::format($assessment->end_date, $timezone),
                 'start_date_iso' => TimezoneHelper::formatIso($assessment->start_date, $timezone),
-                'end_date_iso' => TimezoneHelper::formatIso($assessment->end_date, $timezone),
+                'end_date_iso' => $examEndDate ? $examEndDate->format('Y-m-d\TH:i:sP') : TimezoneHelper::formatIso($assessment->end_date, $timezone),
                 'school_assessment_type' => $assessment->SchoolAssessmentType,
                 'assessment_mode' => $assessment->SchoolAssessmentType->assessmentMode->code ?? 'exam',
                 'mapel' => $assessment->Mapel->mata_pelajaran ?? '-',
@@ -156,6 +167,10 @@ class StudentAssessmentController extends Controller
                 'total_questions' => $totalQuestions,
                 'total_answers' => $totalAnswers,
                 'show_score' => $assessment->show_score,
+                'attempt_status' => $attempt?->status,
+                'attempt_tab_switch_count' => $attempt?->tab_switch_count ?? 0,
+                'attempt_expire_time' => $attempt?->expire_time ? $attempt->expire_time->toIso8601String() : null,
+                'has_attempt' => (bool) $attempt,
     
                 'student_submitted' => $submission ? true : false,
                 'student_submission_file' => $submission->file_path ?? null,
@@ -186,6 +201,20 @@ class StudentAssessmentController extends Controller
         $startDate = TimezoneHelper::parse($assessment->start_date, $timezone);
         $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
         $now = TimezoneHelper::now($timezone);
+
+        $userId = Auth::id();
+        if ($userId) {
+            $attempt = StudentAssessmentAttempt::where('student_id', $userId)
+                ->where('school_assessment_id', $assessmentId)
+                ->first();
+
+            if ($attempt && $attempt->expire_time) {
+                $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+                if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                    $endDate = $attemptExpire->copy()->addMinute();
+                }
+            }
+        }
 
         $status = 'active';
 

@@ -478,10 +478,20 @@
 
             <!-- Menu Analytics -->
             <li class="list-item pb-2 px-1">
-                <div class="content-menu flex items-center gap-3 px-3 py-2">
+                <div class="content-menu flex items-center gap-3 px-3 py-2 {{ request()->routeIs('lms.office.analytics.view') ? 'text-[#0071BC] font-bold' : '' }}">
                     <i class="fa-solid fa-chart-line text-[15px] w-5 text-center"></i>
                     <a href="{{ route('lms.office.analytics.view', Auth::user()->role) }}" class="link-href text-[14px]">
                         Site Analytics
+                    </a>
+                </div>
+            </li>
+
+            <!-- Menu Exam Debugger -->
+            <li class="list-item pb-2 px-1">
+                <div class="content-menu flex items-center gap-3 px-3 py-2 {{ request()->routeIs('lms.office.assessmentDebug.view') ? 'text-[#0071BC] font-bold' : '' }}">
+                    <i class="fa-solid fa-wrench text-[15px] w-5 text-center"></i>
+                    <a href="{{ route('lms.office.assessmentDebug.view', Auth::user()->role) }}" class="link-href text-[14px]">
+                        Exam Debugger
                     </a>
                 </div>
             </li>
@@ -820,6 +830,15 @@
                             <div class="content-menu text-sm flex items-center gap-3 {{ request()->routeIs('lms.office.analytics.view') ? 'text-[#0071BC] font-bold' : '' }}">
                                 <i class="fa-solid fa-chart-line"></i>
                                 <a href="{{ route('lms.office.analytics.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Site Analytics</a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="list-item m-2 pb-3">
+                        <div class="dropdown-menu">
+                            <div class="content-menu text-sm flex items-center gap-3 {{ request()->routeIs('lms.office.assessmentDebug.view') ? 'text-[#0071BC] font-bold' : '' }}">
+                                <i class="fa-solid fa-wrench"></i>
+                                <a href="{{ route('lms.office.assessmentDebug.view', Auth::user()->role) }}" class="link-href flex flex-col text-[13px]">Exam Debugger</a>
                             </div>
                         </div>
                     </li>

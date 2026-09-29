@@ -74,12 +74,36 @@ function changeSemester(semester) {
                 const mode = assessment.assessment_mode;
 
                 let btnStartExam = '';
+                const attemptStatus = assessment.attempt_status;
 
-                if (isAfter || (total_answers > 0)) {
+                if (attemptStatus === 'in_progress' && !isAfter) {
+
+                    btnStartExam = `
+                        <button
+                            onclick="startExamLocalTime(${assessment.id})"
+                            class="mt-6 bg-[#0071BC] hover:bg-[#005a96] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-semibold shadow-md cursor-pointer text-white flex items-center justify-center gap-2">
+                            <i class="fas fa-play text-xs"></i>
+                            <span>Lanjutkan Assessment</span>
+                        </button>
+                    `;
+
+                } else if (attemptStatus === 'cheating' && !isAfter) {
+
+                    btnStartExam = `
+                        <button
+                            type="button"
+                            onclick="Swal.fire({icon: 'error', title: 'Ujian Terkunci', text: 'Ujian dihentikan karena terdeteksi pelanggaran. Hubungi guru atau proktor untuk membuka kunci ujian.'})"
+                            class="mt-6 bg-red-600 hover:bg-red-700 w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-semibold shadow-md cursor-pointer text-white flex items-center justify-center gap-2">
+                            <i class="fas fa-lock text-xs"></i>
+                            <span>Ujian Terkunci</span>
+                        </button>
+                    `;
+
+                } else if (isAfter || attemptStatus === 'submitted' || attemptStatus === 'timeout' || (total_answers > 0 && total_answers >= total_questions)) {
 
                     btnStartExam = `
                         <a href="${resultTestHref}">
-                            <button class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
+                            <button class="mt-6 bg-[#43AB3C] hover:bg-[#399632] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer text-white">
                                 Lihat Hasil Assessment
                             </button>
                         </a>
@@ -90,7 +114,7 @@ function changeSemester(semester) {
                     btnStartExam = `
                         <button
                             onclick="startExamLocalTime(${assessment.id})"
-                            class="mt-6 bg-[#43AB3C] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer">
+                            class="mt-6 bg-[#43AB3C] hover:bg-[#399632] w-full ${mode === 'exam' ? 'sm:w-65' : 'text-white font-bold'} py-2 text-sm rounded-md font-medium shadow-md cursor-pointer text-white">
                             Mulai Assessment
                         </button>
                     `;
