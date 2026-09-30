@@ -65,7 +65,7 @@ class BankSoalWordImportService
             $uploadedFile->move(storage_path('app'), 'tmp_soal.docx');
 
             Log::info("[BankSoalImport] Menjalankan Pandoc untuk konversi DOCX ke HTML.");
-            $process = new Process(['pandoc', $docxPath, '-f', 'docx', '-t', 'html', '--mathml', '-o', $outputHtmlPath]);
+            $process = new Process(['pandoc', $docxPath, '-f', 'docx', '-t', 'html', '--mathjax', '-o', $outputHtmlPath]);
             $process->run();
 
             if (!$process->isSuccessful()) {
@@ -99,102 +99,122 @@ class BankSoalWordImportService
             $htmlContent = file_get_contents($outputHtmlPath);
             $dom = new \DOMDocument();
             libxml_use_internal_errors(true);
-            $dom->loadHTML(mb_convert_encoding($htmlContent, 'HTML-ENTITIES', 'UTF-8'));
+            $dom->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $htmlContent);
             libxml_clear_errors();
     
-            $tables = $dom->getElementsByTagName('table');
+            $xpath = new \DOMXPath($dom);
+            // Ambil HANYA tabel top-level (tabel soal), jangan ambil nested table di dalam cell soal
+            $tables = $xpath->query('//table[not(ancestor::table)]');
             Log::info("[BankSoalImport] Ditemukan " . $tables->length . " tabel/soal dalam dokumen.");
 
             $pandocTableValues = [];
             
             foreach ($tables as $tIndex => $t) {
                 if (!$t instanceof \DOMElement) continue;
-                $rowsForFallback = $t->getElementsByTagName('tr');
+                // Ambil hanya baris langsung milik tabel ini, jangan ambil baris dari nested table
+                $rowsForFallback = $xpath->query('./tr | ./tbody/tr | ./thead/tr | ./tfoot/tr', $t);
                 foreach ($rowsForFallback as $row) {
                     if (!$row instanceof \DOMElement) continue;
-    
-                    $cells = [];
-                    foreach ($row->childNodes as $child) {
-                        if ($child instanceof \DOMElement && in_array(strtolower($child->nodeName), ['td', 'th'])) {
-                            $cells[] = $child;
-                        }
-                    }
-                    if (count($cells) < 2) continue;
-    
+
+                    $cellNodes = $xpath->query('./td | ./th', $row);
+                    if ($cellNodes->length < 2) continue;
+
+                    $keyCell = $cellNodes->item(0);
+                    $valueCell = $cellNodes->item(1);
+
                     $keyHtml = '';
-                    foreach ($cells[0]->childNodes as $child) {
+                    foreach ($keyCell->childNodes as $child) {
                         $keyHtml .= $dom->saveHTML($child);
                     }
                     $normalizedKey = strtoupper(trim($extractor->normalizeTextContent($keyHtml)));
                     $key = preg_replace('/[\s\xA0]+/u', '', $normalizedKey);
                     if ($key === '') $key = 'QUESTION';
-    
+
                     $valueHtml = '';
-                    foreach ($cells[1]->childNodes as $child) {
+                    foreach ($valueCell->childNodes as $child) {
                         $valueHtml .= $dom->saveHTML($child);
                     }
-    
+
                     $pandocTableValues[$tIndex][$key] = $valueHtml;
+                    if ($normalizedKey !== '' && $normalizedKey !== $key) {
+                        $pandocTableValues[$tIndex][$normalizedKey] = $valueHtml;
+                    }
                 }
             }
-    
+
             Log::info("[BankSoalImport] Memulai proses validasi data per tabel.");
             foreach ($tables as $index => $table) {
                 if (!$table instanceof \DOMElement) continue;
-                $rows = $table->getElementsByTagName('tr');
+                // Ambil hanya baris langsung milik tabel ini
+                $rows = $xpath->query('./tr | ./tbody/tr | ./thead/tr | ./tfoot/tr', $table);
                 $dataSoal = [];
                 $validationErrors = [];
                 $soalNumber = $index + 1;
-    
+
                 if (!$forcePandocMode && isset($styledData[$index]) && is_array($styledData[$index]) && count($styledData[$index]) > 0) {
                     $dataSoal = $styledData[$index];
                     foreach ($dataSoal as $k => $htmlValue) {
                         $styledHtml = $htmlValue;
-                        $pandocHtml = $pandocTableValues[$index][$k] ?? '';
-                        $dataSoal[$k] = $extractor->combineStyledAndPandoc($styledHtml, $pandocHtml);
+                        $pandocHtml = $pandocTableValues[$index][$k] ?? ($pandocTableValues[$index][preg_replace('/[\s\xA0]+/u', '', $k)] ?? '');
+                        $val = $extractor->combineStyledAndPandoc($styledHtml, $pandocHtml);
+                        if (!str_contains($val, '<p>') && !str_contains($val, '<div>') && !str_contains($val, '<table')) {
+                            $val = "<p>$val</p>";
+                        }
+                        $dataSoal[$k] = $val;
+                    }
+
+                    // Pastikan jika ada key di pandoc yang terlewat oleh styledData tetap terbawa
+                    if (isset($pandocTableValues[$index])) {
+                        foreach ($pandocTableValues[$index] as $pk => $pv) {
+                            $strippedPk = preg_replace('/[\s\xA0]+/u', '', $pk);
+                            if (!isset($dataSoal[$pk]) && !isset($dataSoal[$strippedPk])) {
+                                if (!str_contains($pv, '<p>') && !str_contains($pv, '<div>') && !str_contains($pv, '<table')) {
+                                    $pv = "<p>$pv</p>";
+                                }
+                                $dataSoal[$pk] = $pv;
+                            }
+                        }
                     }
                 } else {
                     foreach ($rows as $row) {
                         if (!$row instanceof \DOMElement) continue;
-    
-                        $cells = [];
-                        foreach ($row->childNodes as $child) {
-                            if ($child instanceof \DOMElement && in_array(strtolower($child->nodeName), ['td', 'th'])) {
-                                $cells[] = $child;
-                            }
-                        }
-                        if (count($cells) < 2) continue;
-    
+
+                        $cellNodes = $xpath->query('./td | ./th', $row);
+                        if ($cellNodes->length < 2) continue;
+
+                        $keyCell = $cellNodes->item(0);
+                        $valueCell = $cellNodes->item(1);
+
                         $innerHtml = '';
-                        foreach ($cells[0]->childNodes as $child) {
+                        foreach ($keyCell->childNodes as $child) {
                             $innerHtml .= $dom->saveHTML($child);
                         }
-    
+
                         $normalizedText = $extractor->normalizeTextContent($innerHtml);
                         $rawHtmlKey = strtoupper(trim($normalizedText));
                         $key = preg_replace('/[\s\xA0]+/u', '', $rawHtmlKey);
                         if (empty($key) && empty($dataSoal['QUESTION'])) $key = 'QUESTION';
-    
+
                         $rawHtmlValue = '';
-                        foreach ($cells[1]->childNodes as $child) {
+                        foreach ($valueCell->childNodes as $child) {
                             $rawHtmlValue .= $dom->saveHTML($child);
                         }
-    
-                        $styledValue = $styledData[$index][$key] ?? '';
+
+                        $styledValue = $styledData[$index][$key] ?? ($styledData[$index][$rawHtmlKey] ?? '');
                         $plainPandoc = $extractor->normalizeTextContent($rawHtmlValue);
                         $plainStyled = $extractor->normalizeTextContent($styledValue);
-    
+
                         if (empty($styledValue)) {
                             $value = $rawHtmlValue;
                         } elseif ($plainPandoc === $plainStyled) {
                             $value = $styledValue;
-                        } elseif (str_contains($rawHtmlValue, '<math') || str_contains($rawHtmlValue, '<img') || str_contains($rawHtmlValue, '<ul') || str_contains($rawHtmlValue, '<ol')) {
+                        } elseif (str_contains($rawHtmlValue, '<math') || str_contains($rawHtmlValue, '<img') || str_contains($rawHtmlValue, '<table') || str_contains($rawHtmlValue, '<ul') || str_contains($rawHtmlValue, '<ol')) {
                             $value = $extractor->mergeStyledAndPandocHtml($rawHtmlValue, $styledValue, $mediaImages);
                         } else {
                             $value = $styledValue;
                         }
-    
-                        if (!str_contains($value, '<p>') && !str_contains($value, '<div>')) {
+
+                        if (!str_contains($value, '<p>') && !str_contains($value, '<div>') && !str_contains($value, '<table')) {
                             $value = "<p>$value</p>";
                         }
                         if (!empty($key)) $dataSoal[$key] = $value;
@@ -341,6 +361,7 @@ class BankSoalWordImportService
                 foreach ($dataSoal as $k => $v) {
                     $v = $extractor->replaceImageSrc($v, $mediaImages);
                     $v = $extractor->cleanHtml($v);
+                    $v = $this->fixMojibake($v);
                     $dataSoal[$k] = $v;
                 }
                 $validSoalData[] = $dataSoal;
@@ -585,5 +606,31 @@ class BankSoalWordImportService
             'status' => 'success',
             'message' => 'Bank Soal berhasil diupload.',
         ]);
+    }
+
+    /**
+     * Memperbaiki karakter mojibake akibat konversi encoding ganda / CP1252 to UTF-8
+     */
+    public function fixMojibake(?string $str): string
+    {
+        if (empty($str)) {
+            return '';
+        }
+
+        $map = [
+            'â€¦' => '…',
+            'â€œ' => '“',
+            'â€' => '”',
+            'â€'  => '”',
+            'â€™' => '’',
+            'â€˜' => '‘',
+            'â€“' => '–',
+            'â€”' => '—',
+            'â€¢' => '•',
+            'Â '  => ' ',
+            'Â'   => '',
+        ];
+
+        return strtr($str, $map);
     }
 }

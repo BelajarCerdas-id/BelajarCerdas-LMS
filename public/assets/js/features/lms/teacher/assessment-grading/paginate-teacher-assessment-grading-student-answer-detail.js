@@ -870,6 +870,10 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
 
                     $(`#nomor${selectedIndex}`).prop('checked', true);
 
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        window.MathJax.typesetPromise([formAssessmentGrading[0]]).catch(err => console.warn('MathJax error:', err));
+                    }
+
                     $(document).off('click', '.nomor-soal').on('click', '.nomor-soal', function () {
                         const index = parseInt($(this).data('index'));
 

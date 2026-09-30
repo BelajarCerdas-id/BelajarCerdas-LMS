@@ -370,17 +370,13 @@ class DocxExtractor
         // Buat DOMDocument untuk HTML hasil Pandoc
         $pandocDom = new \DOMDocument();
         libxml_use_internal_errors(true); // Supaya warning/error parsing HTML diabaikan sementara
-        $pandocDom->loadHTML(
-            mb_convert_encoding($pandocHtml, 'HTML-ENTITIES', 'UTF-8') // Pastikan encoding ke HTML entities agar aman untuk DOM
-        );
+        $pandocDom->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $pandocHtml);
         libxml_clear_errors(); // Bersihkan error setelah parsing
 
         // Buat DOMDocument untuk HTML hasil PhpWord (styled)
         $styledDom = new \DOMDocument();
         libxml_use_internal_errors(true);
-        $styledDom->loadHTML(
-            mb_convert_encoding($styledHtml, 'HTML-ENTITIES', 'UTF-8')
-        );
+        $styledDom->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $styledHtml);
         libxml_clear_errors();
 
         // 🔹 Sinkronisasi gambar: ganti <img src="..."> dari Pandoc dengan URL hasil extract PhpWord
@@ -397,19 +393,26 @@ class DocxExtractor
         $pandocBody = $pandocDom->getElementsByTagName('body')->item(0);
         $styledBody = $styledDom->getElementsByTagName('body')->item(0);
 
+        if (!$pandocBody) {
+            return $pandocHtml ?: $styledHtml;
+        }
+
         $resultHtml = ''; // Hasil akhir penggabungan
 
         // Loop semua elemen child di body hasil Pandoc
-        for ($i = 0; $i < $pandocBody->childNodes->length; $i++) {
-            $pandocChild = $pandocBody->childNodes->item($i); // Ambil elemen child ke-i
+        $pandocNodes = $pandocBody->childNodes;
+        $styledNodes = $styledBody ? $styledBody->childNodes : null;
+
+        for ($i = 0; $i < $pandocNodes->length; $i++) {
+            $pandocChild = $pandocNodes->item($i); // Ambil elemen child ke-i
             $pandocHtmlChunk = $pandocDom->saveHTML($pandocChild); // Convert ke string HTML
 
-            // Jika chunk mengandung <math> (MathML) → pakai Pandoc HTML (karena Pandoc lebih bagus handle math)
-            if (str_contains($pandocHtmlChunk, '<math')) {
+            // Jika chunk mengandung MathML, MathJax LaTeX, atau Table → pakai Pandoc HTML
+            if (str_contains($pandocHtmlChunk, '<math') || str_contains($pandocHtmlChunk, '\\(') || str_contains($pandocHtmlChunk, '\\[') || str_contains($pandocHtmlChunk, 'class="math') || str_contains($pandocHtmlChunk, '<table')) {
                 $resultHtml .= $pandocHtmlChunk;
             } else {
                 // Ambil chunk styled dari posisi yang sama di HTML PhpWord
-                $styledChild = $styledBody->childNodes->item($i);
+                $styledChild = $styledNodes ? $styledNodes->item($i) : null;
                 $styledHtmlChunk = $styledChild ? $styledDom->saveHTML($styledChild) : null;
 
                 // Jika ada styled version, pakai itu; kalau tidak, fallback ke Pandoc version
@@ -422,14 +425,14 @@ class DocxExtractor
 
     public function combineStyledAndPandoc(string $styledHtml, string $pandocHtml): string
     {
-        // Cek jika HTML hasil Pandoc mengandung <math> (equation) atau <img> (gambar)
-        // Kenapa? Karena Pandoc lebih handal dalam mempertahankan struktur MathML dan path gambar
-        if (str_contains($pandocHtml, '<math') || str_contains($pandocHtml, '<img')) {
-            // Jika ada math atau img, gunakan seluruh pandocHtml
+        // Cek jika HTML hasil Pandoc mengandung equation (MathML atau MathJax LaTeX), <img> (gambar), atau <table> (tabel)
+        // Kenapa? Karena Pandoc lebih handal dalam mempertahankan struktur rumus, path gambar, dan struktur tabel
+        if (str_contains($pandocHtml, '<math') || str_contains($pandocHtml, '\\(') || str_contains($pandocHtml, '\\[') || str_contains($pandocHtml, '<img') || str_contains($pandocHtml, '<table')) {
+            // Jika ada math, img, atau table, gunakan seluruh pandocHtml
             return $pandocHtml;
         }
 
-        // Jika tidak mengandung math atau gambar, berarti hanya teks biasa → gunakan styledHtml
+        // Jika tidak mengandung math, gambar, atau table, berarti hanya teks biasa → gunakan styledHtml
         // StyledHtml dipakai karena memiliki format/style yang lebih rapi (hasil dari PhpWord)
         return $styledHtml;
     }
@@ -449,9 +452,8 @@ class DocxExtractor
 
     public function isMeaningfullyEmpty(string $html): bool
     {
-        // Jika ada <img>, <math>, atau <m:oMath> berarti tidak kosong secara "makna"
-        // <m:oMath> adalah tag equation di OOXML Word
-        if (preg_match('/<img\b/i', $html) || preg_match('/<math\b/i', $html) || preg_match('/<m:oMath\b/i', $html)) {
+        // Jika ada <img>, <table>, <math>, \(, \[, atau <m:oMath> berarti tidak kosong secara "makna"
+        if (preg_match('/<img\b/i', $html) || preg_match('/<table\b/i', $html) || preg_match('/<math\b/i', $html) || str_contains($html, '\\(') || str_contains($html, '\\[') || preg_match('/<m:oMath\b/i', $html)) {
             return false; // tidak kosong
         }
 
@@ -543,21 +545,75 @@ class DocxExtractor
 
     /**
      * Bersihkan HTML hasil parsing.
-     * Menghapus tag <span>, atribut style, dan paragraf kosong.
+     * Menghapus tag <span>, atribut style berlebih, dan merapikan struktur tabel.
      */
     public function cleanHtml(string $html): string
     {
-        // Hapus semua tag <span ...>
-        $html = preg_replace('/<span[^>]*>/i', '', $html);
+        // Hapus semua tag <span ...> KECUALI tag span math
+        $html = preg_replace('/<span(?!\s+class="[^"]*math)[^>]*>/iu', '', $html);
         // Hapus penutup </span>
-        $html = preg_replace('/<\/span>/i', '', $html);
+        $html = preg_replace('/<\/span>/iu', '', $html);
         // Hapus atribut style di semua tag
-        $html = preg_replace('/\s?style="[^"]*"/i', '', $html);
+        $html = preg_replace('/\s?style="[^"]*"/iu', '', $html);
 
         // (Opsional) Hapus paragraf kosong <p></p>
-        $html = preg_replace('/<p>\s*<\/p>/i', '', $html);
+        $html = preg_replace('/<p>\s*<\/p>/iu', '', $html);
+
+        // Format tabel agar memiliki border & styling yang rapi
+        $html = $this->formatTableHtml($html);
 
         return $html; // Kembalikan HTML yang sudah dibersihkan
+    }
+
+    /**
+     * Memastikan struktur tabel di dalam soal memiliki border, class, dan inline style yang rapi.
+     */
+    public function formatTableHtml(string $html): string
+    {
+        if (!str_contains($html, '<table')) {
+            return $html;
+        }
+
+        $dom = new \DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $html);
+        libxml_clear_errors();
+
+        $tables = $dom->getElementsByTagName('table');
+        if ($tables->length === 0) {
+            return $html;
+        }
+
+        foreach ($tables as $table) {
+            $table->setAttribute('border', '1');
+            $existingClass = $table->getAttribute('class');
+            if (!str_contains($existingClass, 'question-table')) {
+                $table->setAttribute('class', trim($existingClass . ' question-table'));
+            }
+            $table->setAttribute('style', 'border-collapse: collapse; border: 1px solid #94a3b8; width: 100%; max-width: 100%; margin: 12px 0;');
+
+            $ths = $table->getElementsByTagName('th');
+            foreach ($ths as $th) {
+                $th->setAttribute('style', 'border: 1px solid #94a3b8; padding: 8px 12px; background-color: #f1f5f9; font-weight: 600; text-align: center;');
+            }
+
+            $tds = $table->getElementsByTagName('td');
+            foreach ($tds as $td) {
+                $td->setAttribute('style', 'border: 1px solid #94a3b8; padding: 8px 12px; vertical-align: middle;');
+            }
+        }
+
+        $body = $dom->getElementsByTagName('body')->item(0);
+        if (!$body) {
+            return $html;
+        }
+
+        $result = '';
+        foreach ($body->childNodes as $child) {
+            $result .= $dom->saveHTML($child);
+        }
+
+        return $result ?: $html;
     }
 
 
@@ -691,8 +747,8 @@ class DocxExtractor
         // Mengabaikan error parsing HTML agar tidak mengganggu proses
         libxml_use_internal_errors(true);
 
-        // Memuat HTML, memastikan encoding ke HTML entities agar aman untuk karakter khusus
-        $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+        // Memuat HTML dengan deklarasi UTF-8 yang aman untuk multibyte
+        $dom->loadHTML('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' . $html);
 
         // Menghapus daftar error yang mungkin tersimpan
         libxml_clear_errors();
@@ -720,16 +776,21 @@ class DocxExtractor
 
         // Ambil elemen <body> dari HTML yang sudah dimodifikasi
         $body = $dom->getElementsByTagName('body')->item(0);
+        if (!$body) {
+            return $html;
+        }
 
         // Variabel untuk menyimpan isi HTML di dalam <body>
         $innerHTML = '';
 
         // Loop semua child nodes di dalam <body> dan gabungkan menjadi satu string HTML
-        foreach ($body->childNodes as $child) {
-            $innerHTML .= $dom->saveHTML($child);
+        if ($body->childNodes) {
+            foreach ($body->childNodes as $child) {
+                $innerHTML .= $dom->saveHTML($child);
+            }
         }
 
         // Kembalikan HTML yang sudah diperbarui dengan src gambar baru
-        return $innerHTML;
+        return $innerHTML ?: $html;
     }
 }

@@ -112,7 +112,7 @@ function paginateBankSoalDetail() {
 
             else if (node.nodeType === Node.ELEMENT_NODE) {
 
-                if (node.tagName.toLowerCase() === "math") {
+                if (node.tagName.toLowerCase() === "math" || (node.classList && node.classList.contains('math'))) {
                     total += 25;
                 }
 
@@ -575,6 +575,10 @@ function paginateBankSoalDetail() {
                     $('.pagination-container-bank-soal-detail').html(response.links);
                     $('#emptyMessageBankSoalDetail').hide();
                     $('.thead-table-bank-soal-detail').show();
+
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        window.MathJax.typesetPromise([containerQuestion[0]]).catch(err => console.warn('MathJax error:', err));
+                    }
                 } else {
                     $('#emptyMessageBankSoalDetail').show();
                     $('.thead-table-bank-soal-detail').hide();
@@ -725,6 +729,14 @@ function initAccordionQuestion() {
 
                 icon.classList.remove('fa-chevron-up');
                 icon.classList.add('fa-chevron-down');
+
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([preview, content]).then(() => {
+                        if (content.classList.contains('accordion-open')) {
+                            content.style.height = content.scrollHeight + "px";
+                        }
+                    }).catch(err => console.warn('MathJax error:', err));
+                }
 
                 setTimeout(() => {
                     const matchingContainer = content.querySelector(".matching-container");

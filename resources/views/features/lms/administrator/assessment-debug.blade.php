@@ -1,6 +1,13 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Exam Debugger'])
 
 @if (Auth::user()->role === 'Administrator')
+    <style>
+        dialog .swal2-container {
+            z-index: 99999 !important;
+            position: fixed !important;
+            inset: 0 !important;
+        }
+    </style>
     <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-[#F8FAFC] transition-all duration-500 ease-in-out z-20 pb-20">
         <div class="mt-4 sm:mt-6 mx-4 sm:mx-8 space-y-6">
 
@@ -25,8 +32,13 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-3 shrink-0">
-                            <button id="btn-refresh-attempts"
+                        <div class="flex flex-wrap items-center gap-3 shrink-0">
+                            <button id="btn-open-cache-manager" type="button"
+                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20">
+                                <i class="fa-solid fa-bolt text-sm"></i>
+                                <span>RAM Cache Manager</span>
+                            </button>
+                            <button id="btn-refresh-attempts" type="button"
                                 class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 text-white font-medium text-sm transition-all shadow-md backdrop-blur-md border border-white/20">
                                 <i class="fa-solid fa-arrows-rotate text-sm" id="icon-refresh"></i>
                                 <span>Segarkan Data</span>
@@ -190,7 +202,7 @@
     <dialog id="modal-edit-attempt" class="modal">
         <div class="modal-box bg-white max-w-lg p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100">
             <!-- Modal Header -->
-            <div class="bg-[linear-gradient(135deg,#0071BC,#004f84)] p-6 text-white flex items-start justify-between">
+            <div class="bg-[#0071BC] p-6 text-white flex items-start justify-between" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 100%) !important;">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-sliders"></i>
@@ -303,6 +315,146 @@
         </form>
     </dialog>
 
+    <!-- MODAL RAM CACHE MANAGER -->
+    <dialog id="modal-cache-manager" class="modal p-3 sm:p-6 backdrop:bg-slate-900/50 backdrop:backdrop-blur-xs">
+        <div class="modal-box w-11/12 max-w-6xl max-h-[92vh] bg-white p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Header (Pinned) -->
+            <div class="bg-emerald-700 p-5 sm:p-6 text-white flex items-start justify-between shrink-0 shadow-xs" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #064e3b 100%) !important;">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0" style="background-color: rgba(255, 255, 255, 0.2);">
+                        <i class="fa-solid fa-bolt text-yellow-300"></i>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider mb-1" style="background-color: rgba(255, 255, 255, 0.2); color: #ffffff;">
+                            <i class="fa-solid fa-microchip"></i>
+                            In-Memory RAM Acceleration
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white" style="color: #ffffff !important;">RAM Cache Soal Ujian</h3>
+                    </div>
+                </div>
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20 text-base cursor-pointer" style="color: #ffffff !important;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Content Area (Scrollable body) -->
+            <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0 bg-slate-50/50">
+                <!-- Summary Metrics -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-list-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Ujian</div>
+                            <div class="text-xl font-extrabold text-slate-800" id="cache-stat-total">0</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-emerald-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Tersimpan di RAM</div>
+                            <div class="text-xl font-extrabold text-emerald-700" id="cache-stat-cached">0</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-amber-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-hourglass-start"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Belum di-Cache</div>
+                            <div class="text-xl font-extrabold text-amber-700" id="cache-stat-uncached">0</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-blue-200/80 rounded-2xl p-4 shadow-2xs flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div>
+                            <div class="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Cache Driver</div>
+                            <div class="text-base font-extrabold text-blue-800 uppercase" id="cache-stat-driver">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Action Bar -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="btn-warm-all-cache" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition shadow-xs">
+                            <i class="fa-solid fa-fire text-xs"></i>
+                            <span>Pre-load Semua Ujian Aktif</span>
+                        </button>
+                        <button type="button" id="btn-clear-all-cache" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-xs font-bold transition">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                            <span>Bersihkan Seluruh Cache Soal</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="relative w-full sm:w-72">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <input type="text" id="cache-search" placeholder="Cari judul ujian / mapel..." class="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition">
+                        </div>
+                        <button type="button" id="btn-refresh-cache-status" class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition shrink-0" title="Segarkan Status Cache">
+                            <i class="fa-solid fa-arrows-rotate text-xs" id="icon-refresh-cache"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Assessment Cache Table -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-100/80 text-[11px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-5 py-3.5 min-w-[220px]">Assessment & Mapel</th>
+                                    <th class="px-5 py-3.5 min-w-[150px]">Kelas & Sekolah</th>
+                                    <th class="px-5 py-3.5 min-w-[160px]">Jadwal Ujian</th>
+                                    <th class="px-5 py-3.5 min-w-[170px] text-center">Status Cache</th>
+                                    <th class="px-5 py-3.5 min-w-[140px] text-center">Aksi RAM</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cache-table-body" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="5" class="px-5 py-10 text-center text-slate-400">
+                                        <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-emerald-600"></i>
+                                        <div>Memeriksa status cache RAM...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer (Pinned) -->
+            <div class="p-4 sm:p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-emerald-600 text-sm"></i>
+                    <span>Soal ujian otomatis dimuat ke RAM pada kunjungan siswa pertama jika belum di-cache.</span>
+                </div>
+                <form method="dialog">
+                    <button class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold transition cursor-pointer">
+                        Tutup
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
     <!-- CLIENT JAVASCRIPT LOGIC -->
     <script>
         let currentStatusFilter = 'all';
@@ -368,11 +520,14 @@
                     renderAttemptsTable(res.data, res.pagination);
                 },
                 error: function (xhr) {
+                    const message = xhr.responseJSON?.message || (xhr.status === 403 
+                        ? 'Akses ditolak. Pastikan Anda memiliki akses administrator.' 
+                        : 'Gagal memuat data (' + (xhr.statusText || 'Error ' + xhr.status) + ').');
                     $('#attempts-table-body').html(`
                         <tr>
                             <td colspan="6" class="px-6 py-12 text-center text-red-500">
                                 <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
-                                <div>Gagal memuat data. Pastikan Anda memiliki akses administrator.</div>
+                                <div class="font-medium">${escapeHtml(message)}</div>
                             </td>
                         </tr>
                     `);
@@ -463,7 +618,7 @@
                     <tr class="hover:bg-slate-50/80 transition-colors">
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-800">${escapeHtml(studentName)}</div>
-                            <div class="text-xs text-slate-500 mt-0.5">NIS: ${escapeHtml(nis)} • Kelas: <span class="font-semibold text-slate-700">${escapeHtml(className)}</span></div>
+                            <div class="text-xs text-slate-500 mt-0.5">NISN: ${escapeHtml(nis)} • Kelas: <span class="font-semibold text-slate-700">${escapeHtml(className)}</span></div>
                             <div class="text-[11px] text-slate-400">${escapeHtml(schoolName)}</div>
                         </td>
                         <td class="px-6 py-4">
@@ -610,6 +765,20 @@
             document.getElementById('modal-edit-attempt').showModal();
         }
 
+        function swalInModal(options, modalId = 'modal-cache-manager') {
+            const modalEl = document.getElementById(modalId);
+            if (typeof options === 'string') {
+                const title = arguments[0];
+                const text = arguments[1] || '';
+                const icon = arguments[2] || 'info';
+                options = { title, text, icon };
+            }
+            const defaults = {
+                target: modalEl || document.body
+            };
+            return Swal.fire(Object.assign({}, defaults, options));
+        }
+
         // Trigger manual answer reset
         function triggerResetAnswers(type) {
             const id = $('#edit-attempt-id').val();
@@ -620,7 +789,7 @@
                 ? 'Hapus SEMUA jawaban siswa untuk ujian ini? Siswa harus mengerjakan ulang dari nomor 1.' 
                 : 'Bersihkan semua jawaban kosong / auto-submit? Soal-soal yang belum diisi akan dapat dikerjakan kembali oleh siswa.';
 
-            Swal.fire({
+            swalInModal({
                 title: isDeleteAll ? 'Hapus Seluruh Jawaban?' : 'Bersihkan Soal Kosong?',
                 text: label,
                 icon: isDeleteAll ? 'warning' : 'question',
@@ -628,7 +797,7 @@
                 confirmButtonText: isDeleteAll ? 'Ya, Hapus Semua' : 'Ya, Bersihkan',
                 cancelButtonText: 'Batal',
                 confirmButtonColor: isDeleteAll ? '#EF4444' : '#0071BC'
-            }).then((result) => {
+            }, 'modal-edit-attempt').then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
                         url: `/administrator/assessment-debug/${id}/reset-answers`,
@@ -638,11 +807,11 @@
                             reset_type: type
                         },
                         success: function (res) {
-                            Swal.fire('Berhasil', res.message, 'success');
+                            swalInModal({ icon: 'success', title: 'Berhasil', text: res.message }, 'modal-edit-attempt');
                             loadAttempts(currentPage);
                         },
                         error: function (xhr) {
-                            Swal.fire('Gagal', xhr.responseJSON?.message || 'Gagal memproses jawaban.', 'error');
+                            swalInModal({ icon: 'error', title: 'Gagal', text: xhr.responseJSON?.message || 'Gagal memproses jawaban.' }, 'modal-edit-attempt');
                         }
                     });
                 }
@@ -754,6 +923,377 @@
             setTimeout(() => {
                 icon.removeClass('fa-spin');
             }, 700);
+        });
+
+        // =========================================================
+        // RAM CACHE MANAGER CLIENT LOGIC
+        // =========================================================
+        let cacheSearchTimeout = null;
+        let currentCacheItems = [];
+
+        function openCacheManagerModal() {
+            const modal = document.getElementById('modal-cache-manager');
+            if (!modal) return;
+            if (typeof modal.showModal === 'function') {
+                modal.showModal();
+            } else {
+                $(modal).addClass('modal-open');
+            }
+            loadCacheStatus();
+        }
+
+        $('#btn-open-cache-manager').on('click', function (e) {
+            e.preventDefault();
+            openCacheManagerModal();
+        });
+
+        $('#btn-refresh-cache-status').on('click', function () {
+            const icon = $('#icon-refresh-cache');
+            icon.addClass('fa-spin');
+            loadCacheStatus();
+            setTimeout(() => {
+                icon.removeClass('fa-spin');
+            }, 700);
+        });
+
+        $('#cache-search').on('input', function () {
+            clearTimeout(cacheSearchTimeout);
+            cacheSearchTimeout = setTimeout(() => {
+                loadCacheStatus();
+            }, 300);
+        });
+
+        function loadCacheStatus() {
+            const search = $('#cache-search').val();
+            const tbody = $('#cache-table-body');
+
+            tbody.html(`
+                <tr>
+                    <td colspan="5" class="px-5 py-10 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-emerald-600"></i>
+                        <div>Memeriksa status cache RAM...</div>
+                    </td>
+                </tr>
+            `);
+
+            $.ajax({
+                url: "{{ route('admin.assessmentDebug.cacheStatus') }}",
+                type: 'GET',
+                data: {
+                    search: search
+                },
+                success: function (res) {
+                    if (res.summary) {
+                        $('#cache-stat-total').text(res.summary.total);
+                        $('#cache-stat-cached').text(res.summary.cached);
+                        $('#cache-stat-uncached').text(res.summary.uncached);
+                        $('#cache-stat-driver').text(res.summary.cache_driver);
+                    }
+                    currentCacheItems = res.data || [];
+                    renderCacheTable(currentCacheItems);
+                },
+                error: function (xhr) {
+                    const errMsg = xhr.responseJSON?.message || 'Gagal memuat status cache RAM. Pastikan Anda memiliki akses administrator.';
+                    tbody.html(`
+                        <tr>
+                            <td colspan="5" class="px-5 py-10 text-center text-red-500">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                                <div class="font-bold">${escapeHtml(errMsg)}</div>
+                                <div class="text-xs text-slate-400 mt-1">Status HTTP: ${xhr.status}</div>
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+        }
+
+        function renderCacheTable(items) {
+            const tbody = $('#cache-table-body');
+            tbody.empty();
+
+            if (!items || items.length === 0) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="5" class="px-5 py-14 text-center text-slate-400">
+                            <i class="fa-solid fa-box-open text-3xl mb-2 text-slate-300"></i>
+                            <div class="font-semibold text-slate-600">Tidak ada assessment ditemukan</div>
+                            <div class="text-xs text-slate-400 mt-1">Pastikan ada ujian yang telah memiliki butir soal.</div>
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            items.forEach(item => {
+                // Exam Schedule Badge
+                let scheduleBadge = '';
+                if (item.status_exam === 'active') {
+                    scheduleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle text-[6px]"></i> Aktif</span>`;
+                } else if (item.status_exam === 'upcoming') {
+                    scheduleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200"><i class="fa-solid fa-clock text-[9px]"></i> Akan Datang</span>`;
+                } else {
+                    scheduleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Selesai</span>`;
+                }
+
+                // Cache Status Badge
+                let cacheBadge = '';
+                if (item.is_cached) {
+                    cacheBadge = `
+                        <div class="flex flex-col items-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs">
+                                <i class="fa-solid fa-circle-check text-[11px]"></i> Tersimpan (${item.cached_questions_count ?? item.total_questions} soal)
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 mt-1 truncate max-w-[190px]" title="${escapeHtml(item.cache_key)}">
+                                ${escapeHtml(item.cache_key)}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    cacheBadge = `
+                        <div class="flex flex-col items-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-hourglass-start text-[10px]"></i> Belum di-Cache
+                            </span>
+                            <span class="text-[10px] text-slate-400 mt-1">Dimuat otomatis pada request ke-1</span>
+                        </div>
+                    `;
+                }
+
+                // Actions
+                const warmBtn = `
+                    <button type="button" class="btn-warm-cache-item cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-bold text-xs transition active:scale-95 border border-emerald-200" data-id="${item.id}" title="Muat / Segarkan ke RAM">
+                        <i class="fa-solid fa-fire text-xs"></i>
+                        <span>Pre-load</span>
+                    </button>
+                `;
+
+                const clearBtn = item.is_cached ? `
+                    <button type="button" class="btn-clear-cache-item cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-bold text-xs transition active:scale-95 border border-red-200" data-id="${item.id}" title="Hapus RAM Cache (Misal setelah edit soal)">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                        <span>Hapus</span>
+                    </button>
+                ` : '';
+
+                const row = `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="px-5 py-3.5">
+                            <div class="font-bold text-slate-800 leading-snug">${escapeHtml(item.title)}</div>
+                            <div class="text-[11px] text-[#0071BC] font-medium mt-0.5">${escapeHtml(item.mapel)} • <span class="text-slate-500 font-normal">${item.total_questions} butir soal</span></div>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <div class="font-semibold text-slate-700">${escapeHtml(item.class_name)}</div>
+                            <div class="text-[11px] text-slate-400">${escapeHtml(item.school_name)}</div>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <div class="mb-1">${scheduleBadge}</div>
+                            <div class="text-[11px] text-slate-500">${escapeHtml(item.start_date)} s/d ${escapeHtml(item.end_date)}</div>
+                        </td>
+                        <td class="px-5 py-3.5 text-center">
+                            ${cacheBadge}
+                        </td>
+                        <td class="px-5 py-3.5 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                ${warmBtn}
+                                ${clearBtn}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        // Delegate item actions
+        $(document).on('click', '.btn-warm-cache-item', function () {
+            const id = $(this).data('id');
+            const item = currentCacheItems.find(x => String(x.id) === String(id));
+            const title = item ? item.title : `Assessment #${id}`;
+            warmAssessmentCache(id, title);
+        });
+
+        $(document).on('click', '.btn-clear-cache-item', function () {
+            const id = $(this).data('id');
+            const item = currentCacheItems.find(x => String(x.id) === String(id));
+            const title = item ? item.title : `Assessment #${id}`;
+            clearAssessmentCache(id, title);
+        });
+
+        // Warm single cache
+        function warmAssessmentCache(id, title) {
+            swalInModal({
+                title: 'Pre-load ke RAM Cache?',
+                html: `Memuat seluruh butir soal ujian <strong>${escapeHtml(title)}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-fire mr-1"></i> Ya, Muat ke RAM',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    swalInModal({
+                        title: 'Memuat Soal ke RAM...',
+                        text: 'Harap tunggu...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/warm/${id}`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Berhasil di-Cache!',
+                                text: res.message,
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                            loadCacheStatus();
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memuat cache.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Clear single cache
+        function clearAssessmentCache(id, title) {
+            swalInModal({
+                title: 'Hapus RAM Cache Soal?',
+                html: `Menghapus cache soal untuk ujian <strong>${escapeHtml(title)}</strong> dari RAM.<br><br>Gunakan opsi ini jika Anda atau guru baru saja memperbarui/mengedit soal di database, agar perubahan segera tercermin pada siswa.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Ya, Bersihkan Cache',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/clear/${id}`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Cache Dibersihkan!',
+                                text: res.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            loadCacheStatus();
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Gagal menghapus cache.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Warm all active assessments
+        $('#btn-warm-all-cache').on('click', function () {
+            swalInModal({
+                title: 'Pre-load Semua Ujian Aktif?',
+                html: `Sistem akan memuat seluruh soal dari ujian yang sedang berlangsung atau aktif ke dalam RAM cache server.<br><br>Ini berguna sebelum jam ujian serentak dimulai.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-fire mr-1"></i> Pre-load Semua',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    swalInModal({
+                        title: 'Memproses Pre-load RAM...',
+                        text: 'Sedang membaca seluruh soal dari database ke RAM...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/warm/all`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Selesai!',
+                                text: res.message,
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                            loadCacheStatus();
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Clear all caches
+        $('#btn-clear-all-cache').on('click', function () {
+            swalInModal({
+                title: 'Bersihkan Seluruh RAM Cache Soal?',
+                html: `Seluruh cache soal ujian yang tersimpan di RAM akan dikosongkan.<br><br>Siswa yang mengakses ujian berikutnya akan otomatis memuat ulang versi terbaru dari database.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Ya, Kosongkan Semua',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/clear/all`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Cache RAM Bersih!',
+                                text: res.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            loadCacheStatus();
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan.'
+                            });
+                        }
+                    });
+                }
+            });
         });
 
         $(document).ready(function () {

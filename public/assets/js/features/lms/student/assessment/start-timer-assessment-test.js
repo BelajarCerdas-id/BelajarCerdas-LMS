@@ -271,7 +271,7 @@ function checkAttemptStatus() {
                     allowEscapeKey: false
                 });
 
-                autoSubmitUnSavedQuestions();
+                autoSubmitUnSavedQuestions(null, 'cheating');
             }
         }
     });
@@ -550,7 +550,7 @@ function reportCheating(reason = 'unspecified') {
                     allowEscapeKey: false
                 });
 
-                autoSubmitUnSavedQuestions();
+                autoSubmitUnSavedQuestions(null, 'cheating');
             }
         },
         error: function () {

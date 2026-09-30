@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class StudentAssessmentExamController extends Controller
 {
@@ -111,50 +112,75 @@ class StudentAssessmentExamController extends Controller
             }
         }
 
-        $publishedQuestionIds = SchoolAssessmentQuestion::where('school_assessment_id', $sourceAssessmentId)->orderBy('id')->pluck('id')->implode(',');
+        $forceRefresh = request()->boolean('force_refresh') || request()->filled('force_refresh');
+        $poolCacheKey = "assessment_questions_pool_{$sourceAssessmentId}";
+
+        if ($forceRefresh) {
+            Cache::forget($poolCacheKey);
+        }
+
+        // 1. Ambil master pool soal langsung dari RAM Cache (atau load & cache jika belum ada)
+        $questionPool = Cache::remember($poolCacheKey, now()->addHours(6), function () use ($sourceAssessmentId) {
+            return SchoolAssessmentQuestion::with([
+                'LmsQuestionBank',
+                'LmsQuestionBank.LmsQuestionOption',
+                'LmsQuestionBank.Mapel'
+            ])
+            ->where('school_assessment_id', $sourceAssessmentId)
+            ->whereHas('LmsQuestionBank', function ($q) {
+                $q->where('status_bank_soal', 'Publish');
+            })
+            ->orderBy('id')
+            ->get();
+        });
+
+        $publishedQuestionIds = $questionPool->pluck('id')->implode(',');
 
         $shuffleQuestions = $schoolAssessment->shuffle_questions;
         $shuffleOptions = $schoolAssessment->shuffle_options;
 
         $cacheKey = "assessment-{$user->id}-{$sourceAssessmentId}-{$publishedQuestionIds}-{$semester}-{$shuffleQuestions}-test";
 
-        $forceRefresh = request()->boolean('force_refresh') || request()->filled('force_refresh');
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        if (Cache::has($cacheKey)) {
+        // 2. Filter remedial langsung di memori jika ada
+        $filteredPool = $questionPool;
+        if (!empty($wrongBankIds)) {
+            $filteredPool = $filteredPool->whereIn('question_bank_id', $wrongBankIds);
+        }
 
-            $cachedIds = Cache::get($cacheKey);
-
-            $questions = SchoolAssessmentQuestion::with(['LmsQuestionBank', 'LmsQuestionBank.LmsQuestionOption', 'LmsQuestionBank.Mapel'])->whereIn('id', $cachedIds)
-            ->when(!empty($wrongBankIds), function ($q) use ($wrongBankIds) {
-            $q->whereIn('question_bank_id', $wrongBankIds);
-        })->get()
-            ->sortBy(function ($q) use ($cachedIds) {
-                return array_search($q->id, $cachedIds);
-            })
-            ->values();
-
-        } else {
-
-            $baseQuery = SchoolAssessmentQuestion::with(['LmsQuestionBank', 'LmsQuestionBank.LmsQuestionOption', 'LmsQuestionBank.Mapel'
-            ])->where('school_assessment_id', $sourceAssessmentId)->whereHas('LmsQuestionBank', function ($q) {
-                $q->where('status_bank_soal', 'Publish');
-            });
-
-            if (!empty($wrongBankIds)) {
-                $baseQuery->whereIn('question_bank_id', $wrongBankIds);
+        // 3. Clone collection dan model agar transformasi opsi tiap siswa terisolasi
+        $isolatedPool = $filteredPool->map(function ($item) {
+            $cloned = clone $item;
+            if ($cloned->relationLoaded('LmsQuestionBank')) {
+                $qb = clone $cloned->LmsQuestionBank;
+                if ($qb->relationLoaded('LmsQuestionOption')) {
+                    $qb->setRelation('LmsQuestionOption', $qb->LmsQuestionOption->map(fn($opt) => clone $opt));
+                }
+                $cloned->setRelation('LmsQuestionBank', $qb);
             }
+            return $cloned;
+        });
 
+        // 4. Urutan soal per siswa
+        if (Cache::has($cacheKey)) {
+            $cachedIds = Cache::get($cacheKey);
+            $questions = $isolatedPool
+                ->whereIn('id', $cachedIds)
+                ->sortBy(function ($q) use ($cachedIds) {
+                    return array_search($q->id, $cachedIds);
+                })
+                ->values();
+        } else {
             if ($shuffleQuestions) {
-                $questions = $baseQuery->get()->shuffle()->values();
+                $questions = $isolatedPool->shuffle()->values();
             } else {
-                $questions = $baseQuery->get();
+                $questions = $isolatedPool->values();
             }
 
             $cachePayload = $questions->pluck('id')->toArray();
-
             Cache::put($cacheKey, $cachePayload, now()->addHours(3));
         }
 
@@ -935,22 +961,23 @@ class StudentAssessmentExamController extends Controller
                 ->count();
 
             if ($totalSubmitted >= $totalQuestions) {
+                Cache::lock("exam_summary_lock_{$assessmentId}_{$userId}", 10)->get(function () use ($request, $userId, $assessmentId, $assessment) {
+                    if ($request->filled('total_exam_duration')) {
+                        StudentAssessmentAnswer::where('student_id', $userId)
+                            ->where('school_assessment_id', $assessmentId)
+                            ->update([
+                                'total_exam_duration' => $request->total_exam_duration
+                            ]);
+                    }
 
-                if ($request->filled('total_exam_duration')) {
-                    StudentAssessmentAnswer::where('student_id', $userId)
-                        ->where('school_assessment_id', $assessmentId)
-                        ->update([
-                            'total_exam_duration' => $request->total_exam_duration
-                        ]);
-                }
-
-                $this->summaryService->updateStudentAssessmentSummary($userId, $assessment);
+                    $this->summaryService->updateStudentAssessmentSummary($userId, $assessment);
+                });
             }
         }
 
         $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())->where('school_assessment_id', $assessmentId)->first();
 
-        if ($attempt && $attempt->status === 'in_progress') {
+        if ($attempt && $attempt->status === 'in_progress' && $request->filled('status_attempt')) {
 
             $attempt->update([
                 'status' => $request->status_attempt
@@ -971,6 +998,313 @@ class StudentAssessmentExamController extends Controller
             'status' => 'success',
             'message' => 'Jawaban berhasil disimpan',
         ]);
+    }
+
+    public function studentAssessmentExamEnd(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
+    {
+        $userId = Auth::id();
+
+        // Gunakan cache lock per student & assessment agar tidak terjadi double-commit bersamaan
+        $lockKey = "exam_end_lock_{$assessmentId}_{$userId}";
+        $lock = Cache::lock($lockKey, 15);
+
+        if (!$lock->get()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Proses pengakhiran ujian sedang berlangsung atau telah selesai.'
+            ]);
+        }
+
+        try {
+            $assessment = SchoolAssessment::findOrFail($assessmentId);
+            $schoolPartner = SchoolPartner::findOrFail($assessment->school_partner_id);
+
+            $timezone = TimezoneHelper::getSchoolTimezone($schoolPartner);
+            $endDate = TimezoneHelper::parse($assessment->end_date, $timezone);
+            $now = TimezoneHelper::now($timezone);
+
+            $attempt = StudentAssessmentAttempt::where('student_id', $userId)
+                ->where('school_assessment_id', $assessmentId)
+                ->first();
+
+            if ($attempt && $attempt->expire_time) {
+                $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+                if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                    $endDate = $attemptExpire->copy()->addMinute();
+                }
+            }
+
+            $isExpired = $endDate && $now->greaterThan($endDate);
+            $statusAttempt = $request->input('status_attempt', ($isExpired ? 'timeout' : 'submitted'));
+            if (!in_array($statusAttempt, ['timeout', 'submitted', 'cheating'])) {
+                $statusAttempt = $isExpired ? 'timeout' : 'submitted';
+            }
+
+            $totalExamDuration = $request->input('total_exam_duration');
+
+            DB::transaction(function () use ($userId, $assessmentId, $assessment, $request, $statusAttempt, $totalExamDuration) {
+                // 1. Simpan jawaban aktif saat ini jika ada yang dikirim dan belum tersimpan
+                $currentQuestionId = $request->input('current_question_id');
+                $currentAnswerValue = $request->input('current_answer_value');
+                $currentAnswerDuration = $request->input('current_answer_duration', 0);
+
+                if ($currentQuestionId) {
+                    $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->find($currentQuestionId);
+                    if ($schoolQuestion && $schoolQuestion->lmsQuestionBank) {
+                        $question = $schoolQuestion->lmsQuestionBank;
+
+                        $answerData = $currentAnswerValue;
+                        if (is_string($answerData)) {
+                            $decoded = json_decode($answerData, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $answerData = $decoded;
+                            }
+                        }
+                        if ($answerData === '' || $answerData === [] || $answerData === null) {
+                            $answerData = null;
+                        }
+
+                        $score = $this->calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId);
+
+                        $existingCurrentAnswer = StudentAssessmentAnswer::where('student_id', $userId)
+                            ->where('school_assessment_id', $assessmentId)
+                            ->where('school_assessment_question_id', $currentQuestionId)
+                            ->first();
+
+                        if ($existingCurrentAnswer) {
+                            $updateData = [
+                                'status_answer' => 'submitted',
+                                'answer_duration' => $currentAnswerDuration ?: $existingCurrentAnswer->answer_duration,
+                            ];
+                            if ($answerData !== null) {
+                                $updateData['answer_value'] = $answerData;
+                                $updateData['question_score'] = $score;
+                            }
+                            $existingCurrentAnswer->update($updateData);
+                        } else {
+                            StudentAssessmentAnswer::create([
+                                'student_id' => $userId,
+                                'school_assessment_id' => $assessmentId,
+                                'school_assessment_question_id' => $currentQuestionId,
+                                'answer_value' => $answerData,
+                                'question_score' => $score,
+                                'answer_duration' => $currentAnswerDuration,
+                                'status_answer' => 'submitted',
+                                'grading_status' => $question->tipe_soal === 'ESSAY' ? 'pending' : null,
+                            ]);
+                        }
+                    }
+                }
+
+                // 2. Ubah semua jawaban 'draft' menjadi 'submitted' sekaligus dalam 1 query
+                StudentAssessmentAnswer::where('student_id', $userId)
+                    ->where('school_assessment_id', $assessmentId)
+                    ->where('status_answer', 'draft')
+                    ->update([
+                        'status_answer' => 'submitted'
+                    ]);
+
+                // 3. Update total exam duration pada semua jawaban siswa sekaligus dalam 1 query
+                if ($totalExamDuration !== null && $totalExamDuration !== '') {
+                    StudentAssessmentAnswer::where('student_id', $userId)
+                        ->where('school_assessment_id', $assessmentId)
+                        ->update([
+                            'total_exam_duration' => (int) $totalExamDuration
+                        ]);
+                }
+
+                // 4. Update durasi per soal jika dikirim dari frontend
+                $durations = $request->input('durations');
+                if (is_array($durations)) {
+                    foreach ($durations as $qId => $dur) {
+                        if ($dur > 0) {
+                            StudentAssessmentAnswer::where('student_id', $userId)
+                                ->where('school_assessment_id', $assessmentId)
+                                ->where('school_assessment_question_id', $qId)
+                                ->where(function ($q) {
+                                    $q->whereNull('answer_duration')->orWhere('answer_duration', '<=', 0);
+                                })
+                                ->update(['answer_duration' => (int) $dur]);
+                        }
+                    }
+                }
+
+                // 5. Isi soal yang belum pernah dijawab dengan jawaban kosong (bulk insert)
+                $sourceAssessmentId = $assessment->id;
+                $assessmentCategory = strtolower($assessment->assessment_category ?? '');
+                if (in_array($assessmentCategory, ['remedial', 'susulan']) && $assessment->parent_assessment_id) {
+                    $sourceAssessmentId = $assessment->parent_assessment_id;
+                }
+
+                $existingQuestionIds = StudentAssessmentAnswer::where('student_id', $userId)
+                    ->where('school_assessment_id', $assessmentId)
+                    ->pluck('school_assessment_question_id')
+                    ->toArray();
+
+                $allQuestionsQuery = SchoolAssessmentQuestion::where('school_assessment_id', $sourceAssessmentId);
+                if ($assessmentCategory === 'remedial' && $assessment->parent_assessment_id) {
+                    $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($assessment->parent_assessment_id);
+                    $wrongBankIds = Cache::get($cacheKeyWrong, []);
+                    if (!empty($wrongBankIds)) {
+                        $allQuestionsQuery->whereIn('id', $wrongBankIds);
+                    }
+                }
+
+                $allQuestionIds = $allQuestionsQuery->pluck('id')->toArray();
+                $missingQuestionIds = array_diff($allQuestionIds, $existingQuestionIds);
+
+                if (!empty($missingQuestionIds)) {
+                    $nowTimestamp = now();
+                    $bulkInsert = [];
+                    foreach ($missingQuestionIds as $missingQId) {
+                        $bulkInsert[] = [
+                            'student_id' => $userId,
+                            'school_assessment_id' => $assessmentId,
+                            'school_assessment_question_id' => $missingQId,
+                            'answer_value' => null,
+                            'question_score' => 0,
+                            'status_answer' => 'submitted',
+                            'grading_status' => null,
+                            'teacher_feedback' => null,
+                            'answer_duration' => 0,
+                            'total_exam_duration' => $totalExamDuration ? (int) $totalExamDuration : null,
+                            'created_at' => $nowTimestamp,
+                            'updated_at' => $nowTimestamp,
+                        ];
+                    }
+                    StudentAssessmentAnswer::insert($bulkInsert);
+                }
+
+                // 6. Update status attempt dalam 1 query
+                $attempt = StudentAssessmentAttempt::where('student_id', $userId)
+                    ->where('school_assessment_id', $assessmentId)
+                    ->first();
+
+                if ($attempt && in_array($attempt->status, ['in_progress', 'cheating'])) {
+                    if ($attempt->status !== 'cheating') {
+                        $attempt->update([
+                            'status' => $statusAttempt
+                        ]);
+                    }
+                }
+
+                // 7. Update summary nilai akhir siswa (cukup 1 kali)
+                $this->summaryService->updateStudentAssessmentSummary($userId, $assessment);
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Assessment berhasil diselesaikan.',
+                'status_attempt' => $statusAttempt,
+            ]);
+
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId)
+    {
+        if ($answerData === null) {
+            return 0;
+        }
+
+        $assessmentCategory = strtolower($assessment->assessment_category ?? '');
+        $isRemedial = $assessmentCategory === 'remedial';
+
+        if ($isRemedial && $assessment->parent_assessment_id) {
+            $previousAssessment = null;
+            $relatedAssessments = SchoolAssessment::where(function ($q) use ($assessment) {
+                $q->where('id', $assessment->parent_assessment_id)->orWhere('parent_assessment_id', $assessment->parent_assessment_id);
+            })->whereHas('StudentAssessmentAnswer', function ($q) use ($userId) {
+                $q->where('student_id', $userId);
+            })->orderBy('start_date')->pluck('id')->toArray();
+
+            $currentIndex = array_search($assessment->id, $relatedAssessments);
+            if ($currentIndex !== false && $currentIndex > 0) {
+                $prevAssessmentId = $relatedAssessments[$currentIndex - 1];
+                $previousAssessment = SchoolAssessment::find($prevAssessmentId);
+            }
+
+            $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
+            $wrongBankIds = Cache::get($cacheKeyWrong, []);
+
+            if (empty($wrongBankIds)) {
+                $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->parent_assessment_id)->count();
+            } else {
+                $totalQuestions = count($wrongBankIds);
+            }
+        } else {
+            $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->count();
+        }
+
+        $scorePerQuestion = $totalQuestions > 0 ? (100 / $totalQuestions) : 0;
+        $score = 0;
+
+        switch ($question->tipe_soal) {
+            case 'MCQ':
+                $correctOption = $question->lmsQuestionOption()
+                    ->where('is_correct', 1)
+                    ->first();
+                if ($correctOption && $answerData === $correctOption->options_key) {
+                    $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                }
+                break;
+
+            case 'MCMA':
+                if (is_array($answerData)) {
+                    $correctOptions = $question->lmsQuestionOption()->where('is_correct', 1)->pluck('options_key')->toArray();
+                    sort($correctOptions);
+                    sort($answerData);
+                    if ($correctOptions === $answerData) {
+                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                    }
+                }
+                break;
+
+            case 'MATCHING':
+                if (is_array($answerData)) {
+                    $correctPairs = $question->lmsQuestionOption()
+                        ->get()
+                        ->filter(function ($opt) {
+                            return isset($opt->extra_data['side']) && $opt->extra_data['side'] === 'left';
+                        })
+                        ->mapWithKeys(function ($opt) {
+                            return [$opt->options_key => $opt->extra_data['pair_with'] ?? null];
+                        })
+                        ->toArray();
+
+                    ksort($correctPairs);
+                    ksort($answerData);
+
+                    if ($correctPairs === $answerData) {
+                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                    }
+                }
+                break;
+
+            case 'PG_KOMPLEKS':
+                $correctAnswers = $question->lmsQuestionOption()->get()->filter(function ($opt) {
+                    return isset($opt->extra_data['side']) && $opt->extra_data['side'] === 'item';
+                })
+                ->mapWithKeys(function ($opt) {
+                    return [$opt->options_key => $opt->extra_data['answer']];
+                })->toArray();
+
+                ksort($correctAnswers);
+                ksort($answerData);
+
+                if ($correctAnswers === $answerData) {
+                    $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                }
+                break;
+
+            case 'ESSAY':
+                $score = 0;
+                break;
+        }
+
+        return $score;
     }
 
     // function submit essay (for ckeditor)

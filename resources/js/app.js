@@ -10,7 +10,7 @@ let classicEditorPromise = null;
 window.ClassicEditor = {
     create: async (...args) => {
         if (!classicEditorPromise) {
-            classicEditorPromise = import('@ckeditor/ckeditor5-build-classic').then((module) => {
+            classicEditorPromise = import('./ckeditor').then((module) => {
                 window.ClassicEditor = module.default;
                 return module.default;
             });

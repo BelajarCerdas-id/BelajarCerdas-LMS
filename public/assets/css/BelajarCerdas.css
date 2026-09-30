@@ -226,6 +226,86 @@ body:has(.sidebar-beranda-student) {
     margin: 0 auto;
 }
 
+/* Table styling for Question Content, Question Bank & CKEditor (Ensures borders & lines are properly displayed) */
+.ck-content table,
+.question-content table,
+.list-style table,
+.preview-text-only table,
+.wrapper-content-accordion-questions table,
+.question-bank-preview table,
+.submit-answer-type table,
+.prose table,
+table.question-table {
+    border-collapse: collapse !important;
+    border: 1px solid #94a3b8 !important;
+    margin: 0.75rem 0 !important;
+    width: auto !important;
+    min-width: 50% !important;
+    max-width: 100% !important;
+    font-size: 0.9em !important;
+    border-spacing: 0 !important;
+}
+
+.ck-content table th,
+.ck-content table td,
+.question-content table th,
+.question-content table td,
+.list-style table th,
+.list-style table td,
+.preview-text-only table th,
+.preview-text-only table td,
+.wrapper-content-accordion-questions table th,
+.wrapper-content-accordion-questions table td,
+.question-bank-preview table th,
+.question-bank-preview table td,
+.submit-answer-type table th,
+.submit-answer-type table td,
+.prose table th,
+.prose table td,
+table.question-table th,
+table.question-table td {
+    border: 1px solid #94a3b8 !important;
+    padding: 0.5rem 0.85rem !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    line-height: 1.5 !important;
+}
+
+.ck-content table th,
+.question-content table th,
+.list-style table th,
+.preview-text-only table th,
+.wrapper-content-accordion-questions table th,
+.question-bank-preview table th,
+.submit-answer-type table th,
+.prose table th,
+table.question-table th {
+    background-color: #f1f5f9 !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    text-align: center !important;
+}
+
+.ck-content table tr:nth-child(even),
+.question-content table tr:nth-child(even),
+.list-style table tr:nth-child(even),
+.preview-text-only table tr:nth-child(even),
+.wrapper-content-accordion-questions table tr:nth-child(even),
+.question-bank-preview table tr:nth-child(even),
+.submit-answer-type table tr:nth-child(even),
+.prose table tr:nth-child(even),
+table.question-table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.ck-content figure.table,
+figure.table {
+    margin: 0.75rem 0 !important;
+    display: table !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+
 /* sidebar beranda siswa  */
 .sidebar-beranda-student {
     width: var(--sidebar-width);

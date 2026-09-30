@@ -1128,6 +1128,10 @@ function renderAssessmentFormContent(selectedIndex, response) {
 
                 $('#empty-message-assessment-form').hide();
 
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([formAssessment[0]]).catch(err => console.warn('MathJax error:', err));
+                }
+
             } else {
                 examFinished = true;
                 $('#btn-submit-end-assessment-test').hide();
@@ -1545,7 +1549,7 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
     });
 });
 
-function autoSubmitUnSavedQuestions(onFinish = null) {
+function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout') {
 
     examFinished = true;
 
@@ -1571,71 +1575,68 @@ function autoSubmitUnSavedQuestions(onFinish = null) {
         questionStartTime = null;
     }
 
-    $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}`,
-        method: 'GET',
-        success: function (response) {
+    // Ambil jawaban dari form aktif saat ini jika ada yang belum tersimpan
+    const currentForm = $('#assessment-test-submit-form')[0];
+    let currentQuestionIdToSend = null;
+    let currentAnswerDataToSend = null;
+    let currentDurationToSend = 0;
 
-            const questions = response.data;
-            const questionsAnswer = response.questionsAnswer;
+    if (currentForm) {
+        const formData = new FormData(currentForm);
+        currentQuestionIdToSend = formData.get('school_assessment_question_id');
+        const answerVal = formData.get('answer_value');
+        if (answerVal && answerVal.trim() !== '' && answerVal !== '[]' && answerVal !== '{}') {
+            currentAnswerDataToSend = answerVal;
+        }
+        currentDurationToSend = questionDurations[currentQuestionIdToSend] || 0;
+    }
 
-            const requests = [];
-
-            questions.forEach((data) => {
-
-                const isSubmitted = questionsAnswer[data.id]?.status_answer === 'submitted';
-
-                let duration = 0;
-
-                // 1. dari database
-                if (questionsAnswer[data.id]?.answer_duration) {
-                    duration = questionsAnswer[data.id].answer_duration;
+    // Kumpulkan durasi per soal dari localStorage jika di memory belum lengkap
+    if (questions && questions.length) {
+        questions.forEach((q) => {
+            if (!questionDurations[q.id]) {
+                const saved = localStorage.getItem('duration_' + q.id);
+                if (saved) {
+                    questionDurations[q.id] = parseInt(saved);
                 }
+            }
+        });
+    }
 
-                // 2. dari memory
-                else if (questionDurations[data.id]) {
-                    duration = questionDurations[data.id];
-                }
+    const payload = {
+        status_attempt: statusAttempt,
+        total_exam_duration: finalExamDuration || getTotalExamDuration(),
+        current_question_id: currentQuestionIdToSend,
+        current_answer_value: currentAnswerDataToSend,
+        current_answer_duration: currentDurationToSend,
+        durations: questionDurations,
+    };
 
-                // 3. dari localStorage (penting saat refresh)
-                else {
-                    const saved = localStorage.getItem('duration_' + data.id);
-                    if (saved) {
-                        duration = parseInt(saved);
-                    }
-                }
+    // Stagger network traffic with tiny random jitter (0 - 1200ms) to prevent concurrent thundering herd
+    const jitter = Math.floor(Math.random() * 1200);
 
-                const request = $.ajax({
-                    url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/answer`,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        school_assessment_id: data.assessment_id,
-                        school_assessment_question_id: data.id,
-                        status_answer: 'submitted',
-                        auto_submit: true,
-                        answer_duration: duration,
-                        total_exam_duration: finalExamDuration,
-                        status_attempt: 'timeout',
-                    }
-                });
-
-                requests.push(request);
-
-            });
-
-            $.when.apply($, requests).always(function () {
+    setTimeout(function () {
+        $.ajax({
+            url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/end`,
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: payload,
+            success: function () {
                 studentFormAssessment(currentQuestionIndex);
-
                 if (typeof onFinish === "function") {
                     onFinish();
                 }
-            });
-
-        }
-    });
+            },
+            error: function () {
+                studentFormAssessment(currentQuestionIndex);
+                if (typeof onFinish === "function") {
+                    onFinish();
+                }
+            }
+        });
+    }, jitter);
 }
 
 $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
@@ -1661,7 +1662,7 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
 
             autoSubmitUnSavedQuestions(function () {
                 window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
-            });
+            }, 'submitted');
 
         }
     });

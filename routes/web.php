@@ -340,6 +340,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
         Route::prefix('administrator/assessment-debug')->group(function () {
             Route::get('/data', [AssessmentDebugController::class, 'getAttempts'])->name('admin.assessmentDebug.data');
+            Route::get('/cache/status', [AssessmentDebugController::class, 'getCacheStatus'])->name('admin.assessmentDebug.cacheStatus');
+            Route::post('/cache/warm/{id}', [AssessmentDebugController::class, 'warmCache'])->name('admin.assessmentDebug.warmCache');
+            Route::post('/cache/clear/{id}', [AssessmentDebugController::class, 'clearCache'])->name('admin.assessmentDebug.clearCache');
             Route::post('/{id}/unlock', [AssessmentDebugController::class, 'unlock'])->name('admin.assessmentDebug.unlock');
             Route::post('/{id}/update-status', [AssessmentDebugController::class, 'updateStatus'])->name('admin.assessmentDebug.updateStatus');
             Route::post('/{id}/update-attempts', [AssessmentDebugController::class, 'updateTabSwitchCount'])->name('admin.assessmentDebug.updateAttempts');
@@ -846,6 +849,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/project-submission', [StudentAssessmentExamController::class, 'studentProjectSubmission'])->name('lms.studentProjectSubmission.answer');
         
         // end assessment
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/end', [StudentAssessmentExamController::class, 'studentAssessmentExamEnd'])->name('lms.studentAssessmentExam.end');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/emd', [StudentAssessmentExamController::class, 'studentAssessmentExamEnd'])->name('lms.studentAssessmentExan.emd');
         
         // results
