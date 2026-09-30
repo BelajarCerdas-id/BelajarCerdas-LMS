@@ -407,7 +407,11 @@ class TkaTryoutPeriodSessionController extends Controller
         }
 
         // get session
-        $session = TkaTryoutSession::query()->where('id', $sessionId)->where('tka_tryout_period_id', $periodId)->firstOrFail();
+        $session = TkaTryoutSession::query()->where('id', $sessionId)->where(function ($query) use ($periodId) {
+            $query->where('tka_tryout_period_id', $periodId)->orWhereHas('TkaTryoutPeriodSchOverride', function ($query) use ($periodId) {
+                $query->where('tka_tryout_period_sch_override_id', $periodId);
+            });
+        })->firstOrFail();
 
         // selected students
         $selectedStudentIds = collect(
