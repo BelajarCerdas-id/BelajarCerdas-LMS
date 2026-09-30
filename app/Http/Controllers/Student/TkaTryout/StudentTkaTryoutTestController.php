@@ -462,7 +462,7 @@ class StudentTkaTryoutTestController extends Controller
 
         $subject = Mapel::findOrFail($subjectId);
 
-        StudentTkaAttempt::where('student_id', $userId)->where('session_id', $sessionId)->where('kelas_id', $subject->kelas_id)->where('mapel_id', $subjectId)
+        StudentTkaAttempt::where('student_id', $userId)->where('tka_tryout_session_id', $sessionId)->where('kelas_id', $subject->kelas_id)->where('mapel_id', $subjectId)
         ->where('attempt_type', 'tryout')->where('status', 'active')->update([
             'status' => 'inactive'
         ]);
