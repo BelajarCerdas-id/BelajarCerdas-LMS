@@ -194,9 +194,9 @@ class TkaTryoutPeriodSubjectController extends Controller
         $subjectList = Mapel::query()->whereHas('Kelas', function ($query) use ($classList) {
             $query->whereIn('kelas', $classList);
         })->whereHas('LmsQuestionBank', function ($query) {
-            $query->where('question_category', 'TKA');
-        })->with('Kelas')->join('Kelas', 'mapels.kelas_id', '=', 'Kelas.id')
-        ->orderByRaw("CASE kelas.kelas WHEN 'Kelas 6' THEN 1 WHEN 'Kelas 9' THEN 2 WHEN 'Kelas 12' THEN 3 ELSE 4 END")->orderBy('mata_pelajaran')->select('mapels.*')->get();
+                $query->where('question_category', 'TKA');
+        })->with('Kelas')->join('kelas', 'mapels.kelas_id', '=', 'kelas.id')
+        ->orderByRaw("CASE kelas.kelas WHEN 'Kelas 6' THEN 1 WHEN 'Kelas 9' THEN 2 WHEN 'Kelas 12' THEN 3 ELSE 4 END")->orderBy('mapels.mata_pelajaran')->select('mapels.*')->get();
 
         return response()->json([
             'period' => $period,
