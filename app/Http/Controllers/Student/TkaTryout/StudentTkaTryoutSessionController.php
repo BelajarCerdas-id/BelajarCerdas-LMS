@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student\TkaTryout;
 use App\Helpers\TimezoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolPartner;
+use App\Models\StudentSchoolClass;
 use App\Models\TkaTryoutPeriod;
 use App\Models\TkaTryoutPeriodSchOverride;
 use App\Models\TkaTryoutSession;
@@ -62,11 +63,17 @@ class StudentTkaTryoutSessionController extends Controller
 
         $override = TkaTryoutPeriodSchOverride::where('tka_tryout_period_id', $periodId)->where('school_partner_id', $schoolId)->first();
 
+        $studentClassId = StudentSchoolClass::query()->where('student_id', $user->id)->whereHas('SchoolClass', function ($query) {
+            $query->where('status_class', 'active');
+        })->first()?->SchoolClass?->kelas_id;
+
         $sessionsQuery = TkaTryoutSession::query()->where('tka_tryout_period_id', $periodId)->with(['TkaTryoutSessionStudent' => function ($query) use ($user) {
             $query->where('student_id', $user->id);
         }]);
 
-        $subjectsQuery = TkaTryoutSubject::query()->where('tka_tryout_period_id', $periodId);
+        $subjectsQuery = TkaTryoutSubject::query()->where('tka_tryout_period_id', $periodId)->whereHas('Mapel', function($query) use ($studentClassId) {
+            $query->where('kelas_id', $studentClassId);
+        });
 
         if ($override) {
             $sessionsQuery->where('tka_tryout_period_sch_override_id', $override->id);
