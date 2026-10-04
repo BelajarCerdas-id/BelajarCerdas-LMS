@@ -13,7 +13,7 @@
 
             <!-- HERO HEADER -->
             <section>
-                <div class="bg-[linear-gradient(135deg,#0071BC_0%,#004f84_60%,#002b49_100%)] rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden relative border border-white/10">
+                <div class="rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden relative border border-white/10 bg-[#0071BC]" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 60%, #002b49 100%) !important;">
                     <div class="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
                         <i class="fa-solid fa-wrench text-[260px] translate-x-12 -translate-y-8"></i>
                     </div>
@@ -173,6 +173,89 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- SECONDARY FILTER BAR: DATE FILTER, PRESETS, SORT, CHEATING, ASSESSMENT, PER PAGE -->
+                    <div class="pt-4 border-t border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs">
+                        <!-- Date Filter & Quick Presets -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-bold text-slate-600 flex items-center gap-1.5 shrink-0">
+                                <i class="fa-regular fa-calendar text-[#0071BC]"></i>
+                                <span>Tanggal Sesi:</span>
+                            </span>
+                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                                <input type="date" id="filter-date-start" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
+                                <span class="text-slate-400 font-medium">s/d</span>
+                                <input type="date" id="filter-date-end" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
+                            </div>
+                            <button type="button" id="btn-quick-today" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                                Hari Ini
+                            </button>
+                            <button type="button" id="btn-quick-yesterday" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                                Kemarin
+                            </button>
+                            <button type="button" id="btn-quick-7days" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                                7 Hari
+                            </button>
+                            <button type="button" id="btn-clear-date" class="hidden px-2 py-1.5 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
+                                <i class="fa-solid fa-xmark mr-1"></i>Reset
+                            </button>
+                            <span id="date-filter-badge" class="hidden px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-300">
+                                <i class="fa-solid fa-bolt mr-1 text-amber-600"></i>Throw All Data
+                            </span>
+                        </div>
+
+                        <!-- Secondary Controls: Assessment, Sort, Cheating, Paginate -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <!-- Filter Assessment -->
+                            <div class="w-full sm:w-48">
+                                <select id="filter-assessment"
+                                    class="w-full h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    <option value="all">Semua Ujian</option>
+                                    @if(isset($assessmentsList))
+                                        @foreach($assessmentsList as $asm)
+                                            <option value="{{ $asm->id }}" data-school="{{ $asm->school_partner_id }}">{{ Str::limit($asm->title, 26) }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <!-- Cheating filter -->
+                            <div class="w-auto">
+                                <select id="filter-cheating-only"
+                                    class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    <option value="all">Semua Sesi</option>
+                                    <option value="with_cheating">Ada Pelanggaran (>0x)</option>
+                                    <option value="clean">Bersih (0x)</option>
+                                </select>
+                            </div>
+
+                            <!-- Sort By -->
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-medium text-slate-500 shrink-0">Urut:</span>
+                                <select id="filter-sort-by"
+                                    class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    <option value="latest">Terbaru</option>
+                                    <option value="oldest">Terlama</option>
+                                    <option value="cheating">Pelanggaran Terbanyak</option>
+                                    <option value="start_desc">Waktu Mulai (Terbaru)</option>
+                                    <option value="start_asc">Waktu Mulai (Terlama)</option>
+                                </select>
+                            </div>
+
+                            <!-- Paginate Selector -->
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-medium text-slate-500 shrink-0">Per Hal:</span>
+                                <select id="filter-per-page"
+                                    class="h-9 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                    <option value="all">Semua (Throw All)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- ATTEMPTS TABLE CONTAINER -->
@@ -180,15 +263,39 @@
                     <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
                         <div>
                             <h2 class="text-base sm:text-lg font-bold text-slate-800">Daftar Sesi Ujian Siswa</h2>
-                            <p class="text-xs sm:text-sm text-slate-500">Klik "Buka Kunci" untuk langsung membebaskan siswa yang terblokir, atau "Recount" untuk menghitung ulang nilai siswa.</p>
+                            <p class="text-xs sm:text-sm text-slate-500">Centang kotak pada baris sesi untuk menghitung ulang (recount) beberapa sesi sekaligus, atau klik tombol Recount di setiap baris.</p>
                         </div>
                         <div class="text-xs text-slate-500" id="table-info">Memuat data...</div>
+                    </div>
+
+                    <!-- BATCH RECOUNT ACTION BAR (Hidden by default, shown when >= 1 checkbox is selected) -->
+                    <div id="batch-action-bar" class="hidden px-5 py-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/80 items-center justify-between gap-3 transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center justify-center min-w-[32px] h-7 px-2 rounded-lg bg-amber-500 text-slate-900 font-black text-xs shadow-xs" id="selected-attempts-count">0</span>
+                            <div>
+                                <span class="text-xs font-bold text-slate-800">Sesi Ujian Siswa Dipilih</span>
+                                <span class="text-[11px] text-slate-500 ml-1.5 hidden sm:inline">• Klik tombol di samping untuk evaluasi ulang skor secara serentak</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="btn-recount-selected" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-bold text-xs shadow-xs transition">
+                                <i class="fa-solid fa-calculator text-xs"></i>
+                                <span>Recount Sesi Terpilih</span>
+                            </button>
+                            <button type="button" id="btn-clear-selected-attempts" class="cursor-pointer inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200 transition">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                                <span>Batal</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600">
                             <thead class="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
                                 <tr>
+                                    <th class="px-4 py-4 w-12 text-center">
+                                        <input type="checkbox" id="check-all-attempts" class="w-4 h-4 rounded text-[#0071BC] focus:ring-sky-200 border-slate-300 cursor-pointer" title="Pilih Semua Sesi di Halaman Ini">
+                                    </th>
                                     <th class="px-6 py-4">Siswa & Kelas</th>
                                     <th class="px-6 py-4">Assessment & Mapel</th>
                                     <th class="px-6 py-4 text-center">Status</th>
@@ -200,7 +307,7 @@
                             </thead>
                             <tbody id="attempts-table-body" class="divide-y divide-slate-100">
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                                         <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
                                         <div>Memuat data attempt ujian...</div>
                                     </td>
@@ -323,6 +430,42 @@
                                     @endforeach
                                 </select>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- SECONDARY FILTER BAR FOR ASSESSMENTS: DATE & PER PAGE -->
+                    <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-bold text-slate-600 flex items-center gap-1.5 shrink-0">
+                                <i class="fa-regular fa-calendar text-[#0071BC]"></i>
+                                <span>Tanggal Assessment:</span>
+                            </span>
+                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                                <input type="date" id="filter-asm-date-start" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
+                                <span class="text-slate-400 font-medium">s/d</span>
+                                <input type="date" id="filter-asm-date-end" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
+                            </div>
+                            <button type="button" id="btn-asm-quick-today" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                                Hari Ini
+                            </button>
+                            <button type="button" id="btn-asm-clear-date" class="hidden px-2 py-1.5 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
+                                <i class="fa-solid fa-xmark mr-1"></i>Reset
+                            </button>
+                            <span id="asm-date-filter-badge" class="hidden px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-300">
+                                <i class="fa-solid fa-bolt mr-1 text-amber-600"></i>Throw All
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium text-slate-500 shrink-0">Per Hal:</span>
+                            <select id="filter-asm-per-page"
+                                class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                <option value="15" selected>15</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">Semua (Throw All)</option>
+                            </select>
                         </div>
                     </div>
                 </section>
@@ -806,7 +949,7 @@
             <div class="p-4 sm:p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
                 <div class="text-xs text-slate-500 flex items-center gap-1.5">
                     <i class="fa-solid fa-calculator text-amber-500 text-sm"></i>
-                    <span>Tombol Recount akan mengevaluasi ulang jawaban terhadap kunci dan bobot terbaru secara otomatis.</span>
+                    <span>Tombol Recount mengevaluasi ulang butir soal objektif. Soal ESSAY tidak di-recount karena dinilai manual oleh guru.</span>
                 </div>
                 <form method="dialog">
                     <button class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold transition cursor-pointer">
@@ -1042,14 +1185,36 @@
             });
         }
 
+        function getLocalDateString(d = new Date()) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         function loadAttempts(page = 1) {
             currentPage = page;
             const search = $('#filter-search').val();
             const schoolId = $('#filter-school').val();
+            const dateStart = $('#filter-date-start').val();
+            const dateEnd = $('#filter-date-end').val();
+            const sortBy = $('#filter-sort-by').val() || 'latest';
+            const cheatingFilter = $('#filter-cheating-only').val() || 'all';
+            const assessmentId = $('#filter-assessment').val() || 'all';
+            const perPage = $('#filter-per-page').val() || '20';
+
+            const hasDate = Boolean(dateStart);
+            if (hasDate) {
+                $('#btn-clear-date').removeClass('hidden');
+                $('#date-filter-badge').removeClass('hidden');
+            } else {
+                $('#btn-clear-date').addClass('hidden');
+                $('#date-filter-badge').addClass('hidden');
+            }
 
             $('#attempts-table-body').html(`
                 <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                         <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
                         <div>Memuat data attempt ujian...</div>
                     </td>
@@ -1063,7 +1228,13 @@
                     page: page,
                     status: currentStatusFilter,
                     school_id: schoolId,
-                    search: search
+                    search: search,
+                    date_start: dateStart,
+                    date_end: dateEnd,
+                    sort_by: sortBy,
+                    cheating_filter: cheatingFilter,
+                    assessment_id: assessmentId,
+                    per_page: perPage
                 },
                 success: function (res) {
                     // Update KPI counters
@@ -1087,7 +1258,7 @@
                         : 'Gagal memuat data (' + (xhr.statusText || 'Error ' + xhr.status) + ').');
                     $('#attempts-table-body').html(`
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-red-500">
+                            <td colspan="8" class="px-6 py-12 text-center text-red-500">
                                 <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
                                 <div class="font-medium">${escapeHtml(message)}</div>
                             </td>
@@ -1104,20 +1275,25 @@
             if (!items || items.length === 0) {
                 tbody.html(`
                     <tr>
-                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
+                        <td colspan="8" class="px-6 py-16 text-center text-slate-400">
                             <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
                             <div class="font-semibold text-slate-600">Tidak ada sesi ujian yang ditemukan</div>
-                            <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian atau filter status.</div>
+                            <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian, filter tanggal, atau filter sekolah.</div>
                         </td>
                     </tr>
                 `);
                 $('#table-info').text('0 data');
                 $('#pagination-container').addClass('hidden');
+                updateBatchActionBar();
                 return;
             }
 
             $('#pagination-container').removeClass('hidden');
-            $('#table-info').text(`Menampilkan ${items.length} dari ${pagination.total} sesi`);
+            if (pagination.is_all) {
+                $('#table-info').html(`<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 font-bold"><i class="fa-solid fa-bolt text-amber-500"></i>Throw All: Menampilkan seluruh ${pagination.total} sesi</span>`);
+            } else {
+                $('#table-info').text(`Menampilkan ${items.length} dari ${pagination.total} sesi`);
+            }
 
             const now = new Date();
 
@@ -1181,8 +1357,13 @@
                 const ansCount = item.answered_count || 0;
                 const totAns = item.total_answers || 0;
 
+                const isChecked = selectedAttemptIds.has(Number(item.id));
+
                 const row = `
-                    <tr class="hover:bg-slate-50/80 transition-colors">
+                    <tr class="hover:bg-slate-50/80 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
+                        <td class="px-4 py-4 text-center">
+                            <input type="checkbox" class="attempt-checkbox w-4 h-4 rounded text-[#0071BC] focus:ring-sky-200 border-slate-300 cursor-pointer" value="${item.id}" ${isChecked ? 'checked' : ''}>
+                        </td>
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-800">${escapeHtml(studentName)}</div>
                             <div class="text-xs text-slate-500 mt-0.5">NISN: ${escapeHtml(nis)} • Kelas: <span class="font-semibold text-slate-700">${escapeHtml(className)}</span></div>
@@ -1257,15 +1438,31 @@
                 tbody.append(row);
             });
 
+            updateBatchActionBar();
             renderPagination(pagination);
         }
 
         function renderPagination(pagination) {
-            $('#pagination-text').text(`Halaman ${pagination.current_page} dari ${pagination.last_page} (Total ${pagination.total} data)`);
             const btnContainer = $('#pagination-buttons');
+            const textContainer = $('#pagination-text');
             btnContainer.empty();
 
-            if (pagination.last_page <= 1) return;
+            if (!pagination || pagination.total === 0) {
+                textContainer.text('0 data');
+                return;
+            }
+
+            if (pagination.is_all || pagination.last_page <= 1) {
+                textContainer.html(`Menampilkan seluruh <strong class="text-slate-800">${pagination.total}</strong> sesi ujian`);
+                btnContainer.html(`
+                    <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-check text-emerald-600"></i>Semua Data Ditampilkan
+                    </span>
+                `);
+                return;
+            }
+
+            textContainer.html(`Halaman <strong class="text-slate-800">${pagination.current_page}</strong> dari <strong class="text-slate-800">${pagination.last_page}</strong> (Total ${pagination.total} data)`);
 
             const prevDisabled = pagination.current_page <= 1 ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:bg-slate-200';
             btnContainer.append(`
@@ -1303,7 +1500,7 @@
                        <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs space-y-1">
                            <div>• Siswa: <strong class="text-slate-800">${escapeHtml(studentName)}</strong></div>
                            <div>• Ujian: <strong class="text-slate-800">${escapeHtml(assessmentTitle)}</strong></div>
-                           <div>• Algoritma: <strong>Kunci & Bobot Terbaru (Termasuk parsial MCMA)</strong></div>
+                           <div>• Algoritma: <strong>Kunci & Bobot Terbaru (Soal ESSAY dinilai manual guru & tidak diubah)</strong></div>
                        </div>`,
                 icon: 'question',
                 showCancelButton: true,
@@ -1545,6 +1742,139 @@
             });
         }
 
+        // ==========================================
+        // CHECKBOX SELECTION & BATCH RECOUNT LOGIC
+        // ==========================================
+        let selectedAttemptIds = new Set();
+
+        function updateBatchActionBar() {
+            const count = selectedAttemptIds.size;
+            $('#selected-attempts-count').text(count);
+            if (count > 0) {
+                $('#batch-action-bar').removeClass('hidden').addClass('flex');
+            } else {
+                $('#batch-action-bar').addClass('hidden').removeClass('flex');
+            }
+
+            const currentCheckboxes = $('.attempt-checkbox');
+            if (currentCheckboxes.length > 0) {
+                const checkedOnPage = currentCheckboxes.filter(':checked').length;
+                const checkAll = $('#check-all-attempts');
+                if (checkedOnPage === 0) {
+                    checkAll.prop('checked', false);
+                    checkAll.prop('indeterminate', false);
+                } else if (checkedOnPage === currentCheckboxes.length) {
+                    checkAll.prop('checked', true);
+                    checkAll.prop('indeterminate', false);
+                } else {
+                    checkAll.prop('checked', false);
+                    checkAll.prop('indeterminate', true);
+                }
+            }
+        }
+
+        $(document).on('change', '#check-all-attempts', function () {
+            const isChecked = $(this).is(':checked');
+            $('.attempt-checkbox').each(function () {
+                const id = parseInt($(this).val(), 10);
+                $(this).prop('checked', isChecked);
+                const $tr = $(this).closest('tr');
+                if (isChecked) {
+                    selectedAttemptIds.add(id);
+                    $tr.addClass('bg-amber-50/40');
+                } else {
+                    selectedAttemptIds.delete(id);
+                    $tr.removeClass('bg-amber-50/40');
+                }
+            });
+            updateBatchActionBar();
+        });
+
+        $(document).on('change', '.attempt-checkbox', function () {
+            const id = parseInt($(this).val(), 10);
+            const $tr = $(this).closest('tr');
+            if ($(this).is(':checked')) {
+                selectedAttemptIds.add(id);
+                $tr.addClass('bg-amber-50/40');
+            } else {
+                selectedAttemptIds.delete(id);
+                $tr.removeClass('bg-amber-50/40');
+            }
+            updateBatchActionBar();
+        });
+
+        $(document).on('click', '#btn-clear-selected-attempts', function () {
+            selectedAttemptIds.clear();
+            $('.attempt-checkbox').prop('checked', false);
+            $('.attempt-checkbox').closest('tr').removeClass('bg-amber-50/40');
+            $('#check-all-attempts').prop('checked', false).prop('indeterminate', false);
+            updateBatchActionBar();
+        });
+
+        $(document).on('click', '#btn-recount-selected', function () {
+            const ids = Array.from(selectedAttemptIds);
+            if (ids.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Ada Sesi Dipilih',
+                    text: 'Silakan centang minimal satu sesi ujian untuk dihitung ulang.'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: `Recount ${ids.length} Sesi Terpilih?`,
+                html: `Sistem akan mengevaluasi dan menghitung ulang skor untuk <strong>${ids.length} sesi ujian</strong> yang dicentang.<br><span class="text-xs text-slate-500 mt-1 inline-block"><i class="fa-solid fa-circle-info mr-1 text-amber-600"></i>Soal tipe ESSAY tidak akan di-recount karena dinilai manual oleh guru.</span>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#F59E0B',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-calculator mr-1.5"></i>Ya, Recount Terpilih',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Menghitung Ulang Sesi Terpilih...',
+                        text: 'Sedang mengevaluasi butir soal dan merekap skor ke database...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: "{{ url('/administrator/assessment-debug/recount-selected') }}",
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            attempt_ids: ids
+                        },
+                        success: function (res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Recount Berhasil!',
+                                text: res.message || 'Sesi ujian berhasil dihitung ulang.',
+                                timer: 3000,
+                                showConfirmButton: true
+                            });
+
+                            selectedAttemptIds.clear();
+                            updateBatchActionBar();
+                            loadAttempts(currentPage);
+                            if (typeof assessmentsLoaded !== 'undefined' && assessmentsLoaded) {
+                                loadAssessments(currentAsmPage);
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Recount',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses recount batch.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
         // Filter Actions
         $('.status-filter-btn').on('click', function () {
             $('.status-filter-btn').removeClass('bg-white text-[#0071BC] font-bold shadow-xs').addClass('text-slate-600 font-semibold');
@@ -1554,6 +1884,64 @@
         });
 
         $('#filter-school').on('change', function () {
+            const selectedSchool = $(this).val();
+            // Filter options in assessment dropdown to match school
+            $('#filter-assessment option').each(function () {
+                const optSchool = $(this).data('school');
+                if (!optSchool || selectedSchool === 'all' || String(optSchool) === String(selectedSchool)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            $('#filter-assessment').val('all');
+            loadAttempts(1);
+        });
+
+        // Date Filter Events - If date filter is chosen, automatically set per-page to 'all' (throw all data)
+        $('#filter-date-start, #filter-date-end').on('change', function () {
+            const dStart = $('#filter-date-start').val();
+            if (dStart) {
+                $('#filter-per-page').val('all');
+            }
+            loadAttempts(1);
+        });
+
+        $('#btn-quick-today').on('click', function () {
+            const today = getLocalDateString(new Date());
+            $('#filter-date-start').val(today);
+            $('#filter-date-end').val(today);
+            $('#filter-per-page').val('all');
+            loadAttempts(1);
+        });
+
+        $('#btn-quick-yesterday').on('click', function () {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yStr = getLocalDateString(yesterday);
+            $('#filter-date-start').val(yStr);
+            $('#filter-date-end').val(yStr);
+            $('#filter-per-page').val('all');
+            loadAttempts(1);
+        });
+
+        $('#btn-quick-7days').on('click', function () {
+            const past = new Date();
+            past.setDate(past.getDate() - 6);
+            $('#filter-date-start').val(getLocalDateString(past));
+            $('#filter-date-end').val(getLocalDateString(new Date()));
+            $('#filter-per-page').val('all');
+            loadAttempts(1);
+        });
+
+        $('#btn-clear-date').on('click', function () {
+            $('#filter-date-start').val('');
+            $('#filter-date-end').val('');
+            $('#filter-per-page').val('20');
+            loadAttempts(1);
+        });
+
+        $('#filter-assessment, #filter-cheating-only, #filter-sort-by, #filter-per-page').on('change', function () {
             loadAttempts(1);
         });
 
@@ -1958,6 +2346,18 @@
             const search = $('#filter-asm-search').val();
             const schoolId = $('#filter-asm-school').val();
             const status = $('#filter-asm-status').val();
+            const dateStart = $('#filter-asm-date-start').val();
+            const dateEnd = $('#filter-asm-date-end').val();
+            const perPage = $('#filter-asm-per-page').val() || '15';
+
+            const hasDate = Boolean(dateStart);
+            if (hasDate) {
+                $('#btn-asm-clear-date').removeClass('hidden');
+                $('#asm-date-filter-badge').removeClass('hidden');
+            } else {
+                $('#btn-asm-clear-date').addClass('hidden');
+                $('#asm-date-filter-badge').addClass('hidden');
+            }
 
             $('#assessments-table-body').html(`
                 <tr>
@@ -1977,7 +2377,10 @@
                     category: currentAsmCategory,
                     status: status,
                     school_id: schoolId,
-                    search: search
+                    search: search,
+                    date_start: dateStart,
+                    date_end: dateEnd,
+                    per_page: perPage
                 },
                 success: function (res) {
                     if (res.status !== 'success') {
@@ -2032,7 +2435,7 @@
                         <td colspan="6" class="px-6 py-16 text-center text-slate-400">
                             <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
                             <div class="font-semibold text-slate-600">Tidak ada assessment yang ditemukan</div>
-                            <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian atau filter kategori/sekolah.</div>
+                            <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian, filter tanggal, atau filter sekolah.</div>
                         </td>
                     </tr>
                 `);
@@ -2042,7 +2445,11 @@
             }
 
             $('#asm-pagination-container').removeClass('hidden');
-            $('#asm-table-info').text(`Menampilkan ${items.length} dari ${pagination.total} assessment`);
+            if (pagination.is_all) {
+                $('#asm-table-info').html(`<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 font-bold"><i class="fa-solid fa-bolt text-amber-500"></i>Throw All: Menampilkan seluruh ${pagination.total} assessment</span>`);
+            } else {
+                $('#asm-table-info').text(`Menampilkan ${items.length} dari ${pagination.total} assessment`);
+            }
 
             let activeCount = 0;
 
@@ -2144,11 +2551,26 @@
         }
 
         function renderAsmPagination(pagination) {
-            $('#asm-pagination-text').text(`Halaman ${pagination.current_page} dari ${pagination.last_page} (Total ${pagination.total} data)`);
             const btnContainer = $('#asm-pagination-buttons');
+            const textContainer = $('#asm-pagination-text');
             btnContainer.empty();
 
-            if (pagination.last_page <= 1) return;
+            if (!pagination || pagination.total === 0) {
+                textContainer.text('0 data');
+                return;
+            }
+
+            if (pagination.is_all || pagination.last_page <= 1) {
+                textContainer.html(`Menampilkan seluruh <strong class="text-slate-800">${pagination.total}</strong> assessment`);
+                btnContainer.html(`
+                    <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-check text-emerald-600"></i>Semua Data Ditampilkan
+                    </span>
+                `);
+                return;
+            }
+
+            textContainer.html(`Halaman <strong class="text-slate-800">${pagination.current_page}</strong> dari <strong class="text-slate-800">${pagination.last_page}</strong> (Total ${pagination.total} data)`);
 
             const prevDisabled = pagination.current_page <= 1 ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:bg-slate-200';
             btnContainer.append(`
@@ -2468,8 +2890,9 @@
                 html: `Anda akan menghitung ulang nilai seluruh siswa pada:<br>
                        <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs space-y-1">
                            <div>• Assessment: <strong class="text-slate-800">${escapeHtml(title)}</strong></div>
-                           <div>• Cakupan: <strong>Seluruh butir jawaban dari seluruh peserta</strong></div>
+                           <div>• Cakupan: <strong>Seluruh butir jawaban objektif seluruh peserta</strong></div>
                            <div>• Penilaian Parsial: <strong>Termasuk opsi C pada soal MCMA</strong></div>
+                           <div>• Soal ESSAY: <strong>Dikecualikan (dinilai manual oleh guru)</strong></div>
                        </div>`,
                 icon: 'warning',
                 showCancelButton: true,
@@ -2666,7 +3089,7 @@
             $('#btn-sed-recount').off('click').on('click', function () {
                 swalInModal({
                     title: 'Recount Lembar Ujian Ini?',
-                    html: `Hitung ulang nilai untuk <strong>${escapeHtml(stu.name)}</strong>?`,
+                    html: `Hitung ulang nilai untuk <strong>${escapeHtml(stu.name)}</strong>?<br><span class="text-xs text-slate-500 mt-1 inline-block"><i class="fa-solid fa-circle-info mr-1 text-[#0071BC]"></i>Soal tipe ESSAY tidak akan diubah karena dinilai manual oleh guru.</span>`,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#F59E0B',
@@ -2757,6 +3180,9 @@
                     borderClass = 'border-emerald-300 bg-emerald-50/10';
                 } else if (q.eval_status === 'partial') {
                     statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Sebagian (${q.score}/${q.weight})</span>`;
+                    borderClass = 'border-amber-300 bg-amber-50/10';
+                } else if (q.eval_status === 'pending') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Menunggu Guru (0/${q.weight})</span>`;
                     borderClass = 'border-amber-300 bg-amber-50/10';
                 } else if (q.eval_status === 'wrong') {
                     statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-red-100 text-red-700 border border-red-300"><i class="fa-solid fa-xmark mr-1"></i>Salah (0/${q.weight})</span>`;
@@ -2911,7 +3337,30 @@
             loadAssessments(1);
         });
 
-        $('#filter-asm-school, #filter-asm-status').on('change', function () {
+        $('#filter-asm-school, #filter-asm-status, #filter-asm-per-page').on('change', function () {
+            loadAssessments(1);
+        });
+
+        $('#filter-asm-date-start, #filter-asm-date-end').on('change', function () {
+            const dStart = $('#filter-asm-date-start').val();
+            if (dStart) {
+                $('#filter-asm-per-page').val('all');
+            }
+            loadAssessments(1);
+        });
+
+        $('#btn-asm-quick-today').on('click', function () {
+            const today = getLocalDateString(new Date());
+            $('#filter-asm-date-start').val(today);
+            $('#filter-asm-date-end').val(today);
+            $('#filter-asm-per-page').val('all');
+            loadAssessments(1);
+        });
+
+        $('#btn-asm-clear-date').on('click', function () {
+            $('#filter-asm-date-start').val('');
+            $('#filter-asm-date-end').val('');
+            $('#filter-asm-per-page').val('15');
             loadAssessments(1);
         });
 

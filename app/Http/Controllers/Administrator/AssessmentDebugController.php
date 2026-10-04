@@ -51,7 +51,12 @@ class AssessmentDebugController extends Controller
             ->orderBy('nama_sekolah', 'asc')
             ->get();
 
-        return view('features.lms.administrator.assessment-debug', compact('role', 'schools'));
+        $assessmentsList = SchoolAssessment::select('id', 'title', 'school_partner_id', 'assessment_category')
+            ->latest('id')
+            ->limit(300)
+            ->get();
+
+        return view('features.lms.administrator.assessment-debug', compact('role', 'schools', 'assessmentsList'));
     }
 
     /**
@@ -65,6 +70,13 @@ class AssessmentDebugController extends Controller
             $search = $request->input('search');
             $schoolId = $request->input('school_id');
             $status = $request->input('status');
+            $dateStart = $request->input('date_start') ?: $request->input('date');
+            $dateEnd = $request->input('date_end') ?: $dateStart;
+            $hasDateFilter = !empty($dateStart);
+            $sortBy = $request->input('sort_by', 'latest');
+            $cheatingFilter = $request->input('cheating_filter');
+            $assessmentId = $request->input('assessment_id');
+            $perPageParam = $request->input('per_page');
 
             $query = StudentAssessmentAttempt::with([
                 'UserAccount.StudentProfile.SchoolPartner',
@@ -75,10 +87,12 @@ class AssessmentDebugController extends Controller
                 'SchoolAssessment.SchoolPartner'
             ]);
 
+            // Status Filter
             if (!empty($status) && $status !== 'all') {
                 $query->where('status', $status);
             }
 
+            // School Filter (Always strictly respected)
             if (!empty($schoolId) && $schoolId !== 'all') {
                 $query->where(function ($q) use ($schoolId) {
                     $q->whereHas('SchoolAssessment', function ($sa) use ($schoolId) {
@@ -89,6 +103,34 @@ class AssessmentDebugController extends Controller
                 });
             }
 
+            // Date Filter (start_time or created_at)
+            if ($hasDateFilter) {
+                $query->where(function ($q) use ($dateStart, $dateEnd) {
+                    $q->where(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNotNull('student_assessment_attempts.start_time')
+                            ->whereDate('student_assessment_attempts.start_time', '>=', $dateStart)
+                            ->whereDate('student_assessment_attempts.start_time', '<=', $dateEnd);
+                    })->orWhere(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNull('student_assessment_attempts.start_time')
+                            ->whereDate('student_assessment_attempts.created_at', '>=', $dateStart)
+                            ->whereDate('student_assessment_attempts.created_at', '<=', $dateEnd);
+                    });
+                });
+            }
+
+            // Assessment Filter
+            if (!empty($assessmentId) && $assessmentId !== 'all') {
+                $query->where('student_assessment_attempts.school_assessment_id', $assessmentId);
+            }
+
+            // Cheating / Tab Switch Filter
+            if ($cheatingFilter === 'with_cheating') {
+                $query->where('student_assessment_attempts.tab_switch_count', '>', 0);
+            } elseif ($cheatingFilter === 'clean') {
+                $query->where('student_assessment_attempts.tab_switch_count', '<=', 0);
+            }
+
+            // Search
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('UserAccount.StudentProfile', function ($sp) use ($search) {
@@ -107,36 +149,98 @@ class AssessmentDebugController extends Controller
                 });
             }
 
-            // Summary Counts
+            // Sorting
+            switch ($sortBy) {
+                case 'oldest':
+                    $query->oldest('student_assessment_attempts.updated_at');
+                    break;
+                case 'cheating':
+                    $query->orderByDesc('student_assessment_attempts.tab_switch_count')
+                          ->latest('student_assessment_attempts.updated_at');
+                    break;
+                case 'start_desc':
+                    $query->orderByDesc('student_assessment_attempts.start_time')
+                          ->latest('student_assessment_attempts.id');
+                    break;
+                case 'start_asc':
+                    $query->orderBy('student_assessment_attempts.start_time')
+                          ->oldest('student_assessment_attempts.id');
+                    break;
+                case 'latest':
+                default:
+                    $query->latest('student_assessment_attempts.updated_at');
+                    break;
+            }
+
+            // Summary Counts respecting school filter & date filter
+            $baseSummaryQuery = StudentAssessmentAttempt::query();
+            if (!empty($schoolId) && $schoolId !== 'all') {
+                $baseSummaryQuery->where(function ($q) use ($schoolId) {
+                    $q->whereHas('SchoolAssessment', fn($sa) => $sa->where('school_partner_id', $schoolId))
+                      ->orWhereHas('UserAccount.StudentProfile', fn($sp) => $sp->where('school_partner_id', $schoolId));
+                });
+            }
+            if ($hasDateFilter) {
+                $baseSummaryQuery->where(function ($q) use ($dateStart, $dateEnd) {
+                    $q->where(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNotNull('student_assessment_attempts.start_time')
+                            ->whereDate('student_assessment_attempts.start_time', '>=', $dateStart)
+                            ->whereDate('student_assessment_attempts.start_time', '<=', $dateEnd);
+                    })->orWhere(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNull('student_assessment_attempts.start_time')
+                            ->whereDate('student_assessment_attempts.created_at', '>=', $dateStart)
+                            ->whereDate('student_assessment_attempts.created_at', '<=', $dateEnd);
+                    });
+                });
+            }
+
             $summaryCounts = [
-                'total' => StudentAssessmentAttempt::count(),
-                'cheating' => StudentAssessmentAttempt::where('status', 'cheating')->count(),
-                'in_progress' => StudentAssessmentAttempt::where('status', 'in_progress')->count(),
-                'submitted' => StudentAssessmentAttempt::where('status', 'submitted')->count(),
-                'timeout' => StudentAssessmentAttempt::where('status', 'timeout')->count(),
-                'total_assessments' => SchoolAssessment::count(),
+                'total' => (clone $baseSummaryQuery)->count(),
+                'cheating' => (clone $baseSummaryQuery)->where('status', 'cheating')->count(),
+                'in_progress' => (clone $baseSummaryQuery)->where('status', 'in_progress')->count(),
+                'submitted' => (clone $baseSummaryQuery)->where('status', 'submitted')->count(),
+                'timeout' => (clone $baseSummaryQuery)->where('status', 'timeout')->count(),
+                'total_assessments' => (!empty($schoolId) && $schoolId !== 'all') 
+                    ? SchoolAssessment::where('school_partner_id', $schoolId)->count()
+                    : SchoolAssessment::count(),
             ];
 
-            $attempts = $query->latest('updated_at')->paginate(20);
+            // Determine per_page:
+            // "if date filter is chosen throw all data"
+            $isThrowAll = false;
+            if ($hasDateFilter && (empty($perPageParam) || $perPageParam === 'all' || $request->boolean('throw_all'))) {
+                $isThrowAll = true;
+                $perPage = 999999;
+            } elseif ($perPageParam === 'all' || (int)$perPageParam === -1) {
+                $isThrowAll = true;
+                $perPage = 999999;
+            } else {
+                $perPage = max(5, min(1000, (int) ($perPageParam ?: 20)));
+            }
 
-            // Ambil skor & butir terjawab untuk 20 attempts ini secara efisien (1 query batch)
-            $studentIds = $attempts->getCollection()->pluck('student_id')->unique();
-            $assessmentIds = $attempts->getCollection()->pluck('school_assessment_id')->unique();
+            $attempts = $query->paginate($perPage);
 
-            $scoreMap = StudentAssessmentAnswer::whereIn('student_id', $studentIds)
-                ->whereIn('school_assessment_id', $assessmentIds)
-                ->groupBy('student_id', 'school_assessment_id')
-                ->select(
-                    'student_id',
-                    'school_assessment_id',
-                    DB::raw('SUM(question_score) as total_score'),
-                    DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' THEN 1 END) as answered_count"),
-                    DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' AND question_score > 0 THEN 1 END) as correct_count"),
-                    DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' AND (question_score <= 0 OR question_score IS NULL) THEN 1 END) as wrong_count"),
-                    DB::raw('COUNT(*) as total_answers')
-                )
-                ->get()
-                ->keyBy(fn($r) => "{$r->student_id}_{$r->school_assessment_id}");
+            // Ambil skor & butir terjawab untuk attempts ini secara efisien (1 query batch)
+            $studentIds = $attempts->getCollection()->pluck('student_id')->unique()->filter()->values();
+            $assessmentIds = $attempts->getCollection()->pluck('school_assessment_id')->unique()->filter()->values();
+
+            $scoreMap = collect();
+            if ($studentIds->isNotEmpty() && $assessmentIds->isNotEmpty()) {
+                $scoreMap = StudentAssessmentAnswer::whereIn('student_id', $studentIds)
+                    ->whereIn('school_assessment_id', $assessmentIds)
+                    ->groupBy('student_id', 'school_assessment_id')
+                    ->select(
+                        'student_id',
+                        'school_assessment_id',
+                        DB::raw('SUM(question_score) as total_score'),
+                        DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' THEN 1 END) as answered_count"),
+                        DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' AND question_score > 0 THEN 1 END) as correct_count"),
+                        DB::raw("COUNT(CASE WHEN answer_value IS NOT NULL AND answer_value != '' AND answer_value != '[]' AND (question_score <= 0 OR question_score IS NULL) THEN 1 END) as wrong_count"),
+                        DB::raw('COUNT(*) as total_answers')
+                    )
+                    ->get()
+                    ->keyBy(fn($r) => "{$r->student_id}_{$r->school_assessment_id}");
+            }
 
             $items = $attempts->getCollection()->map(function ($item) use ($scoreMap) {
                 $key = "{$item->student_id}_{$item->school_assessment_id}";
@@ -158,8 +262,9 @@ class AssessmentDebugController extends Controller
                 'pagination' => [
                     'current_page' => $attempts->currentPage(),
                     'last_page' => $attempts->lastPage(),
-                    'per_page' => $attempts->perPage(),
+                    'per_page' => $isThrowAll ? 'all' : $attempts->perPage(),
                     'total' => $attempts->total(),
+                    'is_all' => $isThrowAll,
                 ],
                 'summary' => $summaryCounts
             ]);
@@ -641,6 +746,10 @@ class AssessmentDebugController extends Controller
             $schoolId = $request->input('school_id');
             $category = $request->input('category');
             $statusExam = $request->input('status');
+            $dateStart = $request->input('date_start') ?: $request->input('date');
+            $dateEnd = $request->input('date_end') ?: $dateStart;
+            $hasDateFilter = !empty($dateStart);
+            $perPageParam = $request->input('per_page');
 
             $query = SchoolAssessment::with([
                 'SchoolPartner',
@@ -660,6 +769,20 @@ class AssessmentDebugController extends Controller
                 $query->where('assessment_category', $category);
             }
 
+            if ($hasDateFilter) {
+                $query->where(function ($q) use ($dateStart, $dateEnd) {
+                    $q->where(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNotNull('start_date')
+                            ->whereDate('start_date', '>=', $dateStart)
+                            ->whereDate('start_date', '<=', $dateEnd);
+                    })->orWhere(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNull('start_date')
+                            ->whereDate('created_at', '>=', $dateStart)
+                            ->whereDate('created_at', '<=', $dateEnd);
+                    });
+                });
+            }
+
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -670,10 +793,41 @@ class AssessmentDebugController extends Controller
                 });
             }
 
-            $totalAssessments = SchoolAssessment::count();
-            $remedialCount = SchoolAssessment::whereIn('assessment_category', ['remedial', 'susulan'])->count();
+            // Summary counts respecting school & date
+            $baseAsmSummary = SchoolAssessment::query();
+            if (!empty($schoolId) && $schoolId !== 'all') {
+                $baseAsmSummary->where('school_partner_id', $schoolId);
+            }
+            if ($hasDateFilter) {
+                $baseAsmSummary->where(function ($q) use ($dateStart, $dateEnd) {
+                    $q->where(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNotNull('start_date')
+                            ->whereDate('start_date', '>=', $dateStart)
+                            ->whereDate('start_date', '<=', $dateEnd);
+                    })->orWhere(function ($sub) use ($dateStart, $dateEnd) {
+                        $sub->whereNull('start_date')
+                            ->whereDate('created_at', '>=', $dateStart)
+                            ->whereDate('created_at', '<=', $dateEnd);
+                    });
+                });
+            }
 
-            $paginated = $query->paginate(15);
+            $totalAssessments = (clone $baseAsmSummary)->count();
+            $remedialCount = (clone $baseAsmSummary)->whereIn('assessment_category', ['remedial', 'susulan'])->count();
+
+            // "if date filter is chosen throw all data"
+            $isThrowAll = false;
+            if ($hasDateFilter && (empty($perPageParam) || $perPageParam === 'all')) {
+                $isThrowAll = true;
+                $perPage = 999999;
+            } elseif ($perPageParam === 'all' || (int)$perPageParam === -1) {
+                $isThrowAll = true;
+                $perPage = 999999;
+            } else {
+                $perPage = max(5, min(1000, (int) ($perPageParam ?: 15)));
+            }
+
+            $paginated = $query->paginate($perPage);
             $assessmentIds = $paginated->getCollection()->pluck('id')->toArray();
 
             // Aggregates for attempts & scores
@@ -771,8 +925,9 @@ class AssessmentDebugController extends Controller
                 'pagination' => [
                     'current_page' => $paginated->currentPage(),
                     'last_page' => $paginated->lastPage(),
-                    'per_page' => $paginated->perPage(),
+                    'per_page' => $isThrowAll ? 'all' : $paginated->perPage(),
                     'total' => $paginated->total(),
+                    'is_all' => $isThrowAll,
                 ],
                 'summary' => [
                     'total_assessments' => $totalAssessments,
@@ -1013,8 +1168,8 @@ class AssessmentDebugController extends Controller
 
             $question = $schoolQuestion->LmsQuestionBank;
 
-            // Jika ESSAY dan sudah dinilai oleh guru secara manual (status 'graded'), pertahankan nilai guru
-            if ($question->tipe_soal === 'ESSAY' && $answer->grading_status === 'graded') {
+            // Jangan pernah recount butir soal tipe ESSAY karena dinilai manual oleh guru
+            if (strtoupper(trim($question->tipe_soal ?? '')) === 'ESSAY') {
                 continue;
             }
 
@@ -1101,10 +1256,6 @@ class AssessmentDebugController extends Controller
                             $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
                         }
                         break;
-
-                    case 'ESSAY':
-                        $score = 0;
-                        break;
                 }
             }
 
@@ -1166,6 +1317,83 @@ class AssessmentDebugController extends Controller
                 'new_total_score' => $result['new_total_score'],
                 'answers_count' => $result['answers_count'],
                 'summary' => $result['summary'],
+            ]
+        ]);
+    }
+
+    /**
+     * Hitung Ulang Sekaligus Sejumlah Sesi Ujian (Batch Recount Selected Attempts)
+     */
+    public function recountSelectedAttempts(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'attempt_ids' => 'required|array|min:1',
+            'attempt_ids.*' => 'integer|exists:student_assessment_attempts,id',
+        ]);
+
+        $attemptIds = $request->input('attempt_ids', []);
+        $attempts = StudentAssessmentAttempt::with('SchoolAssessment', 'UserAccount.studentProfile')
+            ->whereIn('id', $attemptIds)
+            ->get();
+
+        if ($attempts->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada sesi ujian yang valid ditemukan untuk dihitung ulang.'
+            ], 404);
+        }
+
+        $results = [];
+        $successCount = 0;
+        $failedCount = 0;
+
+        foreach ($attempts as $attempt) {
+            $assessment = $attempt->SchoolAssessment;
+            $studentName = $attempt->UserAccount?->studentProfile?->nama_lengkap ?? "Siswa #{$attempt->student_id}";
+
+            if (!$assessment) {
+                $failedCount++;
+                $results[] = [
+                    'attempt_id' => $attempt->id,
+                    'student_name' => $studentName,
+                    'status' => 'failed',
+                    'message' => 'Assessment tidak ditemukan.'
+                ];
+                continue;
+            }
+
+            try {
+                $res = $this->recalculateStudentAnswers($assessment, $attempt->student_id);
+                $successCount++;
+                $results[] = [
+                    'attempt_id' => $attempt->id,
+                    'student_name' => $studentName,
+                    'assessment_title' => $assessment->title,
+                    'status' => 'success',
+                    'old_total_score' => $res['old_total_score'],
+                    'new_total_score' => $res['new_total_score'],
+                ];
+            } catch (\Throwable $e) {
+                $failedCount++;
+                $results[] = [
+                    'attempt_id' => $attempt->id,
+                    'student_name' => $studentName,
+                    'status' => 'failed',
+                    'message' => $e->getMessage()
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Selesai memproses recount untuk {$successCount} sesi ujian" . ($failedCount > 0 ? " ({$failedCount} gagal)." : "."),
+            'data' => [
+                'total_selected' => count($attemptIds),
+                'success_count' => $successCount,
+                'failed_count' => $failedCount,
+                'items' => $results,
             ]
         ]);
     }
@@ -1324,6 +1552,8 @@ class AssessmentDebugController extends Controller
                 if ($isEmpty) {
                     $emptyCount++;
                     $evalStatus = 'empty';
+                } elseif ($tipeSoal === 'ESSAY' && ($answer?->grading_status === 'pending' || $answer?->grading_status === 'not_graded' || empty($answer?->grading_status)) && $score <= 0) {
+                    $evalStatus = 'pending';
                 } elseif ($score <= 0) {
                     $wrongCount++;
                     $evalStatus = 'wrong';
@@ -1346,8 +1576,11 @@ class AssessmentDebugController extends Controller
                         } else {
                             $evalStatus = 'partial';
                         }
+                    } elseif ($tipeSoal === 'ESSAY') {
+                        // ESSAY dinilai manual oleh guru
+                        $evalStatus = ($score >= $weight) ? 'correct' : 'partial';
                     } else {
-                        // ESSAY atau lainnya: toleransi selisih pembulatan tipe kolom MySQL INT (misal 3 vs 3.33)
+                        // toleransi selisih pembulatan tipe kolom MySQL INT (misal 3 vs 3.33)
                         $isFull = ($score >= $weight) || ($weight > 0 && ($score / $weight) >= 0.85) || (abs($score - $weight) <= 0.5);
                         $evalStatus = $isFull ? 'correct' : 'partial';
                     }
@@ -1356,7 +1589,8 @@ class AssessmentDebugController extends Controller
                 }
 
                 // Jika status jawaban 'correct' penuh dan selisih score dengan weight disebabkan oleh pembulatan kolom integer MySQL (misal 3 vs 3.33)
-                if ($evalStatus === 'correct' && $weight > 0) {
+                // Hanya untuk tipe soal non-ESSAY (soal objektif). Nilai ESSAY murni dari penilaian guru dan tidak boleh diubah otomatis.
+                if ($tipeSoal !== 'ESSAY' && $evalStatus === 'correct' && $weight > 0) {
                     if ($score <= 0 || abs($score - $weight) <= 0.5 || $score > $weight) {
                         $score = $weight;
                     }

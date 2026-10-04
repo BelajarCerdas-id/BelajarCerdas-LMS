@@ -6,7 +6,7 @@
 
             <!-- HERO HEADER -->
             <section>
-                <div class="bg-[linear-gradient(135deg,#0071BC_0%,#004f84_60%,#002b49_100%)] rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden relative border border-white/10">
+                <div class="rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden relative border border-white/10 bg-[#0071BC]" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 60%, #002b49 100%) !important;">
                     <div class="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
                         <i class="fa-solid fa-chart-line text-[260px] translate-x-12 -translate-y-8"></i>
                     </div>

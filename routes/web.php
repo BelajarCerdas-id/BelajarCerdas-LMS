@@ -340,10 +340,17 @@ Route::middleware([AuthMiddleware::class])->group(function () {
 
         Route::prefix('administrator/assessment-debug')->group(function () {
             Route::get('/data', [AssessmentDebugController::class, 'getAttempts'])->name('admin.assessmentDebug.data');
+            Route::get('/assessments', [AssessmentDebugController::class, 'getAssessments'])->name('admin.assessmentDebug.assessments');
+            Route::get('/assessment/{id}', [AssessmentDebugController::class, 'getAssessmentDetail'])->name('admin.assessmentDebug.assessmentDetail');
+            Route::get('/assessment/{assessmentId}/student/{studentId}', [AssessmentDebugController::class, 'getStudentExamDetail'])->name('admin.assessmentDebug.studentExamDetail');
+            Route::post('/assessment/{id}/recount', [AssessmentDebugController::class, 'recountAssessment'])->name('admin.assessmentDebug.recountAssessment');
+            Route::post('/recount-user', [AssessmentDebugController::class, 'recountUser'])->name('admin.assessmentDebug.recountUser');
+            Route::post('/recount-selected', [AssessmentDebugController::class, 'recountSelectedAttempts'])->name('admin.assessmentDebug.recountSelected');
             Route::get('/cache/status', [AssessmentDebugController::class, 'getCacheStatus'])->name('admin.assessmentDebug.cacheStatus');
             Route::post('/cache/warm/{id}', [AssessmentDebugController::class, 'warmCache'])->name('admin.assessmentDebug.warmCache');
             Route::post('/cache/clear/{id}', [AssessmentDebugController::class, 'clearCache'])->name('admin.assessmentDebug.clearCache');
             Route::post('/{id}/unlock', [AssessmentDebugController::class, 'unlock'])->name('admin.assessmentDebug.unlock');
+            Route::post('/{id}/recount', [AssessmentDebugController::class, 'recountAttempt'])->name('admin.assessmentDebug.recountAttempt');
             Route::post('/{id}/update-status', [AssessmentDebugController::class, 'updateStatus'])->name('admin.assessmentDebug.updateStatus');
             Route::post('/{id}/update-attempts', [AssessmentDebugController::class, 'updateTabSwitchCount'])->name('admin.assessmentDebug.updateAttempts');
             Route::post('/{id}/update', [AssessmentDebugController::class, 'updateAttempt'])->name('admin.assessmentDebug.update');
