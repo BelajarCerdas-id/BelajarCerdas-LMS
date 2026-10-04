@@ -645,7 +645,7 @@ class StudentAssessmentExamController extends Controller
 
         $attempt->increment('tab_switch_count');
 
-        if ($attempt->tab_switch_count >= 3) {
+        if ($attempt->tab_switch_count >= 5) {
 
             $attempt->update([
                 'status' => 'cheating',
@@ -662,7 +662,8 @@ class StudentAssessmentExamController extends Controller
 
         return response()->json([
             'status' => 'warning',
-            'count' => $attempt->tab_switch_count
+            'count' => $attempt->tab_switch_count,
+            'max_count' => 5
         ]);
     }
 
@@ -681,14 +682,16 @@ class StudentAssessmentExamController extends Controller
         if ($attempt->status === 'cheating') {
             return response()->json([
                 'status' => 'blocked',
-                'count' => $attempt->tab_switch_count
+                'count' => $attempt->tab_switch_count,
+                'max_count' => 5
             ]);
         }
 
         if ($attempt->tab_switch_count > 0) {
             return response()->json([
                 'status' => 'warning',
-                'count' => $attempt->tab_switch_count
+                'count' => $attempt->tab_switch_count,
+                'max_count' => 5
             ]);
         }
 
@@ -843,13 +846,25 @@ class StudentAssessmentExamController extends Controller
 
                     if (is_array($answerData)) {
 
-                        $correctOptions = $question->lmsQuestionOption()->where('is_correct', 1)->pluck('options_key')->toArray();
+                        $correctOptions = $question->lmsQuestionOption()
+                            ->where('is_correct', 1)
+                            ->pluck('options_key')
+                            ->map(fn($val) => trim((string)$val))
+                            ->toArray();
 
-                        sort($correctOptions);
-                        sort($answerData);
+                        $totalCorrect = count($correctOptions);
 
-                        if ($correctOptions === $answerData) {
-                            $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                        if ($totalCorrect > 0) {
+                            $normalizedAnswers = array_map(fn($val) => trim((string)$val), $answerData);
+                            $maxScore = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                            $wrongSelected = count(array_diff($normalizedAnswers, $correctOptions));
+
+                            if ($wrongSelected === 0) {
+                                $correctSelected = count(array_intersect($normalizedAnswers, $correctOptions));
+                                $score = round(($correctSelected / $totalCorrect) * $maxScore, 2);
+                            } else {
+                                $score = 0;
+                            }
                         }
 
                     }
@@ -1253,11 +1268,25 @@ class StudentAssessmentExamController extends Controller
 
             case 'MCMA':
                 if (is_array($answerData)) {
-                    $correctOptions = $question->lmsQuestionOption()->where('is_correct', 1)->pluck('options_key')->toArray();
-                    sort($correctOptions);
-                    sort($answerData);
-                    if ($correctOptions === $answerData) {
-                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                    $correctOptions = $question->lmsQuestionOption()
+                        ->where('is_correct', 1)
+                        ->pluck('options_key')
+                        ->map(fn($val) => trim((string)$val))
+                        ->toArray();
+
+                    $totalCorrect = count($correctOptions);
+
+                    if ($totalCorrect > 0) {
+                        $normalizedAnswers = array_map(fn($val) => trim((string)$val), $answerData);
+                        $maxScore = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                        $wrongSelected = count(array_diff($normalizedAnswers, $correctOptions));
+
+                        if ($wrongSelected === 0) {
+                            $correctSelected = count(array_intersect($normalizedAnswers, $correctOptions));
+                            $score = round(($correctSelected / $totalCorrect) * $maxScore, 2);
+                        } else {
+                            $score = 0;
+                        }
                     }
                 }
                 break;

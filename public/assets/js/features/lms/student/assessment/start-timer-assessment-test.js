@@ -235,10 +235,11 @@ function checkAttemptStatus() {
 
             if (res.status === 'warning') {
                 isWarningModalOpen = true;
+                const maxCount = res.max_count || 5;
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan!',
-                    text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/3)`,
+                    text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/${maxCount})`,
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     confirmButtonText: isFullscreenSupported() ? 'Masuk Fullscreen' : 'Lanjutkan Ujian',
@@ -514,10 +515,11 @@ function reportCheating(reason = 'unspecified') {
 
             if (res.status === 'warning') {
                 isWarningModalOpen = true;
+                const maxCount = res.max_count || 5;
                 Swal.fire({
                     icon: 'warning',
                     title: 'Peringatan!',
-                    text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/3)`,
+                    text: `Kamu terdeteksi meninggalkan halaman ujian, batas kesempatan (${res.count}/${maxCount})`,
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     confirmButtonText: isFullscreenSupported() ? 'Masuk Fullscreen' : 'Lanjutkan Ujian',

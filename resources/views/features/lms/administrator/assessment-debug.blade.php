@@ -48,152 +48,325 @@
                 </div>
             </section>
 
-            <!-- KPI SUMMARY CARDS -->
-            <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Total Attempts -->
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-clipboard-list"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sesi</div>
-                        <div class="text-xl sm:text-2xl font-bold text-slate-800" id="stat-total">0</div>
-                    </div>
-                </div>
-
-                <!-- Cheating / Blocked -->
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-red-200 bg-red-50/20 shadow-xs flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-lock"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-red-600 uppercase tracking-wider">Terblokir (Cheat)</div>
-                        <div class="text-xl sm:text-2xl font-bold text-red-700" id="stat-cheating">0</div>
-                    </div>
-                </div>
-
-                <!-- In Progress -->
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-blue-200 bg-blue-50/20 shadow-xs flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Sedang Ujian</div>
-                        <div class="text-xl sm:text-2xl font-bold text-blue-700" id="stat-in-progress">0</div>
-                    </div>
-                </div>
-
-                <!-- Submitted -->
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 bg-emerald-50/20 shadow-xs flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Selesai</div>
-                        <div class="text-xl sm:text-2xl font-bold text-emerald-700" id="stat-submitted">0</div>
-                    </div>
-                </div>
-
-                <!-- Timeout -->
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-amber-200 bg-amber-50/20 shadow-xs flex items-center gap-4 col-span-2 lg:col-span-1">
-                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Waktu Habis</div>
-                        <div class="text-xl sm:text-2xl font-bold text-amber-700" id="stat-timeout">0</div>
-                    </div>
-                </div>
+            <!-- PRIMARY NAVIGATION TABS -->
+            <section class="flex flex-wrap items-center gap-3">
+                <button type="button" id="tab-nav-attempts" onclick="switchMainTab('attempts')"
+                    class="cursor-pointer inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-xs bg-[#0071BC] text-white">
+                    <i class="fa-solid fa-user-graduate text-base"></i>
+                    <span>Sesi Ujian Siswa (Attempts)</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs bg-white/20 text-white font-semibold" id="badge-total-attempts">0</span>
+                </button>
+                <button type="button" id="tab-nav-assessments" onclick="switchMainTab('assessments')"
+                    class="cursor-pointer inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl font-bold text-sm transition-all bg-white hover:bg-slate-100 text-slate-700 border border-slate-200">
+                    <i class="fa-solid fa-book-open text-base text-[#0071BC]"></i>
+                    <span>Daftar Assessment</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 font-semibold" id="badge-total-assessments">0</span>
+                </button>
             </section>
 
-            <!-- FILTERS & SEARCH BAR -->
-            <section class="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <!-- Status Filter Tabs -->
-                    <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
-                        <button type="button" data-status="all"
-                            class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
-                            Semua Sesi
-                        </button>
-                        <button type="button" data-status="cheating"
-                            class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-red-600 flex items-center gap-1.5">
-                            <i class="fa-solid fa-lock text-xs"></i>
-                            Terblokir (Cheat)
-                        </button>
-                        <button type="button" data-status="in_progress"
-                            class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
-                            Sedang Ujian
-                        </button>
-                        <button type="button" data-status="submitted"
-                            class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
-                            Selesai
-                        </button>
-                        <button type="button" data-status="timeout"
-                            class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
-                            Timeout
-                        </button>
-                    </div>
-
-                    <!-- Search and School Selector -->
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                        <div class="relative w-full sm:w-64">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                            <input type="text" id="filter-search" placeholder="Cari siswa, NIS, judul ujian..."
-                                class="w-full h-11 pl-9 pr-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
+            <!-- ======================================================== -->
+            <!-- ATTEMPTS VIEW CONTAINER -->
+            <!-- ======================================================== -->
+            <div id="view-attempts" class="space-y-6">
+                <!-- KPI SUMMARY CARDS -->
+                <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- Total Attempts -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-clipboard-list"></i>
                         </div>
-
-                        <div class="w-full sm:w-56">
-                            <select id="filter-school"
-                                class="w-full h-11 px-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
-                                <option value="all">Semua Sekolah Mitra</option>
-                                @foreach ($schools as $school)
-                                    <option value="{{ $school->id }}">{{ $school->nama_sekolah }}</option>
-                                @endforeach
-                            </select>
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sesi</div>
+                            <div class="text-xl sm:text-2xl font-bold text-slate-800" id="stat-total">0</div>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- ATTEMPTS TABLE CONTAINER -->
-            <section class="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden">
-                <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-base sm:text-lg font-bold text-slate-800">Daftar Sesi Ujian Siswa</h2>
-                        <p class="text-xs sm:text-sm text-slate-500">Klik "Buka Kunci" untuk langsung membebaskan siswa yang terblokir.</p>
+                    <!-- Cheating / Blocked -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-red-200 bg-red-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-red-600 uppercase tracking-wider">Terblokir (Cheat)</div>
+                            <div class="text-xl sm:text-2xl font-bold text-red-700" id="stat-cheating">0</div>
+                        </div>
                     </div>
-                    <div class="text-xs text-slate-500" id="table-info">Memuat data...</div>
-                </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
-                        <thead class="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
-                            <tr>
-                                <th class="px-6 py-4">Siswa & Kelas</th>
-                                <th class="px-6 py-4">Assessment & Mapel</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-center">Pelanggaran</th>
-                                <th class="px-6 py-4">Waktu & Sisa Durasi</th>
-                                <th class="px-6 py-4 text-center">Aksi Debugger</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attempts-table-body" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="6" class="px-6 py-12 text-center text-slate-400">
-                                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
-                                    <div>Memuat data attempt ujian...</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- In Progress -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-blue-200 bg-blue-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Sedang Ujian</div>
+                            <div class="text-xl sm:text-2xl font-bold text-blue-700" id="stat-in-progress">0</div>
+                        </div>
+                    </div>
 
-                <!-- PAGINATION BAR -->
-                <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4" id="pagination-container">
-                    <div class="text-xs sm:text-sm text-slate-500" id="pagination-text"></div>
-                    <div class="flex items-center gap-2" id="pagination-buttons"></div>
-                </div>
-            </section>
+                    <!-- Submitted -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 bg-emerald-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Selesai</div>
+                            <div class="text-xl sm:text-2xl font-bold text-emerald-700" id="stat-submitted">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Timeout -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-amber-200 bg-amber-50/20 shadow-xs flex items-center gap-4 col-span-2 lg:col-span-1">
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Waktu Habis</div>
+                            <div class="text-xl sm:text-2xl font-bold text-amber-700" id="stat-timeout">0</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FILTERS & SEARCH BAR -->
+                <section class="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <!-- Status Filter Tabs -->
+                        <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
+                            <button type="button" data-status="all"
+                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
+                                Semua Sesi
+                            </button>
+                            <button type="button" data-status="cheating"
+                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-red-600 flex items-center gap-1.5">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                                Terblokir (Cheat)
+                            </button>
+                            <button type="button" data-status="in_progress"
+                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
+                                Sedang Ujian
+                            </button>
+                            <button type="button" data-status="submitted"
+                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
+                                Selesai
+                            </button>
+                            <button type="button" data-status="timeout"
+                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
+                                Timeout
+                            </button>
+                        </div>
+
+                        <!-- Search and School Selector -->
+                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="filter-search" placeholder="Cari siswa, NIS, judul ujian..."
+                                    class="w-full h-11 pl-9 pr-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
+                            </div>
+
+                            <div class="w-full sm:w-56">
+                                <select id="filter-school"
+                                    class="w-full h-11 px-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    <option value="all">Semua Sekolah Mitra</option>
+                                    @foreach ($schools as $school)
+                                        <option value="{{ $school->id }}">{{ $school->nama_sekolah }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ATTEMPTS TABLE CONTAINER -->
+                <section class="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden">
+                    <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-800">Daftar Sesi Ujian Siswa</h2>
+                            <p class="text-xs sm:text-sm text-slate-500">Klik "Buka Kunci" untuk langsung membebaskan siswa yang terblokir, atau "Recount" untuk menghitung ulang nilai siswa.</p>
+                        </div>
+                        <div class="text-xs text-slate-500" id="table-info">Memuat data...</div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4">Siswa & Kelas</th>
+                                    <th class="px-6 py-4">Assessment & Mapel</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Pelanggaran</th>
+                                    <th class="px-6 py-4 text-center">Skor & Jawaban</th>
+                                    <th class="px-6 py-4">Waktu & Sisa Durasi</th>
+                                    <th class="px-6 py-4 text-center">Aksi Debugger</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attempts-table-body" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
+                                        <div>Memuat data attempt ujian...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION BAR -->
+                    <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4" id="pagination-container">
+                        <div class="text-xs sm:text-sm text-slate-500" id="pagination-text"></div>
+                        <div class="flex items-center gap-2" id="pagination-buttons"></div>
+                    </div>
+                </section>
+            </div> <!-- end #view-attempts -->
+
+            <!-- ======================================================== -->
+            <!-- ASSESSMENT VIEWS CONTAINER -->
+            <!-- ======================================================== -->
+            <div id="view-assessments" class="space-y-6 hidden">
+                <!-- KPI SUMMARY CARDS FOR ASSESSMENTS -->
+                <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Total Assessments -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Assessment</div>
+                            <div class="text-xl sm:text-2xl font-bold text-slate-800" id="stat-asm-total">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Ongoing / Active -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-blue-200 bg-blue-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Sedang Aktif</div>
+                            <div class="text-xl sm:text-2xl font-bold text-blue-700" id="stat-asm-active">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Remedial & Susulan -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-purple-200 bg-purple-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Remedial / Susulan</div>
+                            <div class="text-xl sm:text-2xl font-bold text-purple-700" id="stat-asm-remedial">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Total Attempts / Participants -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 bg-emerald-50/20 shadow-xs flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Total Sesi Ujian</div>
+                            <div class="text-xl sm:text-2xl font-bold text-emerald-700" id="stat-asm-attempts">0</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FILTERS & SEARCH FOR ASSESSMENTS -->
+                <section class="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <!-- Category Filter Tabs -->
+                        <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
+                            <button type="button" data-category="all"
+                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
+                                Semua Kategori
+                            </button>
+                            <button type="button" data-category="main"
+                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
+                                Utama (Main)
+                            </button>
+                            <button type="button" data-category="remedial"
+                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-purple-600">
+                                Remedial
+                            </button>
+                            <button type="button" data-category="susulan"
+                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
+                                Susulan
+                            </button>
+                            <button type="button" data-category="pengayaan"
+                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
+                                Pengayaan
+                            </button>
+                        </div>
+
+                        <!-- Search, Status and School Selector -->
+                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                            <!-- Status Exam Selector -->
+                            <div class="w-full sm:w-44">
+                                <select id="filter-asm-status"
+                                    class="w-full h-11 px-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    <option value="all">Semua Status</option>
+                                    <option value="active">Aktif</option>
+                                    <option value="upcoming">Mendatang</option>
+                                    <option value="expired">Berakhir</option>
+                                </select>
+                            </div>
+
+                            <div class="relative w-full sm:w-56">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" id="filter-asm-search" placeholder="Cari judul, mapel..."
+                                    class="w-full h-11 pl-9 pr-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
+                            </div>
+
+                            <div class="w-full sm:w-52">
+                                <select id="filter-asm-school"
+                                    class="w-full h-11 px-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    <option value="all">Semua Sekolah Mitra</option>
+                                    @foreach ($schools as $school)
+                                        <option value="{{ $school->id }}">{{ $school->nama_sekolah }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ASSESSMENTS TABLE CONTAINER -->
+                <section class="bg-white rounded-3xl shadow-xs border border-slate-200 overflow-hidden">
+                    <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-800">Daftar Assessment & Rekapitulasi Nilai</h2>
+                            <p class="text-xs sm:text-sm text-slate-500">Lihat rincian butir soal, daftar peserta, dan hitung ulang (recount) nilai per assessment.</p>
+                        </div>
+                        <div class="text-xs text-slate-500" id="asm-table-info">Memuat data...</div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4">Assessment & Mapel</th>
+                                    <th class="px-6 py-4">Kelas & Sekolah</th>
+                                    <th class="px-6 py-4">Jadwal & Status</th>
+                                    <th class="px-6 py-4 text-center">Soal & Bobot</th>
+                                    <th class="px-6 py-4 text-center">Peserta & Rekap Nilai</th>
+                                    <th class="px-6 py-4 text-center">Aksi Assessment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assessments-table-body" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
+                                        <div>Memuat data assessment...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION BAR FOR ASSESSMENTS -->
+                    <div class="p-4 sm:p-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4" id="asm-pagination-container">
+                        <div class="text-xs sm:text-sm text-slate-500" id="asm-pagination-text"></div>
+                        <div class="flex items-center gap-2" id="asm-pagination-buttons"></div>
+                    </div>
+                </section>
+            </div> <!-- end #view-assessments -->
 
         </div>
     </div>
@@ -455,11 +628,396 @@
         </form>
     </dialog>
 
+    <!-- MODAL ASSESSMENT DETAIL -->
+    <dialog id="modal-assessment-detail" class="modal p-3 sm:p-6 backdrop:bg-slate-900/50 backdrop:backdrop-blur-xs">
+        <div class="modal-box w-11/12 max-w-6xl max-h-[92vh] bg-white p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Header (Pinned) -->
+            <div class="bg-[#0071BC] p-5 sm:p-6 text-white flex items-start justify-between shrink-0 shadow-xs" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 50%, #002b49 100%) !important;">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0" style="background-color: rgba(255, 255, 255, 0.2);">
+                        <i class="fa-solid fa-book-open text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/20 text-white" id="modal-asm-badge-category">
+                                Main
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-sky-100" id="modal-asm-badge-mapel">
+                                Mapel
+                            </span>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white" id="modal-asm-title">Judul Assessment</h3>
+                        <p class="text-xs text-sky-100/90 mt-0.5" id="modal-asm-subtitle">Kelas • Sekolah • Durasi</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-recount-all-in-modal" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-900 font-bold text-xs shadow-md transition">
+                        <i class="fa-solid fa-calculator text-xs"></i>
+                        <span>Recount Seluruh Siswa</span>
+                    </button>
+                    <form method="dialog">
+                        <button class="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20 text-base cursor-pointer">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sub Navigation Tabs inside Modal -->
+            <div class="flex items-center gap-2 px-6 pt-3 bg-slate-50 border-b border-slate-200 shrink-0">
+                <button type="button" id="subtab-btn-participants" onclick="switchModalSubTab('participants')"
+                    class="modal-subtab-btn px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 border-[#0071BC] text-[#0071BC] transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-users text-xs"></i>
+                    <span>Peserta & Nilai (<span id="modal-count-participants">0</span>)</span>
+                </button>
+                <button type="button" id="subtab-btn-questions" onclick="switchModalSubTab('questions')"
+                    class="modal-subtab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-clipboard-question text-xs"></i>
+                    <span>Daftar Butir Soal (<span id="modal-count-questions">0</span>)</span>
+                </button>
+                <button type="button" id="subtab-btn-info" onclick="switchModalSubTab('info')"
+                    class="modal-subtab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-circle-info text-xs"></i>
+                    <span>Informasi & Jadwal</span>
+                </button>
+            </div>
+
+            <!-- Content Area (Scrollable body) -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 bg-slate-50/50 space-y-4">
+                <!-- SUBTAB: PARTICIPANTS -->
+                <div id="subtab-content-participants" class="space-y-4">
+                    <!-- Participant Metrics -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm shrink-0">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-slate-500 uppercase">Peserta</div>
+                                <div class="text-lg font-extrabold text-slate-800" id="modal-stat-participants">0</div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-emerald-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-emerald-700 uppercase">Rata-rata Skor</div>
+                                <div class="text-lg font-extrabold text-emerald-700" id="modal-stat-avg">0</div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-blue-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center text-sm shrink-0">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-blue-700 uppercase">Tertinggi</div>
+                                <div class="text-lg font-extrabold text-blue-800" id="modal-stat-max">0</div>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-amber-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0">
+                                <i class="fa-solid fa-arrow-trend-down"></i>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-bold text-amber-700 uppercase">Terendah</div>
+                                <div class="text-lg font-extrabold text-amber-800" id="modal-stat-min">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Participants Table -->
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-100/80 text-[11px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-5 py-3">Siswa & NISN</th>
+                                        <th class="px-5 py-3">Kelas</th>
+                                        <th class="px-5 py-3 text-center">Status</th>
+                                        <th class="px-5 py-3 text-center">Pelanggaran</th>
+                                        <th class="px-3 py-3 text-center text-emerald-700">Benar</th>
+                                        <th class="px-3 py-3 text-center text-red-600">Salah</th>
+                                        <th class="px-3 py-3 text-center text-slate-500">Kosong</th>
+                                        <th class="px-5 py-3 text-center">Skor Ujian</th>
+                                        <th class="px-5 py-3 text-center min-w-[210px]">Aksi Siswa</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-participants-table-body" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td colspan="9" class="px-5 py-8 text-center text-slate-400">
+                                            <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-[#0071BC]"></i>
+                                            <div>Memuat data peserta...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBTAB: QUESTIONS -->
+                <div id="subtab-content-questions" class="space-y-4 hidden">
+                    <div id="modal-questions-list" class="space-y-3">
+                        <div class="p-8 text-center text-slate-400">
+                            <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-[#0071BC]"></i>
+                            <div>Memuat butir soal...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBTAB: INFO -->
+                <div id="subtab-content-info" class="space-y-4 hidden">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <span class="font-bold text-slate-500 uppercase">Jadwal Mulai:</span>
+                                <div class="text-sm font-semibold text-slate-800" id="modal-info-start">-</div>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-500 uppercase">Jadwal Selesai:</span>
+                                <div class="text-sm font-semibold text-slate-800" id="modal-info-end">-</div>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-500 uppercase">Durasi Pengerjaan:</span>
+                                <div class="text-sm font-semibold text-slate-800" id="modal-info-duration">-</div>
+                            </div>
+                            <div>
+                                <span class="font-bold text-slate-500 uppercase">Ujian Induk (Parent):</span>
+                                <div class="text-sm font-semibold text-slate-800" id="modal-info-parent">-</div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <span class="font-bold text-slate-500 uppercase">Pengaturan Ujian:</span>
+                            <div class="flex flex-wrap gap-2 mt-2" id="modal-info-settings"></div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <span class="font-bold text-slate-500 uppercase">Petunjuk / Instruksi Ujian:</span>
+                            <div class="mt-1 text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed" id="modal-info-instruction">
+                                -
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer (Pinned) -->
+            <div class="p-4 sm:p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-calculator text-amber-500 text-sm"></i>
+                    <span>Tombol Recount akan mengevaluasi ulang jawaban terhadap kunci dan bobot terbaru secara otomatis.</span>
+                </div>
+                <form method="dialog">
+                    <button class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold transition cursor-pointer">
+                        Tutup
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- MODAL SPECIFIC STUDENT EXAM DETAIL -->
+    <dialog id="modal-student-exam-detail" class="modal p-2 sm:p-5 backdrop:bg-slate-900/60 backdrop:backdrop-blur-xs z-[60]">
+        <div class="modal-box w-11/12 max-w-5xl max-h-[92vh] bg-white p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Modal Header (Pinned) -->
+            <div class="p-5 sm:p-6 text-white flex items-start justify-between shrink-0 shadow-xs" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 50%, #002b49 100%) !important;">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0" style="background-color: rgba(255, 255, 255, 0.2);">
+                        <i class="fa-solid fa-file-signature text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/20 text-white" id="sed-badge-status">
+                                Status
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-sky-100" id="sed-badge-mapel">
+                                Mapel
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-sky-100" id="sed-badge-category">
+                                Category
+                            </span>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white" id="sed-student-name">Nama Siswa</h3>
+                        <p class="text-xs text-sky-100/90 mt-0.5" id="sed-subtitle">NISN • Kelas • Ujian</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-sed-recount" class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-900 font-bold text-xs shadow-md transition">
+                        <i class="fa-solid fa-calculator text-xs"></i>
+                        <span>Recount Nilai Siswa</span>
+                    </button>
+                    <form method="dialog">
+                        <button class="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20 text-base cursor-pointer">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Body Area (Scrollable) -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 bg-slate-50/50 space-y-4">
+                <!-- Summary Metrics (5 cards) -->
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Skor Ujian</div>
+                            <div class="text-base sm:text-lg font-extrabold text-slate-800" id="sed-stat-score">0</div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-emerald-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-emerald-700 uppercase">Benar</div>
+                            <div class="text-base sm:text-lg font-extrabold text-emerald-700" id="sed-stat-correct">0</div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-red-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-red-700 uppercase">Salah</div>
+                            <div class="text-base sm:text-lg font-extrabold text-red-600" id="sed-stat-wrong">0</div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-minus"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase">Kosong</div>
+                            <div class="text-base sm:text-lg font-extrabold text-slate-600" id="sed-stat-empty">0</div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-purple-200/80 rounded-2xl p-3.5 shadow-2xs flex items-center gap-3 col-span-2 sm:col-span-1">
+                        <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-base shrink-0">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-purple-700 uppercase">Tab Switch</div>
+                            <div class="text-base sm:text-lg font-extrabold text-purple-800" id="sed-stat-switch">0x</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timing & Duration Info Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-slate-600">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-clock text-[#0071BC]"></i>
+                        <span>Mulai: <strong id="sed-time-start" class="text-slate-800">-</strong></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-hourglass-end text-amber-500"></i>
+                        <span>Batas/Selesai: <strong id="sed-time-expire" class="text-slate-800">-</strong></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-slate-400"></i>
+                        <span>Durasi Ujian: <strong id="sed-time-duration" class="text-slate-800">-</strong></span>
+                    </div>
+                </div>
+
+                <!-- Question Filter Tabs -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
+                        <button type="button" onclick="filterStudentExamQuestions('all')" data-sed-filter="all"
+                            class="sed-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-xl transition cursor-pointer bg-white text-[#0071BC] shadow-xs">
+                            Semua Soal (<span id="sed-count-all">0</span>)
+                        </button>
+                        <button type="button" onclick="filterStudentExamQuestions('correct')" data-sed-filter="correct"
+                            class="sed-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer text-slate-600 hover:text-emerald-700">
+                            <i class="fa-solid fa-check text-[10px] text-emerald-600 mr-1"></i> Benar (<span id="sed-count-correct">0</span>)
+                        </button>
+                        <button type="button" onclick="filterStudentExamQuestions('wrong')" data-sed-filter="wrong"
+                            class="sed-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer text-slate-600 hover:text-red-600">
+                            <i class="fa-solid fa-xmark text-[10px] text-red-600 mr-1"></i> Salah (<span id="sed-count-wrong">0</span>)
+                        </button>
+                        <button type="button" onclick="filterStudentExamQuestions('empty')" data-sed-filter="empty"
+                            class="sed-filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer text-slate-600 hover:text-slate-800">
+                            <i class="fa-solid fa-minus text-[10px] text-slate-400 mr-1"></i> Kosong (<span id="sed-count-empty">0</span>)
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-500 font-medium">
+                        Perbandingan jawaban siswa terhadap kunci jawaban sistem
+                    </div>
+                </div>
+
+                <!-- Questions List Container -->
+                <div id="sed-questions-list" class="space-y-3">
+                    <div class="p-12 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
+                        <div>Memuat butir soal dan jawaban siswa...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer (Pinned) -->
+            <div class="p-4 sm:p-5 bg-white border-t border-slate-200/80 flex items-center justify-between shrink-0">
+                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-[#0071BC] text-sm"></i>
+                    <span>Hijau = Kunci/Pilihan Benar, Merah = Pilihan Salah Siswa, Abu-abu = Belum/Tidak Dijawab.</span>
+                </div>
+                <form method="dialog">
+                    <button class="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs font-bold transition cursor-pointer">
+                        Tutup
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
     <!-- CLIENT JAVASCRIPT LOGIC -->
     <script>
         let currentStatusFilter = 'all';
         let currentPage = 1;
         let searchTimeout = null;
+
+        // ==========================================
+        // MAIN TAB NAVIGATION (ATTEMPTS vs ASSESSMENTS)
+        // ==========================================
+        let currentMainTab = 'attempts';
+        let assessmentsLoaded = false;
+
+        function switchMainTab(tab) {
+            currentMainTab = tab;
+            if (tab === 'attempts') {
+                $('#view-attempts').removeClass('hidden');
+                $('#view-assessments').addClass('hidden');
+                $('#tab-nav-attempts')
+                    .removeClass('bg-white text-slate-700 border hover:bg-slate-100')
+                    .addClass('bg-[#0071BC] text-white shadow-xs');
+                $('#tab-nav-assessments')
+                    .removeClass('bg-[#0071BC] text-white shadow-xs')
+                    .addClass('bg-white text-slate-700 border hover:bg-slate-100');
+            } else {
+                $('#view-attempts').addClass('hidden');
+                $('#view-assessments').removeClass('hidden');
+                $('#tab-nav-assessments')
+                    .removeClass('bg-white text-slate-700 border hover:bg-slate-100')
+                    .addClass('bg-[#0071BC] text-white shadow-xs');
+                $('#tab-nav-attempts')
+                    .removeClass('bg-[#0071BC] text-white shadow-xs')
+                    .addClass('bg-white text-slate-700 border hover:bg-slate-100');
+
+                if (!assessmentsLoaded) {
+                    loadAssessments(1);
+                }
+            }
+        }
 
         function escapeHtml(text) {
             if (!text) return '-';
@@ -491,7 +1049,7 @@
 
             $('#attempts-table-body').html(`
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
                         <div>Memuat data attempt ujian...</div>
                     </td>
@@ -499,7 +1057,7 @@
             `);
 
             $.ajax({
-                url: "{{ route('admin.assessmentDebug.data') }}",
+                url: "{{ url('/administrator/assessment-debug/data') }}",
                 type: 'GET',
                 data: {
                     page: page,
@@ -511,10 +1069,14 @@
                     // Update KPI counters
                     if (res.summary) {
                         $('#stat-total').text(res.summary.total);
+                        $('#badge-total-attempts').text(res.summary.total);
                         $('#stat-cheating').text(res.summary.cheating);
                         $('#stat-in-progress').text(res.summary.in_progress);
                         $('#stat-submitted').text(res.summary.submitted);
                         $('#stat-timeout').text(res.summary.timeout);
+                        if (res.summary.total_assessments !== undefined) {
+                            $('#badge-total-assessments').text(res.summary.total_assessments);
+                        }
                     }
 
                     renderAttemptsTable(res.data, res.pagination);
@@ -525,7 +1087,7 @@
                         : 'Gagal memuat data (' + (xhr.statusText || 'Error ' + xhr.status) + ').');
                     $('#attempts-table-body').html(`
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-red-500">
+                            <td colspan="7" class="px-6 py-12 text-center text-red-500">
                                 <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
                                 <div class="font-medium">${escapeHtml(message)}</div>
                             </td>
@@ -542,7 +1104,7 @@
             if (!items || items.length === 0) {
                 tbody.html(`
                     <tr>
-                        <td colspan="6" class="px-6 py-16 text-center text-slate-400">
+                        <td colspan="7" class="px-6 py-16 text-center text-slate-400">
                             <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
                             <div class="font-semibold text-slate-600">Tidak ada sesi ujian yang ditemukan</div>
                             <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian atau filter status.</div>
@@ -566,7 +1128,7 @@
                 const schoolName = student?.school_partner?.nama_sekolah || item.school_assessment?.school_partner?.nama_sekolah || '-';
                 const className = item.user_account?.student_school_class?.[0]?.school_class?.class_name || item.school_assessment?.school_class?.class_name || '-';
 
-                const assessmentTitle = item.school_assessment?.school_assessment_type?.name || 'Assessment';
+                const assessmentTitle = item.school_assessment?.title || item.school_assessment?.school_assessment_type?.name || 'Assessment';
                 const mapel = item.school_assessment?.mapel?.mata_pelajaran || '-';
                 const duration = item.school_assessment?.duration || 0;
 
@@ -609,10 +1171,15 @@
 
                 // Tab switch badge
                 const switchCount = parseInt(item.tab_switch_count) || 0;
-                let switchBadgeClass = switchCount >= 3 ? 'bg-red-50 text-red-700 border-red-200 font-bold' : (switchCount > 0 ? 'bg-amber-50 text-amber-700 border-amber-200 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200');
+                let switchBadgeClass = switchCount >= 5 ? 'bg-red-50 text-red-700 border-red-200 font-bold' : (switchCount > 0 ? 'bg-amber-50 text-amber-700 border-amber-200 font-semibold' : 'bg-slate-50 text-slate-600 border-slate-200');
 
                 // Quick Unlock button only for blocked/cheating/timeout
                 const isLocked = (st === 'cheating' || st === 'timeout');
+
+                // Score & Answer Stats
+                const scoreVal = (item.current_score !== undefined && item.current_score !== null) ? Number(item.current_score).toFixed(2) : '0.00';
+                const ansCount = item.answered_count || 0;
+                const totAns = item.total_answers || 0;
 
                 const row = `
                     <tr class="hover:bg-slate-50/80 transition-colors">
@@ -635,6 +1202,17 @@
                                 ${switchCount} kali
                             </span>
                         </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 font-extrabold text-slate-800 text-sm">
+                                <i class="fa-solid fa-star text-amber-500 text-xs"></i>
+                                <span>${scoreVal}</span>
+                            </div>
+                            <div class="flex items-center justify-center gap-1 text-[11px] font-bold mt-1.5">
+                                <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="Benar">${item.correct_count ?? 0}B</span>
+                                <span class="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200" title="Salah">${item.wrong_count ?? 0}S</span>
+                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200" title="Kosong">${item.empty_count ?? 0}K</span>
+                            </div>
+                        </td>
                         <td class="px-6 py-4">
                             ${timeInfo}
                             <div class="text-[11px] text-slate-400 mt-0.5">Mulai: ${formatDateTime(item.start_time)}</div>
@@ -642,6 +1220,12 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="openStudentExamDetail(${item.school_assessment_id}, ${item.student_id}, '${escapeHtml(studentName)}')"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-[#0071BC] text-[#0071BC] hover:text-white font-semibold text-xs transition active:scale-95 border border-sky-200" title="Lihat Lembar Jawaban Siswa">
+                                    <i class="fa-solid fa-file-lines text-xs"></i>
+                                    <span>Detail</span>
+                                </button>
+
                                 ${isLocked ? `
                                     <button type="button" onclick="quickUnlock(${item.id}, '${escapeHtml(studentName)}', ${duration})"
                                         class="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95" title="Buka Kunci Ujian">
@@ -650,8 +1234,14 @@
                                     </button>
                                 ` : ''}
 
+                                <button type="button" onclick="recountSingleAttempt(${item.id}, '${escapeHtml(studentName)}', '${escapeHtml(assessmentTitle)}')"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-900 font-semibold text-xs transition active:scale-95 border border-amber-200" title="Hitung Ulang Nilai Siswa">
+                                    <i class="fa-solid fa-calculator text-xs"></i>
+                                    <span>Recount</span>
+                                </button>
+
                                 <button type="button" onclick='openEditModal(${JSON.stringify(item)})'
-                                    class="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0071BC] hover:text-white text-slate-700 font-semibold text-xs transition active:scale-95" title="Edit Status & Pelanggaran">
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0071BC] hover:text-white text-slate-700 font-semibold text-xs transition active:scale-95" title="Edit Status & Pelanggaran">
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
                                     <span>Edit</span>
                                 </button>
@@ -703,6 +1293,64 @@
                     Next <i class="fa-solid fa-chevron-right ml-1"></i>
                 </button>
             `);
+        }
+
+        // Recount Single Attempt Action
+        function recountSingleAttempt(attemptId, studentName, assessmentTitle) {
+            Swal.fire({
+                title: 'Hitung Ulang Nilai Siswa?',
+                html: `Sistem akan mengevaluasi ulang seluruh butir jawaban untuk:<br>
+                       <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs space-y-1">
+                           <div>• Siswa: <strong class="text-slate-800">${escapeHtml(studentName)}</strong></div>
+                           <div>• Ujian: <strong class="text-slate-800">${escapeHtml(assessmentTitle)}</strong></div>
+                           <div>• Algoritma: <strong>Kunci & Bobot Terbaru (Termasuk parsial MCMA)</strong></div>
+                       </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0071BC',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-calculator mr-1.5"></i> Ya, Recount Nilai',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    Swal.fire({
+                        title: 'Menghitung Ulang...',
+                        text: 'Mengevaluasi butir jawaban dan menyinkronkan rekap nilai...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/${attemptId}/recount`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (resp) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Recount Selesai!',
+                                html: `<div class="text-sm text-slate-700">${escapeHtml(resp.message)}</div>
+                                       <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 font-semibold">
+                                           Skor Sebelum: <span class="line-through text-red-500">${resp.data.old_total_score}</span> &rarr;
+                                           Skor Baru: <span class="text-emerald-600 font-extrabold text-sm">${resp.data.new_total_score}</span>
+                                       </div>`,
+                                timer: 3500
+                            });
+                            loadAttempts(currentPage);
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Recount',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghitung ulang nilai.'
+                            });
+                        }
+                    });
+                }
+            });
         }
 
         // Quick Unlock Action
@@ -977,7 +1625,7 @@
             `);
 
             $.ajax({
-                url: "{{ route('admin.assessmentDebug.cacheStatus') }}",
+                url: "{{ url('/administrator/assessment-debug/cache/status') }}",
                 type: 'GET',
                 data: {
                     search: search
@@ -1294,6 +1942,995 @@
                     });
                 }
             });
+        });
+
+        // ==========================================
+        // ASSESSMENT VIEWS LOGIC & RECOUNT
+        // ==========================================
+        let currentAsmCategory = 'all';
+        let currentAsmPage = 1;
+        let asmSearchTimeout = null;
+        let currentDetailAssessmentId = null;
+
+        function loadAssessments(page = 1) {
+            currentAsmPage = page;
+            assessmentsLoaded = true;
+            const search = $('#filter-asm-search').val();
+            const schoolId = $('#filter-asm-school').val();
+            const status = $('#filter-asm-status').val();
+
+            $('#assessments-table-body').html(`
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
+                        <div>Memuat data assessment...</div>
+                    </td>
+                </tr>
+            `);
+
+            $.ajax({
+                url: "{{ url('/administrator/assessment-debug/assessments') }}",
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    page: page,
+                    category: currentAsmCategory,
+                    status: status,
+                    school_id: schoolId,
+                    search: search
+                },
+                success: function (res) {
+                    if (res.status !== 'success') {
+                        $('#assessments-table-body').html(`
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-amber-500">
+                                    <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                                    <div class="font-medium">${escapeHtml(res.message || 'Respons tidak valid dari server.')}</div>
+                                </td>
+                            </tr>
+                        `);
+                        return;
+                    }
+
+                    if (res.summary) {
+                        $('#stat-asm-total').text(res.summary.total_assessments);
+                        $('#stat-asm-remedial').text(res.summary.remedial_susulan);
+                        $('#stat-asm-attempts').text(res.summary.total_attempts);
+                        $('#badge-total-assessments').text(res.summary.total_assessments);
+                    }
+
+                    renderAssessmentsTable(res.data, res.pagination);
+                },
+                error: function (xhr) {
+                    let message = 'Gagal memuat data assessment.';
+                    if (xhr.status === 404) {
+                        message = 'Endpoint /administrator/assessment-debug/assessments belum terdaftar atau masih ter-cache lama di server. Silakan upload file routes/web.php & jalankan "php artisan route:clear" di server.';
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (xhr.statusText) {
+                        message = 'Error ' + xhr.status + ': ' + xhr.statusText;
+                    }
+                    $('#assessments-table-body').html(`
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-red-500">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                                <div class="font-medium">${escapeHtml(message)}</div>
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+        }
+
+        function renderAssessmentsTable(items, pagination) {
+            const tbody = $('#assessments-table-body');
+            tbody.empty();
+
+            if (!items || items.length === 0) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="6" class="px-6 py-16 text-center text-slate-400">
+                            <i class="fa-solid fa-inbox text-3xl mb-3 text-slate-300"></i>
+                            <div class="font-semibold text-slate-600">Tidak ada assessment yang ditemukan</div>
+                            <div class="text-xs text-slate-400 mt-1">Coba ubah kata kunci pencarian atau filter kategori/sekolah.</div>
+                        </td>
+                    </tr>
+                `);
+                $('#asm-table-info').text('0 data');
+                $('#asm-pagination-container').addClass('hidden');
+                return;
+            }
+
+            $('#asm-pagination-container').removeClass('hidden');
+            $('#asm-table-info').text(`Menampilkan ${items.length} dari ${pagination.total} assessment`);
+
+            let activeCount = 0;
+
+            items.forEach(item => {
+                if (item.status_exam === 'active') activeCount++;
+
+                // Status Badge
+                let statusBadge = '';
+                if (item.status_exam === 'active') {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <i class="fa-solid fa-circle-dot text-[9px] animate-pulse"></i> Aktif
+                    </span>`;
+                } else if (item.status_exam === 'upcoming') {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                        <i class="fa-regular fa-clock text-[10px]"></i> Mendatang
+                    </span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                        <i class="fa-solid fa-calendar-xmark text-[10px]"></i> Berakhir
+                    </span>`;
+                }
+
+                // Category Badge
+                let catBadge = '';
+                const cat = String(item.category).toLowerCase();
+                if (cat === 'remedial') {
+                    catBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200 uppercase">Remedial</span>`;
+                } else if (cat === 'susulan') {
+                    catBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200 uppercase">Susulan</span>`;
+                } else if (cat === 'pengayaan') {
+                    catBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-100 text-teal-700 border border-teal-200 uppercase">Pengayaan</span>`;
+                } else {
+                    catBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 uppercase">Utama</span>`;
+                }
+
+                // Cache Badge
+                const cacheBadge = item.is_cached
+                    ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold" title="Soal tersimpan di RAM Cache"><i class="fa-solid fa-bolt text-[9px] text-amber-500"></i> RAM</span>`
+                    : '';
+
+                const row = `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1.5 mb-1">
+                                ${catBadge}
+                                ${cacheBadge}
+                                <span class="text-xs text-slate-400 font-medium">• ${escapeHtml(item.type)}</span>
+                            </div>
+                            <div class="font-bold text-slate-800 text-sm">${escapeHtml(item.title)}</div>
+                            <div class="text-xs text-[#0071BC] font-medium mt-0.5">${escapeHtml(item.mapel)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-slate-800 text-xs sm:text-sm">${escapeHtml(item.class_name)}</div>
+                            <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(item.school_name)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="mb-1.5">${statusBadge}</div>
+                            <div class="text-[11px] text-slate-600 font-medium">Mulai: ${item.start_date}</div>
+                            <div class="text-[11px] text-slate-400">Selesai: ${item.end_date}</div>
+                            <div class="text-[11px] text-slate-400">Durasi: ${item.duration} Menit</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="text-sm font-extrabold text-slate-800">${item.total_questions} Soal</div>
+                            <div class="text-xs text-slate-500 mt-0.5">Bobot: <strong class="text-slate-700">${item.total_weight}</strong></div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 font-bold text-blue-900 text-xs">
+                                <i class="fa-solid fa-users text-[10px]"></i>
+                                <span>${item.participants_count} Peserta</span>
+                            </div>
+                            <div class="text-[11px] text-slate-600 font-semibold mt-1.5">
+                                Rata-rata: <span class="text-emerald-600 font-bold">${item.avg_score}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                Max: ${item.max_score} • Min: ${item.min_score}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="openAssessmentDetail(${item.id})"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0071BC] text-slate-700 hover:text-white font-semibold text-xs transition active:scale-95 shadow-2xs" title="Lihat Detail & Daftar Soal">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                    <span>Detail</span>
+                                </button>
+                                <button type="button" onclick="recountAllAssessment(${item.id}, '${escapeHtml(item.title)}')"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-900 font-semibold text-xs transition active:scale-95 border border-amber-200 shadow-2xs" title="Hitung Ulang Nilai Seluruh Peserta">
+                                    <i class="fa-solid fa-calculator text-xs"></i>
+                                    <span>Recount Semua</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            $('#stat-asm-active').text(activeCount);
+            renderAsmPagination(pagination);
+        }
+
+        function renderAsmPagination(pagination) {
+            $('#asm-pagination-text').text(`Halaman ${pagination.current_page} dari ${pagination.last_page} (Total ${pagination.total} data)`);
+            const btnContainer = $('#asm-pagination-buttons');
+            btnContainer.empty();
+
+            if (pagination.last_page <= 1) return;
+
+            const prevDisabled = pagination.current_page <= 1 ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:bg-slate-200';
+            btnContainer.append(`
+                <button type="button" onclick="loadAssessments(${pagination.current_page - 1})" class="px-3 py-1.5 text-xs rounded-lg bg-slate-100 font-semibold text-slate-700 ${prevDisabled}">
+                    <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                </button>
+            `);
+
+            const startPage = Math.max(1, pagination.current_page - 2);
+            const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === pagination.current_page ? 'bg-[#0071BC] text-white font-bold' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold cursor-pointer';
+                btnContainer.append(`
+                    <button type="button" onclick="loadAssessments(${i})" class="px-3 py-1.5 text-xs rounded-lg transition ${active}">
+                        ${i}
+                    </button>
+                `);
+            }
+
+            const nextDisabled = pagination.current_page >= pagination.last_page ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer hover:bg-slate-200';
+            btnContainer.append(`
+                <button type="button" onclick="loadAssessments(${pagination.current_page + 1})" class="px-3 py-1.5 text-xs rounded-lg bg-slate-100 font-semibold text-slate-700 ${nextDisabled}">
+                    Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
+            `);
+        }
+
+        // ==========================================
+        // ASSESSMENT DETAIL MODAL LOGIC
+        // ==========================================
+        function switchModalSubTab(subtab) {
+            $('.modal-subtab-btn').removeClass('border-[#0071BC] text-[#0071BC]').addClass('border-transparent text-slate-500');
+            $('#subtab-btn-' + subtab).removeClass('border-transparent text-slate-500').addClass('border-[#0071BC] text-[#0071BC]');
+
+            $('#subtab-content-participants').addClass('hidden');
+            $('#subtab-content-questions').addClass('hidden');
+            $('#subtab-content-info').addClass('hidden');
+
+            $('#subtab-content-' + subtab).removeClass('hidden');
+        }
+
+        function openAssessmentDetail(assessmentId) {
+            currentDetailAssessmentId = assessmentId;
+            switchModalSubTab('participants');
+            document.getElementById('modal-assessment-detail').showModal();
+            fetchAssessmentDetail(assessmentId);
+        }
+
+        function fetchAssessmentDetail(assessmentId) {
+            $('#modal-participants-table-body').html(`
+                <tr>
+                    <td colspan="7" class="px-5 py-8 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-[#0071BC]"></i>
+                        <div>Memuat data peserta & nilai...</div>
+                    </td>
+                </tr>
+            `);
+            $('#modal-questions-list').html(`
+                <div class="p-8 text-center text-slate-400">
+                    <i class="fa-solid fa-spinner fa-spin text-xl mb-1.5 text-[#0071BC]"></i>
+                    <div>Memuat butir soal...</div>
+                </div>
+            `);
+
+            $.ajax({
+                url: `/administrator/assessment-debug/assessment/${assessmentId}`,
+                type: 'GET',
+                success: function (res) {
+                    const data = res.data;
+                    const asm = data.assessment;
+
+                    $('#modal-asm-title').text(asm.title);
+                    $('#modal-asm-subtitle').text(`${asm.class_name} • ${asm.school_name} • Durasi: ${asm.duration} Menit`);
+                    $('#modal-asm-badge-category').text(asm.category.toUpperCase());
+                    $('#modal-asm-badge-mapel').text(asm.mapel);
+
+                    // Bind Recount All Button in Modal Header
+                    $('#btn-recount-all-in-modal').off('click').on('click', function () {
+                        recountAllAssessment(asm.id, asm.title, true);
+                    });
+
+                    // Update Subtab counts
+                    $('#modal-count-participants').text(data.participants ? data.participants.length : 0);
+                    $('#modal-count-questions').text(data.questions ? data.questions.length : 0);
+
+                    // Update Summary Metrics
+                    if (data.summary) {
+                        $('#modal-stat-participants').text(data.summary.total_participants);
+                        $('#modal-stat-avg').text(data.summary.avg_score);
+                        $('#modal-stat-max').text(data.summary.highest_score);
+                        $('#modal-stat-min').text(data.summary.lowest_score);
+                    }
+
+                    // Render Participants Table
+                    renderModalParticipants(data.participants, asm.id);
+
+                    // Render Questions List
+                    renderModalQuestions(data.questions);
+
+                    // Render Info & Settings
+                    renderModalInfo(asm);
+                },
+                error: function (xhr) {
+                    swalInModal({
+                        icon: 'error',
+                        title: 'Gagal Memuat Detail',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memuat detail assessment.'
+                    });
+                }
+            });
+        }
+
+        function renderModalParticipants(participants, assessmentId) {
+            const tbody = $('#modal-participants-table-body');
+            tbody.empty();
+
+            if (!participants || participants.length === 0) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="9" class="px-5 py-8 text-center text-slate-400">
+                            <i class="fa-solid fa-users-slash text-2xl mb-2 text-slate-300"></i>
+                            <div>Belum ada peserta yang memulai atau mengerjakan assessment ini.</div>
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            participants.forEach(p => {
+                let statusBadge = '';
+                const st = String(p.status).toLowerCase();
+                if (st === 'cheating') {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">Cheating</span>`;
+                } else if (st === 'in_progress') {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">In Progress</span>`;
+                } else if (st === 'submitted') {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Submitted</span>`;
+                } else if (st === 'timeout') {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">Timeout</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">${escapeHtml(p.status)}</span>`;
+                }
+
+                const switchBadgeClass = p.tab_switch_count >= 5 ? 'text-red-600 font-bold' : (p.tab_switch_count > 0 ? 'text-amber-600 font-semibold' : 'text-slate-500');
+
+                const row = `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-5 py-3">
+                            <div class="font-bold text-slate-800 text-xs">${escapeHtml(p.name)}</div>
+                            <div class="text-[11px] text-slate-400">NISN: ${escapeHtml(p.nis)}</div>
+                        </td>
+                        <td class="px-5 py-3 font-medium text-slate-700">
+                            ${escapeHtml(p.class_name)}
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            ${statusBadge}
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="${switchBadgeClass}">${p.tab_switch_count}x</span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="inline-flex items-center justify-center min-w-[34px] px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 text-xs" title="${p.correct_count} Jawaban Benar">
+                                <i class="fa-solid fa-check text-[10px] mr-1"></i>${p.correct_count}
+                            </span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="inline-flex items-center justify-center min-w-[34px] px-2 py-0.5 rounded-lg bg-red-50 text-red-600 font-bold border border-red-200 text-xs" title="${p.wrong_count} Jawaban Salah">
+                                <i class="fa-solid fa-xmark text-[10px] mr-1"></i>${p.wrong_count}
+                            </span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <span class="inline-flex items-center justify-center min-w-[34px] px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 font-bold border border-slate-200 text-xs" title="${p.empty_count} Butir Kosong">
+                                <i class="fa-solid fa-minus text-[10px] mr-1"></i>${p.empty_count}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 font-extrabold text-slate-800 text-xs">
+                                <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+                                ${Number(p.total_score).toFixed(2)}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="openStudentExamDetail(${assessmentId}, ${p.student_id}, '${escapeHtml(p.name)}')"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-[#0071BC] text-[#0071BC] hover:text-white font-semibold text-xs transition active:scale-95 border border-sky-200 shadow-2xs" title="Lihat Lembar Jawaban Siswa">
+                                    <i class="fa-solid fa-file-lines text-xs"></i>
+                                    <span>Detail Ujian</span>
+                                </button>
+                                <button type="button" onclick="recountUserFromDetail(${p.student_id}, ${assessmentId}, '${escapeHtml(p.name)}')"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-900 font-semibold text-xs transition active:scale-95 border border-amber-200 shadow-2xs" title="Hitung Ulang Nilai Siswa Ini">
+                                    <i class="fa-solid fa-calculator text-[10px]"></i>
+                                    <span>Recount</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function renderModalQuestions(questions) {
+            const container = $('#modal-questions-list');
+            container.empty();
+
+            if (!questions || questions.length === 0) {
+                container.html(`
+                    <div class="p-8 text-center text-slate-400">
+                        <i class="fa-solid fa-folder-open text-2xl mb-2 text-slate-300"></i>
+                        <div>Belum ada butir soal yang dihubungkan ke assessment ini.</div>
+                    </div>
+                `);
+                return;
+            }
+
+            questions.forEach(q => {
+                let optionsHtml = '';
+                if (q.options && q.options.length > 0) {
+                    optionsHtml = `<div class="mt-2.5 space-y-1.5 pl-2 border-l-2 border-slate-200">`;
+                    const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+                    q.options.forEach((opt, optIndex) => {
+                        const optKeyStr = String(opt.key).trim();
+                        let displayLetter = optionLetters[optIndex] || '';
+                        if (/^[A-Za-z]$/.test(optKeyStr)) {
+                            displayLetter = optKeyStr.toUpperCase();
+                        } else if (/^option_?(\d+)$/i.test(optKeyStr)) {
+                            const num = parseInt(optKeyStr.replace(/\D/g, ''), 10);
+                            if (num >= 1 && num <= 26) {
+                                displayLetter = String.fromCharCode(64 + num);
+                            }
+                        }
+                        if (!displayLetter) {
+                            displayLetter = optionLetters[optIndex] || optKeyStr;
+                        }
+
+                        const correctClass = opt.is_correct
+                            ? 'bg-emerald-50 text-emerald-800 font-bold border-emerald-300'
+                            : 'bg-white text-slate-600 border-slate-200';
+                        const checkIcon = opt.is_correct
+                            ? '<i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>'
+                            : '<i class="fa-regular fa-circle text-slate-300 mr-1.5"></i>';
+
+                        let extraDetail = '';
+                        if (opt.extra_data) {
+                            if (opt.extra_data.pair_with) {
+                                extraDetail = ` <span class="text-xs text-blue-600">&rarr; Pasangan: <strong>${escapeHtml(opt.extra_data.pair_with)}</strong></span>`;
+                            } else if (opt.extra_data.answer) {
+                                extraDetail = ` <span class="text-xs text-blue-600">&rarr; Jawaban: <strong>${escapeHtml(opt.extra_data.answer)}</strong></span>`;
+                            }
+                        }
+
+                        optionsHtml += `
+                            <div class="px-3 py-1.5 rounded-lg border text-xs flex items-center justify-between ${correctClass}">
+                                <div>${checkIcon}<strong>${escapeHtml(displayLetter)}:</strong> ${escapeHtml(opt.value)}${extraDetail}</div>
+                                ${opt.is_correct ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-800 uppercase font-bold">Kunci Benar</span>' : ''}
+                            </div>
+                        `;
+                    });
+                    optionsHtml += `</div>`;
+                }
+
+                const itemCard = `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-2">
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-slate-100 font-bold text-slate-700 text-xs flex items-center justify-center">${q.number}</span>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">${escapeHtml(q.tipe_soal)}</span>
+                                <span class="text-[11px] text-slate-400 font-medium">Difficulty: ${escapeHtml(q.difficulty)}</span>
+                            </div>
+                            <div class="text-xs font-bold text-slate-700">
+                                Bobot: <span class="text-[#0071BC] font-extrabold text-sm">${q.weight}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-800 leading-relaxed font-medium">
+                            ${escapeHtml(q.question_text)}
+                        </div>
+                        ${optionsHtml}
+                    </div>
+                `;
+                container.append(itemCard);
+            });
+        }
+
+        function renderModalInfo(asm) {
+            $('#modal-info-start').text(asm.start_date || '-');
+            $('#modal-info-end').text(asm.end_date || '-');
+            $('#modal-info-duration').text(`${asm.duration} Menit`);
+            $('#modal-info-parent').text(asm.parent_title || 'Tidak ada (Assessment Utama)');
+
+            const settingsDiv = $('#modal-info-settings');
+            settingsDiv.empty();
+
+            settingsDiv.append(`
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${asm.shuffle_questions ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
+                    <i class="fa-solid fa-${asm.shuffle_questions ? 'check text-emerald-600' : 'xmark text-slate-400'}"></i> Acak Soal
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${asm.shuffle_options ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
+                    <i class="fa-solid fa-${asm.shuffle_options ? 'check text-emerald-600' : 'xmark text-slate-400'}"></i> Acak Pilihan
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${asm.show_score ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
+                    <i class="fa-solid fa-${asm.show_score ? 'check text-emerald-600' : 'xmark text-slate-400'}"></i> Tampilkan Nilai Siswa
+                </span>
+            `);
+
+            $('#modal-info-instruction').text(asm.instruction || 'Tidak ada petunjuk khusus.');
+        }
+
+        // ==========================================
+        // RECOUNT PER ASSESSMENT (BATCH RECOUNT)
+        // ==========================================
+        function recountAllAssessment(assessmentId, title, isInModal = false) {
+            const swalFn = (opts) => isInModal ? swalInModal(opts, 'modal-assessment-detail') : Swal.fire(opts);
+
+            swalFn({
+                title: 'Hitung Ulang Seluruh Peserta?',
+                html: `Anda akan menghitung ulang nilai seluruh siswa pada:<br>
+                       <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left text-xs space-y-1">
+                           <div>• Assessment: <strong class="text-slate-800">${escapeHtml(title)}</strong></div>
+                           <div>• Cakupan: <strong>Seluruh butir jawaban dari seluruh peserta</strong></div>
+                           <div>• Penilaian Parsial: <strong>Termasuk opsi C pada soal MCMA</strong></div>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#F59E0B',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-calculator mr-1"></i> Ya, Hitung Ulang Semua',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    swalFn({
+                        title: 'Sedang Menghitung Ulang...',
+                        text: 'Mengevaluasi jawaban seluruh siswa dan memperbarui rekapitulasi nilai...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/assessment/${assessmentId}/recount`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (resp) {
+                            swalFn({
+                                icon: 'success',
+                                title: 'Recount Sukses!',
+                                text: resp.message,
+                                timer: 3000
+                            });
+
+                            if (isInModal) {
+                                fetchAssessmentDetail(assessmentId);
+                            }
+                            if (assessmentsLoaded) {
+                                loadAssessments(currentAsmPage);
+                            }
+                            loadAttempts(currentPage);
+                        },
+                        error: function (xhr) {
+                            swalFn({
+                                icon: 'error',
+                                title: 'Gagal Recount',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghitung ulang.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // ==========================================
+        // RECOUNT USER FROM DETAIL MODAL
+        // ==========================================
+        function recountUserFromDetail(studentId, assessmentId, studentName) {
+            swalInModal({
+                title: 'Recount Nilai Siswa Ini?',
+                html: `Hitung ulang butir jawaban untuk <strong>${escapeHtml(studentName)}</strong>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0071BC',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Ya, Hitung Ulang',
+                cancelButtonText: 'Batal'
+            }, 'modal-assessment-detail').then((res) => {
+                if (res.isConfirmed) {
+                    swalInModal({
+                        title: 'Menghitung Ulang...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    }, 'modal-assessment-detail');
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/recount-user`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            student_id: studentId,
+                            assessment_id: assessmentId
+                        },
+                        success: function (resp) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                html: `<div class="text-xs text-slate-700">${escapeHtml(resp.message)}</div>
+                                       <div class="mt-2 text-xs font-bold text-emerald-600">Skor Baru: ${resp.data.new_total_score}</div>`,
+                                timer: 2500
+                            }, 'modal-assessment-detail');
+                            fetchAssessmentDetail(assessmentId);
+                            if (assessmentsLoaded) {
+                                loadAssessments(currentAsmPage);
+                            }
+                            loadAttempts(currentPage);
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan.'
+                            }, 'modal-assessment-detail');
+                        }
+                    });
+                }
+            });
+        }
+
+        // ==========================================
+        // SPECIFIC STUDENT EXAM DETAIL MODAL LOGIC
+        // ==========================================
+        let currentSedQuestions = [];
+        let currentSedFilter = 'all';
+        let currentSedData = null;
+
+        function openStudentExamDetail(assessmentId, studentId, studentName) {
+            document.getElementById('modal-student-exam-detail').showModal();
+            $('#sed-student-name').text(studentName || 'Memuat...');
+            $('#sed-subtitle').text('Memuat lembar jawaban dan butir soal...');
+            $('#sed-stat-score').text('-');
+            $('#sed-stat-correct').text('-');
+            $('#sed-stat-wrong').text('-');
+            $('#sed-stat-empty').text('-');
+            $('#sed-stat-switch').text('-');
+
+            $('#sed-questions-list').html(`
+                <div class="p-12 text-center text-slate-400">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-[#0071BC]"></i>
+                    <div>Memuat butir soal dan rincian lembar jawaban siswa...</div>
+                </div>
+            `);
+
+            $.ajax({
+                url: `/administrator/assessment-debug/assessment/${assessmentId}/student/${studentId}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    if (res.status !== 'success') {
+                        $('#sed-questions-list').html(`
+                            <div class="p-8 text-center text-red-500">
+                                <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                                <div>${escapeHtml(res.message || 'Gagal memuat detail')}</div>
+                            </div>
+                        `);
+                        return;
+                    }
+
+                    currentSedData = res.data;
+                    currentSedQuestions = res.data.questions || [];
+
+                    renderStudentExamDetail(res.data);
+                },
+                error: function (xhr) {
+                    $('#sed-questions-list').html(`
+                        <div class="p-8 text-center text-red-500">
+                            <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                            <div>${escapeHtml(xhr.responseJSON?.message || 'Terjadi kesalahan saat memuat lembar jawaban.')}</div>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        function renderStudentExamDetail(data) {
+            const stu = data.student;
+            const asm = data.assessment;
+            const att = data.attempt;
+            const sum = data.summary;
+
+            $('#sed-student-name').text(stu.name);
+            $('#sed-subtitle').text(`NISN: ${stu.nis} • Kelas: ${stu.class_name} • Sekolah: ${stu.school_name} • Ujian: ${asm.title}`);
+            $('#sed-badge-status').text(att.status.toUpperCase());
+            $('#sed-badge-mapel').text(asm.mapel);
+            $('#sed-badge-category').text(asm.category.toUpperCase());
+
+            $('#sed-stat-score').text(`${sum.total_score} / ${sum.max_score}`);
+            $('#sed-stat-correct').text(`${sum.correct_count} Soal`);
+            $('#sed-stat-wrong').text(`${sum.wrong_count} Soal`);
+            $('#sed-stat-empty').text(`${sum.empty_count} Soal`);
+            $('#sed-stat-switch').text(`${att.tab_switch_count}x`);
+
+            $('#sed-time-start').text(att.start_time || '-');
+            $('#sed-time-expire').text(att.expire_time || '-');
+            $('#sed-time-duration').text(`${asm.duration} Menit`);
+
+            // Counts for filter pills
+            $('#sed-count-all').text(sum.total_questions);
+            $('#sed-count-correct').text(sum.correct_count);
+            $('#sed-count-wrong').text(sum.wrong_count);
+            $('#sed-count-empty').text(sum.empty_count);
+
+            // Bind recount button inside exam detail modal
+            $('#btn-sed-recount').off('click').on('click', function () {
+                swalInModal({
+                    title: 'Recount Lembar Ujian Ini?',
+                    html: `Hitung ulang nilai untuk <strong>${escapeHtml(stu.name)}</strong>?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#F59E0B',
+                    cancelButtonColor: '#6B7280',
+                    confirmButtonText: 'Ya, Hitung Ulang',
+                    cancelButtonText: 'Batal'
+                }, 'modal-student-exam-detail').then((res) => {
+                    if (res.isConfirmed) {
+                        swalInModal({
+                            title: 'Menghitung Ulang...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        }, 'modal-student-exam-detail');
+
+                        $.ajax({
+                            url: `/administrator/assessment-debug/recount-user`,
+                            type: 'POST',
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                student_id: stu.id,
+                                assessment_id: asm.id
+                            },
+                            success: function (resp) {
+                                swalInModal({
+                                    icon: 'success',
+                                    title: 'Recount Berhasil!',
+                                    html: `<div class="text-xs text-slate-700">${escapeHtml(resp.message)}</div>
+                                           <div class="mt-2 text-xs font-bold text-emerald-600">Skor Baru: ${resp.data.new_total_score}</div>`,
+                                    timer: 2500
+                                }, 'modal-student-exam-detail');
+
+                                openStudentExamDetail(asm.id, stu.id, stu.name);
+                                if (currentDetailAssessmentId) {
+                                    fetchAssessmentDetail(currentDetailAssessmentId);
+                                }
+                                if (assessmentsLoaded) {
+                                    loadAssessments(currentAsmPage);
+                                }
+                                loadAttempts(currentPage);
+                            },
+                            error: function (xhr) {
+                                swalInModal({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: xhr.responseJSON?.message || 'Terjadi kesalahan.'
+                                }, 'modal-student-exam-detail');
+                            }
+                        });
+                    }
+                });
+            });
+
+            filterStudentExamQuestions('all');
+        }
+
+        function filterStudentExamQuestions(filter) {
+            currentSedFilter = filter;
+            $('.sed-filter-btn').removeClass('bg-white text-[#0071BC] font-bold shadow-xs').addClass('text-slate-600 font-semibold');
+            $(`[data-sed-filter="${filter}"]`).removeClass('text-slate-600 font-semibold').addClass('bg-white text-[#0071BC] font-bold shadow-xs');
+
+            const container = $('#sed-questions-list');
+            container.empty();
+
+            let filtered = currentSedQuestions;
+            if (filter === 'correct') {
+                filtered = currentSedQuestions.filter(q => q.eval_status === 'correct' || q.eval_status === 'partial');
+            } else if (filter === 'wrong') {
+                filtered = currentSedQuestions.filter(q => q.eval_status === 'wrong');
+            } else if (filter === 'empty') {
+                filtered = currentSedQuestions.filter(q => q.eval_status === 'empty');
+            }
+
+            if (filtered.length === 0) {
+                container.html(`
+                    <div class="p-8 text-center text-slate-400 bg-white border border-slate-200 rounded-2xl">
+                        <i class="fa-solid fa-inbox text-2xl mb-2 text-slate-300"></i>
+                        <div>Tidak ada butir soal pada kategori filter ini.</div>
+                    </div>
+                `);
+                return;
+            }
+
+            filtered.forEach(q => {
+                let statusBadge = '';
+                let borderClass = 'border-slate-200';
+                if (q.eval_status === 'correct') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-check mr-1"></i>Benar (${q.score}/${q.weight})</span>`;
+                    borderClass = 'border-emerald-300 bg-emerald-50/10';
+                } else if (q.eval_status === 'partial') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-circle-half-stroke mr-1"></i>Sebagian (${q.score}/${q.weight})</span>`;
+                    borderClass = 'border-amber-300 bg-amber-50/10';
+                } else if (q.eval_status === 'wrong') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-red-100 text-red-700 border border-red-300"><i class="fa-solid fa-xmark mr-1"></i>Salah (0/${q.weight})</span>`;
+                    borderClass = 'border-red-200 bg-red-50/10';
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-600 border border-slate-200"><i class="fa-solid fa-minus mr-1"></i>Kosong (0/${q.weight})</span>`;
+                    borderClass = 'border-slate-200';
+                }
+
+                let answerBodyHtml = '';
+
+                if (q.tipe_soal === 'MCQ' || q.tipe_soal === 'MCMA') {
+                    const studentAnswerArr = Array.isArray(q.student_answer)
+                        ? q.student_answer.map(String).map(s => s.trim().toLowerCase())
+                        : (q.student_answer !== null && q.student_answer !== undefined ? [String(q.student_answer).trim().toLowerCase()] : []);
+
+                    let optionsListHtml = '<div class="mt-2.5 space-y-2">';
+                    if (q.options && q.options.length > 0) {
+                        const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+                        q.options.forEach((opt, optIndex) => {
+                            const optKey = String(opt.key).trim();
+                            const isChosen = studentAnswerArr.includes(optKey.toLowerCase());
+                            const isCorrect = Boolean(opt.is_correct);
+
+                            let displayLetter = optionLetters[optIndex] || '';
+                            if (/^[A-Za-z]$/.test(optKey)) {
+                                displayLetter = optKey.toUpperCase();
+                            } else if (/^option_?(\d+)$/i.test(optKey)) {
+                                const num = parseInt(optKey.replace(/\D/g, ''), 10);
+                                if (num >= 1 && num <= 26) {
+                                    displayLetter = String.fromCharCode(64 + num);
+                                }
+                            }
+                            if (!displayLetter) {
+                                displayLetter = optionLetters[optIndex] || optKey;
+                            }
+
+                            let optStyle = 'bg-white text-slate-700 border-slate-200';
+                            let optTag = '';
+                            let badgeStyle = 'bg-slate-100 text-slate-600 border border-slate-200';
+
+                            if (isChosen && isCorrect) {
+                                optStyle = 'bg-emerald-50/90 text-emerald-950 border-emerald-400 font-bold shadow-2xs';
+                                optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-200/90 text-emerald-900 font-extrabold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-check mr-1 text-emerald-700"></i>Pilihan Siswa & Kunci Benar</span>';
+                                badgeStyle = 'bg-emerald-600 text-white shadow-2xs';
+                            } else if (isChosen && !isCorrect) {
+                                optStyle = 'bg-red-50/90 text-red-950 border-red-300 font-bold shadow-2xs';
+                                optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-red-200/90 text-red-900 font-extrabold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-xmark mr-1 text-red-700"></i>Pilihan Siswa (Salah)</span>';
+                                badgeStyle = 'bg-red-600 text-white shadow-2xs';
+                            } else if (!isChosen && isCorrect) {
+                                optStyle = 'bg-emerald-50/40 text-emerald-900 border-dashed border-emerald-300 font-medium';
+                                optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-key mr-1 text-emerald-600"></i>Kunci Benar</span>';
+                                badgeStyle = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+                            }
+
+                            optionsListHtml += `
+                                <div class="px-3.5 py-2.5 rounded-xl border text-xs flex items-center justify-between gap-3 transition-colors ${optStyle}">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="w-7 h-7 min-w-[28px] rounded-lg shrink-0 flex items-center justify-center text-xs font-black select-none ${badgeStyle}" title="Key: ${escapeHtml(opt.key)}">
+                                            ${escapeHtml(displayLetter)}
+                                        </span>
+                                        <div class="font-medium leading-relaxed break-words text-slate-800">${escapeHtml(opt.value)}</div>
+                                    </div>
+                                    <div class="shrink-0">${optTag}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    optionsListHtml += '</div>';
+
+                    if (studentAnswerArr.length === 0) {
+                        answerBodyHtml = `
+                            <div class="mt-2 p-2.5 rounded-xl bg-slate-100 text-slate-500 text-xs font-semibold flex items-center gap-2">
+                                <i class="fa-solid fa-circle-exclamation text-slate-400"></i>
+                                <span>Siswa tidak memilih jawaban apapun untuk butir soal ini.</span>
+                            </div>
+                            ${optionsListHtml}
+                        `;
+                    } else {
+                        answerBodyHtml = optionsListHtml;
+                    }
+                } else if (q.tipe_soal === 'ESSAY') {
+                    answerBodyHtml = `
+                        <div class="mt-2.5 space-y-2">
+                            <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jawaban Siswa:</div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-medium leading-relaxed">
+                                ${q.student_answer ? escapeHtml(String(q.student_answer)) : '<em class="text-slate-400">Siswa tidak memberikan jawaban esai.</em>'}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-slate-500 font-medium">Status Penilaian Guru:</span>
+                                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${q.grading_status === 'graded' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                    ${q.grading_status === 'graded' ? 'Sudah Dinilai' : 'Menunggu Penilaian Manual'}
+                                </span>
+                                ${q.teacher_feedback ? `<span class="text-slate-600">Catatan: "${escapeHtml(q.teacher_feedback)}"</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // MATCHING / PG_KOMPLEKS / DLL
+                    let chosenStr = '-';
+                    if (q.student_answer) {
+                        try {
+                            chosenStr = typeof q.student_answer === 'object' ? JSON.stringify(q.student_answer, null, 2) : String(q.student_answer);
+                        } catch (e) {
+                            chosenStr = String(q.student_answer);
+                        }
+                    }
+
+                    answerBodyHtml = `
+                        <div class="mt-2.5 space-y-2 text-xs">
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                                <div class="font-bold text-slate-700">Data Pilihan Siswa:</div>
+                                <pre class="font-mono text-[11px] text-slate-800 bg-white p-2 rounded-lg border border-slate-200 overflow-x-auto">${escapeHtml(chosenStr)}</pre>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const itemCard = `
+                    <div class="border rounded-2xl p-4 shadow-2xs space-y-2.5 bg-white transition hover:shadow-xs ${borderClass}">
+                        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-slate-100 font-extrabold text-slate-700 text-xs flex items-center justify-center">${q.number}</span>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-blue-50 text-[#0071BC] border border-blue-200">${escapeHtml(q.tipe_soal)}</span>
+                                <span class="text-[11px] text-slate-400 font-medium">Difficulty: ${escapeHtml(q.difficulty)}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                ${statusBadge}
+                                <span class="text-xs font-bold text-slate-700">
+                                    Skor: <strong class="text-[#0071BC] font-extrabold">${q.score}</strong> / ${q.weight}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-800 leading-relaxed font-medium">
+                            ${escapeHtml(q.question_text)}
+                        </div>
+
+                        ${answerBodyHtml}
+                    </div>
+                `;
+
+                container.append(itemCard);
+            });
+        }
+
+        // Filter Handlers for Assessments View
+        $(document).on('click', '.asm-category-filter-btn', function () {
+            $('.asm-category-filter-btn').removeClass('bg-white text-[#0071BC] font-bold shadow-xs').addClass('text-slate-600 font-semibold hover:text-blue-600');
+            $(this).removeClass('text-slate-600 font-semibold hover:text-blue-600 hover:text-purple-600 hover:text-amber-600 hover:text-emerald-600').addClass('bg-white text-[#0071BC] font-bold shadow-xs');
+            currentAsmCategory = $(this).data('category');
+            loadAssessments(1);
+        });
+
+        $('#filter-asm-school, #filter-asm-status').on('change', function () {
+            loadAssessments(1);
+        });
+
+        $('#filter-asm-search').on('input', function () {
+            clearTimeout(asmSearchTimeout);
+            asmSearchTimeout = setTimeout(() => {
+                loadAssessments(1);
+            }, 400);
+        });
+
+        $('#btn-refresh-attempts').on('click', function () {
+            const icon = $('#icon-refresh');
+            icon.addClass('fa-spin');
+            if (currentMainTab === 'assessments') {
+                loadAssessments(currentAsmPage);
+            } else {
+                loadAttempts(currentPage);
+            }
+            setTimeout(() => icon.removeClass('fa-spin'), 600);
         });
 
         $(document).ready(function () {
