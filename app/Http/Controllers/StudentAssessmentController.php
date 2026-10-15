@@ -98,17 +98,17 @@ class StudentAssessmentController extends Controller
             // MAIN -> selalu tampil
             if ($category === 'main') return true;
     
-            if (!$summary) return false;
-    
             // SUSULAN -> jika belum ada nilai main
             if ($category === 'susulan') {
-                return is_null($summary->main_score);
+                return !$summary || is_null($summary->main_score);
+            }
+
+            if (!$summary) {
+                return false;
             }
     
             // REMEDIAL
             if ($category === 'remedial') {
-    
-                if (!$summary) return false;
     
                 $lastRemedialId = $summary->last_remedial_assessment_id;
     
