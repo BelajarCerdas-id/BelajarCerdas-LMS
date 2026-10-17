@@ -96,6 +96,49 @@ class AcademicDocumentWordController extends Controller
         return $this->currentRole() === self::GURU_ROLE;
     }
 
+    private function requestedTeacherId(Request $request, int $schoolId): int
+    {
+        $authId = (int) Auth::id();
+
+        if (!$this->isGuru()) {
+            return $authId;
+        }
+
+        $teacherId = (int) $request->query('teacher_id', $authId);
+        $teacherId = $teacherId > 0 ? $teacherId : $authId;
+
+        if ($teacherId === $authId) {
+            return $authId;
+        }
+
+        $valid = TeacherMapel::query()
+            ->where('user_id', $teacherId)
+            ->where('is_active', true)
+            ->whereHas('SchoolClass', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->exists();
+
+        abort_unless($valid, 404, 'Guru yang dipilih tidak terdaftar pada sekolah ini.');
+
+        return $teacherId;
+    }
+
+    private function isTeacherViewer(Request $request, int $schoolId): bool
+    {
+        return $this->isGuru()
+            && $this->requestedTeacherId($request, $schoolId) !== (int) Auth::id();
+    }
+
+    private function authorizeTeacherWrite(Request $request, int $schoolId): void
+    {
+        abort_if(
+            $this->isTeacherViewer($request, $schoolId),
+            403,
+            'Mode Viewer aktif. Anda hanya dapat melihat dokumen guru lain.'
+        );
+    }
+
 
     private function abortIfCannotView(): void
     {
@@ -345,14 +388,21 @@ class AcademicDocumentWordController extends Controller
 
         /*
         |----------------------------------------------------------------------
-        | Guru hanya boleh dokumen sendiri.
+        | Guru normal = owner sendiri.
+        | Guru yang sedang membuka teacher_id lain = VIEWER, sama seperti
+        | Admin/Kepala/Wakil, sehingga dokumen target boleh dibaca.
         |----------------------------------------------------------------------
         */
 
-        $this->ensureGuruOwnsDocument(
-            $document,
-            $user
-        );
+        if (
+            $this->isGuru()
+            && !$this->isTeacherViewer(request(), $schoolId)
+        ) {
+            $this->ensureGuruOwnsDocument(
+                $document,
+                $user
+            );
+        }
 
         return $document;
     }
@@ -388,7 +438,7 @@ class AcademicDocumentWordController extends Controller
         if ($this->isGuru()) {
             $this->applyGuruOwnerFilter(
                 $query,
-                (int) $user->id
+                $this->requestedTeacherId(request(), $schoolId)
             );
         }
 
@@ -763,10 +813,7 @@ class AcademicDocumentWordController extends Controller
             */
 
             $fileUrl =
-                Storage::disk('public')
-                    ->url(
-                        $filePath
-                    );
+                asset('storage/' . ltrim($filePath, '/'));
 
             /*
             |------------------------------------------------------------------
@@ -969,10 +1016,7 @@ class AcademicDocumentWordController extends Controller
                 )
         ) {
             $fileUrl =
-                Storage::disk('public')
-                    ->url(
-                        $document->file_path
-                    );
+                asset('storage/' . ltrim($document->file_path, '/'));
         }
 
         /*
@@ -1000,7 +1044,13 @@ class AcademicDocumentWordController extends Controller
                     $fileUrl,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
 
                 'currentRole' =>
                     $this->currentRole(),
@@ -1141,6 +1191,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->abortIfCannotView();
 
         $user = Auth::user();
@@ -1188,6 +1239,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->saveTypedDocument(
             $request,
             $schoolId,
@@ -1231,6 +1283,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->destroyTypedDocument(
             $schoolId,
             $documentId,
@@ -1327,10 +1380,7 @@ class AcademicDocumentWordController extends Controller
                 )
         ) {
             $fileUrl =
-                Storage::disk('public')
-                    ->url(
-                        $document->file_path
-                    );
+                asset('storage/' . ltrim($document->file_path, '/'));
         }
 
         return view(
@@ -1352,7 +1402,13 @@ class AcademicDocumentWordController extends Controller
                     $fileUrl,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
 
                 'currentRole' =>
                     $this->currentRole(),
@@ -1494,6 +1550,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->abortIfCannotView();
 
         $user = Auth::user();
@@ -1541,6 +1598,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->saveTypedDocument(
             $request,
             $schoolId,
@@ -1584,6 +1642,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->destroyTypedDocument(
             $schoolId,
             $documentId,
@@ -1659,10 +1718,7 @@ class AcademicDocumentWordController extends Controller
                 )
         ) {
             $fileUrl =
-                Storage::disk('public')
-                    ->url(
-                        $document->file_path
-                    );
+                asset('storage/' . ltrim($document->file_path, '/'));
         }
 
         /*
@@ -1687,7 +1743,13 @@ class AcademicDocumentWordController extends Controller
                     $comments,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer(request(), $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId(request(), $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer(request(), $schoolId),
 
                 'currentRole' =>
                     $this->currentRole(),
@@ -1915,54 +1977,66 @@ class AcademicDocumentWordController extends Controller
     */
 
     private function downloadTypedDocument(
-        string $schoolId,
-        string $documentId,
-        string $documentType
-    ) {
-        $this->abortIfCannotView();
+    string $schoolId,
+    string $documentId,
+    string $documentType
+) {
+    $this->abortIfCannotView();
 
-        $schoolId =
-            (int) $schoolId;
+    $schoolId = (int) $schoolId;
+    $documentId = (int) $documentId;
 
-        $documentId =
-            (int) $documentId;
+    $document = $this->getTypedDocumentOrFail(
+        $documentId,
+        $schoolId,
+        $documentType
+    );
 
-        $document =
-            $this->getTypedDocumentOrFail(
-                $documentId,
-                $schoolId,
-                $documentType
-            );
+    abort_if(
+        empty($document->file_path),
+        404,
+        'File dokumen tidak ditemukan.'
+    );
 
-        abort_if(
-            empty($document->file_path),
-            404,
-            'File dokumen tidak ditemukan.'
-        );
+    $disk = Storage::disk('public');
 
-        $disk =
-            Storage::disk('public');
+    abort_unless(
+        $disk->exists($document->file_path),
+        404,
+        'File dokumen tidak ditemukan di storage.'
+    );
 
-        abort_unless(
-            $disk->exists(
-                $document->file_path
-            ),
-            404,
-            'File dokumen tidak ditemukan di storage.'
-        );
+    $downloadName = $document->original_filename
+        ?: (($document->title ?: 'dokumen') . '.docx');
 
-        $downloadName =
-            $document->original_filename
-            ?: (
-                ($document->title ?: 'dokumen')
-                . '.docx'
-            );
+    $absolutePath = storage_path(
+        'app/public/' . ltrim($document->file_path, '/')
+    );
 
-        return $disk->download(
-            $document->file_path,
-            $downloadName
-        );
+    abort_unless(
+        is_file($absolutePath),
+        404,
+        'File dokumen tidak ditemukan di lokasi penyimpanan.'
+    );
+
+    // Amankan nama file unduhan.
+    $downloadName = basename(
+        preg_replace(
+            '/[\/\\\\:*?"<>|]/',
+            '_',
+            trim((string) $downloadName)
+        ) ?? 'dokumen.docx'
+    );
+
+    if ($downloadName === '' || $downloadName === '.') {
+        $downloadName = 'dokumen.docx';
     }
+
+    return response()->download(
+        $absolutePath,
+        $downloadName
+    );
+}
 
 
     /*
@@ -3047,85 +3121,92 @@ class AcademicDocumentWordController extends Controller
     */
 
     private function fileTypedDocument(
-        string $schoolId,
-        int $documentId,
-        string $documentType
-    ) {
-        $this->abortIfCannotView();
+    string $schoolId,
+    int $documentId,
+    string $documentType
+) {
+    $this->abortIfCannotView();
 
-        $user = Auth::user();
+    $user = Auth::user();
 
-        abort_unless(
-            $user,
-            401,
-            'Pengguna belum login.'
-        );
+    abort_unless(
+        $user,
+        401,
+        'Pengguna belum login.'
+    );
 
-        $schoolId =
-            (int) $schoolId;
+    $schoolId = (int) $schoolId;
 
-        abort_unless(
-            $schoolId > 0,
-            422,
-            'ID sekolah tidak valid.'
-        );
+    abort_unless(
+        $schoolId > 0,
+        422,
+        'ID sekolah tidak valid.'
+    );
 
-        $document =
-            $this->getTypedDocumentOrFail(
-                $documentId,
-                $schoolId,
-                $documentType
-            );
+    $document = $this->getTypedDocumentOrFail(
+        $documentId,
+        $schoolId,
+        $documentType
+    );
 
-        abort_if(
-            empty(
-                $document->file_path
-            ),
-            404,
-            'File Word belum tersedia.'
-        );
+    abort_if(
+        empty($document->file_path),
+        404,
+        'File Word belum tersedia.'
+    );
 
-        $disk =
-            Storage::disk('public');
+    $disk = Storage::disk('public');
 
-        abort_unless(
-            $disk->exists(
-                $document->file_path
-            ),
-            404,
-            'File Word tidak ditemukan di storage.'
-        );
+    abort_unless(
+        $disk->exists($document->file_path),
+        404,
+        'File Word tidak ditemukan di storage.'
+    );
 
-        $filename =
-            $document->original_filename
-            ?: (
-                $document->title
-                ?: 'dokumen.docx'
-            );
+    $absolutePath = storage_path(
+        'app/public/' . ltrim($document->file_path, '/')
+    );
 
-        return $disk->response(
-            $document->file_path,
-            $filename,
-            [
-                'Content-Type' =>
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    abort_unless(
+        is_file($absolutePath),
+        404,
+        'File Word tidak ditemukan di lokasi penyimpanan.'
+    );
 
-                'Content-Disposition' =>
-                    'inline; filename="'
-                    . addslashes($filename)
-                    . '"',
+    $filename = $document->original_filename
+        ?: ($document->title ?: 'dokumen.docx');
 
-                'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate, max-age=0',
+    // Amankan nama file.
+    $filename = basename(
+        preg_replace(
+            '/[\/\\\\:*?"<>|]/',
+            '_',
+            trim((string) $filename)
+        ) ?? 'dokumen.docx'
+    );
 
-                'Pragma' =>
-                    'no-cache',
-
-                'X-Content-Type-Options' =>
-                    'nosniff',
-            ]
-        );
+    if ($filename === '' || $filename === '.') {
+        $filename = 'dokumen.docx';
     }
+
+    return response()->file(
+        $absolutePath,
+        [
+            'Content-Type' =>
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+
+            'Content-Disposition' =>
+                'inline; filename="' . addslashes($filename) . '"',
+
+            'Cache-Control' =>
+                'no-store, no-cache, must-revalidate, max-age=0',
+
+            'Pragma' => 'no-cache',
+
+            'X-Content-Type-Options' => 'nosniff',
+        ]
+    );
+}
 
 
     /*
@@ -3227,10 +3308,7 @@ class AcademicDocumentWordController extends Controller
                 )
         ) {
             $fileUrl =
-                Storage::disk('public')
-                    ->url(
-                        $document->file_path
-                    );
+                asset('storage/' . ltrim($document->file_path, '/'));
         }
 
         return view(
@@ -3252,7 +3330,13 @@ class AcademicDocumentWordController extends Controller
                     $fileUrl,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
 
                 'currentRole' =>
                     $this->currentRole(),
@@ -3294,6 +3378,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolName,
         string $schoolId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         if (!$this->isGuru()) {
             return response()->json(
                 [
@@ -3404,6 +3489,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->abortIfCannotView();
 
         $user =
@@ -3452,6 +3538,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->saveTypedDocument(
             $request,
             $schoolId,
@@ -3495,6 +3582,7 @@ class AcademicDocumentWordController extends Controller
         string $schoolId,
         string $documentId
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->destroyTypedDocument(
             $schoolId,
             $documentId,

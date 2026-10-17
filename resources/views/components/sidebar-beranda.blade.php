@@ -1384,7 +1384,7 @@
                     </div>
                 </li>
 
-                {{-- ====================================================== --}}
+{{-- ====================================================== --}}
 {{-- REGISTRASI GURU --}}
 {{-- ====================================================== --}}
 <li class="list-item">
@@ -1419,7 +1419,7 @@
             {{-- ================================================== --}}
             <div class="flex flex-col py-2 mt-1">
 
-                <a href="{{ route('lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan', [
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                         'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
@@ -1432,63 +1432,62 @@
 
             </div>
 
-{{-- ================================================== --}}
-{{-- 2. PROTA DAN PROSEM --}}
-{{-- ================================================== --}}
-<div class="flex flex-col py-2 mt-1">
-
-    <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem.tampilan', [
-            'role' => Auth::user()->role,
-            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id,
-        ]) }}"
-       class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-        PROTA & PROSEM
-
-    </a>
-
-</div>
 
             {{-- ================================================== --}}
-            {{-- 3. ANALISIS RPPM DAN RPPM --}}
+            {{-- 2. PROTA DAN PROSEM --}}
             {{-- ================================================== --}}
             <div class="flex flex-col py-2 mt-1">
 
-                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm.tampilan', [
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
                         'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                     ]) }}"
                    class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
 
-                 RPP & RPPM
+                    PROTA & PROSEM
 
                 </a>
 
             </div>
 
 
+            {{-- ================================================== --}}
+            {{-- 3. ANALISIS RPPM DAN RPPM --}}
+            {{-- ================================================== --}}
+            <div class="flex flex-col py-2 mt-1">
+
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
+                        'role' => Auth::user()->role,
+                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                    ]) }}"
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+
+                     RPP ^ RPPM
+
+                </a>
+
+            </div>
+
 
             {{-- ================================================== --}}
             {{-- 4. REFLEKSI GURU --}}
             {{-- ================================================== --}}
-
             <div class="flex flex-col py-2 mt-1">
 
-                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksi-guru.tampilan', [
+                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
                         'role' => Auth::user()->role,
                         'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
-                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id,
+                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                     ]) }}"
-                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                   class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
 
                     Refleksi Guru
 
                 </a>
 
             </div>
-
 
 
         </div>

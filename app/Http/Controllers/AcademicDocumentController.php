@@ -71,6 +71,58 @@ class AcademicDocumentController extends Controller
             === self::GURU_ROLE;
     }
 
+    /**
+     * Guru dapat membuka data guru lain sebagai VIEWER.
+     * teacher_id hanya berlaku untuk role Guru; role non-Guru tetap
+     * menggunakan perilaku sekolah-wide seperti sebelumnya.
+     */
+    protected function requestedTeacherId(Request $request, int $schoolId): int
+    {
+        $authId = (int) Auth::id();
+
+        if (!$this->isGuru()) {
+            return $authId;
+        }
+
+        $teacherId = (int) $request->query('teacher_id', $authId);
+        $teacherId = $teacherId > 0 ? $teacherId : $authId;
+
+        if ($teacherId === $authId) {
+            return $authId;
+        }
+
+        $valid = TeacherMapel::query()
+            ->where('user_id', $teacherId)
+            ->where('is_active', true)
+            ->whereHas('SchoolClass', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->exists();
+
+        abort_unless(
+            $valid,
+            404,
+            'Guru yang dipilih tidak terdaftar pada sekolah ini.'
+        );
+
+        return $teacherId;
+    }
+
+    protected function isTeacherViewer(Request $request, int $schoolId): bool
+    {
+        return $this->isGuru()
+            && $this->requestedTeacherId($request, $schoolId) !== (int) Auth::id();
+    }
+
+    protected function authorizeTeacherWrite(Request $request, int $schoolId): void
+    {
+        abort_if(
+            $this->isTeacherViewer($request, $schoolId),
+            403,
+            'Mode Viewer aktif. Anda hanya dapat melihat dokumen guru lain.'
+        );
+    }
+
 
     protected function authorizeRole(): void
     {
@@ -341,7 +393,7 @@ class AcademicDocumentController extends Controller
 
             $query->where(
                 'user_id',
-                Auth::id()
+                $this->requestedTeacherId(request(), $schoolId)
             );
         }
 
@@ -507,14 +559,13 @@ class AcademicDocumentController extends Controller
                 $documentType
             );
         }
+if ($ownerOnly) {
+    $this->applyDocumentOwner(
+        $query,
+        $this->requestedTeacherId(request(), $schoolId)
+    );
+}
 
-        if ($ownerOnly) {
-
-            $this->applyDocumentOwner(
-                $query,
-                (int) Auth::id()
-            );
-        }
 
         return $query->firstOrFail();
     }
@@ -770,7 +821,13 @@ class AcademicDocumentController extends Controller
                     $role,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
 
                 // Halaman /bagan-analisis adalah halaman input utama.
                 // Jika Guru sudah punya dokumen, tampilkan dokumen terbaru.
@@ -793,6 +850,7 @@ class AcademicDocumentController extends Controller
         string $schoolName,
         int $schoolId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->authorizeRole();
 
         $this->getSchoolProfileOrFail(
@@ -1398,7 +1456,7 @@ class AcademicDocumentController extends Controller
                 $schoolId,
                 $document,
                 self::BAGAN_ANALISIS_TYPE,
-                $this->isGuru()
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
             );
 
         abort_unless(
@@ -1440,6 +1498,7 @@ class AcademicDocumentController extends Controller
         int $schoolId,
         int $document
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->authorizeRole();
 
         $this->getSchoolProfileOrFail(
@@ -2160,7 +2219,7 @@ public function storeBaganAnalisisComment(
 
                 $query->where(
                     $ownerColumn,
-                    Auth::id()
+                    $this->requestedTeacherId($request, $schoolId)
                 );
             }
 
@@ -2306,7 +2365,7 @@ public function storeBaganAnalisisComment(
 
             $teacherMapels->where(
                 'user_id',
-                Auth::id()
+                $this->requestedTeacherId($request, $schoolId)
             );
         }
 
@@ -2367,7 +2426,7 @@ public function storeBaganAnalisisComment(
 
             $this->applyDocumentOwner(
                 $documentQuery,
-                (int) Auth::id()
+                $this->requestedTeacherId($request, $schoolId)
             );
 
         } else {
@@ -2509,7 +2568,13 @@ public function storeBaganAnalisisComment(
                     $comments,
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
 
                 'uploadRoute' =>
                     route(
@@ -2605,6 +2670,7 @@ public function storeBaganAnalisisComment(
         string $schoolName,
         int $schoolId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->baganAnalisisUpload(
             $request,
             $role,
@@ -2638,6 +2704,7 @@ public function storeBaganAnalisisComment(
         int $schoolId,
         int $document
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->baganAnalisisDestroy(
             $request,
             $role,
@@ -2655,6 +2722,7 @@ public function storeBaganAnalisisComment(
         int $schoolId,
         int $cell
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         return $this->updateBaganAnalisisCell(
             $request,
             $role,
@@ -2751,7 +2819,7 @@ public function protaProsem(
 
             $query->where(
                 $ownerColumn,
-                Auth::id()
+                $this->requestedTeacherId($request, $schoolId)
             );
         }
 
@@ -2805,6 +2873,10 @@ public function protaProsem(
                 $document->subject_id
                 ??
                 $document->mapel_id
+                ??
+                $document->mata_pelajaran_id  // Tambahan pengaman kolom database
+                ??
+                $document->id_mapel           // Tambahan pengaman kolom database
                 ??
                 null
         )
@@ -2879,7 +2951,13 @@ public function protaProsem(
                 $role,
 
             'isGuru' =>
-                $this->isGuru(),
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+            'viewingTeacherId' =>
+                $this->requestedTeacherId($request, $schoolId),
+
+            'isTeacherViewer' =>
+                $this->isTeacherViewer($request, $schoolId),
         ]
     );
 }
@@ -2933,7 +3011,7 @@ public function tampilanProtaProsem(
 
         $this->applyDocumentOwner(
             $documentQuery,
-            (int) Auth::id()
+            (int) $this->requestedTeacherId($request, $schoolId)
         );
 
     } else {
@@ -2973,13 +3051,10 @@ public function tampilanProtaProsem(
 
     /*
      * GURU TANPA DOKUMEN:
-     * Jangan biarkan Guru berhenti di halaman tampilan dengan pesan
-     * "Belum ada dokumen". Arahkan selalu ke halaman input utama.
-     *
-     * Ini juga membuat perilaku tetap benar ketika Guru berpindah tab,
-     * membuka ulang URL lama /bagan-analisis/tampilan, atau melakukan
-     * refresh setelah dokumen dihapus.
+     * Blok redirect ini DINONAKTIFKAN agar halaman tampilan 
+     * tidak memaksa kembali ke route input saat dokumen kosong.
      */
+    /*
     if (
         $this->isGuru() &&
         $documents->isEmpty()
@@ -2994,6 +3069,7 @@ public function tampilanProtaProsem(
                 ]
             );
     }
+    */
 
     // Blade tamp-prota-prosem menggunakan $document sebagai dokumen aktif.
     // Ambil dokumen terbaru yang sudah lolos filter akses di atas.
@@ -3174,7 +3250,13 @@ public function tampilanProtaProsem(
                 $role,
 
             'isGuru' =>
-                $this->isGuru(),
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+            'viewingTeacherId' =>
+                $this->requestedTeacherId($request, $schoolId),
+
+            'isTeacherViewer' =>
+                $this->isTeacherViewer($request, $schoolId),
 
             'currentRole' =>
                 $this->currentRole(),
@@ -3195,6 +3277,7 @@ public function protaProsemUpload(
         string $schoolName,
         int $schoolId
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->authorizeRole();
 
         $this->getSchoolProfileOrFail(
@@ -3273,7 +3356,7 @@ public function protaProsemUpload(
                     $schoolId,
 
                 'owner_user_id' =>
-                    Auth::id(),
+                    $this->requestedTeacherId($request, $schoolId),
 
                 'subject_id' =>
                     $mapelId,
@@ -3343,7 +3426,7 @@ public function protaProsemUpload(
             ) {
 
                 $legacyData['uploaded_by'] =
-                    Auth::id();
+                    $this->requestedTeacherId($request, $schoolId);
             }
 
             if (
@@ -3353,7 +3436,7 @@ public function protaProsemUpload(
             ) {
 
                 $legacyData['created_by'] =
-                    Auth::id();
+                    $this->requestedTeacherId($request, $schoolId);
             }
 
             if (
@@ -3800,7 +3883,7 @@ public function protaProsemDownload(
                 $schoolId,
                 $document,
                 self::PROTA_PROSEM_TYPE,
-                $this->isGuru()
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
             );
 
         abort_unless(
@@ -3842,6 +3925,7 @@ public function protaProsemDestroy(
     int $schoolId,
     int $document
 ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
     $this->authorizeRole();
 
     $this->getSchoolProfileOrFail(
@@ -3881,7 +3965,7 @@ public function protaProsemDestroy(
         )
         ->where(
             $ownerColumn,
-            Auth::id()
+            $this->requestedTeacherId($request, $schoolId)
         )
         ->firstOrFail();
 
@@ -3899,7 +3983,7 @@ public function protaProsemDestroy(
     $documentsToDelete = $this->protaProsemDocumentQuery()
         ->where(
             $ownerColumn,
-            Auth::id()
+            $this->requestedTeacherId($request, $schoolId)
         )
         ->get();
 
@@ -4056,7 +4140,7 @@ public function showProtaProsem(
                 $schoolId,
                 $document,
                 self::PROTA_PROSEM_TYPE,
-                $this->isGuru()
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
             );
 
         $academicDocument->load([
@@ -4131,7 +4215,13 @@ public function showProtaProsem(
                     $this->currentRole(),
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
             ]
         );
     }
@@ -4549,6 +4639,7 @@ public function protaProsemComments(
         int $schoolId,
         int $cell
     ) {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->authorizeRole();
 
         $this->getSchoolProfileOrFail(
@@ -4684,7 +4775,7 @@ public function protaProsemComments(
 
             $this->applyDocumentOwner(
                 $documentQuery,
-                (int) Auth::id()
+                $this->requestedTeacherId($request, $schoolId)
             );
         }
 
@@ -5240,7 +5331,7 @@ public function protaProsemComments(
         if ($this->isGuru()) {
             $this->applyDocumentOwner(
                 $documentQuery,
-                (int) Auth::id()
+                $this->requestedTeacherId($request, $schoolId)
             );
         } else {
             $ownerColumn = $this->documentOwnerColumn();
@@ -5450,7 +5541,7 @@ public function protaProsemComments(
                 $schoolId,
                 $document,
                 self::BAGAN_ANALISIS_TYPE,
-                $this->isGuru()
+                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
             );
 
         $academicDocument->load([
@@ -5525,7 +5616,13 @@ public function protaProsemComments(
                     $this->currentRole(),
 
                 'isGuru' =>
-                    $this->isGuru(),
+                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' =>
+                    $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' =>
+                    $this->isTeacherViewer($request, $schoolId),
             ]
         );
     }
@@ -5541,6 +5638,70 @@ public function protaProsemComments(
     |
     */
 
+    /**
+     * Daftar Guru untuk navigasi antar pemilik perangkat pembelajaran.
+     * Guru yang memilih Guru lain masuk sebagai Viewer.
+     */
+    public function namaGuru(
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId
+    ) {
+        $this->authorizeRole();
+        $this->getSchoolProfileOrFail($schoolId);
+
+        $rows = TeacherMapel::query()
+            ->with(['Mapel', 'SchoolClass'])
+            ->where('is_active', true)
+            ->whereHas('SchoolClass', function ($q) use ($schoolId) {
+                $q->where('school_partner_id', $schoolId);
+            })
+            ->get();
+
+        $teacherIds = $rows->pluck('user_id')->filter()->unique()->map(fn ($id) => (int) $id)->values();
+        $users = collect();
+
+        if ($teacherIds->isNotEmpty() && Schema::hasTable('user_accounts')) {
+            $users = DB::table('user_accounts')
+                ->whereIn('id', $teacherIds->all())
+                ->get()
+                ->keyBy('id');
+        }
+
+        $teachers = $teacherIds->map(function ($id) use ($users, $rows) {
+            $id = (int) $id;
+            $u = $users->get($id);
+            $assignments = $rows->where('user_id', $id);
+
+            $name = $u?->name
+                ?? $u?->nama
+                ?? $u?->nama_lengkap
+                ?? $u?->full_name
+                ?? $u?->username
+                ?? $u?->email
+                ?? ('Guru #' . $id);
+
+            return [
+                'id' => $id,
+                'name' => $name,
+                'role' => $u?->role ?? 'Guru',
+                'mapels' => $assignments->map(function ($row) {
+                    return $this->mapelName($row->Mapel ?? $row->mapel ?? null);
+                })->filter()->unique()->values()->all(),
+            ];
+        })->sortBy(fn ($teacher) => strtolower((string) $teacher['name']))->values();
+
+        return view('features.lms.school-admin.registrasi-guru.nama-guru', [
+            'role' => $role,
+            'schoolName' => $schoolName,
+            'schoolId' => $schoolId,
+            'teachers' => $teachers,
+            'currentTeacherId' => (int) Auth::id(),
+            'currentRole' => $this->currentRole(),
+        ]);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACADEMIC DRIVE - SAVE / BROWSE
@@ -5555,6 +5716,7 @@ public function protaProsemComments(
         string $type,
         int $document
     ): JsonResponse {
+        $this->authorizeTeacherWrite($request, (int) $schoolId);
         $this->authorizeRole();
         $this->getSchoolProfileOrFail($schoolId);
 
@@ -5740,13 +5902,14 @@ public function protaProsemComments(
             );
         }
 
-        if ($ownerOnly) {
 
-            $this->applyDocumentOwner(
-                $query,
-                (int) Auth::id()
-            );
-        }
+if ($ownerOnly) {
+    $this->applyDocumentOwner(
+        $query,
+        $this->requestedTeacherId(request(), $schoolId)
+    );
+}
+
 
         return $query->firstOrFail();
     }
