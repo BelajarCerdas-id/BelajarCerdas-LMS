@@ -1195,12 +1195,10 @@ Route::delete(
 |--------------------------------------------------------------------------
 |
 | PREFIX:
-|
 | lms/{role}/{schoolName}/{schoolId}/registrasi-guru
 |
 | NAME:
-|
-| lms.schoolAdmin.registrasiGuru.
+| lms.schoolAdmin.registrasiGuru.*
 |
 |--------------------------------------------------------------------------
 */
@@ -1211,409 +1209,351 @@ Route::prefix(
     'lms.schoolAdmin.registrasiGuru.'
 )->group(function () {
 
-
-   /*
-|--------------------------------------------------------------------------
-| ======================================================================
-| PROTA / PROSEM
-| ======================================================================
-|--------------------------------------------------------------------------
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| MENU PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/prota-prosem',
-    [
-        AcademicDocumentController::class,
-        'protaProsem'
-    ]
-)->name('prota-prosem');
-
-
-/*
-|--------------------------------------------------------------------------
-| TAMPILAN EXCEL PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/prota-prosem/tampilan',
-    [
-        AcademicDocumentController::class,
-        'tampilanProtaProsem'
-    ]
-)->name(
-    'prota-prosem.tampilan'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| UPLOAD PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/prota-prosem/upload',
-    [
-        AcademicDocumentController::class,
-        'protaProsemUpload'
-    ]
-)->name(
-    'prota-prosem.upload'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE CELL PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::put(
-    '/prota-prosem/cells/{cell}',
-    [
-        AcademicDocumentController::class,
-        'updateCell'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'prota-prosem.cells.update'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| AUTOSAVE CELL PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/prota-prosem/cells/{cell}/autosave',
-    [
-        AcademicDocumentController::class,
-        'updateCell'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'prota-prosem.cells.autosave'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| STORE COMMENT PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/prota-prosem/cells/{cell}/comments',
-    [
-        AcademicDocumentController::class,
-        'storeProtaProsemComment'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'prota-prosem.comments.store'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| GET COMMENTS PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/prota-prosem/cells/{cell}/comments',
-    [
-        AcademicDocumentController::class,
-        'protaProsemComments'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'prota-prosem.comments'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| RESOLVE REVISION PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/prota-prosem/comments/{comment}/resolve',
-    [
-        AcademicDocumentController::class,
-        'resolveRevision'
-    ]
-)
-->whereNumber('comment')
-->name(
-    'prota-prosem.comments.resolve'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| DOWNLOAD PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/prota-prosem/{document}/download',
-    [
-        AcademicDocumentController::class,
-        'protaProsemDownload'
-    ]
-)
-->whereNumber('document')
-->name(
-    'prota-prosem.download'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::delete(
-    '/prota-prosem/{document}',
-    [
-        AcademicDocumentController::class,
-        'protaProsemDestroy'
-    ]
-)
-->whereNumber('document')
-->name(
-    'prota-prosem.delete'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| SHOW PROTA / PROSEM
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/prota-prosem/{document}',
-    [
-        AcademicDocumentController::class,
-        'showProtaProsem'
-    ]
-)
-->whereNumber('document')
-->name(
-    'prota-prosem.show'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| BAGAN ANALISIS / ANALISIS CP HINGGA ATP
-|--------------------------------------------------------------------------
-*/
-
-/*
-|--------------------------------------------------------------------------
-| MENU BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/bagan-analisis',
-    [
-        AcademicDocumentController::class,
-        'baganAnalisis'
-    ]
-)->name(
-    'baganAnalisis'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| TAMPILAN BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/bagan-analisis/tampilan',
-    [
-        AcademicDocumentController::class,
-        'tampilanBaganAnalisis'
-    ]
-)->name(
-    'baganAnalisis.tampilan'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| UPLOAD BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/bagan-analisis/upload',
-    [
-        AcademicDocumentController::class,
-        'baganAnalisisUpload'
-    ]
-)->name(
-    'baganAnalisis.upload'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| DOWNLOAD BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/bagan-analisis/{document}/download',
-    [
-        AcademicDocumentController::class,
-        'baganAnalisisDownload'
-    ]
-)
-->whereNumber('document')
-->name(
-    'baganAnalisis.download'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE CELL BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/bagan-analisis/cells/{cell}/autosave',
-    [
-        AcademicDocumentController::class,
-        'updateBaganAnalisisCell'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'baganAnalisis.cells.autosave'
-);
-
-// Legacy PUT endpoint kept for compatibility.
-Route::put(
-    '/bagan-analisis/cells/{cell}',
-    [
-        AcademicDocumentController::class,
-        'updateBaganAnalisisCell'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'baganAnalisis.cells.update'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| STORE COMMENT BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/bagan-analisis/cells/{cell}/comments',
-    [
-        AcademicDocumentController::class,
-        'storeBaganAnalisisComment'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'baganAnalisis.comments.store'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| GET COMMENTS BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::get(
-    '/bagan-analisis/cells/{cell}/comments',
-    [
-        AcademicDocumentController::class,
-        'baganAnalisisComments'
-    ]
-)
-->whereNumber('cell')
-->name(
-    'baganAnalisis.comments'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| RESOLVE COMMENT / REVISI
-|--------------------------------------------------------------------------
-*/
-
-Route::post(
-    '/bagan-analisis/comments/{comment}/resolve',
-    [
-        AcademicDocumentController::class,
-        'resolveBaganAnalisisRevision'
-    ]
-)
-->whereNumber('comment')
-->name(
-    'baganAnalisis.comments.resolve'
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE BAGAN ANALISIS
-|--------------------------------------------------------------------------
-*/
-
-Route::delete(
-    '/bagan-analisis/{document}',
-    [
-        AcademicDocumentController::class,
-        'baganAnalisisDestroy'
-    ]
-)
-->whereNumber('document')
-->name(
-    'baganAnalisis.delete'
-);
-
+    /*
+    |--------------------------------------------------------------------------
+    | ======================================================================
+    | PROTA / PROSEM
+    | ======================================================================
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENU PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/prota-prosem',
+        [
+            AcademicDocumentController::class,
+            'protaProsem'
+        ]
+    )->name('prota-prosem');
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMPILAN EXCEL PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/prota-prosem/tampilan',
+        [
+            AcademicDocumentController::class,
+            'tampilanProtaProsem'
+        ]
+    )->name('prota-prosem.tampilan');
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPLOAD PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/prota-prosem/upload',
+        [
+            AcademicDocumentController::class,
+            'protaProsemUpload'
+        ]
+    )->name('prota-prosem.upload');
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE CELL PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::put(
+        '/prota-prosem/cells/{cell}',
+        [
+            AcademicDocumentController::class,
+            'updateCell'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('prota-prosem.cells.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTOSAVE CELL PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/prota-prosem/cells/{cell}/autosave',
+        [
+            AcademicDocumentController::class,
+            'updateCell'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('prota-prosem.cells.autosave');
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE COMMENT PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/prota-prosem/cells/{cell}/comments',
+        [
+            AcademicDocumentController::class,
+            'storeProtaProsemComment'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('prota-prosem.comments.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET COMMENTS PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/prota-prosem/cells/{cell}/comments',
+        [
+            AcademicDocumentController::class,
+            'protaProsemComments'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('prota-prosem.comments');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESOLVE REVISION PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/prota-prosem/comments/{comment}/resolve',
+        [
+            AcademicDocumentController::class,
+            'resolveRevision'
+        ]
+    )
+        ->whereNumber('comment')
+        ->name('prota-prosem.comments.resolve');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/prota-prosem/{document}/download',
+        [
+            AcademicDocumentController::class,
+            'protaProsemDownload'
+        ]
+    )
+        ->whereNumber('document')
+        ->name('prota-prosem.download');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        '/prota-prosem/{document}',
+        [
+            AcademicDocumentController::class,
+            'protaProsemDestroy'
+        ]
+    )
+        ->whereNumber('document')
+        ->name('prota-prosem.delete');
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW PROTA / PROSEM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/prota-prosem/{document}',
+        [
+            AcademicDocumentController::class,
+            'showProtaProsem'
+        ]
+    )
+        ->whereNumber('document')
+        ->name('prota-prosem.show');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ======================================================================
+    | BAGAN ANALISIS / ANALISIS CP HINGGA ATP
+    | ======================================================================
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | MENU BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/bagan-analisis',
+        [
+            AcademicDocumentController::class,
+            'baganAnalisis'
+        ]
+    )->name('baganAnalisis');
+
+    /*
+    |--------------------------------------------------------------------------
+    | TAMPILAN BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/bagan-analisis/tampilan',
+        [
+            AcademicDocumentController::class,
+            'tampilanBaganAnalisis'
+        ]
+    )->name('baganAnalisis.tampilan');
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPLOAD BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/bagan-analisis/upload',
+        [
+            AcademicDocumentController::class,
+            'baganAnalisisUpload'
+        ]
+    )->name('baganAnalisis.upload');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/bagan-analisis/{document}/download',
+        [
+            AcademicDocumentController::class,
+            'baganAnalisisDownload'
+        ]
+    )
+        ->whereNumber('document')
+        ->name('baganAnalisis.download');
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE CELL BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/bagan-analisis/cells/{cell}/autosave',
+        [
+            AcademicDocumentController::class,
+            'updateBaganAnalisisCell'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('baganAnalisis.cells.autosave');
+
+    /*
+    |--------------------------------------------------------------------------
+    | LEGACY PUT ENDPOINT
+    |--------------------------------------------------------------------------
+    */
+
+    Route::put(
+        '/bagan-analisis/cells/{cell}',
+        [
+            AcademicDocumentController::class,
+            'updateBaganAnalisisCell'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('baganAnalisis.cells.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE COMMENT BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/bagan-analisis/cells/{cell}/comments',
+        [
+            AcademicDocumentController::class,
+            'storeBaganAnalisisComment'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('baganAnalisis.comments.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET COMMENTS BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/bagan-analisis/cells/{cell}/comments',
+        [
+            AcademicDocumentController::class,
+            'baganAnalisisComments'
+        ]
+    )
+        ->whereNumber('cell')
+        ->name('baganAnalisis.comments');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESOLVE COMMENT / REVISI
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/bagan-analisis/comments/{comment}/resolve',
+        [
+            AcademicDocumentController::class,
+            'resolveBaganAnalisisRevision'
+        ]
+    )
+        ->whereNumber('comment')
+        ->name('baganAnalisis.comments.resolve');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE BAGAN ANALISIS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        '/bagan-analisis/{document}',
+        [
+            AcademicDocumentController::class,
+            'baganAnalisisDestroy'
+        ]
+    )
+        ->whereNumber('document')
+        ->name('baganAnalisis.delete');
 
     /*
     |--------------------------------------------------------------------------
     | SHOW BAGAN ANALISIS
     |--------------------------------------------------------------------------
-    |
-    | Hanya aktif jika method showBaganAnalisis()
-    | memang tersedia di controller.
-    |
     */
 
     Route::get(
@@ -1623,11 +1563,8 @@ Route::delete(
             'showBaganAnalisis'
         ]
     )
-    ->whereNumber('document')
-    ->name(
-        'baganAnalisis.show'
-    );
-
+        ->whereNumber('document')
+        ->name('baganAnalisis.show');
 
 
     /*
@@ -1637,7 +1574,6 @@ Route::delete(
     | ======================================================================
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1651,10 +1587,7 @@ Route::delete(
             AcademicDocumentController::class,
             'analisis'
         ]
-    )->name(
-        'analisis'
-    );
-
+    )->name('analisis');
 
     /*
     |--------------------------------------------------------------------------
@@ -1668,10 +1601,7 @@ Route::delete(
             AcademicDocumentController::class,
             'tampilanAnalisis'
         ]
-    )->name(
-        'analisis.tampilan'
-    );
-
+    )->name('analisis.tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -1685,10 +1615,7 @@ Route::delete(
             AcademicDocumentController::class,
             'analisisUpload'
         ]
-    )->name(
-        'analisis.upload'
-    );
-
+    )->name('analisis.upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -1703,11 +1630,8 @@ Route::delete(
             'analisisDownload'
         ]
     )
-    ->whereNumber('document')
-    ->name(
-        'analisis.download'
-    );
-
+        ->whereNumber('document')
+        ->name('analisis.download');
 
     /*
     |--------------------------------------------------------------------------
@@ -1722,11 +1646,8 @@ Route::delete(
             'updateAnalisisCell'
         ]
     )
-    ->whereNumber('cell')
-    ->name(
-        'analisis.cells.update'
-    );
-
+        ->whereNumber('cell')
+        ->name('analisis.cells.update');
 
     /*
     |--------------------------------------------------------------------------
@@ -1741,11 +1662,8 @@ Route::delete(
             'storeAnalisisComment'
         ]
     )
-    ->whereNumber('cell')
-    ->name(
-        'analisis.comments.store'
-    );
-
+        ->whereNumber('cell')
+        ->name('analisis.comments.store');
 
     /*
     |--------------------------------------------------------------------------
@@ -1760,11 +1678,8 @@ Route::delete(
             'analisisComments'
         ]
     )
-    ->whereNumber('cell')
-    ->name(
-        'analisis.comments'
-    );
-
+        ->whereNumber('cell')
+        ->name('analisis.comments');
 
     /*
     |--------------------------------------------------------------------------
@@ -1779,11 +1694,8 @@ Route::delete(
             'resolveAnalisisRevision'
         ]
     )
-    ->whereNumber('comment')
-    ->name(
-        'analisis.comments.resolve'
-    );
-
+        ->whereNumber('comment')
+        ->name('analisis.comments.resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -1798,11 +1710,8 @@ Route::delete(
             'analisisDestroy'
         ]
     )
-    ->whereNumber('document')
-    ->name(
-        'analisis.delete'
-    );
-
+        ->whereNumber('document')
+        ->name('analisis.delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -1817,11 +1726,8 @@ Route::delete(
             'showAnalisis'
         ]
     )
-    ->whereNumber('document')
-    ->name(
-        'analisis.show'
-    );
-
+        ->whereNumber('document')
+        ->name('analisis.show');
 
 
     /*
@@ -1831,7 +1737,6 @@ Route::delete(
     | ======================================================================
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1849,19 +1754,13 @@ Route::delete(
             return view(
                 'features.lms.school-admin.registrasi-guru.RPPM',
                 [
-                    'role' =>
-                        $role,
-                    'schoolName' =>
-                        $schoolName,
-                    'schoolId' =>
-                        $schoolId,
+                    'role'       => $role,
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId,
                 ]
             );
         }
-    )->name(
-        'rppm'
-    );
-
+    )->name('rppm');
 
     /*
     |--------------------------------------------------------------------------
@@ -1875,10 +1774,7 @@ Route::delete(
             AcademicDocumentWordController::class,
             'rppm'
         ]
-    )->name(
-        'rppm.tampilan'
-    );
-
+    )->name('rppm.tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -1887,54 +1783,156 @@ Route::delete(
     */
 
     Route::post(
-    '/rppm-word/upload',
-    [AcademicDocumentWordController::class, 'upload']
-)->name('rppm.word.upload');
+        '/rppm-word/upload',
+        [
+            AcademicDocumentWordController::class,
+            'upload'
+        ]
+    )->name('rppm.word.upload');
 
-Route::get(
-    '/rppm-word/{documentId}/file',
-    [AcademicDocumentWordController::class, 'file']
-)->name('rppm.word.file');
+    /*
+    |--------------------------------------------------------------------------
+    | FILE RPPM WORD
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/rppm-word/{documentId}/save',
-    [AcademicDocumentWordController::class, 'save']
-)->name('rppm.word.save');
+    Route::get(
+        '/rppm-word/{documentId}/file',
+        [
+            AcademicDocumentWordController::class,
+            'file'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.file');
 
-Route::get(
-    '/rppm-word/{documentId}/download',
-    [AcademicDocumentWordController::class, 'download']
-)->name('rppm.word.download');
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE RPPM WORD
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/rppm-word/{documentId}/comments',
-    [AcademicDocumentWordController::class, 'storeComment']
-)->name('rppm.word.comments.store');
+    Route::post(
+        '/rppm-word/{documentId}/save',
+        [
+            AcademicDocumentWordController::class,
+            'save'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.save');
 
-Route::post(
-    '/rppm-word/comments/{commentId}/reply',
-    [AcademicDocumentWordController::class, 'replyComment']
-)->name('rppm.word.comments.reply');
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD RPPM WORD
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/rppm-word/comments/{commentId}/resolve',
-    [AcademicDocumentWordController::class, 'resolveComment']
-)->name('rppm.word.comments.resolve');
+    Route::get(
+        '/rppm-word/{documentId}/download',
+        [
+            AcademicDocumentWordController::class,
+            'download'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.download');
 
-Route::delete(
-    '/rppm-word/comments/{commentId}',
-    [AcademicDocumentWordController::class, 'destroyComment']
-)->name('rppm.word.comments.destroy');
+    /*
+    |--------------------------------------------------------------------------
+    | STORE COMMENT RPPM
+    |--------------------------------------------------------------------------
+    */
 
-Route::delete(
-    '/rppm-word/{documentId}',
-    [AcademicDocumentWordController::class, 'destroy']
-)->name('rppm.word.destroy');
+    Route::post(
+        '/rppm-word/{documentId}/comments',
+        [
+            AcademicDocumentWordController::class,
+            'storeComment'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.comments.store');
 
-Route::get(
-    '/rppm-word/{documentId}',
-    [AcademicDocumentWordController::class, 'edit']
-)->name('rppm.word.edit');
+    /*
+    |--------------------------------------------------------------------------
+    | REPLY RPPM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/rppm-word/comments/{commentId}/reply',
+        [
+            AcademicDocumentWordController::class,
+            'replyComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('rppm.word.comments.reply');
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESOLVE RPPM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/rppm-word/comments/{commentId}/resolve',
+        [
+            AcademicDocumentWordController::class,
+            'resolveComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('rppm.word.comments.resolve');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE COMMENT RPPM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        '/rppm-word/comments/{commentId}',
+        [
+            AcademicDocumentWordController::class,
+            'destroyComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('rppm.word.comments.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE RPPM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        '/rppm-word/{documentId}',
+        [
+            AcademicDocumentWordController::class,
+            'destroy'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT RPPM
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/rppm-word/{documentId}',
+        [
+            AcademicDocumentWordController::class,
+            'edit'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('rppm.word.edit');
 
 
     /*
@@ -1944,7 +1942,6 @@ Route::get(
     | ======================================================================
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1962,19 +1959,13 @@ Route::get(
             return view(
                 'features.lms.school-admin.registrasi-guru.analisis-rppm',
                 [
-                    'role' =>
-                        $role,
-                    'schoolName' =>
-                        $schoolName,
-                    'schoolId' =>
-                        $schoolId,
+                    'role'       => $role,
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId,
                 ]
             );
         }
-    )->name(
-        'analisis-rppm'
-    );
-
+    )->name('analisis-rppm');
 
     /*
     |--------------------------------------------------------------------------
@@ -1988,10 +1979,7 @@ Route::get(
             AcademicDocumentWordController::class,
             'analisisRppm'
         ]
-    )->name(
-        'analisis-rppm.tampilan'
-    );
-
+    )->name('analisis-rppm.tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -2005,10 +1993,7 @@ Route::get(
             AcademicDocumentWordController::class,
             'uploadAnalisisRppm'
         ]
-    )->name(
-        'analisis-rppm.word.upload'
-    );
-
+    )->name('analisis-rppm.word.upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -2023,11 +2008,8 @@ Route::get(
             'fileAnalisisRppm'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.file'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.file');
 
     /*
     |--------------------------------------------------------------------------
@@ -2042,11 +2024,8 @@ Route::get(
             'saveAnalisisRppm'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.save'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.save');
 
     /*
     |--------------------------------------------------------------------------
@@ -2061,11 +2040,8 @@ Route::get(
             'downloadAnalisisRppm'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.download'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.download');
 
     /*
     |--------------------------------------------------------------------------
@@ -2080,11 +2056,8 @@ Route::get(
             'storeAnalisisRppmComment'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.comments.store'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.comments.store');
 
     /*
     |--------------------------------------------------------------------------
@@ -2099,11 +2072,8 @@ Route::get(
             'replyAnalisisRppmComment'
         ]
     )
-    ->whereNumber('commentId')
-    ->name(
-        'analisis-rppm.word.comments.reply'
-    );
-
+        ->whereNumber('commentId')
+        ->name('analisis-rppm.word.comments.reply');
 
     /*
     |--------------------------------------------------------------------------
@@ -2118,11 +2088,8 @@ Route::get(
             'resolveAnalisisRppmComment'
         ]
     )
-    ->whereNumber('commentId')
-    ->name(
-        'analisis-rppm.word.comments.resolve'
-    );
-
+        ->whereNumber('commentId')
+        ->name('analisis-rppm.word.comments.resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -2137,11 +2104,8 @@ Route::get(
             'destroyAnalisisRppmComment'
         ]
     )
-    ->whereNumber('commentId')
-    ->name(
-        'analisis-rppm.word.comments.destroy'
-    );
-
+        ->whereNumber('commentId')
+        ->name('analisis-rppm.word.comments.destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -2156,11 +2120,8 @@ Route::get(
             'destroyAnalisisRppm'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.destroy'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -2175,11 +2136,8 @@ Route::get(
             'editAnalisisRppm'
         ]
     )
-    ->whereNumber('documentId')
-    ->name(
-        'analisis-rppm.word.edit'
-    );
-
+        ->whereNumber('documentId')
+        ->name('analisis-rppm.word.edit');
 
 
     /*
@@ -2189,7 +2147,6 @@ Route::get(
     | ======================================================================
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -2207,19 +2164,13 @@ Route::get(
             return view(
                 'features.lms.school-admin.registrasi-guru.refleksi-guru',
                 [
-                    'role' =>
-                        $role,
-                    'schoolName' =>
-                        $schoolName,
-                    'schoolId' =>
-                        $schoolId,
+                    'role'       => $role,
+                    'schoolName' => $schoolName,
+                    'schoolId'   => $schoolId,
                 ]
             );
         }
-    )->name(
-        'refleksiGuru'
-    );
-
+    )->name('refleksiGuru');
 
     /*
     |--------------------------------------------------------------------------
@@ -2233,10 +2184,7 @@ Route::get(
             AcademicDocumentWordController::class,
             'refleksiGuru'
         ]
-    )->name(
-        'refleksi-guru.tampilan'
-    );
-
+    )->name('refleksi-guru.tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -2244,138 +2192,387 @@ Route::get(
     |--------------------------------------------------------------------------
     */
 
-Route::post(
-    '/refleksi-guru/upload',
-    [AcademicDocumentWordController::class, 'uploadRefleksi']
-)->name('refleksi-guru.upload');
+    Route::post(
+        '/refleksi-guru/upload',
+        [
+            AcademicDocumentWordController::class,
+            'uploadRefleksi'
+        ]
+    )->name('refleksi-guru.upload');
 
-Route::get(
-    '/refleksi-guru/{documentId}/file',
-    [AcademicDocumentWordController::class, 'fileRefleksi']
-)->name('refleksi-guru.file');
+    /*
+    |--------------------------------------------------------------------------
+    | FILE REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/refleksi-guru/{documentId}/save',
-    [AcademicDocumentWordController::class, 'saveRefleksi']
-)->name('refleksi-guru.save');
+    Route::get(
+        '/refleksi-guru/{documentId}/file',
+        [
+            AcademicDocumentWordController::class,
+            'fileRefleksi'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.file');
 
-Route::get(
-    '/refleksi-guru/{documentId}/download',
-    [AcademicDocumentWordController::class, 'downloadRefleksi']
-)->name('refleksi-guru.download');
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/refleksi-guru/{documentId}/comments',
-    [AcademicDocumentWordController::class, 'storeRefleksiComment']
-)->name('refleksi-guru.comments.store');
+    Route::post(
+        '/refleksi-guru/{documentId}/save',
+        [
+            AcademicDocumentWordController::class,
+            'saveRefleksi'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.save');
 
-Route::post(
-    '/refleksi-guru/comments/{commentId}/reply',
-    [AcademicDocumentWordController::class, 'replyRefleksiComment']
-)->name('refleksi-guru.comments.reply');
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/refleksi-guru/comments/{commentId}/resolve',
-    [AcademicDocumentWordController::class, 'resolveRefleksiComment']
-)->name('refleksi-guru.comments.resolve');
+    Route::get(
+        '/refleksi-guru/{documentId}/download',
+        [
+            AcademicDocumentWordController::class,
+            'downloadRefleksi'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.download');
 
-Route::delete(
-    '/refleksi-guru/comments/{commentId}',
-    [AcademicDocumentWordController::class, 'destroyRefleksiComment']
-)->name('refleksi-guru.comments.destroy');
+    /*
+    |--------------------------------------------------------------------------
+    | STORE COMMENT REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::delete(
-    '/refleksi-guru/{documentId}',
-    [AcademicDocumentWordController::class, 'destroyRefleksi']
-)->name('refleksi-guru.destroy');
+    Route::post(
+        '/refleksi-guru/{documentId}/comments',
+        [
+            AcademicDocumentWordController::class,
+            'storeRefleksiComment'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.comments.store');
 
-Route::get(
-    '/refleksi-guru/{documentId}',
-    [AcademicDocumentWordController::class, 'editRefleksi']
-)->name('refleksi-guru.edit');
+    /*
+    |--------------------------------------------------------------------------
+    | REPLY REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    '/academic-document/{type}/{document}/save-archive',
-    [AcademicDocumentController::class, 'saveArchive']
-)
-->whereIn('type', ['analisis', 'prota', 'prota-prosem'])
-->whereNumber('document')
-->name('academicDocument.saveArchive');
+    Route::post(
+        '/refleksi-guru/comments/{commentId}/reply',
+        [
+            AcademicDocumentWordController::class,
+            'replyRefleksiComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('refleksi-guru.comments.reply');
 
-Route::get(
-    '/academic-drive/browse/{type}',
-    [AcademicDocumentController::class, 'browseAcademicDocuments']
-)
-->whereIn('type', ['analisis', 'prota', 'prota-prosem'])
-->name('academicDrive.browse');
+    /*
+    |--------------------------------------------------------------------------
+    | RESOLVE REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::get(
-    '/academic-document/{type}/{document}/view',
-    [AcademicDocumentController::class, 'viewSharedAcademicDocument']
-)
-->whereIn('type', ['analisis', 'prota', 'prota-prosem'])
-->whereNumber('document')
-->name('academicDocument.sharedView');
+    Route::post(
+        '/refleksi-guru/comments/{commentId}/resolve',
+        [
+            AcademicDocumentWordController::class,
+            'resolveRefleksiComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('refleksi-guru.comments.resolve');
 
-Route::post(
-    '/academic-word/{type}/{documentId}/save-archive',
-    [AcademicDocumentWordController::class, 'saveArchive']
-)
-    ->whereIn('type', ['rppm', 'refleksi-guru'])
-    ->whereNumber('documentId')
-    ->name('academicWord.saveArchive');
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE COMMENT REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-Route::get(
-    '/academic-word/{type}/browse',
-    [AcademicDocumentWordController::class, 'browseAcademicDocuments']
-)
-    ->whereIn('type', ['rppm', 'refleksi-guru'])
-    ->name('academicWord.browse');
+    Route::delete(
+        '/refleksi-guru/comments/{commentId}',
+        [
+            AcademicDocumentWordController::class,
+            'destroyRefleksiComment'
+        ]
+    )
+        ->whereNumber('commentId')
+        ->name('refleksi-guru.comments.destroy');
 
-Route::get(
-    '/academic-word/{type}/{documentId}/view',
-    [AcademicDocumentWordController::class, 'viewSharedDocument']
-)
-    ->whereIn('type', ['rppm', 'refleksi-guru'])
-    ->whereNumber('documentId')
-    ->name('academicWord.sharedView');
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE REFLEKSI
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/academic-word/{type}/browse',
-    [AcademicDocumentWordController::class, 'browseAcademicDocuments']
-)->whereIn('type', ['rppm', 'refleksi-guru'])
- ->name('academicWord.browse');
+    Route::delete(
+        '/refleksi-guru/{documentId}',
+        [
+            AcademicDocumentWordController::class,
+            'destroyRefleksi'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT REFLEKSI
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/refleksi-guru/{documentId}',
+        [
+            AcademicDocumentWordController::class,
+            'editRefleksi'
+        ]
+    )
+        ->whereNumber('documentId')
+        ->name('refleksi-guru.edit');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ======================================================================
+    | ACADEMIC DOCUMENT SHARING
+    | ======================================================================
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE ARCHIVE - EXCEL
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/academic-document/{type}/{document}/save-archive',
+        [
+            AcademicDocumentController::class,
+            'saveArchive'
+        ]
+    )
+        ->whereIn('type', [
+            'analisis',
+            'prota',
+            'prota-prosem'
+        ])
+        ->whereNumber('document')
+        ->name('academicDocument.saveArchive');
+
+    /*
+    |--------------------------------------------------------------------------
+    | BROWSE ACADEMIC DOCUMENT - EXCEL
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/academic-drive/browse/{type}',
+        [
+            AcademicDocumentController::class,
+            'browseAcademicDocuments'
+        ]
+    )
+        ->whereIn('type', [
+            'analisis',
+            'prota',
+            'prota-prosem'
+        ])
+        ->name('academicDrive.browse');
+
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW SHARED ACADEMIC DOCUMENT - EXCEL
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/academic-document/{type}/{document}/view',
+        [
+            AcademicDocumentController::class,
+            'viewSharedAcademicDocument'
+        ]
+    )
+        ->whereIn('type', [
+            'analisis',
+            'prota',
+            'prota-prosem'
+        ])
+        ->whereNumber('document')
+        ->name('academicDocument.sharedView');
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE ARCHIVE - WORD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/academic-word/{type}/{documentId}/save-archive',
+        [
+            AcademicDocumentWordController::class,
+            'saveArchive'
+        ]
+    )
+        ->whereIn('type', [
+            'rppm',
+            'refleksi-guru'
+        ])
+        ->whereNumber('documentId')
+        ->name('academicWord.saveArchive');
+
+    /*
+    |--------------------------------------------------------------------------
+    | BROWSE ACADEMIC DOCUMENT - WORD
+    |--------------------------------------------------------------------------
+    | HANYA SATU ROUTE.
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/academic-word/{type}/browse',
+        [
+            AcademicDocumentWordController::class,
+            'browseAcademicDocuments'
+        ]
+    )
+        ->whereIn('type', [
+            'rppm',
+            'refleksi-guru'
+        ])
+        ->name('academicWord.browse');
+
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW SHARED DOCUMENT - WORD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/academic-word/{type}/{documentId}/view',
+        [
+            AcademicDocumentWordController::class,
+            'viewSharedDocument'
+        ]
+    )
+        ->whereIn('type', [
+            'rppm',
+            'refleksi-guru'
+        ])
+        ->whereNumber('documentId')
+        ->name('academicWord.sharedView');
 
 });
 
 
+/*
+|--------------------------------------------------------------------------
+| ==========================================================================
+| ACADEMIC DRIVE
+| ==========================================================================
+|
+| URL:
+|
+| /lms/{role}/{schoolName}/{schoolId}/registrasi-guru/academic-drive
+|
+|--------------------------------------------------------------------------
+*/
 
-Route::prefix('lms/{role}/{schoolName}/{schoolId}/registrasi-guru/academic-drive')
+Route::prefix(
+    'lms/{role}/{schoolName}/{schoolId}/registrasi-guru/academic-drive'
+)
     ->middleware('auth')
+    ->name('lms.schoolAdmin.registrasiGuru.academic-drive.')
     ->group(function () {
-        Route::get('/', [
-            AcademicDocumentDriveController::class,
-            'index',
-        ])->name('lms.schoolAdmin.registrasiGuru.academic-drive');
 
-        Route::get('/files/{subjectId}/{teacherId}/{folder}', [
-            AcademicDocumentDriveController::class,
-            'files',
-        ])->name('lms.schoolAdmin.registrasiGuru.academic-drive.files');
+        /*
+        |--------------------------------------------------------------------------
+        | DASHBOARD / ROOT ACADEMIC DRIVE
+        |--------------------------------------------------------------------------
+        */
 
-        Route::get('/download/{documentId}', [
-            AcademicDocumentDriveController::class,
-            'download',
-        ])->name('lms.schoolAdmin.registrasiGuru.academic-drive.download');
+        Route::get(
+            '/',
+            [
+                AcademicDocumentDriveController::class,
+                'index'
+            ]
+        )->name('index');
 
-        Route::post('/download-selected', [
-            AcademicDocumentDriveController::class,
-            'downloadSelected',
-        ])->name('lms.schoolAdmin.registrasiGuru.academic-drive.download-selected');
+        /*
+        |--------------------------------------------------------------------------
+        | FILES
+        |--------------------------------------------------------------------------
+        */
 
-        Route::post('/delete-selected', [
-            AcademicDocumentDriveController::class,
-            'destroySelected',
-        ])->name('lms.schoolAdmin.registrasiGuru.academic-drive.delete-selected');
+        Route::get(
+            '/files/{subjectId}/{teacherId}/{folder}',
+            [
+                AcademicDocumentDriveController::class,
+                'files'
+            ]
+        )
+            ->whereNumber('subjectId')
+            ->whereNumber('teacherId')
+            ->name('files');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOWNLOAD SINGLE FILE
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/download/{documentId}',
+            [
+                AcademicDocumentDriveController::class,
+                'download'
+            ]
+        )
+            ->whereNumber('documentId')
+            ->name('download');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOWNLOAD SELECTED FILES
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/download-selected',
+            [
+                AcademicDocumentDriveController::class,
+                'downloadSelected'
+            ]
+        )->name('download-selected');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELETE SELECTED FILES
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/delete-selected',
+            [
+                AcademicDocumentDriveController::class,
+                'destroySelected'
+            ]
+        )->name('delete-selected');
     });
 
         // edit school logo

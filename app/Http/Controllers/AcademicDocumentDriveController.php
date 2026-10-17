@@ -158,6 +158,9 @@ class AcademicDocumentDriveController extends Controller
                 'folders' => self::FOLDERS,
                 'currentRole' => $this->currentRole(),
                 'isGuru' => $this->currentRole() === 'guru',
+                'viewingTeacherId' => $this->currentRole() === 'guru'
+                    ? (int) $request->query('teacher_id', Auth::id())
+                    : (int) Auth::id(),
             ]
         );
     }
@@ -234,40 +237,47 @@ class AcademicDocumentDriveController extends Controller
     | DOWNLOAD SATU FILE
     |--------------------------------------------------------------------------
     */
+public function download(
+    Request $request,
+    string $role,
+    string $schoolName,
+    int $schoolId,
+    int $documentId
+) {
+    $this->authorizeDrive();
 
-    public function download(
-        Request $request,
-        string $role,
-        string $schoolName,
-        int $schoolId,
-        int $documentId
-    ) {
-        $this->authorizeDrive();
+    $document = $this->documentForSchool($schoolId, $documentId);
 
-        $document = $this->documentForSchool($schoolId, $documentId);
+    abort_if(
+        empty($document->file_path),
+        404,
+        'File dokumen tidak ditemukan.'
+    );
 
-        abort_if(
-            empty($document->file_path),
-            404,
-            'File dokumen tidak ditemukan.'
-        );
+    $disk = Storage::disk('public');
 
-        $disk = Storage::disk('public');
+    abort_unless(
+        $disk->exists($document->file_path),
+        404,
+        'File dokumen tidak ditemukan di storage.'
+    );
 
-        abort_unless(
-            $disk->exists($document->file_path),
-            404,
-            'File dokumen tidak ditemukan di storage.'
-        );
+    $name = $document->original_filename
+        ?: (($document->title ?: 'dokumen') . '.docx');
 
-        $name = $document->original_filename
-            ?: (($document->title ?: 'dokumen') . '.docx');
+    $path = $disk->path($document->file_path);
 
-        return $disk->download(
-            $document->file_path,
-            $this->safeFilename($name)
-        );
-    }
+    abort_unless(
+        is_file($path),
+        404,
+        'File dokumen tidak ditemukan di lokasi penyimpanan.'
+    );
+
+    return response()->download(
+        $path,
+        $this->safeFilename($name)
+    );
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -579,19 +589,25 @@ class AcademicDocumentDriveController extends Controller
             ->firstOrFail();
     }
 
-    private function fileUrl($document): ?string
-    {
-        if (
-            empty($document->file_path) ||
-            !Storage::disk('public')->exists($document->file_path)
-        ) {
-            return null;
-        }
 
-        return Storage::disk('public')->url(
-            $document->file_path
-        );
+private function fileUrl($document): ?string
+{
+    if (empty($document->file_path)) {
+        return null;
     }
+
+    $disk = Storage::disk('public');
+
+    if (!$disk->exists($document->file_path)) {
+        return null;
+    }
+
+    // Gunakan URL publik dari path storage.
+    return asset(
+        'storage/' . ltrim($document->file_path, '/')
+    );
+}
+
 
     private function deleteDocument(
         AcademicDocument $document
