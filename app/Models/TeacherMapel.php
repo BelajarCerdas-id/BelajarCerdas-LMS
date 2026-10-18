@@ -9,11 +9,17 @@ class TeacherMapel extends Model
 {
     use HasFactory;
 
+    protected $table = 'teacher_mapels';
+
     protected $fillable = [
         'user_id',
         'mapel_id',
         'school_class_id',
         'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function UserAccount()
@@ -33,6 +39,9 @@ class TeacherMapel extends Model
 
     public function SubjectAttendance()
     {
-        return $this->hasMany(SubjectAttendance::class, 'teacher_subject_id');
+        return $this->hasMany(
+            SubjectAttendance::class,
+            'teacher_subject_id'
+        );
     }
 }

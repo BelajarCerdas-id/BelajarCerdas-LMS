@@ -108,7 +108,7 @@ function renderAssessmentFormContent(selectedIndex, response) {
                 function calculateQuestionWeight(question, totalQuestions, assessmentCategory) {
 
                     // jika bukan remedial -> pakai dari DB
-                    if (!['remedial', 'susulan'].includes((assessmentCategory || '').toLowerCase())) {
+                    if (!['remedial'].includes((assessmentCategory || '').toLowerCase())) {
                         return question.question_weight;
                     }
 
