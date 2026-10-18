@@ -352,6 +352,8 @@ Route::middleware([AuthMiddleware::class])->group(function () {
             Route::get('/cache/status', [AssessmentDebugController::class, 'getCacheStatus'])->name('admin.assessmentDebug.cacheStatus');
             Route::post('/cache/warm/{id}', [AssessmentDebugController::class, 'warmCache'])->name('admin.assessmentDebug.warmCache');
             Route::post('/cache/clear/{id}', [AssessmentDebugController::class, 'clearCache'])->name('admin.assessmentDebug.clearCache');
+            Route::post('/cache/clear-db', [AssessmentDebugController::class, 'clearDatabaseCache'])->name('admin.assessmentDebug.clearDbCache');
+            Route::post('/cache/purge-global', [AssessmentDebugController::class, 'purgeGlobalCache'])->name('admin.assessmentDebug.purgeGlobalCache');
             Route::post('/{id}/unlock', [AssessmentDebugController::class, 'unlock'])->name('admin.assessmentDebug.unlock');
             Route::post('/{id}/recount', [AssessmentDebugController::class, 'recountAttempt'])->name('admin.assessmentDebug.recountAttempt');
             Route::post('/{id}/update-status', [AssessmentDebugController::class, 'updateStatus'])->name('admin.assessmentDebug.updateStatus');
@@ -855,6 +857,7 @@ Route::middleware([AuthMiddleware::class])->group(function () {
         // routes report tab switch (cheating detection)
         Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/report-tab-switch', [StudentAssessmentExamController::class, 'reportTabSwitch'])->name('lms.reportTabSwitch.cheating');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/attempt-status', [StudentAssessmentExamController::class, 'checkAttemptStatus'])->name('lms.checkAttemptStatus.cheating');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/heartbeat', [StudentAssessmentExamController::class, 'heartbeat'])->name('lms.heartbeat.cheating');
         
         // answer
         Route::post('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/form/{assessmentId}/answer', [StudentAssessmentExamController::class, 'studentAssessmentExamAnswer'])->name('lms.studentAssessmentExan.answer');

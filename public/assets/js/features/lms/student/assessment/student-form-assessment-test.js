@@ -22,6 +22,176 @@ let questionsAnswer = {};
 let examStarted = false;
 let cachedFormResponse = null;
 
+// ============================================================
+//  IMAGE ATTACHMENT HELPERS FOR TEXT / ESSAY QUESTIONS
+// ============================================================
+
+function escapeRegExp(string) {
+    return (string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractImageUrlsFromHtml(html) {
+    if (!html || typeof html !== 'string') return [];
+    const urls = [];
+    const regex = /<img[^>]+src=["']([^"']+)["']/gi;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+        if (match[1] && !urls.includes(match[1])) {
+            urls.push(match[1]);
+        }
+    }
+    return urls;
+}
+
+function updateAttachedImagesGallery(questionId, editorInstance) {
+    const container = $(`#attached-images-list-${questionId}`);
+    if (!container.length) return;
+
+    let content = '';
+    if (editorInstance && typeof editorInstance.getData === 'function') {
+        content = editorInstance.getData();
+    } else {
+        content = questionsAnswer[questionId]?.answer_value ?? $(`#userAnswer${questionId}`).val() ?? '';
+    }
+
+    const imageUrls = extractImageUrlsFromHtml(content);
+    const countEl = $(`#attached-count-${questionId}`);
+    if (countEl.length) {
+        countEl.text(`${imageUrls.length} gambar`);
+    }
+
+    const isReadOnly = (questionsAnswer[questionId]?.status_answer === 'submitted') || (typeof isAfter !== 'undefined' && isAfter);
+
+    if (imageUrls.length === 0) {
+        container.html(`
+            <div class="text-xs text-gray-400 italic py-1">
+                Belum ada gambar yang dilampirkan.
+            </div>
+        `);
+        return;
+    }
+
+    const html = imageUrls.map((url, idx) => `
+        <div class="relative group border border-gray-200 bg-white rounded-lg p-2 shadow-xs flex items-center gap-3 w-full sm:w-auto min-w-[210px] max-w-full hover:border-blue-300 transition">
+            <div class="w-14 h-14 rounded-md overflow-hidden bg-gray-100 shrink-0 border border-gray-200 cursor-pointer btn-preview-image" data-src="${url}" title="Klik untuk memperbesar">
+                <img src="${url}" alt="Attachment ${idx + 1}" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 min-w-0 pr-2">
+                <div class="text-xs font-semibold text-gray-700 truncate">Foto Jawaban #${idx + 1}</div>
+                <button type="button" class="text-[11px] text-[#0071BC] hover:underline cursor-pointer btn-preview-image flex items-center gap-1 mt-0.5" data-src="${url}">
+                    <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i> Lihat Penuh
+                </button>
+            </div>
+            ${!isReadOnly ? `
+                <button type="button" class="btn-delete-attached-image p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition cursor-pointer shrink-0" data-question-id="${questionId}" data-url="${url}" title="Hapus gambar">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+            ` : ''}
+        </div>
+    `).join('');
+
+    container.html(html);
+}
+
+function uploadWebCameraSnapshot(questionId, blob) {
+    if (!blob) {
+        if (typeof window.setSelectingFile === 'function') {
+            window.setSelectingFile(false);
+        }
+        return;
+    }
+
+    const loading = $('#web-camera-loading');
+    const loadingText = $('#web-camera-loading-text');
+    loadingText.text('Menyimpan foto jawaban...');
+    loading.removeClass('hidden');
+
+    const editorContainer = document.getElementById('container-assessment-test-form');
+    const uploadUrl = editorContainer ? editorContainer.getAttribute('data-upload-url') : null;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const fileName = `foto_jawaban_soal_${questionId}_${Date.now()}.jpg`;
+    const formData = new FormData();
+    formData.append('upload', blob, fileName);
+
+    $.ajax({
+        url: uploadUrl,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        },
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            loading.addClass('hidden');
+
+            if (response && response.url) {
+                const imageUrl = response.url;
+                const editorObj = editorInstances.find(item => item.element && item.element.id === `essay_${questionId}`);
+
+                if (editorObj && editorObj.instance) {
+                    try {
+                        editorObj.instance.execute('insertImage', { source: imageUrl });
+                    } catch (err) {
+                        const curData = editorObj.instance.getData();
+                        editorObj.instance.setData(curData + `<p><img src="${imageUrl}" alt="Lampiran Foto Jawaban" /></p>`);
+                    }
+                    $(`#userAnswer${questionId}`).val(editorObj.instance.getData());
+                    updateAttachedImagesGallery(questionId, editorObj.instance);
+                } else {
+                    const curVal = $(`#userAnswer${questionId}`).val() || '';
+                    const newVal = curVal + `<p><img src="${imageUrl}" alt="Lampiran Foto Jawaban" /></p>`;
+                    $(`#userAnswer${questionId}`).val(newVal);
+                    if (questionsAnswer[questionId]) {
+                        questionsAnswer[questionId].answer_value = newVal;
+                    }
+                    updateAttachedImagesGallery(questionId, null);
+                }
+
+                $('#error-answer_value').text('');
+                closeWebCameraModal();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Foto jawaban berhasil dilampirkan!',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Menyimpan Foto',
+                    text: response?.error?.message || 'Terjadi kesalahan saat menyimpan foto ke server.'
+                });
+            }
+        },
+        error: function (xhr) {
+            loading.addClass('hidden');
+            const errRes = xhr.responseJSON;
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Mengunggah Foto',
+                text: errRes?.error?.message || errRes?.message || 'Gagal mengirim foto jawaban ke server.'
+            });
+        }
+    });
+}
+
+function uploadAttachmentFile(questionId, file) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Unggah File Dinonaktifkan',
+        text: 'Pengunggahan file dari perangkat tidak diperkenankan demi integritas ujian. Harap gunakan tombol "Ambil Foto Jawaban" untuk mengambil foto langsung melalui kamera web.'
+    });
+    if (typeof window.setSelectingFile === 'function') {
+        window.setSelectingFile(false);
+    }
+}
+
 function renderAssessmentFormContent(selectedIndex, response) {
 
             const formAssessment = $('#form-assessment-test');
@@ -243,19 +413,80 @@ function renderAssessmentFormContent(selectedIndex, response) {
                     const score = questionsAnswer[question.id]?.question_score ?? null;
 
                     let renderEssay = '';
+                    const isSubmitted = questionsAnswer[question.id]?.status_answer === 'submitted';
+                    const isReadOnly = isSubmitted || isAfter;
 
-                    if (!questionsAnswer[question.id] || questionsAnswer[question.id]?.status_answer === 'draft') {
+                    if (!isReadOnly) {
                         renderEssay = `
-                            <div class="space-y-3">
-                                <textarea id="essay_${question.id}" name="essay_${question.id}" rows="6" class="editor w-full border border-gray-300 rounded-xl p-4 text-sm resize-none transition"
-                                placeholder="Tulis jawaban kamu di sini...">${questionsAnswer[question.id]?.answer_value ?? ''}</textarea>
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <textarea id="essay_${question.id}" name="essay_${question.id}" rows="6" class="editor w-full border border-gray-300 rounded-xl p-4 text-sm resize-none transition"
+                                    placeholder="Tulis jawaban kamu di sini...">${questionsAnswer[question.id]?.answer_value ?? ''}</textarea>
+                                </div>
+
+                                <!-- In-Web Live Camera Attachment Box (Strictly No File Upload) -->
+                                <div id="essay-attachment-box-${question.id}" class="essay-attachment-box rounded-xl border border-blue-200 bg-blue-50/40 p-4 transition-all duration-200" data-question-id="${question.id}">
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <div class="flex items-start sm:items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-blue-100 text-[#0071BC] flex items-center justify-center shrink-0 shadow-xs">
+                                                <i class="fa-solid fa-camera text-sm"></i>
+                                            </div>
+                                            <div>
+                                                <div class="flex items-center gap-2">
+                                                    <h4 class="font-semibold text-gray-800 text-sm">Lampirkan Foto Jawaban Langsung</h4>
+                                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0071BC] font-medium flex items-center gap-1">
+                                                        <i class="fa-solid fa-video text-[9px]"></i> Kamera Web Langsung
+                                                    </span>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-0.5">Ambil foto lembar jawaban fisik langsung melalui kamera web peramban. Pengunggahan file dari perangkat dinonaktifkan demi integritas ujian.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                                            <button type="button" class="btn-open-web-camera w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0071BC] hover:bg-[#005a96] text-white text-xs font-semibold rounded-lg shadow-xs transition cursor-pointer" data-question-id="${question.id}">
+                                                <i class="fa-solid fa-camera"></i>
+                                                <span>Ambil Foto Jawaban</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Attached Images List -->
+                                    <div class="mt-4 pt-3 border-t border-blue-100/80">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-images text-[#0071BC] text-[11px]"></i>
+                                                Foto Jawaban Terlampir:
+                                            </span>
+                                            <span id="attached-count-${question.id}" class="text-[11px] text-gray-500 font-medium">0 foto</span>
+                                        </div>
+                                        <div id="attached-images-list-${question.id}" class="flex flex-wrap gap-2.5">
+                                            <div class="text-xs text-gray-400 italic py-1">Belum ada foto jawaban yang dilampirkan.</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         `;
-                    } else if (questionsAnswer[question.id]?.status_answer === 'submitted') {
+                    } else {
                         renderEssay = `
-                            <div class="space-y-3">
-                                <textarea id="essay_${question.id}" name="essay_${question.id}" rows="6" class="editor w-full border border-gray-300 rounded-xl p-4 text-sm resize-none transition"
-                                placeholder="Tulis jawaban kamu di sini...">${questionsAnswer[question.id]?.answer_value ?? ''}</textarea>
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <textarea id="essay_${question.id}" name="essay_${question.id}" rows="6" class="editor w-full border border-gray-300 rounded-xl p-4 text-sm resize-none transition"
+                                    placeholder="Tulis jawaban kamu di sini...">${questionsAnswer[question.id]?.answer_value ?? ''}</textarea>
+                                </div>
+
+                                <!-- Read-only Attached Images Gallery -->
+                                <div id="essay-attachment-box-${question.id}" class="rounded-xl border border-gray-200 bg-gray-50/70 p-4" data-question-id="${question.id}">
+                                    <div class="flex items-center justify-between mb-2.5">
+                                        <span class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-images text-[#0071BC] text-[11px]"></i>
+                                            Gambar Terlampir:
+                                        </span>
+                                        <span id="attached-count-${question.id}" class="text-[11px] text-gray-500 font-medium">0 gambar</span>
+                                    </div>
+                                    <div id="attached-images-list-${question.id}" class="flex flex-wrap gap-2.5">
+                                        <div class="text-xs text-gray-400 italic py-1">Memuat lampiran...</div>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     }
@@ -1018,6 +1249,7 @@ function renderAssessmentFormContent(selectedIndex, response) {
                     stopQuestionTimer();
                     resetAllQuestionDurations();
                     stopTimer();
+                    stopHeartbeat();
 
                     document.getElementById('timer-assessment-test').textContent = 'Waktu Habis';
 
@@ -1059,26 +1291,64 @@ function renderAssessmentFormContent(selectedIndex, response) {
                     }
                 });
 
+                // Bersihkan editor sebelumnya jika ada
+                while (editorInstances.length) {
+                    const prevEditor = editorInstances.pop();
+                    if (prevEditor && prevEditor.instance && typeof prevEditor.instance.destroy === 'function') {
+                        prevEditor.instance.destroy().catch(() => {});
+                    }
+                }
+
                 // Inisialisasi CKEditor jika ada
                 const editorContainer = document.getElementById('container-assessment-test-form');
-                const uploadUrl = editorContainer.getAttribute('data-upload-url');
-                const deleteUrl = editorContainer.getAttribute('data-delete-url');
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const uploadUrl = editorContainer ? editorContainer.getAttribute('data-upload-url') : null;
+                const deleteUrl = editorContainer ? editorContainer.getAttribute('data-delete-url') : null;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
                 const editors = formAssessment.find('.editor');
                 editors.each((index, textarea) => {
+                    const soalId = textarea.id.split('_')[1];
+
+                    // Render galeri awal dengan data yang ada
+                    updateAttachedImagesGallery(soalId, null);
+
                     ClassicEditor.create(textarea, {
-                        ckfinder: {
-                            uploadUrl: uploadUrl
-                        },
                         toolbar: {
+                            items: [
+                                'heading',
+                                '|',
+                                'bold',
+                                'italic',
+                                'underline',
+                                'strikethrough',
+                                '|',
+                                'bulletedList',
+                                'numberedList',
+                                'blockQuote',
+                                '|',
+                                'undo',
+                                'redo'
+                            ],
                             shouldNotGroupWhenFull: true
                         },
                     })
                         .then(editor => {
                             previousImageUrlsMap[index] = [];
 
-                            const soalId = editor.sourceElement.id.split('_')[1];
+                            // Cegah drop atau paste file gambar langsung ke dalam CKEditor
+                            if (editor.editing && editor.editing.view && editor.editing.view.document) {
+                                editor.editing.view.document.on('clipboardInput', (evt, data) => {
+                                    const dataTransfer = data.dataTransfer;
+                                    if (dataTransfer && dataTransfer.files && dataTransfer.files.length > 0) {
+                                        evt.stop();
+                                        Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Tempel File Dinonaktifkan',
+                                            text: 'Pengunggahan file gambar dari luar tidak diperkenankan. Harap gunakan tombol "Ambil Foto Jawaban" untuk mengambil foto langsung via kamera web.'
+                                        });
+                                    }
+                                });
+                            }
 
                             $(`#userAnswer${soalId}`).val(editor.getData());
 
@@ -1088,42 +1358,43 @@ function renderAssessmentFormContent(selectedIndex, response) {
                                 editor.enableReadOnlyMode('assessment-lock');
                             }
 
-                            // Hapus text error ketika konten CKEditor berubah
+                            // Update galeri dengan instance editor yang aktif
+                            updateAttachedImagesGallery(soalId, editor);
+
+                            // Sinkronkan data, gambar, dan galeri ketika CKEditor berubah
                             editor.model.document.on('change:data', () => {
                                 const currentContent = editor.getData();
-
                                 const imageUrls = Array.from(currentContent.matchAll(/<img[^>]+src="([^">]+)"/g)).map(match => match[1]);
 
-                                const removedImages = previousImageUrlsMap[index].filter(url => !imageUrls.includes(url));
+                                const removedImages = (previousImageUrlsMap[index] || []).filter(url => !imageUrls.includes(url));
 
                                 removedImages.forEach(url => {
-                                    fetch(deleteUrl, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': csrfToken
-                                        },
-                                        body: JSON.stringify({ imageUrl: url })
-                                    })
-                                        .then(response => response.json())
-                                        .then(data => console.log('Gambar berhasil dihapus:', data))
-                                        .catch(error => console.error('Error saat menghapus gambar:', error));
+                                    if (deleteUrl && csrfToken) {
+                                        fetch(deleteUrl, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': csrfToken
+                                            },
+                                            body: JSON.stringify({ imageUrl: url })
+                                        })
+                                            .then(response => response.json())
+                                            .catch(error => console.error('Error saat menghapus gambar:', error));
+                                    }
                                 });
 
                                 previousImageUrlsMap[index] = imageUrls;
-                            });
-                            editorInstances.push({ element: textarea, instance: editor });
-
-                            editor.model.document.on('change:data', () => {
-                                const textarea = editor.sourceElement;
-
-                                const value = editor.getData();
-                                $(`#userAnswer${soalId}`).val(value);
-
+                                $(`#userAnswer${soalId}`).val(currentContent);
                                 $('#error-answer_value').text('');
+                                updateAttachedImagesGallery(soalId, editor);
                             });
+
+                            editorInstances.push({ element: textarea, instance: editor });
                         })
-                        .catch(error => console.error('Error CKEditor:', error));
+                        .catch(error => {
+                            console.error('Error CKEditor:', error);
+                            updateAttachedImagesGallery(soalId, null);
+                        });
                 });
 
                 $('#empty-message-assessment-form').hide();
@@ -1273,10 +1544,16 @@ $(document).ready(function () {
     };
 
     const hasTimer = localStorage.getItem(START_KEY);
+    const isAlreadyCompleted = localStorage.getItem(`assessment_${assessmentId}_all_answered`);
 
-    if (hasTimer) {
+    if (hasTimer && !isAlreadyCompleted) {
         examStarted = true;
         startTimer();
+    } else if (isAlreadyCompleted) {
+        // Exam was already completed — clean up any leftover timer state
+        examFinished = true;
+        localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
+        localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
     }
 
     studentFormAssessment(0);
@@ -1439,8 +1716,18 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
     const answerVal = formData.get('answer_value');
 
     // Validasi: jika 'submitted', jawaban tidak boleh kosong
-    if (statusAnswer === 'submitted' && (!answerVal || answerVal.trim() === '' || answerVal === '[]' || answerVal === '{}')) {
-        $('#error-answer_value').text('Harap pilih atau isi jawaban terlebih dahulu.');
+    let isEmptyAnswer = !answerVal || answerVal.trim() === '' || answerVal === '[]' || answerVal === '{}';
+    if (!isEmptyAnswer && typeof answerVal === 'string') {
+        const hasImg = /<img\b[^>]*src=/i.test(answerVal);
+        const strippedText = answerVal.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+        // Jika tidak ada gambar dan teks bersih kosong (misal hanya tag kosong <p></p> atau spasi)
+        if (!hasImg && strippedText === '') {
+            isEmptyAnswer = true;
+        }
+    }
+
+    if (statusAnswer === 'submitted' && isEmptyAnswer) {
+        $('#error-answer_value').text('Harap pilih, isi jawaban, atau lampirkan gambar terlebih dahulu.');
         return;
     }
 
@@ -1494,19 +1781,8 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
         processData: false,
         contentType: false,
         success: function (response) {
-            if (response.is_all_answered) {
-                examFinished = true;
-                stopTimer();
-                stopQuestionTimer();
-
-                localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-                localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
-                localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
-
-                successAssessmentTest();
-                studentFormAssessment(currentQuestionIndex, true);
-                saveQuestionDuration();
-            }
+            // Exam only ends via manual "Akhiri Assessment" button or timer expiry.
+            // Student can freely review and change answers after answering all questions.
         },
         error: function (xhr) {
             if (xhr.status === 422) {
@@ -1555,6 +1831,7 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout') 
 
     stopTimer();
     stopQuestionTimer();
+    stopHeartbeat();
 
     // reset timer storage
     localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
@@ -1660,6 +1937,8 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
             saveQuestionDuration();
             finalExamDuration = getTotalExamDuration();
 
+            localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
+
             autoSubmitUnSavedQuestions(function () {
                 window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
             }, 'submitted');
@@ -1675,5 +1954,414 @@ $(document).on('click', '#btn-submit-exit-assessment-test', function (e) {
     if (examFinished) {
         window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
         return;
+    }
+});
+
+// ============================================================
+//  IN-WEB LIVE CAMERA CONTROLLER (No File Upload Allowed)
+// ============================================================
+
+let currentCameraQuestionId = null;
+let currentCameraStream = null;
+let currentCameraFacingMode = 'environment'; // default to back camera for photographing sheets
+let capturedPhotoBlob = null;
+let capturedPhotoUrl = null;
+
+function stopWebCameraStream() {
+    if (currentCameraStream) {
+        currentCameraStream.getTracks().forEach(track => {
+            try {
+                track.stop();
+            } catch (e) {
+                console.warn('Error stopping camera track:', e);
+            }
+        });
+        currentCameraStream = null;
+    }
+    const video = document.getElementById('web-camera-video');
+    if (video) {
+        video.srcObject = null;
+    }
+}
+
+function startWebCameraStream() {
+    const video = document.getElementById('web-camera-video');
+    const loading = $('#web-camera-loading');
+    const loadingText = $('#web-camera-loading-text');
+    const errorBox = $('#web-camera-error');
+    const errorMsg = $('#web-camera-error-msg');
+    const overlay = $('#web-camera-overlay');
+    const capturedImg = $('#web-camera-captured-img');
+    const liveControls = $('#web-camera-live-controls');
+    const previewControls = $('#web-camera-preview-controls');
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        loading.addClass('hidden');
+        errorMsg.text('Browser Anda tidak mendukung akses kamera web langsung (getUserMedia). Harap gunakan browser modern seperti Google Chrome, Microsoft Edge, atau Safari.');
+        errorBox.removeClass('hidden');
+        return;
+    }
+
+    // Reset preview state
+    stopWebCameraStream();
+    if (capturedPhotoUrl) {
+        URL.revokeObjectURL(capturedPhotoUrl);
+        capturedPhotoUrl = null;
+    }
+    capturedPhotoBlob = null;
+
+    $(video).removeClass('hidden');
+    capturedImg.addClass('hidden').attr('src', '');
+    errorBox.addClass('hidden');
+    loadingText.text('Menghubungkan ke kamera...');
+    loading.removeClass('hidden');
+    liveControls.removeClass('hidden');
+    previewControls.addClass('hidden');
+    overlay.removeClass('hidden');
+
+    const constraints = {
+        video: {
+            facingMode: currentCameraFacingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        },
+        audio: false
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+            currentCameraStream = stream;
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play().then(() => {
+                    loading.addClass('hidden');
+                }).catch(err => {
+                    console.warn('Autoplay prevented:', err);
+                    loading.addClass('hidden');
+                });
+            };
+        })
+        .catch(err => {
+            console.warn('First camera attempt failed:', err);
+            // Fallback: If 'environment' failed (e.g. desktop webcam without back camera), try fallback with simple video: true
+            if (currentCameraFacingMode === 'environment') {
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(stream => {
+                        currentCameraFacingMode = 'user';
+                        currentCameraStream = stream;
+                        video.srcObject = stream;
+                        video.onloadedmetadata = () => {
+                            video.play().then(() => {
+                                loading.addClass('hidden');
+                            }).catch(() => {
+                                loading.addClass('hidden');
+                            });
+                        };
+                    })
+                    .catch(err2 => {
+                        handleCameraError(err2);
+                    });
+            } else {
+                handleCameraError(err);
+            }
+        });
+
+    function handleCameraError(error) {
+        loading.addClass('hidden');
+        let message = 'Tidak dapat mengakses kamera. Harap pastikan izin kamera telah diberikan di browser Anda.';
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            message = 'Akses kamera ditolak oleh pengguna atau sistem. Harap izinkan akses kamera di pengaturan izin situs peramban Anda.';
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            message = 'Perangkat kamera tidak ditemukan di komputer/perangkat Anda.';
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            message = 'Kamera sedang digunakan oleh aplikasi lain. Tutup aplikasi yang memakai kamera lalu coba lagi.';
+        }
+        errorMsg.text(message);
+        errorBox.removeClass('hidden');
+    }
+}
+
+function closeWebCameraModal() {
+    stopWebCameraStream();
+    if (capturedPhotoUrl) {
+        URL.revokeObjectURL(capturedPhotoUrl);
+        capturedPhotoUrl = null;
+    }
+    capturedPhotoBlob = null;
+    currentCameraQuestionId = null;
+
+    if (typeof window.setSelectingFile === 'function') {
+        window.setSelectingFile(false);
+    }
+
+    const modal = document.getElementById('modal-web-camera');
+    if (modal && typeof modal.close === 'function' && modal.open) {
+        modal.close();
+    }
+}
+
+// Buka kamera web ujian saat tombol Ambil Foto Jawaban diklik
+$(document).on('click', '.btn-open-web-camera', function (e) {
+    e.preventDefault();
+    const questionId = $(this).data('question-id');
+    currentCameraQuestionId = questionId;
+
+    if (typeof window.setSelectingFile === 'function') {
+        window.setSelectingFile(true);
+    }
+
+    const modal = document.getElementById('modal-web-camera');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+        startWebCameraStream();
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Kamera Tidak Tersedia',
+            text: 'Komponen modal kamera tidak dapat dimuat.'
+        });
+        if (typeof window.setSelectingFile === 'function') {
+            window.setSelectingFile(false);
+        }
+    }
+});
+
+// Tombol ganti kamera depan/belakang
+$(document).on('click', '#btn-switch-camera', function () {
+    currentCameraFacingMode = (currentCameraFacingMode === 'environment' ? 'user' : 'environment');
+    startWebCameraStream();
+});
+
+// Coba lagi saat kamera error
+$(document).on('click', '#btn-retry-web-camera', function () {
+    startWebCameraStream();
+});
+
+// Ambil foto (shutter snapshot ke hidden canvas)
+$(document).on('click', '#btn-capture-photo', function () {
+    const video = document.getElementById('web-camera-video');
+    const canvas = document.getElementById('web-camera-canvas');
+    if (!video || !canvas || !currentCameraStream) return;
+
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 720;
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, width, height);
+
+    // Watermark keamanan ujian
+    ctx.save();
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 4;
+    const timeStr = new Date().toLocaleString('id-ID');
+    ctx.fillText(`Ujian BelajarCerdas • ${timeStr}`, 16, height - 16);
+    ctx.restore();
+
+    canvas.toBlob((blob) => {
+        if (!blob) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menangkap Gambar',
+                text: 'Terjadi kesalahan saat memproses frame kamera.'
+            });
+            return;
+        }
+
+        capturedPhotoBlob = blob;
+        if (capturedPhotoUrl) {
+            URL.revokeObjectURL(capturedPhotoUrl);
+        }
+        capturedPhotoUrl = URL.createObjectURL(blob);
+
+        $('#web-camera-captured-img').attr('src', capturedPhotoUrl).removeClass('hidden');
+        $(video).addClass('hidden');
+        $('#web-camera-overlay').addClass('hidden');
+        $('#web-camera-live-controls').addClass('hidden');
+        $('#web-camera-preview-controls').removeClass('hidden');
+    }, 'image/jpeg', 0.92);
+});
+
+// Foto ulang (retake)
+$(document).on('click', '#btn-retake-photo', function () {
+    if (capturedPhotoUrl) {
+        URL.revokeObjectURL(capturedPhotoUrl);
+        capturedPhotoUrl = null;
+    }
+    capturedPhotoBlob = null;
+
+    $('#web-camera-captured-img').addClass('hidden').attr('src', '');
+    $('#web-camera-video').removeClass('hidden');
+    $('#web-camera-overlay').removeClass('hidden');
+    $('#web-camera-preview-controls').addClass('hidden');
+    $('#web-camera-live-controls').removeClass('hidden');
+});
+
+// Gunakan foto hasil jepretan kamera web
+$(document).on('click', '#btn-use-photo', function () {
+    if (!capturedPhotoBlob || !currentCameraQuestionId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Foto Belum Siap',
+            text: 'Harap ambil foto terlebih dahulu sebelum menggunakan.'
+        });
+        return;
+    }
+
+    uploadWebCameraSnapshot(currentCameraQuestionId, capturedPhotoBlob);
+});
+
+// Tutup / batal modal kamera
+$(document).on('click', '#btn-close-web-camera, #btn-cancel-web-camera, #btn-backdrop-web-camera', function (e) {
+    e.preventDefault();
+    closeWebCameraModal();
+});
+
+// Listener dialog close / cancel native
+const modalWebCameraEl = document.getElementById('modal-web-camera');
+if (modalWebCameraEl) {
+    modalWebCameraEl.addEventListener('close', function () {
+        closeWebCameraModal();
+    });
+    modalWebCameraEl.addEventListener('cancel', function (e) {
+        e.preventDefault();
+        closeWebCameraModal();
+    });
+}
+
+// ============================================================
+//  SECURITY: STRICTLY BLOCK EXTERNAL FILE UPLOADS / DROPS / PASTES
+// ============================================================
+
+// Blokir drag and drop file di seluruh halaman ujian
+$(document).on('dragover dragenter', function (e) {
+    e.preventDefault();
+});
+
+$(document).on('drop', function (e) {
+    const dt = e.originalEvent?.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        Swal.fire({
+            icon: 'warning',
+            title: 'Unggah File Dinonaktifkan',
+            text: 'Demi integritas ujian, pengunggahan file dari perangkat dinonaktifkan. Anda hanya dapat melampirkan foto jawaban secara langsung melalui kamera web dengan tombol "Ambil Foto Jawaban".',
+            confirmButtonText: 'Mengerti'
+        });
+    }
+});
+
+// Blokir penempelan (paste) file/gambar dari clipboard eksternal
+$(document).on('paste', function (e) {
+    const clipboardData = e.originalEvent?.clipboardData || e.clipboardData;
+    if (clipboardData && clipboardData.items) {
+        for (let i = 0; i < clipboardData.items.length; i++) {
+            const item = clipboardData.items[i];
+            if (item.kind === 'file' || (item.type && item.type.indexOf('image') !== -1)) {
+                e.preventDefault();
+                e.stopPropagation();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tempel Gambar Dinonaktifkan',
+                    text: 'Penyalinan file/gambar dari luar tidak diperkenankan demi integritas ujian. Gunakan tombol "Ambil Foto Jawaban" untuk mengambil foto lembar jawaban secara langsung melalui kamera web.',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
+            }
+        }
+    }
+});
+
+// Delete an attached image
+$(document).on('click', '.btn-delete-attached-image', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const btn = $(this);
+    const questionId = btn.data('question-id');
+    const targetUrl = btn.data('url');
+
+    Swal.fire({
+        title: 'Hapus Gambar?',
+        text: 'Gambar ini akan dihapus dari jawaban Anda.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        // Cari instance editor untuk soal ini
+        const editorObj = editorInstances.find(item => item.element && item.element.id === `essay_${questionId}`);
+        if (editorObj && editorObj.instance) {
+            let data = editorObj.instance.getData();
+            const figureRegex = new RegExp(`<figure[^>]*>\\s*<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>\\s*<\\/figure>`, 'gi');
+            const pRegex = new RegExp(`<p>\\s*<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>\\s*<\\/p>`, 'gi');
+            const imgRegex = new RegExp(`<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>`, 'gi');
+
+            let newData = data.replace(figureRegex, '').replace(pRegex, '').replace(imgRegex, '');
+            editorObj.instance.setData(newData);
+            $(`#userAnswer${questionId}`).val(newData);
+        } else {
+            let curVal = $(`#userAnswer${questionId}`).val() || '';
+            const figureRegex = new RegExp(`<figure[^>]*>\\s*<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>\\s*<\\/figure>`, 'gi');
+            const pRegex = new RegExp(`<p>\\s*<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>\\s*<\\/p>`, 'gi');
+            const imgRegex = new RegExp(`<img[^>]*src=["']${escapeRegExp(targetUrl)}["'][^>]*>`, 'gi');
+            let newVal = curVal.replace(figureRegex, '').replace(pRegex, '').replace(imgRegex, '');
+            $(`#userAnswer${questionId}`).val(newVal);
+            if (questionsAnswer[questionId]) {
+                questionsAnswer[questionId].answer_value = newVal;
+            }
+        }
+
+        // Hapus file fisik di server
+        const editorContainer = document.getElementById('container-assessment-test-form');
+        const deleteUrl = editorContainer ? editorContainer.getAttribute('data-delete-url') : null;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        if (deleteUrl && csrfToken) {
+            fetch(deleteUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ imageUrl: targetUrl })
+            }).catch(err => console.warn('Gagal menghapus file gambar:', err));
+        }
+
+        updateAttachedImagesGallery(questionId, editorObj?.instance);
+    });
+});
+
+// Image Preview Modal
+$(document).on('click', '.btn-preview-image', function (e) {
+    e.preventDefault();
+    const src = $(this).data('src');
+    if (!src) return;
+
+    $('#modal-preview-img').attr('src', src);
+    $('#modal-preview-open-tab').attr('href', src);
+    const modal = document.getElementById('modal-image-preview');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+    }
+});
+
+// Preview images when clicked in question content or editor
+$(document).on('click', '.submit-answer-type img, .question-content img, .ck-content img', function () {
+    const src = $(this).attr('src');
+    if (!src) return;
+    $('#modal-preview-img').attr('src', src);
+    $('#modal-preview-open-tab').attr('href', src);
+    const modal = document.getElementById('modal-image-preview');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
     }
 });

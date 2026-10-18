@@ -38,6 +38,18 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3 shrink-0">
+                            <button id="btn-purge-global-cache-header" type="button"
+                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20"
+                                title="Paksa bersihkan seluruh cache: Server RAM/Redis + Cloudflare CDN + Local Storage Klien">
+                                <i class="fa-solid fa-bolt-lightning text-sm text-yellow-300"></i>
+                                <span>Force Clear All Cache</span>
+                            </button>
+                            <button id="btn-clear-db-cache-header" type="button"
+                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20"
+                                title="Kosongkan tabel cache & cache_locks di Database MySQL">
+                                <i class="fa-solid fa-database text-sm"></i>
+                                <span>Clear DB Cache</span>
+                            </button>
                             <button id="btn-open-cache-manager" type="button"
                                 class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20">
                                 <i class="fa-solid fa-bolt text-sm"></i>
@@ -729,6 +741,16 @@
                         <button type="button" id="btn-clear-all-cache" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 text-xs font-bold transition">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                             <span>Bersihkan Seluruh Cache Soal</span>
+                        </button>
+                        <button type="button" id="btn-clear-db-cache" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-800 border border-amber-300 text-xs font-bold transition"
+                            title="Kosongkan tabel cache & cache_locks di Database MySQL">
+                            <i class="fa-solid fa-database text-xs text-amber-600"></i>
+                            <span>Bersihkan Cache DB (MySQL)</span>
+                        </button>
+                        <button type="button" id="btn-purge-global-cache" class="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-bold transition shadow-xs"
+                            title="Paksa bersihkan seluruh cache: Server RAM/Redis + Cloudflare CDN + Local Storage Klien">
+                            <i class="fa-solid fa-bolt-lightning text-xs text-yellow-300"></i>
+                            <span>Force Clear All (Server + Cloudflare + Client)</span>
                         </button>
                     </div>
 
@@ -2666,6 +2688,153 @@
                                 icon: 'error',
                                 title: 'Gagal',
                                 text: xhr.responseJSON?.message || 'Terjadi kesalahan.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Clear Database Cache (MySQL cache & cache_locks tables)
+        $(document).on('click', '#btn-clear-db-cache, #btn-clear-db-cache-header', function () {
+            swalInModal({
+                title: 'Bersihkan Cache Database MySQL?',
+                html: `Seluruh data pada tabel <b>cache</b> dan <b>cache_locks</b> di database MySQL akan dikosongkan.<br><br>Ini berguna jika sistem menggunakan driver database cache dan ingin menghapus record cache yang tersimpan di MySQL.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#D97706',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-database mr-1"></i> Ya, Kosongkan Cache DB',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    swalInModal({
+                        title: 'Mengosongkan Cache Database...',
+                        text: 'Sedang membersihkan tabel cache & cache_locks...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/clear-db`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Cache Database Bersih!',
+                                text: res.message,
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                            if (typeof loadCacheStatus === 'function') {
+                                loadCacheStatus();
+                            }
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat membersihkan cache database.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Force Clear All Cache (Server + Cloudflare + Client)
+        $(document).on('click', '#btn-purge-global-cache, #btn-purge-global-cache-header', function () {
+            swalInModal({
+                title: 'Force Clear All Cache?',
+                html: `
+                    <div class="text-left text-xs text-slate-600 space-y-2.5 mt-2">
+                        <p class="font-bold text-slate-800">Tindakan ini akan membersihkan 3 lapisan cache sekaligus:</p>
+                        <div class="p-3 bg-purple-50/80 border border-purple-200 rounded-xl space-y-2">
+                            <div class="flex items-start gap-2">
+                                <i class="fa-solid fa-server text-purple-600 mt-0.5 text-xs"></i>
+                                <span><b>1. Server RAM & Redis:</b> Mengosongkan seluruh cache soal, session, dan view Laravel.</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="fa-solid fa-cloud text-blue-600 mt-0.5 text-xs"></i>
+                                <span><b>2. Cloudflare CDN Edge:</b> Purge Everything cache Cloudflare agar file JS/CSS/asset tidak tersangkut di edge proxy.</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i class="fa-solid fa-mobile-screen-button text-emerald-600 mt-0.5 text-xs"></i>
+                                <span><b>3. Local Cache Klien:</b> Memperbarui versi cache global sehingga browser siswa & guru otomatis membersihkan LocalStorage & CacheStorage.</span>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-amber-700 font-semibold bg-amber-50 p-2 rounded-lg border border-amber-200">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Catatan: Timer sesi siswa yang sedang berlangsung tetap dilindungi dan tidak akan hilang.
+                        </p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#7C3AED',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: '<i class="fa-solid fa-bolt-lightning mr-1"></i> Ya, Bersihkan Semua Lapisan',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    swalInModal({
+                        title: 'Memproses Pembersihan Cache...',
+                        text: 'Sedang membersihkan Server RAM, Cloudflare CDN, dan menginisiasi pembaruan Klien...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    $.ajax({
+                        url: `/administrator/assessment-debug/cache/purge-global`,
+                        type: 'POST',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (res) {
+                            const r = res.results || {};
+                            let cfBadge = '';
+                            if (r.cloudflare === true) {
+                                cfBadge = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check mr-1"></i>' + r.cloudflare_message + '</span>';
+                            } else if (r.cloudflare === false) {
+                                cfBadge = '<span class="text-amber-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>' + r.cloudflare_message + '</span>';
+                            } else {
+                                cfBadge = '<span class="text-slate-500 italic"><i class="fa-solid fa-circle-info mr-1"></i>' + r.cloudflare_message + '</span>';
+                            }
+
+                            swalInModal({
+                                icon: 'success',
+                                title: 'Cache 3-Layer Berhasil Dibersihkan!',
+                                html: `
+                                    <div class="text-left text-xs space-y-2 mt-2">
+                                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div class="font-bold text-slate-700">1. Server & Redis Cache:</div>
+                                            <div class="text-slate-600">${r.server_message || 'OK'}</div>
+                                        </div>
+                                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div class="font-bold text-slate-700">2. Cloudflare CDN:</div>
+                                            <div>${cfBadge}</div>
+                                        </div>
+                                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div class="font-bold text-slate-700">3. Sinkronisasi Klien:</div>
+                                            <div class="text-slate-600">${r.client_message || 'OK'}</div>
+                                        </div>
+                                    </div>
+                                `,
+                                confirmButtonColor: '#0071BC',
+                                confirmButtonText: 'Selesai'
+                            });
+
+                            if (typeof loadCacheStatus === 'function') {
+                                loadCacheStatus();
+                            }
+                        },
+                        error: function (xhr) {
+                            swalInModal({
+                                icon: 'error',
+                                title: 'Gagal Membersihkan Cache',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses pembersihan cache.'
                             });
                         }
                     });

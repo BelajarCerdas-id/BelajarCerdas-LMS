@@ -20,6 +20,9 @@ use App\Models\SchoolAssessmentQuestion;
 use App\Models\LmsQuestionBank;
 use App\Models\LmsQuestionOption;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class AssessmentDebugController extends Controller
@@ -698,6 +701,133 @@ class AssessmentDebugController extends Controller
             'status' => 'success',
             'message' => "RAM Cache untuk '{$assessment->title}' berhasil dibersihkan. Request berikutnya akan memuat ulang data terbaru dari database."
         ]);
+    }
+
+    /**
+     * Bersihkan Khusus Cache Tabel Database (MySQL: cache & cache_locks)
+     */
+    public function clearDatabaseCache(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        try {
+            $deletedCacheCount = 0;
+            $deletedLocksCount = 0;
+
+            // 1. Flush via Laravel Database Store driver
+            try {
+                Cache::store('database')->flush();
+            } catch (\Throwable $e) {}
+
+            // 2. Kosongkan langsung baris di tabel `cache` dan `cache_locks`
+            if (Schema::hasTable('cache')) {
+                $deletedCacheCount = DB::table('cache')->count();
+                DB::table('cache')->delete();
+            }
+
+            if (Schema::hasTable('cache_locks')) {
+                $deletedLocksCount = DB::table('cache_locks')->count();
+                DB::table('cache_locks')->delete();
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Cache tabel Database MySQL berhasil dikosongkan ({$deletedCacheCount} cache rows & {$deletedLocksCount} lock rows dihapus).",
+                'deleted_cache' => $deletedCacheCount,
+                'deleted_locks' => $deletedLocksCount,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membersihkan cache database: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Purge all layers of cache:
+     * 1. Application Server Cache (Redis / Database / File)
+     * 2. Cloudflare CDN Edge Cache (via API)
+     * 3. Client Browsers LocalStorage, SessionStorage & CacheStorage (via global version bump)
+     */
+    public function purgeGlobalCache(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        $results = [
+            'server_cache' => false,
+            'server_message' => '',
+            'cloudflare' => null,
+            'cloudflare_message' => '',
+            'client_cache' => true,
+            'client_message' => '',
+            'new_version' => null,
+        ];
+
+        // 1. CLEAR SERVER APPLICATION CACHE
+        try {
+            Cache::flush();
+            try {
+                Artisan::call('view:clear');
+            } catch (\Throwable $e) {}
+
+            $results['server_cache'] = true;
+            $results['server_message'] = 'Seluruh RAM & Server Application Cache (Redis/DB/Views) berhasil dibersihkan.';
+        } catch (\Throwable $e) {
+            $results['server_cache'] = false;
+            $results['server_message'] = 'Gagal membersihkan cache server: ' . $e->getMessage();
+        }
+
+        // 2. BUMP CLIENT CACHE VERSION (Forces all students & users to wipe LocalStorage / ServiceWorker caches)
+        $newEpoch = time();
+        Cache::forever('global_client_cache_version', $newEpoch);
+        $results['new_version'] = $newEpoch;
+        $results['client_message'] = "Versi cache klien diperbarui ke epoch {$newEpoch}. Semua browser siswa & pengguna akan otomatis mengosongkan LocalStorage dan memuat ulang data terbaru saat request berikutnya.";
+
+        // 3. PURGE CLOUDFLARE CDN CACHE (If configured)
+        $cfZoneId = config('services.cloudflare.zone_id') ?: env('CLOUDFLARE_ZONE_ID');
+        $cfToken = config('services.cloudflare.api_token') ?: env('CLOUDFLARE_API_TOKEN');
+        $cfEmail = config('services.cloudflare.email') ?: env('CLOUDFLARE_EMAIL');
+        $cfKey = config('services.cloudflare.api_key') ?: env('CLOUDFLARE_API_KEY');
+
+        if ($cfZoneId && ($cfToken || ($cfEmail && $cfKey))) {
+            try {
+                $headers = ['Content-Type' => 'application/json'];
+                if ($cfToken) {
+                    $headers['Authorization'] = 'Bearer ' . $cfToken;
+                } else {
+                    $headers['X-Auth-Email'] = $cfEmail;
+                    $headers['X-Auth-Key'] = $cfKey;
+                }
+
+                $cfResponse = Http::withHeaders($headers)
+                    ->timeout(15)
+                    ->post("https://api.cloudflare.com/client/v4/zones/{$cfZoneId}/purge_cache", [
+                        'purge_everything' => true
+                    ]);
+
+                if ($cfResponse->successful() && $cfResponse->json('success')) {
+                    $results['cloudflare'] = true;
+                    $results['cloudflare_message'] = 'Cloudflare CDN Edge Cache berhasil dibersihkan (Purge Everything).';
+                } else {
+                    $results['cloudflare'] = false;
+                    $errorMsg = $cfResponse->json('errors.0.message') ?? $cfResponse->body();
+                    $results['cloudflare_message'] = 'Cloudflare gagal di-purge: ' . $errorMsg;
+                }
+            } catch (\Throwable $e) {
+                $results['cloudflare'] = false;
+                $results['cloudflare_message'] = 'Kendala koneksi ke Cloudflare: ' . $e->getMessage();
+            }
+        } else {
+            $results['cloudflare'] = null; // not configured
+            $results['cloudflare_message'] = 'Cloudflare dilewati (CLOUDFLARE_ZONE_ID atau API_TOKEN belum diset di .env).';
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Proses pembersihan cache multi-tier selesai.',
+            'results' => $results
+        ])->header('Clear-Site-Data', '"cache", "storage"');
     }
 
     /**

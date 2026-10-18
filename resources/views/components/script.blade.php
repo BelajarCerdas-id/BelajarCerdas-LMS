@@ -7,6 +7,7 @@
     <meta name="color-scheme" content="light">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="app-cache-version" content="{{ Cache::get('global_client_cache_version', 1) }}">
 
     <script>
         document.documentElement.setAttribute('data-theme', 'light');
@@ -16,6 +17,42 @@
             var savedSidebarWidth = localStorage.getItem('bc_sidebar_width');
             if (savedSidebarWidth) {
                 document.documentElement.style.setProperty('--sidebar-width', savedSidebarWidth + 'px');
+            }
+
+            // Client-Side Cache Synchronizer (Auto-purge on Admin Force Clear)
+            var serverCacheVersion = "{{ (string) Cache::get('global_client_cache_version', 1) }}";
+            var localCacheVersion = localStorage.getItem('app_client_cache_version');
+            if (localCacheVersion && localCacheVersion !== serverCacheVersion) {
+                console.warn('[CacheManager] New cache epoch detected (' + localCacheVersion + ' -> ' + serverCacheVersion + '). Flushing client caches...');
+                
+                // Clear Service Worker & CacheStorage (HTTP CDN assets)
+                if ('caches' in window) {
+                    caches.keys().then(function (names) {
+                        names.forEach(function (name) { caches.delete(name); });
+                    });
+                }
+
+                // Preserve active exam timer if user is in an active test
+                var preservedKeys = {};
+                for (var i = 0; i < localStorage.length; i++) {
+                    var k = localStorage.key(i);
+                    if (k && (k.indexOf('timer_assessment_test_') === 0 || k.indexOf('duration_') === 0 || k === 'bc_sidebar_width')) {
+                        preservedKeys[k] = localStorage.getItem(k);
+                    }
+                }
+
+                localStorage.clear();
+                sessionStorage.clear();
+
+                for (var pk in preservedKeys) {
+                    localStorage.setItem(pk, preservedKeys[pk]);
+                }
+                localStorage.setItem('app_client_cache_version', serverCacheVersion);
+
+                // Hard reload to guarantee clean HTTP assets
+                window.location.reload(true);
+            } else if (!localCacheVersion) {
+                localStorage.setItem('app_client_cache_version', serverCacheVersion);
             }
         } catch (e) {}
     </script>

@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class StudentAssessmentExamController extends Controller
 {
@@ -699,6 +700,57 @@ class StudentAssessmentExamController extends Controller
             'status' => 'ok'
         ]);
     }
+
+    /**
+     * Receive heartbeat pings from the client-side anti-cheat system.
+     * Detects gaps in heartbeat (e.g., iOS Safari suspending JS when app is backgrounded).
+     * If gap > 10 seconds, it's treated as a cheating event.
+     */
+    public function heartbeat(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
+    {
+        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
+
+        if (!$attempt || $attempt->status !== 'in_progress') {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        $now = now();
+        $lastHeartbeat = $attempt->last_heartbeat_at;
+
+        // Allow grace period when student is actively taking a photo or selecting an image
+        $isSelectingFile = $request->boolean('is_selecting_file');
+        $maxGap = $isSelectingFile ? 90 : 10;
+
+        // Detect heartbeat gap: if last ping was more than $maxGap seconds ago,
+        // the browser was likely backgrounded (especially iOS Safari where JS is suspended)
+        if ($lastHeartbeat && $now->diffInSeconds($lastHeartbeat) > $maxGap) {
+            $attempt->increment('tab_switch_count');
+
+            if ($attempt->tab_switch_count >= 5) {
+                $attempt->update(['status' => 'cheating']);
+
+                $assessment = SchoolAssessment::findOrFail($assessmentId);
+                $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
+
+                return response()->json(['status' => 'blocked']);
+            }
+
+            $attempt->update(['last_heartbeat_at' => $now]);
+
+            return response()->json([
+                'status' => 'warning',
+                'count' => $attempt->tab_switch_count,
+                'max_count' => 5
+            ]);
+        }
+
+        // Normal heartbeat — just update the timestamp
+        $attempt->update(['last_heartbeat_at' => $now]);
+
+        return response()->json(['status' => 'ok']);
+    }
     
     public function studentAssessmentExamAnswer(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
@@ -1336,32 +1388,77 @@ class StudentAssessmentExamController extends Controller
         return $score;
     }
 
-    // function submit essay (for ckeditor)
+    // function submit essay image (for ckeditor & direct image attachments)
     public function storeImageEssay(Request $request) {
-        if ($request->hasFile('upload')) {
-            $originName = $request->file('upload')->getClientOriginalName();
-            $fileName = pathInfo($originName, PATHINFO_FILENAME);
-            $extension = $request->file('upload')->getClientOriginalExtension();
-            $fileName = $fileName . '_' . time() . '.' . $extension;
+        $file = $request->file('upload') ?? $request->file('image');
 
-            $request->file('upload')->move(public_path('lms-assessment-submission/assessment-test'), $fileName);
-
-            $url = "/lms-assessment-submission/assessment-test/$fileName";
-            return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
+        if (!$file) {
+            return response()->json([
+                'uploaded' => 0,
+                'error' => ['message' => 'Tidak ada file gambar yang diunggah.']
+            ], 422);
         }
-    }
 
-    // function delete image bank soal (for ckeditor)
-    public function deleteImageEssay(Request $request) {
-        $request->validate([
-            'imageUrl' => 'required|url',
+        $validator = Validator::make(['file' => $file], [
+            'file' => 'required|file|mimes:jpeg,jpg,png,gif,webp,heic,heif|max:10240'
+        ], [
+            'file.mimes' => 'Format file harus berupa gambar (JPG, PNG, GIF, WEBP, HEIC).',
+            'file.max' => 'Ukuran gambar maksimal adalah 10 MB.',
         ]);
 
-        $imagePath = str_replace(asset(''), '', $request->imageUrl); // Hapus base URL
-        $fullImagePath = public_path($imagePath);
+        if ($validator->fails()) {
+            return response()->json([
+                'uploaded' => 0,
+                'error' => ['message' => $validator->errors()->first('file')],
+                'message' => $validator->errors()->first('file')
+            ], 422);
+        }
 
-        if (file_exists($fullImagePath)) {
-            unlink($fullImagePath); // Hapus gambar
+        $targetDir = public_path('lms-assessment-submission/assessment-test');
+        if (!file_exists($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $originName = $file->getClientOriginalName();
+        $rawFileName = pathinfo($originName, PATHINFO_FILENAME);
+        $safeName = Str::slug(substr($rawFileName, 0, 50));
+        if (empty($safeName)) {
+            $safeName = 'answer_img';
+        }
+        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        $finalName = $safeName . '_' . time() . '_' . Str::random(6) . '.' . $extension;
+
+        $file->move($targetDir, $finalName);
+
+        $url = "/lms-assessment-submission/assessment-test/$finalName";
+        return response()->json([
+            'fileName' => $finalName,
+            'uploaded' => 1,
+            'url' => $url,
+            'status' => 'success'
+        ]);
+    }
+
+    // function delete image essay (for ckeditor & attachment removal)
+    public function deleteImageEssay(Request $request) {
+        $request->validate([
+            'imageUrl' => 'required|string',
+        ]);
+
+        $url = $request->imageUrl;
+        $parsedPath = parse_url($url, PHP_URL_PATH) ?? $url;
+        $relativePath = ltrim($parsedPath, '/\\');
+
+        // Security check: restrict deletion only to the assessment-test upload directory
+        $allowedPrefix = 'lms-assessment-submission/assessment-test/';
+        if (!str_starts_with($relativePath, $allowedPrefix)) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $fullImagePath = public_path($relativePath);
+
+        if (file_exists($fullImagePath) && is_file($fullImagePath)) {
+            unlink($fullImagePath);
             return response()->json(['message' => 'Gambar berhasil dihapus']);
         }
 

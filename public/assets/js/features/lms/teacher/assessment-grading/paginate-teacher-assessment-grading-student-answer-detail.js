@@ -555,6 +555,47 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
 
                         const isAnswered = statusAnswer === 'submitted';
 
+                        let attachedImagesHtml = '';
+                        if (studentAnswer && typeof studentAnswer === 'string') {
+                            const urls = [];
+                            const regex = /<img[^>]+src=["']([^"']+)["']/gi;
+                            let match;
+                            while ((match = regex.exec(studentAnswer)) !== null) {
+                                if (match[1] && !urls.includes(match[1])) {
+                                    urls.push(match[1]);
+                                }
+                            }
+
+                            if (urls.length > 0) {
+                                attachedImagesHtml = `
+                                    <div class="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50/50">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-images text-[#0071BC]"></i>
+                                                Gambar Terlampir Siswa (${urls.length} gambar):
+                                            </span>
+                                            <span class="text-[11px] text-gray-500">Klik gambar untuk memperbesar</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-3">
+                                            ${urls.map((url, idx) => `
+                                                <div class="border border-gray-200 bg-white rounded-lg p-2 shadow-xs flex items-center gap-3 min-w-[210px] hover:border-blue-400 transition">
+                                                    <div class="w-14 h-14 rounded-md overflow-hidden bg-gray-100 shrink-0 border border-gray-200 cursor-pointer btn-preview-image" data-src="${url}" title="Klik untuk memperbesar">
+                                                        <img src="${url}" alt="Attachment ${idx + 1}" class="w-full h-full object-cover">
+                                                    </div>
+                                                    <div class="flex-1 min-w-0 pr-2">
+                                                        <div class="text-xs font-semibold text-gray-700 truncate">Foto Jawaban #${idx + 1}</div>
+                                                        <button type="button" class="text-[11px] text-[#0071BC] hover:underline cursor-pointer btn-preview-image flex items-center gap-1 mt-0.5" data-src="${url}">
+                                                            <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i> Lihat Penuh
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }
+
                         return `
 
                             <h4 class="font-semibold text-gray-800 mb-4">
@@ -575,6 +616,8 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
                                 ${!isAnswered ? 'disabled' : ''}>
                                 ${studentAnswer ?? ''}
                             </textarea>
+
+                            ${attachedImagesHtml}
 
                             <div class="mt-8 border-t border-gray-300 pt-6">
 
@@ -1107,3 +1150,29 @@ function initMatchingContainer(container) {
     matchingObservers.set(container, observer);
 
 }
+
+// Image Preview Modal for teacher grading
+$(document).on('click', '.btn-preview-image', function (e) {
+    e.preventDefault();
+    const src = $(this).data('src');
+    if (!src) return;
+
+    $('#modal-preview-img').attr('src', src);
+    $('#modal-preview-open-tab').attr('href', src);
+    const modal = document.getElementById('modal-image-preview');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+    }
+});
+
+// Preview images when clicked inside CKEditor or answer content
+$(document).on('click', '.editor img, .ck-content img, [data-key] img', function () {
+    const src = $(this).attr('src');
+    if (!src) return;
+    $('#modal-preview-img').attr('src', src);
+    $('#modal-preview-open-tab').attr('href', src);
+    const modal = document.getElementById('modal-image-preview');
+    if (modal && typeof modal.showModal === 'function') {
+        modal.showModal();
+    }
+});
