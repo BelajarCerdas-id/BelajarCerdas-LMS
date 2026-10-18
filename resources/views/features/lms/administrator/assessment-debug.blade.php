@@ -2,8 +2,13 @@
 
 @if (Auth::user()->role === 'Administrator')
     <style>
-        dialog .swal2-container {
-            z-index: 99999 !important;
+        dialog .swal2-container,
+        .swal2-top-modal-container,
+        .swal2-container {
+            z-index: 9999999 !important;
+        }
+        dialog .swal2-container,
+        .swal2-top-modal-container {
             position: fixed !important;
             inset: 0 !important;
         }
@@ -613,6 +618,20 @@
                     </div>
                 </div>
 
+                <!-- Shortcut Ubah Nilai Ujian (Per Exam Basis) -->
+                <div class="p-3.5 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-ruler text-amber-600"></i>
+                            <span>Ubah Nilai Ujian Siswa</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Ubah total nilai atau jawaban butir soal dengan verifikasi 2 langkah.</p>
+                    </div>
+                    <button type="button" id="btn-edit-exam-from-attempt-modal" class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-bold text-xs transition cursor-pointer shadow-xs shrink-0">
+                        Ubah Nilai Ujian
+                    </button>
+                </div>
+
                 <!-- Modal Actions -->
                 <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
                     <button type="button" onclick="document.getElementById('modal-edit-attempt').close()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition cursor-pointer">
@@ -991,6 +1010,10 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <button type="button" id="btn-sed-edit-exam" class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold text-xs shadow-md transition">
+                        <i class="fa-solid fa-pen-ruler text-xs"></i>
+                        <span>Ubah Nilai Ujian (Per Exam)</span>
+                    </button>
                     <button type="button" id="btn-sed-recount" class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-900 font-bold text-xs shadow-md transition">
                         <i class="fa-solid fa-calculator text-xs"></i>
                         <span>Recount Nilai Siswa</span>
@@ -1118,6 +1141,294 @@
             </div>
         </div>
 
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- MODAL EDIT NILAI & JAWABAN PER SOAL (PER QUESTION BASIS) -->
+    <dialog id="modal-edit-question-grade" class="modal p-3 sm:p-6 backdrop:bg-slate-900/60 backdrop:backdrop-blur-xs z-[70]">
+        <div class="modal-box w-11/12 max-w-2xl bg-white p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Header -->
+            <div class="p-5 text-white flex items-center justify-between shrink-0" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 100%) !important;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-pen-to-square text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-white/20 text-white" id="eqm-badge-number">Soal #1</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-white/20 text-sky-100" id="eqm-badge-type">MCQ</span>
+                        </div>
+                        <h4 class="text-base sm:text-lg font-bold text-white">Ubah Nilai & Jawaban Butir Soal</h4>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-edit-question-grade').close()" class="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20 text-base cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 sm:p-6 overflow-y-auto space-y-4 max-h-[75vh]">
+                <!-- Info Siswa & Ujian -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div>Siswa: <strong class="text-slate-800" id="eqm-student-name">-</strong></div>
+                    <div>Bobot Maksimal: <strong class="text-[#0071BC]" id="eqm-max-weight">0</strong></div>
+                </div>
+
+                <!-- Cuplikan Soal -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Pertanyaan:</label>
+                    <div id="eqm-question-text" class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 leading-relaxed max-h-32 overflow-y-auto font-medium">
+                        -
+                    </div>
+                </div>
+
+                <!-- Input Nilai / Skor -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-star text-amber-500"></i>
+                            <span>Nilai / Skor Butir Soal:</span>
+                        </label>
+                        <span class="text-xs text-slate-400">Skor saat ini: <strong id="eqm-current-score" class="text-slate-700">0</strong></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="eqm-input-score" step="0.01" min="0" class="w-full h-11 px-3.5 text-sm font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#0071BC] focus:bg-white transition" placeholder="Masukkan nilai skor">
+                        <button type="button" id="eqm-btn-full-score" class="px-3 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 shrink-0 transition cursor-pointer">
+                            Nilai Penuh
+                        </button>
+                        <button type="button" id="eqm-btn-zero-score" class="px-3 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold border border-red-200 shrink-0 transition cursor-pointer">
+                            Skor 0
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Jawaban Siswa -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-check-to-slot text-[#0071BC]"></i>
+                            <span>Jawaban Siswa:</span>
+                        </label>
+                        <span class="text-[11px] text-slate-400" id="eqm-answer-guide">Pilih jawaban</span>
+                    </div>
+                    <!-- Container dinamis jawaban berdasarkan tipe soal -->
+                    <div id="eqm-answer-input-container" class="space-y-2">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Status Koreksi & Catatan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Status Penilaian:</label>
+                        <select id="eqm-select-grading-status" class="w-full h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC]">
+                            <option value="graded">Graded (Sudah Dinilai)</option>
+                            <option value="pending">Pending (Menunggu Penilaian)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Status Jawaban:</label>
+                        <select id="eqm-select-status-answer" class="w-full h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC]">
+                            <option value="submitted">Submitted (Terkirim)</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Catatan / Feedback Guru -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Catatan / Feedback Guru (Opsional):</label>
+                    <input type="text" id="eqm-input-feedback" class="w-full h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC]" placeholder="Catatan untuk evaluasi...">
+                </div>
+
+                <!-- 2-Step Warning Notice Banner -->
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
+                    <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0 text-sm"></i>
+                    <div>
+                        <strong>Pengamanan 2 Langkah:</strong> Klik tombol simpan akan membuka peringatan langkah 1 dan konfirmasi kata kunci verifikasi langkah 2 sebelum perubahan disimpan secara permanen ke database.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 sm:p-5 bg-white border-t border-slate-100 flex items-center justify-between shrink-0">
+                <button type="button" onclick="document.getElementById('modal-edit-question-grade').close()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btn-save-question-edit" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0071BC] hover:bg-sky-700 active:scale-95 text-white font-bold text-xs shadow-md transition">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Simpan Perubahan (2-Step Warning)</span>
+                </button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- MODAL EDIT NILAI UJIAN MENYELURUH (PER EXAM BASIS) -->
+    <dialog id="modal-edit-exam-grades" class="modal p-3 sm:p-6 backdrop:bg-slate-900/60 backdrop:backdrop-blur-xs z-[70]">
+        <div class="modal-box w-11/12 max-w-4xl max-h-[92vh] bg-white p-0 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Header -->
+            <div class="p-5 text-white flex items-center justify-between shrink-0" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 100%) !important;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-pen-ruler text-white"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-white/20 text-white">Per Exam Basis</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-white/20 text-sky-100" id="eem-badge-total-q">0 Butir Soal</span>
+                        </div>
+                        <h4 class="text-base sm:text-lg font-bold text-white">Ubah Nilai Ujian (Per Exam Basis)</h4>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('modal-edit-exam-grades').close()" class="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20 text-base cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Mode Selector Tabs inside Modal -->
+            <div class="flex items-center border-b border-slate-200 bg-slate-50 px-5 pt-2 gap-2 shrink-0">
+                <button type="button" onclick="switchExamEditTab('scale')" id="eem-tab-btn-scale" class="eem-tab-btn px-4 py-2.5 text-xs font-bold border-b-2 border-[#0071BC] text-[#0071BC] transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Set Total Nilai (Skala Proporsional)</span>
+                </button>
+                <button type="button" onclick="switchExamEditTab('grid')" id="eem-tab-btn-grid" class="eem-tab-btn px-4 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>Tabel Edit Seluruh Soal</span>
+                </button>
+                <button type="button" onclick="switchExamEditTab('preset')" id="eem-tab-btn-preset" class="eem-tab-btn px-4 py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Aksi Preset Cepat</span>
+                </button>
+            </div>
+
+            <!-- Body Area -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4">
+                <!-- Meta Info Siswa & Ujian -->
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div>
+                        <div class="text-slate-500">Siswa:</div>
+                        <div class="font-bold text-slate-800 text-sm" id="eem-student-name">-</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Ujian:</div>
+                        <div class="font-bold text-slate-800" id="eem-assessment-title">-</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-500">Total Nilai Saat Ini:</div>
+                        <div class="font-extrabold text-[#0071BC] text-base" id="eem-current-total-score">0 / 0</div>
+                    </div>
+                </div>
+
+                <!-- TAB 1: SCALE / TARGET TOTAL SCORE -->
+                <div id="eem-pane-scale" class="space-y-4">
+                    <div class="p-4 bg-sky-50/60 border border-sky-200 rounded-2xl text-xs text-sky-950 leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-[#0071BC] mr-1.5"></i>
+                        Mode ini akan mendistribusikan total nilai yang Anda tentukan secara proporsional ke setiap butir soal berdasarkan bobot masing-masing butir soal.
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Target Total Nilai Baru:
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="eem-input-target-score" step="0.01" min="0" class="w-full h-12 px-4 text-lg font-extrabold text-slate-800 bg-slate-50 border border-slate-300 rounded-2xl outline-none focus:border-[#0071BC] focus:bg-white transition" placeholder="Contoh: 85.00">
+                            <span class="text-slate-500 text-sm font-bold shrink-0">/ <span id="eem-max-score-label">100</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Quick preset score buttons -->
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <span class="text-xs font-semibold text-slate-500 mr-1">Preset Nilai:</span>
+                        <button type="button" onclick="setEemTargetScore(100)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer">100 (Maksimal)</button>
+                        <button type="button" onclick="setEemTargetScore(90)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer">90</button>
+                        <button type="button" onclick="setEemTargetScore(85)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer">85</button>
+                        <button type="button" onclick="setEemTargetScore(75)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer">75 (Standar KKM)</button>
+                        <button type="button" onclick="setEemTargetScore(60)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer">60</button>
+                        <button type="button" onclick="setEemTargetScore(0)" class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition active:scale-95 cursor-pointer">0 (Nol)</button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: BATCH ALL QUESTIONS GRID -->
+                <div id="eem-pane-grid" class="hidden space-y-3">
+                    <div class="p-3 bg-slate-100 rounded-xl text-xs text-slate-600 flex items-center justify-between">
+                        <span>Edit nilai masing-masing soal secara langsung pada tabel di bawah:</span>
+                        <span class="font-bold text-slate-800">Total Terhitung: <span id="eem-grid-calculated-total" class="text-[#0071BC]">0.00</span></span>
+                    </div>
+
+                    <div class="overflow-x-auto border border-slate-200 rounded-2xl max-h-[50vh]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2.5 text-center w-12">No</th>
+                                    <th class="px-3 py-2.5 w-24">Tipe</th>
+                                    <th class="px-4 py-2.5">Pertanyaan</th>
+                                    <th class="px-3 py-2.5 w-44">Jawaban Siswa</th>
+                                    <th class="px-3 py-2.5 text-center w-40">Nilai / Bobot</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eem-grid-table-body" class="divide-y divide-slate-100 bg-white">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PRESETS -->
+                <div id="eem-pane-preset" class="hidden space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 border-2 border-emerald-200 rounded-2xl bg-emerald-50/50 space-y-2.5">
+                            <div class="flex items-center gap-2 font-bold text-emerald-800 text-sm">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                <span>Semua Jawaban Benar (100%)</span>
+                            </div>
+                            <p class="text-xs text-emerald-950 leading-relaxed">
+                                Memberikan jawaban kunci yang benar pada semua butir soal dan memberikan nilai penuh pada setiap butir soal.
+                            </p>
+                            <button type="button" onclick="applyExamPreset('preset_all_correct')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition active:scale-95 cursor-pointer shadow-xs">
+                                Terapkan Semua Benar (100%)
+                            </button>
+                        </div>
+
+                        <div class="p-4 border-2 border-red-200 rounded-2xl bg-red-50/50 space-y-2.5">
+                            <div class="flex items-center gap-2 font-bold text-red-800 text-sm">
+                                <i class="fa-solid fa-circle-xmark text-red-600 text-lg"></i>
+                                <span>Semua Jawaban Salah (Skor 0)</span>
+                            </div>
+                            <p class="text-xs text-red-950 leading-relaxed">
+                                Mengatur skor setiap butir soal menjadi 0 sehingga total nilai ujian siswa bernilai 0.
+                            </p>
+                            <button type="button" onclick="applyExamPreset('preset_all_wrong')" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition active:scale-95 cursor-pointer shadow-xs">
+                                Terapkan Semua Salah (Skor 0)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2-Step Warning Notice Banner -->
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
+                    <i class="fa-solid fa-shield-halved text-amber-600 mt-0.5 shrink-0 text-sm"></i>
+                    <div>
+                        <strong>Pengamanan 2 Langkah:</strong> Klik tombol simpan akan membuka peringatan langkah 1 dan konfirmasi kata sandi verifikasi langkah 2 sebelum perubahan disimpan ke database.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 sm:p-5 bg-white border-t border-slate-100 flex items-center justify-between shrink-0">
+                <button type="button" onclick="document.getElementById('modal-edit-exam-grades').close()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btn-save-exam-edit" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0071BC] hover:bg-sky-700 active:scale-95 text-white font-bold text-xs shadow-md transition">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Simpan Perubahan Ujian (2-Step Warning)</span>
+                </button>
+            </div>
+        </div>
         <form method="dialog" class="modal-backdrop">
             <button>close</button>
         </form>
@@ -1595,7 +1906,9 @@
         }
 
         // Open Edit Modal
+        let currentEditModalItem = null;
         function openEditModal(item) {
+            currentEditModalItem = item;
             const student = item.user_account?.student_profile;
             $('#edit-attempt-id').val(item.id);
             $('#modal-student-name').text(student?.nama_lengkap || 'Siswa');
@@ -1610,8 +1923,33 @@
             document.getElementById('modal-edit-attempt').showModal();
         }
 
-        function swalInModal(options, modalId = 'modal-cache-manager') {
-            const modalEl = document.getElementById(modalId);
+        function getActiveTopDialog() {
+            const dialogIds = [
+                'modal-edit-question-grade',
+                'modal-edit-exam-grades',
+                'modal-student-exam-detail',
+                'modal-assessment-detail',
+                'modal-cache-manager',
+                'modal-edit-attempt'
+            ];
+            for (const id of dialogIds) {
+                const el = document.getElementById(id);
+                if (el && el.open) {
+                    return el;
+                }
+            }
+            const openDialogs = document.querySelectorAll('dialog[open]');
+            if (openDialogs.length > 0) {
+                return openDialogs[openDialogs.length - 1];
+            }
+            return document.body;
+        }
+
+        function swalInModal(options, modalId = null) {
+            let modalEl = modalId ? document.getElementById(modalId) : null;
+            if (!modalEl || !modalEl.open) {
+                modalEl = getActiveTopDialog();
+            }
             if (typeof options === 'string') {
                 const title = arguments[0];
                 const text = arguments[1] || '';
@@ -1619,7 +1957,10 @@
                 options = { title, text, icon };
             }
             const defaults = {
-                target: modalEl || document.body
+                target: modalEl || document.body,
+                customClass: {
+                    container: 'swal2-top-modal-container'
+                }
             };
             return Swal.fire(Object.assign({}, defaults, options));
         }
@@ -3063,27 +3404,27 @@
             const att = data.attempt;
             const sum = data.summary;
 
-            $('#sed-student-name').text(stu.name);
-            $('#sed-subtitle').text(`NISN: ${stu.nis} • Kelas: ${stu.class_name} • Sekolah: ${stu.school_name} • Ujian: ${asm.title}`);
-            $('#sed-badge-status').text(att.status.toUpperCase());
-            $('#sed-badge-mapel').text(asm.mapel);
-            $('#sed-badge-category').text(asm.category.toUpperCase());
+            $('#sed-student-name').text(stu?.name || 'Siswa');
+            $('#sed-subtitle').text(`NISN: ${stu?.nis || '-'} • Kelas: ${stu?.class_name || '-'} • Sekolah: ${stu?.school_name || '-'} • Ujian: ${asm?.title || '-'}`);
+            $('#sed-badge-status').text((att?.status || 'SUBMITTED').toUpperCase());
+            $('#sed-badge-mapel').text(asm?.mapel || '-');
+            $('#sed-badge-category').text((asm?.category || 'MAIN').toUpperCase());
 
-            $('#sed-stat-score').text(`${sum.total_score} / ${sum.max_score}`);
-            $('#sed-stat-correct').text(`${sum.correct_count} Soal`);
-            $('#sed-stat-wrong').text(`${sum.wrong_count} Soal`);
-            $('#sed-stat-empty').text(`${sum.empty_count} Soal`);
-            $('#sed-stat-switch').text(`${att.tab_switch_count}x`);
+            $('#sed-stat-score').text(`${sum?.total_score ?? 0} / ${sum?.max_score ?? 100}`);
+            $('#sed-stat-correct').text(`${sum?.correct_count ?? 0} Soal`);
+            $('#sed-stat-wrong').text(`${sum?.wrong_count ?? 0} Soal`);
+            $('#sed-stat-empty').text(`${sum?.empty_count ?? 0} Soal`);
+            $('#sed-stat-switch').text(`${att?.tab_switch_count ?? 0}x`);
 
-            $('#sed-time-start').text(att.start_time || '-');
-            $('#sed-time-expire').text(att.expire_time || '-');
-            $('#sed-time-duration').text(`${asm.duration} Menit`);
+            $('#sed-time-start').text(att?.start_time || '-');
+            $('#sed-time-expire').text(att?.expire_time || '-');
+            $('#sed-time-duration').text(`${asm?.duration ?? 0} Menit`);
 
             // Counts for filter pills
-            $('#sed-count-all').text(sum.total_questions);
-            $('#sed-count-correct').text(sum.correct_count);
-            $('#sed-count-wrong').text(sum.wrong_count);
-            $('#sed-count-empty').text(sum.empty_count);
+            $('#sed-count-all').text(sum?.total_questions ?? 0);
+            $('#sed-count-correct').text(sum?.correct_count ?? 0);
+            $('#sed-count-wrong').text(sum?.wrong_count ?? 0);
+            $('#sed-count-empty').text(sum?.empty_count ?? 0);
 
             // Bind recount button inside exam detail modal
             $('#btn-sed-recount').off('click').on('click', function () {
@@ -3314,6 +3655,12 @@
                                 <span class="text-xs font-bold text-slate-700">
                                     Skor: <strong class="text-[#0071BC] font-extrabold">${q.score}</strong> / ${q.weight}
                                 </span>
+                                <button type="button" onclick="openEditQuestionGradeModal(${q.number})"
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-[#0071BC] text-[#0071BC] hover:text-white font-bold text-[11px] border border-sky-200 transition active:scale-95 ml-1"
+                                    title="Ubah nilai dan jawaban butir soal ini secara manual">
+                                    <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                                    <span>Edit Soal</span>
+                                </button>
                             </div>
                         </div>
 
@@ -3380,6 +3727,582 @@
                 loadAttempts(currentPage);
             }
             setTimeout(() => icon.removeClass('fa-spin'), 600);
+        });
+
+        // ==========================================
+        // 2-STEP WARNING CONFIRMATION SYSTEM
+        // ==========================================
+        function executeWithTwoStepWarning(options, onConfirmed) {
+            const targetEl = options.target || getActiveTopDialog();
+
+            // STEP 1: Peringatan Awal Konsekuensi
+            swalInModal({
+                target: targetEl,
+                title: options.step1Title || '⚠️ Peringatan (Langkah 1 dari 2)',
+                html: `
+                    <div class="text-left text-xs space-y-3">
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 leading-relaxed font-semibold">
+                            <i class="fa-solid fa-triangle-exclamation mr-1.5 text-amber-600"></i>
+                            ${options.step1WarningText || 'Anda akan melakukan perubahan nilai atau jawaban secara manual. Tindakan ini berdampak langsung pada rapor dan riwayat ujian siswa.'}
+                        </div>
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 font-medium text-slate-700">
+                            <div>• <strong>Siswa:</strong> ${escapeHtml(options.studentName || '-')}</div>
+                            <div>• <strong>Ujian:</strong> ${escapeHtml(options.assessmentTitle || '-')}</div>
+                            <div>• <strong>Cakupan:</strong> <span class="text-[#0071BC] font-bold">${options.scopeText || '-'}</span></div>
+                            <div>• <strong>Detail Perubahan:</strong> ${options.changeDetailHtml || '-'}</div>
+                        </div>
+                        <div class="text-slate-500 text-[11px]">
+                            Langkah ini memastikan Anda tidak mengubah data siswa secara tidak sengaja. Klik <strong>Lanjut ke Langkah 2</strong> untuk verifikasi akhir.
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#F59E0B',
+                cancelButtonColor: '#64748B',
+                confirmButtonText: 'Lanjut ke Langkah 2 <i class="fa-solid fa-arrow-right ml-1"></i>',
+                cancelButtonText: 'Batal',
+                focusCancel: true
+            }, targetEl).then((res1) => {
+                if (!res1.isConfirmed) return;
+
+                // STEP 2: Verifikasi Kata Kunci Keamanan "UBAH"
+                swalInModal({
+                    target: targetEl,
+                    title: options.step2Title || '🛑 Konfirmasi Akhir (Langkah 2 dari 2)',
+                    html: `
+                        <div class="text-left text-xs space-y-3">
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-900 leading-relaxed font-semibold">
+                                <i class="fa-solid fa-shield-halved mr-1.5 text-red-600"></i>
+                                Konfirmasi terakhir untuk menerapkan perubahan secara permanen ke database LMS.
+                            </div>
+                            <p class="text-slate-700">
+                                Untuk mengonfirmasi bahwa perubahan ini benar-benar disengaja, silakan ketik kata 
+                                <strong class="text-red-600 font-mono text-sm bg-red-100 px-1.5 py-0.5 rounded border border-red-200">UBAH</strong> 
+                                pada kolom input di bawah ini:
+                            </p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    input: 'text',
+                    inputPlaceholder: 'Ketik UBAH di sini...',
+                    showCancelButton: true,
+                    confirmButtonColor: '#DC2626',
+                    cancelButtonColor: '#64748B',
+                    confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i>Ya, Simpan Perubahan Permanen',
+                    cancelButtonText: 'Batalkan',
+                    focusCancel: true,
+                    inputValidator: (value) => {
+                        if (!value || value.trim().toUpperCase() !== 'UBAH') {
+                            return 'Anda harus mengetik "UBAH" dengan benar untuk melanjutkan.';
+                        }
+                    }
+                }, targetEl).then((res2) => {
+                    if (res2.isConfirmed && res2.value) {
+                        onConfirmed(res2.value.trim().toUpperCase());
+                    }
+                });
+            });
+        }
+
+        // ==========================================
+        // MANUAL GRADE & ANSWER EDIT: PER QUESTION
+        // ==========================================
+        let currentEditingQuestionNumber = null;
+
+        function openEditQuestionGradeModal(qNumber) {
+            const q = currentSedQuestions.find(item => item.number === qNumber);
+            if (!q || !currentSedData) {
+                swalInModal({ icon: 'error', title: 'Error', text: 'Data butir soal tidak ditemukan.' }, 'modal-student-exam-detail');
+                return;
+            }
+
+            currentEditingQuestionNumber = qNumber;
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+
+            $('#eqm-badge-number').text(`Soal #${q.number}`);
+            $('#eqm-badge-type').text(q.tipe_soal);
+            $('#eqm-student-name').text(stu.name);
+            $('#eqm-max-weight').text(`${q.weight} Poin`);
+            $('#eqm-question-text').text(q.question_text || '(Tidak ada teks pertanyaan)');
+            $('#eqm-current-score').text(q.score);
+            $('#eqm-input-score').val(q.score);
+            $('#eqm-select-grading-status').val(q.grading_status || 'graded');
+            $('#eqm-select-status-answer').val(q.status_answer || 'submitted');
+            $('#eqm-input-feedback').val(q.teacher_feedback || '');
+
+            // Render input jawaban dinamis
+            const container = $('#eqm-answer-input-container');
+            container.empty();
+
+            const studentAnsArr = Array.isArray(q.student_answer)
+                ? q.student_answer.map(v => String(v).trim().toLowerCase())
+                : (q.student_answer !== null && q.student_answer !== undefined ? [String(q.student_answer).trim().toLowerCase()] : []);
+
+            if (q.tipe_soal === 'MCQ' || q.tipe_soal === 'PILIHAN GANDA' || (q.options && q.options.length > 0 && q.tipe_soal !== 'MCMA')) {
+                $('#eqm-answer-guide').text('Pilih 1 opsi jawaban');
+                let radioListHtml = '<div class="space-y-1.5">';
+                q.options.forEach((opt, idx) => {
+                    const optKey = String(opt.key).trim();
+                    const isChecked = studentAnsArr.includes(optKey.toLowerCase());
+                    const isKeyCorrect = Boolean(opt.is_correct);
+
+                    radioListHtml += `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition ${isChecked ? 'bg-sky-50/70 border-sky-300 font-bold' : ''}">
+                            <div class="flex items-center gap-2.5">
+                                <input type="radio" name="eqm-radio-answer" value="${escapeHtml(optKey)}" class="w-4 h-4 text-[#0071BC] focus:ring-sky-200" ${isChecked ? 'checked' : ''}>
+                                <span class="font-extrabold text-slate-800">[${escapeHtml(optKey.toUpperCase())}]</span>
+                                <span class="text-slate-700 font-medium">${escapeHtml(opt.value)}</span>
+                            </div>
+                            ${isKeyCorrect ? '<span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold border border-emerald-300"><i class="fa-solid fa-key mr-1"></i>Kunci Benar</span>' : ''}
+                        </label>
+                    `;
+                });
+                radioListHtml += `
+                    <label class="flex items-center gap-2 p-2 rounded-xl text-xs text-slate-500 hover:bg-slate-100 cursor-pointer">
+                        <input type="radio" name="eqm-radio-answer" value="__EMPTY__" class="w-4 h-4" ${studentAnsArr.length === 0 ? 'checked' : ''}>
+                        <span>(Kosongkan / Siswa Tidak Menjawab)</span>
+                    </label>
+                </div>`;
+                container.html(radioListHtml);
+            } else if (q.tipe_soal === 'MCMA') {
+                $('#eqm-answer-guide').text('Pilih satu atau beberapa opsi jawaban');
+                let checkListHtml = '<div class="space-y-1.5">';
+                q.options.forEach((opt, idx) => {
+                    const optKey = String(opt.key).trim();
+                    const isChecked = studentAnsArr.includes(optKey.toLowerCase());
+                    const isKeyCorrect = Boolean(opt.is_correct);
+
+                    checkListHtml += `
+                        <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs transition ${isChecked ? 'bg-sky-50/70 border-sky-300 font-bold' : ''}">
+                            <div class="flex items-center gap-2.5">
+                                <input type="checkbox" class="eqm-check-answer w-4 h-4 rounded text-[#0071BC] focus:ring-sky-200 cursor-pointer" value="${escapeHtml(optKey)}" ${isChecked ? 'checked' : ''}>
+                                <span class="font-extrabold text-slate-800">[${escapeHtml(optKey.toUpperCase())}]</span>
+                                <span class="text-slate-700 font-medium">${escapeHtml(opt.value)}</span>
+                            </div>
+                            ${isKeyCorrect ? '<span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold border border-emerald-300"><i class="fa-solid fa-key mr-1"></i>Kunci Benar</span>' : ''}
+                        </label>
+                    `;
+                });
+                checkListHtml += '</div>';
+                container.html(checkListHtml);
+            } else if (q.tipe_soal === 'ESSAY') {
+                $('#eqm-answer-guide').text('Tuliskan teks jawaban esai siswa');
+                const textVal = q.student_answer ? String(q.student_answer) : '';
+                container.html(`
+                    <textarea id="eqm-textarea-answer" rows="4" class="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#0071BC] focus:bg-white font-medium" placeholder="Ketik teks jawaban esai...">${escapeHtml(textVal)}</textarea>
+                `);
+            } else {
+                $('#eqm-answer-guide').text('Format JSON atau teks string');
+                let rawStr = '';
+                if (q.student_answer !== null && q.student_answer !== undefined) {
+                    rawStr = typeof q.student_answer === 'object' ? JSON.stringify(q.student_answer, null, 2) : String(q.student_answer);
+                }
+                container.html(`
+                    <textarea id="eqm-textarea-answer" rows="4" class="w-full p-3 font-mono text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#0071BC] focus:bg-white" placeholder="Ketik data jawaban...">${escapeHtml(rawStr)}</textarea>
+                `);
+            }
+
+            document.getElementById('modal-edit-question-grade').showModal();
+        }
+
+        // Quick score buttons in Question Modal
+        $('#eqm-btn-full-score').on('click', function () {
+            const q = currentSedQuestions.find(item => item.number === currentEditingQuestionNumber);
+            if (q) $('#eqm-input-score').val(q.weight);
+        });
+
+        $('#eqm-btn-zero-score').on('click', function () {
+            $('#eqm-input-score').val(0);
+        });
+
+        // Save Question Edit with 2-Step Warning
+        $('#btn-save-question-edit').on('click', function () {
+            const q = currentSedQuestions.find(item => item.number === currentEditingQuestionNumber);
+            if (!q || !currentSedData) return;
+
+            const newScore = parseFloat($('#eqm-input-score').val());
+            if (isNaN(newScore) || newScore < 0) {
+                swalInModal({ icon: 'error', title: 'Input Tidak Valid', text: 'Nilai skor harus berupa angka minimal 0.' }, 'modal-edit-question-grade');
+                return;
+            }
+
+            // Kumpulkan data jawaban
+            let newAnswer = null;
+            if (q.tipe_soal === 'MCQ' || q.tipe_soal === 'PILIHAN GANDA' || (q.options && q.options.length > 0 && q.tipe_soal !== 'MCMA')) {
+                const selectedRadio = $('input[name="eqm-radio-answer"]:checked').val();
+                if (selectedRadio && selectedRadio !== '__EMPTY__') {
+                    newAnswer = [selectedRadio];
+                } else {
+                    newAnswer = null;
+                }
+            } else if (q.tipe_soal === 'MCMA') {
+                const checked = [];
+                $('.eqm-check-answer:checked').each(function () {
+                    checked.push($(this).val());
+                });
+                newAnswer = checked.length > 0 ? checked : null;
+            } else {
+                const textVal = $('#eqm-textarea-answer').val();
+                newAnswer = textVal ? textVal.trim() : null;
+            }
+
+            const gradingStatus = $('#eqm-select-grading-status').val();
+            const statusAnswer = $('#eqm-select-status-answer').val();
+            const feedback = $('#eqm-input-feedback').val();
+
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+
+            // Trigger 2-Step Warning
+            executeWithTwoStepWarning({
+                target: document.getElementById('modal-edit-question-grade'),
+                step1Title: `⚠️ Peringatan (Langkah 1/2): Ubah Soal #${q.number}`,
+                step1WarningText: `Anda akan mengubah nilai/jawaban butir soal nomor #${q.number} secara manual untuk siswa <strong>${escapeHtml(stu.name)}</strong>.`,
+                studentName: stu.name,
+                assessmentTitle: asm.title,
+                scopeText: `Butir Soal #${q.number} (${escapeHtml(q.tipe_soal)})`,
+                changeDetailHtml: `
+                    <div>Nilai Skor: <strong class="text-slate-500">${q.score}</strong> → <strong class="text-[#0071BC]">${newScore}</strong> (Bobot: ${q.weight})</div>
+                    <div>Status Penilaian: <strong class="text-slate-800">${escapeHtml(gradingStatus)}</strong></div>
+                `,
+                step2Title: `🛑 Konfirmasi Akhir (Langkah 2/2): Ubah Soal #${q.number}`
+            }, function (confirmText) {
+                // User confirmed step 2
+                swalInModal({
+                    title: 'Menyimpan Perubahan...',
+                    text: 'Memperbarui database nilai siswa...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                }, 'modal-edit-question-grade');
+
+                $.ajax({
+                    url: `/administrator/assessment-debug/assessment/${asm.id}/student/${stu.id}/question/${q.question_id}/update`,
+                    type: 'POST',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        question_score: newScore,
+                        answer_value: newAnswer,
+                        grading_status: gradingStatus,
+                        status_answer: statusAnswer,
+                        teacher_feedback: feedback,
+                        confirm_text: confirmText
+                    },
+                    success: function (res) {
+                        document.getElementById('modal-edit-question-grade').close();
+                        swalInModal({
+                            icon: 'success',
+                            title: 'Tersimpan!',
+                            html: `<div class="text-xs text-slate-700">${escapeHtml(res.message)}</div>
+                                   <div class="mt-2 text-xs font-bold text-emerald-600">Total Nilai Baru Ujian: ${res.data.new_total_score}</div>`,
+                            timer: 2500,
+                            showConfirmButton: false
+                        }, 'modal-student-exam-detail');
+
+                        // Refresh Exam Detail & Attempt List
+                        openStudentExamDetail(asm.id, stu.id, stu.name);
+                        loadAttempts(currentPage);
+                        if (currentDetailAssessmentId) {
+                            fetchAssessmentDetail(currentDetailAssessmentId);
+                        }
+                    },
+                    error: function (xhr) {
+                        swalInModal({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan',
+                            text: xhr.responseJSON?.message || 'Terjadi kesalahan pada server.'
+                        }, 'modal-edit-question-grade');
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // MANUAL GRADE & ANSWER EDIT: PER EXAM BASIS
+        // ==========================================
+        let currentExamEditMode = 'scale';
+
+        function switchExamEditTab(tab) {
+            currentExamEditMode = tab;
+            $('.eem-tab-btn').removeClass('border-[#0071BC] text-[#0071BC] font-bold').addClass('border-transparent text-slate-500 font-semibold');
+            $(`#eem-tab-btn-${tab}`).addClass('border-[#0071BC] text-[#0071BC] font-bold').removeClass('border-transparent text-slate-500');
+
+            $('#eem-pane-scale, #eem-pane-grid, #eem-pane-preset').addClass('hidden');
+            $(`#eem-pane-${tab}`).removeClass('hidden');
+
+            if (tab === 'preset') {
+                $('#btn-save-exam-edit').addClass('hidden');
+            } else {
+                $('#btn-save-exam-edit').removeClass('hidden');
+            }
+        }
+
+        function setEemTargetScore(score) {
+            if (!currentSedData) return;
+            const max = currentSedData.summary.max_score || 100;
+            const finalScore = Math.min(score, max);
+            $('#eem-input-target-score').val(finalScore);
+        }
+
+        function openEditExamModal() {
+            if (!currentSedData) {
+                swalInModal({ icon: 'warning', title: 'Data Tidak Tersedia', text: 'Buka detail lembar ujian siswa terlebih dahulu.' }, 'modal-student-exam-detail');
+                return;
+            }
+
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+            const sum = currentSedData.summary;
+
+            $('#eem-student-name').text(stu.name);
+            $('#eem-assessment-title').text(asm.title);
+            $('#eem-current-total-score').text(`${sum.total_score} / ${sum.max_score}`);
+            $('#eem-badge-total-q').text(`${sum.total_questions} Butir Soal`);
+
+            // Tab 1 setup
+            $('#eem-input-target-score').val(sum.total_score);
+            $('#eem-max-score-label').text(sum.max_score);
+
+            // Tab 2 setup (Grid)
+            renderEemBatchGrid();
+
+            switchExamEditTab('scale');
+            document.getElementById('modal-edit-exam-grades').showModal();
+        }
+
+        function renderEemBatchGrid() {
+            const tbody = $('#eem-grid-table-body');
+            tbody.empty();
+
+            let totalCalc = 0;
+
+            currentSedQuestions.forEach((q) => {
+                totalCalc += parseFloat(q.score) || 0;
+
+                let answerSelectorHtml = '';
+                const studentAnsArr = Array.isArray(q.student_answer)
+                    ? q.student_answer.map(v => String(v).trim().toLowerCase())
+                    : (q.student_answer !== null && q.student_answer !== undefined ? [String(q.student_answer).trim().toLowerCase()] : []);
+
+                if (q.options && q.options.length > 0 && q.tipe_soal !== 'MCMA') {
+                    answerSelectorHtml = `<select class="eem-grid-ans w-full h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0071BC]" data-qid="${q.question_id}">`;
+                    answerSelectorHtml += `<option value="" ${studentAnsArr.length === 0 ? 'selected' : ''}>-- Kosong --</option>`;
+                    q.options.forEach((opt) => {
+                        const optKey = String(opt.key).trim();
+                        const isSelected = studentAnsArr.includes(optKey.toLowerCase());
+                        answerSelectorHtml += `<option value="${escapeHtml(optKey)}" ${isSelected ? 'selected' : ''}>[${escapeHtml(optKey.toUpperCase())}] ${escapeHtml(opt.value.substring(0, 18))}${opt.is_correct ? ' (Kunci)' : ''}</option>`;
+                    });
+                    answerSelectorHtml += `</select>`;
+                } else {
+                    const textVal = q.student_answer ? (typeof q.student_answer === 'object' ? JSON.stringify(q.student_answer) : String(q.student_answer)) : '';
+                    answerSelectorHtml = `<input type="text" class="eem-grid-ans w-full h-8 px-2 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0071BC]" data-qid="${q.question_id}" value="${escapeHtml(textVal)}" placeholder="Jawaban...">`;
+                }
+
+                const row = `
+                    <tr class="hover:bg-slate-50 transition" data-qid="${q.question_id}">
+                        <td class="px-3 py-2 text-center font-bold text-slate-700">${q.number}</td>
+                        <td class="px-3 py-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-[#0071BC] border border-blue-200">${escapeHtml(q.tipe_soal)}</span>
+                        </td>
+                        <td class="px-4 py-2">
+                            <div class="text-[11px] font-medium text-slate-800 line-clamp-1" title="${escapeHtml(q.question_text)}">${escapeHtml(q.question_text)}</div>
+                        </td>
+                        <td class="px-3 py-2">
+                            ${answerSelectorHtml}
+                        </td>
+                        <td class="px-3 py-2 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <input type="number" step="0.01" min="0" max="${q.weight}" class="eem-grid-score w-16 h-8 text-center text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0071BC]" data-qid="${q.question_id}" data-weight="${q.weight}" value="${q.score}">
+                                <span class="text-[11px] text-slate-400">/${q.weight}</span>
+                                <button type="button" onclick="setGridRowScore(${q.question_id}, ${q.weight})" class="px-1.5 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold border border-emerald-200 transition" title="Beri Nilai Penuh">✓</button>
+                                <button type="button" onclick="setGridRowScore(${q.question_id}, 0)" class="px-1.5 py-0.5 rounded bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold border border-red-200 transition" title="Beri Skor 0">✕</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            $('#eem-grid-calculated-total').text(totalCalc.toFixed(2));
+
+            // Re-calculate total on grid score changes
+            $('.eem-grid-score').off('input').on('input', function () {
+                let sum = 0;
+                $('.eem-grid-score').each(function () {
+                    sum += parseFloat($(this).val()) || 0;
+                });
+                $('#eem-grid-calculated-total').text(sum.toFixed(2));
+            });
+        }
+
+        function setGridRowScore(qid, score) {
+            $(`.eem-grid-score[data-qid="${qid}"]`).val(score).trigger('input');
+        }
+
+        // Apply Exam Preset (100% or 0%)
+        function applyExamPreset(presetMode) {
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+            const isCorrect = presetMode === 'preset_all_correct';
+
+            executeWithTwoStepWarning({
+                target: document.getElementById('modal-edit-exam-grades'),
+                step1Title: `⚠️ Peringatan (Langkah 1/2): Preset Ujian`,
+                step1WarningText: isCorrect
+                    ? `Anda akan mengatur seluruh butir soal menjadi <strong>BENAR (100% Nilai Maksimal)</strong> untuk siswa <strong>${escapeHtml(stu.name)}</strong>.`
+                    : `Anda akan mengatur seluruh butir soal menjadi <strong>SALAH (Skor 0)</strong> untuk siswa <strong>${escapeHtml(stu.name)}</strong>.`,
+                studentName: stu.name,
+                assessmentTitle: asm.title,
+                scopeText: `Seluruh Ujian (${currentSedQuestions.length} Butir Soal)`,
+                changeDetailHtml: isCorrect
+                    ? `<span class="text-emerald-600 font-bold">Semua jawaban diatur ke kunci benar dengan skor maksimal ${currentSedData.summary.max_score}.</span>`
+                    : `<span class="text-red-600 font-bold">Semua butir soal diatur ke skor 0.</span>`,
+                step2Title: `🛑 Konfirmasi Akhir (Langkah 2/2): Preset Ujian`
+            }, function (confirmText) {
+                dispatchExamGradesUpdate({
+                    mode: presetMode,
+                    confirm_text: confirmText
+                });
+            });
+        }
+
+        // Save Exam Grades Edit (Scale or Batch Grid)
+        $('#btn-save-exam-edit').on('click', function () {
+            if (!currentSedData) return;
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+
+            if (currentExamEditMode === 'scale') {
+                const targetScore = parseFloat($('#eem-input-target-score').val());
+                if (isNaN(targetScore) || targetScore < 0) {
+                    swalInModal({ icon: 'error', title: 'Input Tidak Valid', text: 'Target total nilai harus berupa angka minimal 0.' }, 'modal-edit-exam-grades');
+                    return;
+                }
+
+                executeWithTwoStepWarning({
+                    target: document.getElementById('modal-edit-exam-grades'),
+                    step1Title: `⚠️ Peringatan (Langkah 1/2): Skala Total Nilai Ujian`,
+                    step1WarningText: `Anda akan mengubah total nilai ujian untuk siswa <strong>${escapeHtml(stu.name)}</strong> secara menyeluruh dengan mendistribusikan nilai secara proporsional.`,
+                    studentName: stu.name,
+                    assessmentTitle: asm.title,
+                    scopeText: `Skala Proporsional Seluruh Ujian (${currentSedQuestions.length} Butir Soal)`,
+                    changeDetailHtml: `Total Nilai: <strong class="text-slate-500">${currentSedData.summary.total_score}</strong> → <strong class="text-[#0071BC] text-sm">${targetScore}</strong> (dari maks ${currentSedData.summary.max_score})`,
+                    step2Title: `🛑 Konfirmasi Akhir (Langkah 2/2): Ubah Nilai Ujian`
+                }, function (confirmText) {
+                    dispatchExamGradesUpdate({
+                        mode: 'target_total_score',
+                        target_total_score: targetScore,
+                        confirm_text: confirmText
+                    });
+                });
+            } else if (currentExamEditMode === 'grid') {
+                const batchQuestions = [];
+                let totalCalc = 0;
+
+                $('#eem-grid-table-body tr').each(function () {
+                    const qid = $(this).data('qid');
+                    const score = parseFloat($(this).find('.eem-grid-score').val()) || 0;
+                    const ansVal = $(this).find('.eem-grid-ans').val();
+                    totalCalc += score;
+
+                    batchQuestions.push({
+                        question_id: qid,
+                        score: score,
+                        answer_value: ansVal ? [ansVal] : null
+                    });
+                });
+
+                executeWithTwoStepWarning({
+                    target: document.getElementById('modal-edit-exam-grades'),
+                    step1Title: `⚠️ Peringatan (Langkah 1/2): Batch Edit Seluruh Soal`,
+                    step1WarningText: `Anda akan memperbarui rincian nilai dan jawaban ${batchQuestions.length} butir soal untuk siswa <strong>${escapeHtml(stu.name)}</strong>.`,
+                    studentName: stu.name,
+                    assessmentTitle: asm.title,
+                    scopeText: `Batch Edit (${batchQuestions.length} Butir Soal)`,
+                    changeDetailHtml: `Total Nilai Baru: <strong class="text-[#0071BC] text-sm">${totalCalc.toFixed(2)}</strong> (Sebelumnya: ${currentSedData.summary.total_score})`,
+                    step2Title: `🛑 Konfirmasi Akhir (Langkah 2/2): Batch Edit Ujian`
+                }, function (confirmText) {
+                    dispatchExamGradesUpdate({
+                        mode: 'batch_questions',
+                        questions: batchQuestions,
+                        confirm_text: confirmText
+                    });
+                });
+            }
+        });
+
+        function dispatchExamGradesUpdate(payload) {
+            const stu = currentSedData.student;
+            const asm = currentSedData.assessment;
+
+            swalInModal({
+                title: 'Menyimpan Perubahan Ujian...',
+                text: 'Memproses pembaruan nilai & jawaban siswa...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            }, 'modal-edit-exam-grades');
+
+            $.ajax({
+                url: `/administrator/assessment-debug/assessment/${asm.id}/student/${stu.id}/update-exam-grades`,
+                type: 'POST',
+                data: Object.assign({
+                    _token: "{{ csrf_token() }}"
+                }, payload),
+                success: function (res) {
+                    document.getElementById('modal-edit-exam-grades').close();
+                    swalInModal({
+                        icon: 'success',
+                        title: 'Berhasil Diperbarui!',
+                        html: `<div class="text-xs text-slate-700">${escapeHtml(res.message)}</div>
+                               <div class="mt-2 text-xs font-bold text-emerald-600">Total Nilai Baru: ${res.data.new_total_score}</div>`,
+                        timer: 2500,
+                        showConfirmButton: false
+                    }, 'modal-student-exam-detail');
+
+                    // Refresh
+                    openStudentExamDetail(asm.id, stu.id, stu.name);
+                    loadAttempts(currentPage);
+                    if (currentDetailAssessmentId) {
+                        fetchAssessmentDetail(currentDetailAssessmentId);
+                    }
+                },
+                error: function (xhr) {
+                    swalInModal({
+                        icon: 'error',
+                        title: 'Gagal Menyimpan',
+                        text: xhr.responseJSON?.message || 'Terjadi kesalahan pada server.'
+                    }, 'modal-edit-exam-grades');
+                }
+            });
+        }
+
+        // Open Exam Edit from Detail Header
+        $('#btn-sed-edit-exam').on('click', function () {
+            openEditExamModal();
+        });
+
+        // Open Exam Edit from Attempt Edit Modal
+        $('#btn-edit-exam-from-attempt-modal').on('click', function () {
+            const attemptId = $('#edit-attempt-id').val();
+            if (!attemptId) return;
+
+            document.getElementById('modal-edit-attempt').close();
+            $.ajax({
+                url: `/administrator/assessment-debug/data`,
+                type: 'GET',
+                data: { page: 1, search: '', per_page: 'all' },
+                success: function (res) {
+                    const item = res.data?.find(a => a.id == attemptId);
+                    if (item) {
+                        const studentName = item.user_account?.student_profile?.nama_lengkap || 'Siswa';
+                        openStudentExamDetail(item.school_assessment_id, item.student_id, studentName);
+                        setTimeout(() => openEditExamModal(), 600);
+                    } else {
+                        swalInModal({ icon: 'error', title: 'Error', text: 'Sesi ujian tidak ditemukan.' });
+                    }
+                }
+            });
         });
 
         $(document).ready(function () {

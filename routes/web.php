@@ -354,7 +354,9 @@ Route::middleware([AuthMiddleware::class])->group(function () {
             Route::post('/{id}/update-status', [AssessmentDebugController::class, 'updateStatus'])->name('admin.assessmentDebug.updateStatus');
             Route::post('/{id}/update-attempts', [AssessmentDebugController::class, 'updateTabSwitchCount'])->name('admin.assessmentDebug.updateAttempts');
             Route::post('/{id}/update', [AssessmentDebugController::class, 'updateAttempt'])->name('admin.assessmentDebug.update');
-            Route::post('/{id}/reset-answers', [AssessmentDebugController::class, 'resetAnswers'])->name('admin.assessmentDebug.resetAnswers');
+            Route::post('/assessment/{assessmentId}/student/{studentId}/question/{questionId}/update', [AssessmentDebugController::class, 'updateQuestionGradeAndAnswer'])->name('admin.assessmentDebug.updateQuestionGradeAndAnswer');
+            Route::post('/assessment/{assessmentId}/student/{studentId}/update-exam-grades', [AssessmentDebugController::class, 'updateExamGradesAndAnswers'])->name('admin.assessmentDebug.updateExamGradesAndAnswers');
+            Route::post('/attempt/{id}/update-exam-grades', [AssessmentDebugController::class, 'updateAttemptExamGrades'])->name('admin.assessmentDebug.updateAttemptExamGrades');
             Route::delete('/{id}', [AssessmentDebugController::class, 'deleteAttempt'])->name('admin.assessmentDebug.delete');
         });
     

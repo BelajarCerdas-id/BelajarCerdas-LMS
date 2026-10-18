@@ -882,6 +882,14 @@ class AssessmentDebugController extends Controller
                     : $assessment->id;
                 $isCached = Cache::has("assessment_questions_pool_{$sourceId}");
 
+                $totalQuestions = (int) ($assessment->school_assessment_question_count ?? 0);
+                $totalWeight = (float) ($assessment->total_weight ?? 0);
+
+                if ($totalQuestions === 0 && $assessment->parent_assessment_id) {
+                    $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $sourceId)->count();
+                    $totalWeight = (float) SchoolAssessmentQuestion::where('school_assessment_id', $sourceId)->sum('question_weight');
+                }
+
                 $att = $attemptStats->get($assessment->id);
                 $ans = $answerStats->get($assessment->id);
 
@@ -900,8 +908,8 @@ class AssessmentDebugController extends Controller
                     'end_date' => $endDate ? $endDate->format('d M Y H:i') : '-',
                     'status_exam' => $itemExamStatus,
                     'is_cached' => $isCached,
-                    'total_questions' => (int) ($assessment->school_assessment_question_count ?? 0),
-                    'total_weight' => round((float) ($assessment->total_weight ?? 0), 2),
+                    'total_questions' => $totalQuestions,
+                    'total_weight' => round($totalWeight, 2),
                     'total_attempts' => (int) ($att->total_attempts ?? 0),
                     'submitted_count' => (int) ($att->submitted_count ?? 0),
                     'in_progress_count' => (int) ($att->in_progress_count ?? 0),
@@ -948,6 +956,34 @@ class AssessmentDebugController extends Controller
     }
 
     /**
+     * Dapatkan ID assessment sumber butir soal (menangani remedial & susulan yang mewarisi butir soal dari parent)
+     */
+    protected function getQuestionSourceAssessmentId(SchoolAssessment $assessment): int
+    {
+        if (SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->exists()) {
+            return $assessment->id;
+        }
+
+        if ($assessment->parent_assessment_id) {
+            $parent = SchoolAssessment::find($assessment->parent_assessment_id);
+            if ($parent) {
+                if (SchoolAssessmentQuestion::where('school_assessment_id', $parent->id)->exists()) {
+                    return $parent->id;
+                }
+                if ($parent->parent_assessment_id) {
+                    $root = SchoolAssessment::find($parent->parent_assessment_id);
+                    if ($root && SchoolAssessmentQuestion::where('school_assessment_id', $root->id)->exists()) {
+                        return $root->id;
+                    }
+                }
+            }
+            return $assessment->parent_assessment_id;
+        }
+
+        return $assessment->id;
+    }
+
+    /**
      * Ambil Detail Assessment Lengkap (Info, Daftar Soal & Kunci, Daftar Peserta & Nilai)
      */
     public function getAssessmentDetail(Request $request, int $id): JsonResponse
@@ -969,11 +1005,13 @@ class AssessmentDebugController extends Controller
             $startDate = $assessment->start_date ? Carbon::parse($assessment->start_date)->setTimezone($timezone) : null;
             $endDate = $assessment->end_date ? Carbon::parse($assessment->end_date)->setTimezone($timezone) : null;
 
-            // Load Soal
+            // Load Soal (Fallback ke parent jika child assessment remedial / susulan)
+            $sourceAssessmentId = $this->getQuestionSourceAssessmentId($assessment);
+
             $questions = SchoolAssessmentQuestion::with([
                 'LmsQuestionBank.LmsQuestionOption'
             ])
-            ->where('school_assessment_id', $id)
+            ->where('school_assessment_id', $sourceAssessmentId)
             ->orderBy('id')
             ->get()
             ->map(function ($sq, $index) {
@@ -1114,10 +1152,12 @@ class AssessmentDebugController extends Controller
      */
     protected function recalculateStudentAnswers(SchoolAssessment $assessment, int $studentId): array
     {
+        $sourceAssessmentId = $this->getQuestionSourceAssessmentId($assessment);
+
         $schoolQuestions = SchoolAssessmentQuestion::with([
             'LmsQuestionBank.LmsQuestionOption'
         ])
-        ->where('school_assessment_id', $assessment->id)
+        ->where('school_assessment_id', $sourceAssessmentId)
         ->get()
         ->keyBy('id');
 
@@ -1144,7 +1184,7 @@ class AssessmentDebugController extends Controller
             $wrongBankIds = Cache::get($cacheKeyWrong, []);
 
             if (empty($wrongBankIds)) {
-                $totalRemedialQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->parent_assessment_id)->count();
+                $totalRemedialQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $sourceAssessmentId)->count();
             } else {
                 $totalRemedialQuestions = count($wrongBankIds);
             }
@@ -1486,7 +1526,8 @@ class AssessmentDebugController extends Controller
                 'SchoolPartner',
                 'SchoolClass',
                 'Mapel',
-                'SchoolAssessmentType'
+                'SchoolAssessmentType',
+                'parentAssessment'
             ])->findOrFail($assessmentId);
 
             $student = UserAccount::with([
@@ -1498,21 +1539,50 @@ class AssessmentDebugController extends Controller
                 ->where('student_id', $studentId)
                 ->first();
 
+            // Fallback attempt: jika belum ada di child assessment, ambil dari parent assessment
+            if (!$attempt && $assessment->parent_assessment_id) {
+                $attempt = StudentAssessmentAttempt::where('school_assessment_id', $assessment->parent_assessment_id)
+                    ->where('student_id', $studentId)
+                    ->first();
+            }
+
             $timezone = $assessment->SchoolPartner?->timezone ?: config('app.timezone', 'Asia/Jakarta');
 
-            // Load Butir Soal Ujian
+            // Load Butir Soal Ujian (Fallback ke parent jika child assessment remedial / susulan)
+            $sourceAssessmentId = $this->getQuestionSourceAssessmentId($assessment);
+
             $schoolQuestions = SchoolAssessmentQuestion::with([
                 'LmsQuestionBank.LmsQuestionOption'
             ])
-            ->where('school_assessment_id', $assessmentId)
+            ->where('school_assessment_id', $sourceAssessmentId)
             ->orderBy('id')
             ->get();
 
-            // Load Jawaban Siswa
+            // Load Jawaban Siswa pada Assessment ini
             $answers = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)
                 ->where('student_id', $studentId)
                 ->get()
                 ->keyBy('school_assessment_question_id');
+
+            // Fallback Jawaban: Jika ini child assessment (remedial / susulan), cek jawaban dari parent jika ada
+            if ($assessment->parent_assessment_id) {
+                $parentAnswers = StudentAssessmentAnswer::where('school_assessment_id', $assessment->parent_assessment_id)
+                    ->where('student_id', $studentId)
+                    ->get()
+                    ->keyBy('school_assessment_question_id');
+
+                if ($answers->isEmpty() && $parentAnswers->isNotEmpty()) {
+                    $answers = $parentAnswers;
+                } else {
+                    // Gabungkan: jika pada remedial siswa hanya mengerjakan butir soal salah sebelumnya,
+                    // butir soal yang benar dari parent tetap ditampilkan
+                    foreach ($parentAnswers as $qId => $pAns) {
+                        if (!$answers->has($qId)) {
+                            $answers->put($qId, $pAns);
+                        }
+                    }
+                }
+            }
 
             $items = [];
             $correctCount = 0;
@@ -1661,5 +1731,288 @@ class AssessmentDebugController extends Controller
                 'message' => 'Gagal memuat detail lembar jawaban siswa: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Ubah Nilai dan Jawaban Butir Soal Tertentu secara Manual (Per Question Basis)
+     */
+    public function updateQuestionGradeAndAnswer(Request $request, int $assessmentId, int $studentId, int $questionId): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'question_score' => 'required|numeric|min:0',
+            'confirm_text' => 'required|string',
+            'status_answer' => 'nullable|in:draft,submitted',
+            'grading_status' => 'nullable|in:pending,graded',
+            'teacher_feedback' => 'nullable|string',
+        ]);
+
+        if (strtoupper(trim($request->confirm_text)) !== 'UBAH') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Konfirmasi langkah 2 tidak valid. Kata kunci verifikasi harus "UBAH".'
+            ], 422);
+        }
+
+        $assessment = SchoolAssessment::findOrFail($assessmentId);
+        $student = UserAccount::with('studentProfile')->findOrFail($studentId);
+        $studentName = $student->studentProfile?->nama_lengkap ?? "Siswa #{$studentId}";
+
+        $sourceAssessmentId = $this->getQuestionSourceAssessmentId($assessment);
+
+        $schoolQuestion = SchoolAssessmentQuestion::with('LmsQuestionBank.LmsQuestionOption')
+            ->where('school_assessment_id', $sourceAssessmentId)
+            ->where('id', $questionId)
+            ->firstOrFail();
+
+        $answer = StudentAssessmentAnswer::firstOrNew([
+            'school_assessment_id' => $assessmentId,
+            'student_id' => $studentId,
+            'school_assessment_question_id' => $questionId,
+        ]);
+
+        $oldScore = $answer->question_score;
+        $newScore = round((float) $request->input('question_score'), 2);
+
+        // Update answer value jika dikirim
+        if ($request->has('answer_value')) {
+            $rawVal = $request->input('answer_value');
+            if (is_string($rawVal) && (str_starts_with($rawVal, '[') || str_starts_with($rawVal, '{'))) {
+                $decoded = json_decode($rawVal, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $rawVal = $decoded;
+                }
+            }
+            $answer->answer_value = $rawVal;
+        }
+
+        $answer->question_score = $newScore;
+        $answer->status_answer = $request->input('status_answer', 'submitted');
+        $answer->grading_status = $request->input('grading_status', 'graded');
+        if ($request->has('teacher_feedback')) {
+            $answer->teacher_feedback = $request->input('teacher_feedback');
+        }
+        $answer->save();
+
+        // Sinkronkan ke StudentAssessmentSummary
+        $this->summaryService->updateStudentAssessmentSummary($studentId, $assessment);
+
+        // Hitung total nilai baru untuk exam ini
+        $newTotalScore = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)
+            ->where('student_id', $studentId)
+            ->sum('question_score');
+
+        \Log::info("AssessmentDebug: Admin " . (Auth::user()->email ?? Auth::id()) . " updated question grade for Student #{$studentId} on Assessment #{$assessmentId}, Question #{$questionId}. Score: {$oldScore} -> {$newScore}");
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Nilai dan jawaban soal berhasil diperbarui untuk {$studentName}.",
+            'data' => [
+                'assessment_id' => $assessmentId,
+                'student_id' => $studentId,
+                'question_id' => $questionId,
+                'old_score' => $oldScore,
+                'new_score' => $newScore,
+                'new_total_score' => round($newTotalScore, 2),
+                'grading_status' => $answer->grading_status,
+                'status_answer' => $answer->status_answer,
+            ]
+        ]);
+    }
+
+    /**
+     * Ubah Nilai dan Jawaban Ujian secara Menyeluruh (Per Exam Basis)
+     */
+    public function updateExamGradesAndAnswers(Request $request, int $assessmentId, int $studentId): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'mode' => 'required|in:target_total_score,batch_questions,preset_all_correct,preset_all_wrong',
+            'confirm_text' => 'required|string',
+            'target_total_score' => 'required_if:mode,target_total_score|nullable|numeric|min:0',
+            'questions' => 'required_if:mode,batch_questions|nullable|array',
+        ]);
+
+        if (strtoupper(trim($request->confirm_text)) !== 'UBAH') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Konfirmasi langkah 2 tidak valid. Kata kunci verifikasi harus "UBAH".'
+            ], 422);
+        }
+
+        $assessment = SchoolAssessment::findOrFail($assessmentId);
+        $student = UserAccount::with('studentProfile')->findOrFail($studentId);
+        $studentName = $student->studentProfile?->nama_lengkap ?? "Siswa #{$studentId}";
+
+        $sourceAssessmentId = $this->getQuestionSourceAssessmentId($assessment);
+
+        $schoolQuestions = SchoolAssessmentQuestion::with('LmsQuestionBank.LmsQuestionOption')
+            ->where('school_assessment_id', $sourceAssessmentId)
+            ->get();
+
+        if ($schoolQuestions->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada butir soal pada assessment ini.'
+            ], 404);
+        }
+
+        $existingAnswers = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)
+            ->where('student_id', $studentId)
+            ->get()
+            ->keyBy('school_assessment_question_id');
+
+        $oldTotalScore = $existingAnswers->sum('question_score');
+        $mode = $request->input('mode');
+        $updatedCount = 0;
+
+        if ($mode === 'target_total_score') {
+            $targetTotal = (float) $request->input('target_total_score', 0);
+            $totalWeight = $schoolQuestions->sum('question_weight');
+            if ($totalWeight <= 0) {
+                $totalWeight = $schoolQuestions->count() * 10;
+            }
+
+            $runningSum = 0;
+            $count = $schoolQuestions->count();
+
+            foreach ($schoolQuestions as $idx => $sq) {
+                $isLast = ($idx === $count - 1);
+                $weight = (float) $sq->question_weight;
+                if ($weight <= 0) $weight = 10;
+
+                if ($isLast) {
+                    $qScore = max(0, round($targetTotal - $runningSum, 2));
+                } else {
+                    $qScore = round(($weight / $totalWeight) * $targetTotal, 2);
+                    $runningSum += $qScore;
+                }
+
+                $ans = $existingAnswers->get($sq->id) ?: new StudentAssessmentAnswer([
+                    'school_assessment_id' => $assessmentId,
+                    'student_id' => $studentId,
+                    'school_assessment_question_id' => $sq->id,
+                ]);
+
+                $ans->question_score = $qScore;
+                $ans->status_answer = 'submitted';
+                $ans->grading_status = 'graded';
+                $ans->save();
+                $updatedCount++;
+            }
+        } elseif ($mode === 'preset_all_correct') {
+            foreach ($schoolQuestions as $sq) {
+                $bank = $sq->LmsQuestionBank;
+                $tipeSoal = strtoupper($bank?->tipe_soal ?? '');
+                $weight = (float) $sq->question_weight;
+
+                $correctKeys = [];
+                if ($bank && $bank->LmsQuestionOption) {
+                    $correctKeys = $bank->LmsQuestionOption->where('is_correct', true)->pluck('options_key')->values()->toArray();
+                }
+
+                $ans = $existingAnswers->get($sq->id) ?: new StudentAssessmentAnswer([
+                    'school_assessment_id' => $assessmentId,
+                    'student_id' => $studentId,
+                    'school_assessment_question_id' => $sq->id,
+                ]);
+
+                $ans->question_score = $weight;
+                $ans->status_answer = 'submitted';
+                $ans->grading_status = 'graded';
+                if (!empty($correctKeys)) {
+                    $ans->answer_value = count($correctKeys) === 1 ? [$correctKeys[0]] : $correctKeys;
+                } elseif ($tipeSoal === 'ESSAY') {
+                    $ans->answer_value = 'Jawaban terverifikasi otomatis (Full Score)';
+                }
+                $ans->save();
+                $updatedCount++;
+            }
+        } elseif ($mode === 'preset_all_wrong') {
+            foreach ($schoolQuestions as $sq) {
+                $ans = $existingAnswers->get($sq->id) ?: new StudentAssessmentAnswer([
+                    'school_assessment_id' => $assessmentId,
+                    'student_id' => $studentId,
+                    'school_assessment_question_id' => $sq->id,
+                ]);
+
+                $ans->question_score = 0;
+                $ans->status_answer = 'submitted';
+                $ans->grading_status = 'graded';
+                $ans->save();
+                $updatedCount++;
+            }
+        } elseif ($mode === 'batch_questions') {
+            $batchItems = $request->input('questions', []);
+            foreach ($batchItems as $item) {
+                $qId = (int) ($item['question_id'] ?? 0);
+                if (!$qId) continue;
+
+                $sq = $schoolQuestions->firstWhere('id', $qId);
+                if (!$sq) continue;
+
+                $ans = $existingAnswers->get($qId) ?: new StudentAssessmentAnswer([
+                    'school_assessment_id' => $assessmentId,
+                    'student_id' => $studentId,
+                    'school_assessment_question_id' => $qId,
+                ]);
+
+                if (isset($item['score'])) {
+                    $ans->question_score = max(0, round((float) $item['score'], 2));
+                }
+
+                if (array_key_exists('answer_value', $item)) {
+                    $raw = $item['answer_value'];
+                    if (is_string($raw) && (str_starts_with($raw, '[') || str_starts_with($raw, '{'))) {
+                        $dec = json_decode($raw, true);
+                        if (json_last_error() === JSON_ERROR_NONE) $raw = $dec;
+                    }
+                    $ans->answer_value = $raw;
+                }
+
+                $ans->status_answer = $item['status_answer'] ?? 'submitted';
+                $ans->grading_status = $item['grading_status'] ?? 'graded';
+                if (!empty($item['teacher_feedback'])) {
+                    $ans->teacher_feedback = $item['teacher_feedback'];
+                }
+                $ans->save();
+                $updatedCount++;
+            }
+        }
+
+        $newTotalScore = StudentAssessmentAnswer::where('school_assessment_id', $assessmentId)
+            ->where('student_id', $studentId)
+            ->sum('question_score');
+
+        // Sinkronkan ke StudentAssessmentSummary
+        $this->summaryService->updateStudentAssessmentSummary($studentId, $assessment);
+
+        \Log::info("AssessmentDebug: Admin " . (Auth::user()->email ?? Auth::id()) . " updated exam grades per exam basis ({$mode}) for Student #{$studentId} on Assessment #{$assessmentId}. Total Score: {$oldTotalScore} -> {$newTotalScore}");
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Nilai ujian (Per Exam) berhasil diperbarui untuk {$studentName}. Skor sebelumnya: {$oldTotalScore} -> Skor baru: " . round($newTotalScore, 2) . " ({$updatedCount} butir soal diproses).",
+            'data' => [
+                'assessment_id' => $assessmentId,
+                'student_id' => $studentId,
+                'mode' => $mode,
+                'old_total_score' => round($oldTotalScore, 2),
+                'new_total_score' => round($newTotalScore, 2),
+                'updated_count' => $updatedCount,
+            ]
+        ]);
+    }
+
+    /**
+     * Shortcut: Ubah Nilai Ujian (Per Exam Basis) Menggunakan Attempt ID
+     */
+    public function updateAttemptExamGrades(Request $request, int $id): JsonResponse
+    {
+        $this->authorizeAdmin();
+
+        $attempt = StudentAssessmentAttempt::findOrFail($id);
+        return $this->updateExamGradesAndAnswers($request, $attempt->school_assessment_id, $attempt->student_id);
     }
 }
