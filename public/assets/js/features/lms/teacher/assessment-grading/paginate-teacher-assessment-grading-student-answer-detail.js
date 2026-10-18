@@ -71,6 +71,16 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
 
                 if (response.data.length > 0) {
 
+                    function escapeHtml(text) {
+                        if (!text) return '-';
+                        return String(text)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#039;');
+                    }
+
                     const questions = response.data;
 
                     // Mendapatkan data jawaban
@@ -231,75 +241,92 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0) {
 
                     // RENDER MCQ / MCMA
                     function renderMCQOptions() {
-                        const optionKeys = ['A', 'B', 'C', 'D', 'E'];
+                        const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+                        const studentOptions = Array.isArray(studentAnswer) ? studentAnswer.map(value => String(value).trim().toLowerCase()) : studentAnswer !== null && studentAnswer !== undefined
+                            ? [String(studentAnswer).trim().toLowerCase()] : [];
 
                         return options.map((item, index) => {
+                            const optKey = String(item.options_key).trim();
+                            const normalizedKey = optKey.toLowerCase();
+
                             const containsImage = /<img\s+[^>]*src=/.test(item.options_value);
-
-                            const key = optionKeys[index];
-
-                            const studentOptions = Array.isArray(studentAnswer) ? studentAnswer : studentAnswer ? [studentAnswer] : [];
-
-                            const isStudent = studentOptions.includes(item.options_key);
+                            const isChosen = studentOptions.includes(normalizedKey);
                             const isCorrect = item.is_correct == 1;
 
-                            let statusClass = '';
-                            let badge = '';
+                            let displayLetter = optionLetters[index] || '';
+
+                            if (/^[A-Za-z]$/.test(optKey)) {
+                                displayLetter = optKey.toUpperCase();
+                            } else if (/^option_?(\d+)$/i.test(optKey)) {
+                                const num = parseInt(optKey.replace(/\D/g, ''), 10);
+
+                                if (num >= 1 && num <= 26) {
+                                    displayLetter = String.fromCharCode(64 + num);
+                                }
+                            }
+
+                            if (!displayLetter) {
+                                displayLetter = optionLetters[index] || optKey;
+                            }
+
+                            let optStyle = 'bg-white text-slate-700 border-slate-200';
+                            let optTag = '';
+                            let badgeStyle = 'bg-slate-100 text-slate-600 border border-slate-200';
+
+                            if (questionStatus === 'not_answered') {
+                                if (isCorrect) {
+                                    optStyle = 'bg-emerald-50/40 text-emerald-900 border-dashed border-emerald-300 font-medium';
+                                    optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-key mr-1 text-emerald-600"></i>Kunci Benar</span>';
+                                    badgeStyle = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+                                }
+                            } else if (questionStatus === 'correct') {
+                                if (isChosen && isCorrect) {
+                                    optStyle = 'bg-emerald-50/90 text-emerald-950 border-emerald-400 font-bold shadow-2xs';
+                                    optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-200/90 text-emerald-900 font-extrabold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-check mr-1 text-emerald-700"></i>Pilihan Siswa & Kunci Benar</span>';
+                                    badgeStyle = 'bg-emerald-600 text-white shadow-2xs';
+                                }
+                            } else if (questionStatus === 'wrong') {
+                                if (isChosen && isCorrect) {
+                                    optStyle = 'bg-emerald-50/90 text-emerald-950 border-emerald-400 font-bold shadow-2xs';
+                                    optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-200/90 text-emerald-900 font-extrabold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-check mr-1 text-emerald-700"></i>Pilihan Siswa & Kunci Benar</span>';
+                                    badgeStyle = 'bg-emerald-600 text-white shadow-2xs';
+                                } else if (isChosen && !isCorrect) {
+                                    optStyle = 'bg-red-50/90 text-red-950 border-red-300 font-bold shadow-2xs';
+                                    optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-red-200/90 text-red-900 font-extrabold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-xmark mr-1 text-red-700"></i>Pilihan Siswa (Salah)</span>';
+                                    badgeStyle = 'bg-red-600 text-white shadow-2xs';
+                                } else if (!isChosen && isCorrect) {
+                                    optStyle = 'bg-emerald-50/40 text-emerald-900 border-dashed border-emerald-300 font-medium';
+                                    optTag = '<span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold uppercase whitespace-nowrap tracking-wide"><i class="fa-solid fa-key mr-1 text-emerald-600"></i>Kunci Benar</span>';
+                                    badgeStyle = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+                                }
+                            }
 
                             let content = item.options_value;
 
-                            // Tambahkan class img jika ada gambar
                             if (containsImage) {
-                                content = addClassToImgTags(item.options_value, 'max-w-[300px] rounded my-2');
-                            }
-
-                            if (questionStatus === 'not_answered') {
-
-                                if (isCorrect) {
-                                    statusClass = 'bg-green-100 text-green-700';
-                                    badge = `<span class="text-xs font-semibold text-green-700">Jawaban Benar</span>`;
-                                }
-
-                            }
-
-                            else if (questionStatus === 'correct') {
-
-                                if (isStudent) {
-                                    statusClass = 'bg-green-200 text-green-800 font-semibold';
-                                    badge = `<span class="text-xs font-bold text-green-800">Jawaban Siswa</span>`;
-                                }
-
-                            }
-
-                            else if (questionStatus === 'wrong') {
-
-                                if (isStudent && !isCorrect) {
-                                    statusClass = 'bg-red-200 text-red-700 font-semibold';
-                                    badge = `<span class="text-xs font-bold text-red-700">Jawaban Siswa</span>`;
-                                }
-
-                                if (isCorrect) {
-                                    statusClass = 'bg-green-100 text-green-700';
-                                    badge = `<span class="text-xs font-semibold text-green-700">Jawaban Benar</span>`;
-                                }
-
+                                content = addClassToImgTags(
+                                    item.options_value,
+                                    'max-w-[300px] rounded my-2'
+                                );
                             }
 
                             return `
-                                <div class="border rounded-lg p-3 mb-3 flex justify-between items-start gap-3 ${statusClass}">
-                                    
-                                    <div class="flex text-sm gap-3">
-                                        <span class="font-bold">${key}.</span>
-                                        <div>${content}</div>
+                                <div class="px-3.5 py-2.5 rounded-xl border text-xs flex items-center justify-between gap-3 transition-colors mb-3 ${optStyle}">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <span class="w-7 h-7 min-w-7 rounded-lg shrink-0 flex items-center justify-center text-xs font-black select-none ${badgeStyle}" title="Key: ${escapeHtml(optKey)}">
+                                            ${escapeHtml(displayLetter)}
+                                        </span>
+                                        <div class="font-medium leading-relaxed wrap-break-word text-slate-800 min-w-0">
+                                            ${content}
+                                        </div>
                                     </div>
-
-                                    ${badge}
-
+                                    <div class="shrink-0">${optTag}</div>
                                 </div>
                             `;
-
                         }).join('');
                     }
+
                     const leftItems = options.filter(item => item.options_key.startsWith('LEFT'));
                     const rightItems = options.filter(item => item.options_key.startsWith('RIGHT'));
 
