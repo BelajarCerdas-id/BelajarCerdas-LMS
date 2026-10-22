@@ -624,6 +624,7 @@ class StudentAssessmentExamController extends Controller
             [
                 'start_time' => $now,
                 'expire_time' => $now->copy()->addMinutes($assessment->duration),
+                'last_heartbeat_at' => $now,
                 'status' => 'in_progress'
             ]
         );
@@ -638,22 +639,41 @@ class StudentAssessmentExamController extends Controller
 
     public function reportTabSwitch($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
-        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())->where('school_assessment_id', $assessmentId)->first();
+        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())
+            ->where('school_assessment_id', $assessmentId)
+            ->first();
 
-        if (!$attempt) {
-            return response()->json(['status' => 'error']);
+        if (!$attempt || $attempt->status !== 'in_progress') {
+            return response()->json(['status' => 'ignored']);
         }
 
+        $now = now();
+
+        if ($attempt->expire_time && $now->gt($attempt->expire_time)) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        // Server-side cooldown: avoid cascading duplicate triggers within 10 seconds
+        $cooldownKey = "tab_switch_cooldown_{$attempt->id}";
+        if (Cache::has($cooldownKey)) {
+            return response()->json([
+                'status' => 'warning',
+                'count' => $attempt->tab_switch_count,
+                'max_count' => 5
+            ]);
+        }
+
+        Cache::put($cooldownKey, true, 10);
+
         $attempt->increment('tab_switch_count');
+        $attempt->update(['last_heartbeat_at' => $now]);
 
         if ($attempt->tab_switch_count >= 5) {
-
             $attempt->update([
                 'status' => 'cheating',
             ]);
 
             $assessment = SchoolAssessment::findOrFail($assessmentId);
-
             $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
 
             return response()->json([
@@ -680,7 +700,7 @@ class StudentAssessmentExamController extends Controller
             ]);
         }
 
-        if ($attempt->status === 'cheating') {
+        if ($attempt->status === 'cheating' || $attempt->tab_switch_count >= 5) {
             return response()->json([
                 'status' => 'blocked',
                 'count' => $attempt->tab_switch_count,
@@ -688,23 +708,17 @@ class StudentAssessmentExamController extends Controller
             ]);
         }
 
-        if ($attempt->tab_switch_count > 0) {
-            return response()->json([
-                'status' => 'warning',
-                'count' => $attempt->tab_switch_count,
-                'max_count' => 5
-            ]);
-        }
-
         return response()->json([
-            'status' => 'ok'
+            'status' => 'ok',
+            'count' => $attempt->tab_switch_count,
+            'max_count' => 5
         ]);
     }
 
     /**
      * Receive heartbeat pings from the client-side anti-cheat system.
-     * Detects gaps in heartbeat (e.g., iOS Safari suspending JS when app is backgrounded).
-     * If gap > 10 seconds, it's treated as a cheating event.
+     * Detects gaps in heartbeat (e.g., mobile backgrounding where JS is suspended).
+     * Includes cooldown and sensible gap thresholds to avoid false alarms from network jitter.
      */
     public function heartbeat(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
@@ -717,19 +731,34 @@ class StudentAssessmentExamController extends Controller
         }
 
         $now = now();
+
+        if ($attempt->expire_time && $now->gt($attempt->expire_time)) {
+            return response()->json(['status' => 'ignored']);
+        }
+
         $lastHeartbeat = $attempt->last_heartbeat_at;
 
         // Allow grace period when student is actively taking a photo or selecting an image
         $isSelectingFile = $request->boolean('is_selecting_file');
-        $maxGap = $isSelectingFile ? 90 : 10;
+        $maxGap = $isSelectingFile ? 180 : 35;
 
-        // Detect heartbeat gap: if last ping was more than $maxGap seconds ago,
-        // the browser was likely backgrounded (especially iOS Safari where JS is suspended)
-        if ($lastHeartbeat && $now->diffInSeconds($lastHeartbeat) > $maxGap) {
+        // Startup grace period: ignore gap within first 60 seconds of exam start or initial load
+        $hasStartupGrace = $attempt->start_time && $now->diffInSeconds($attempt->start_time) < 60;
+
+        // Check if a tab switch was already recorded very recently (dedup with reportTabSwitch)
+        $cooldownKey = "tab_switch_cooldown_{$attempt->id}";
+        $isRecentTabSwitch = Cache::has($cooldownKey);
+
+        // Detect heartbeat gap: if last ping was more than $maxGap seconds ago and not in cooldown/grace
+        if ($lastHeartbeat && !$hasStartupGrace && !$isRecentTabSwitch && $now->diffInSeconds($lastHeartbeat) > $maxGap) {
+            Cache::put($cooldownKey, true, 10);
             $attempt->increment('tab_switch_count');
 
             if ($attempt->tab_switch_count >= 5) {
-                $attempt->update(['status' => 'cheating']);
+                $attempt->update([
+                    'status' => 'cheating',
+                    'last_heartbeat_at' => $now
+                ]);
 
                 $assessment = SchoolAssessment::findOrFail($assessmentId);
                 $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
@@ -746,8 +775,10 @@ class StudentAssessmentExamController extends Controller
             ]);
         }
 
-        // Normal heartbeat — just update the timestamp
-        $attempt->update(['last_heartbeat_at' => $now]);
+        // Normal heartbeat: throttle database updates to once every 15 seconds to reduce server load
+        if (!$lastHeartbeat || $now->diffInSeconds($lastHeartbeat) >= 15) {
+            $attempt->update(['last_heartbeat_at' => $now]);
+        }
 
         return response()->json(['status' => 'ok']);
     }

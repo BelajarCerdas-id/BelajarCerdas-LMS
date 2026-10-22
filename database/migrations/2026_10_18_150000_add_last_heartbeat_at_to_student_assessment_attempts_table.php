@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('student_assessment_attempts', function (Blueprint $table) {
-            $table->timestamp('last_heartbeat_at')->nullable()->after('tab_switch_count');
-        });
+        if (Schema::hasTable('student_assessment_attempts') && !Schema::hasColumn('student_assessment_attempts', 'last_heartbeat_at')) {
+            Schema::table('student_assessment_attempts', function (Blueprint $table) {
+                $table->timestamp('last_heartbeat_at')->nullable()->after('tab_switch_count');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('student_assessment_attempts', function (Blueprint $table) {
-            $table->dropColumn('last_heartbeat_at');
-        });
+        if (Schema::hasTable('student_assessment_attempts') && Schema::hasColumn('student_assessment_attempts', 'last_heartbeat_at')) {
+            Schema::table('student_assessment_attempts', function (Blueprint $table) {
+                $table->dropColumn('last_heartbeat_at');
+            });
+        }
     }
 };

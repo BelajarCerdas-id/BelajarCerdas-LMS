@@ -827,7 +827,7 @@ class AssessmentDebugController extends Controller
             'status' => 'success',
             'message' => 'Proses pembersihan cache multi-tier selesai.',
             'results' => $results
-        ])->header('Clear-Site-Data', '"cache", "storage"');
+        ]);
     }
 
     /**

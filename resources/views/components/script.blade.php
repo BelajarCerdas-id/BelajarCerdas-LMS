@@ -48,9 +48,6 @@
                     localStorage.setItem(pk, preservedKeys[pk]);
                 }
                 localStorage.setItem('app_client_cache_version', serverCacheVersion);
-
-                // Hard reload to guarantee clean HTTP assets
-                window.location.reload(true);
             } else if (!localCacheVersion) {
                 localStorage.setItem('app_client_cache_version', serverCacheVersion);
             }

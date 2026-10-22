@@ -295,9 +295,13 @@ function startHeartbeat() {
                 timestamp: Date.now(),
                 is_selecting_file: !!window.isSelectingFile
             },
-            timeout: 4000,
+            timeout: 8000,
             success: function (res) {
                 if (examFinished) return;
+
+                if (res.status === 'ignored') {
+                    return;
+                }
 
                 // Server detected a heartbeat gap (e.g., iOS backgrounding)
                 if (res.status === 'warning') {
@@ -344,7 +348,7 @@ function startHeartbeat() {
                 }
             }
         });
-    }, 5000);
+    }, 10000);
 }
 
 function stopHeartbeat() {
@@ -642,7 +646,7 @@ function enterFullscreen() {
     const el = document.documentElement;
     try {
         if (el.requestFullscreen) {
-            return el.requestFullscreen().catch(() => {});
+            return el.requestFullscreen().catch(() => { });
         } else if (el.webkitRequestFullscreen) {
             return el.webkitRequestFullscreen();
         }
@@ -748,9 +752,9 @@ function reportCheating(reason = 'unspecified') {
 
     const now = Date.now();
 
-    // 1500ms cooldown to avoid cascading/duplicate triggers from related events
+    // 4000ms cooldown to avoid cascading/duplicate triggers from related events
     // (e.g. visibilitychange + blur + pagehide can all fire within milliseconds)
-    if (now - lastCheatReport < 1500) {
+    if (now - lastCheatReport < 4000) {
         return;
     }
 

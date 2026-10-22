@@ -146,8 +146,13 @@
                             <i class="fa-solid fa-camera"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-sm text-white">Ambil Foto Jawaban Langsung</h3>
-                            <p class="text-[11px] text-slate-400">Kamera aktif di dalam browser ujian • Upload file dinonaktifkan</p>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-sm text-white">Ambil Foto Jawaban Langsung</h3>
+                                <span id="modal-web-camera-count" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-medium">
+                                    0 foto terlampir
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">Anda dapat mengambil dan melampirkan lebih dari satu foto lembar jawaban</p>
                         </div>
                     </div>
                     <button type="button" id="btn-close-web-camera" class="btn btn-circle btn-sm btn-ghost text-slate-400 hover:text-white hover:bg-slate-700">
@@ -201,9 +206,9 @@
                 </div>
 
                 <!-- Footer / Camera Controls -->
-                <div class="px-5 py-4 bg-slate-800 border-t border-slate-700 flex items-center justify-between gap-3">
+                <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-800 border-t border-slate-700 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                     <!-- Left: Switch camera button (front/back on phone or multiple webcams) -->
-                    <div>
+                    <div class="order-1 sm:order-none">
                         <button type="button" id="btn-switch-camera" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-medium transition cursor-pointer border border-slate-600" title="Ganti Kamera Depan / Belakang">
                             <i class="fa-solid fa-camera-rotate"></i>
                             <span class="hidden sm:inline">Ganti Kamera</span>
@@ -211,32 +216,40 @@
                     </div>
 
                     <!-- Center: Action Controls -->
-                    <div class="flex items-center gap-3">
-                        <!-- Live State: Shutter Button -->
-                        <div id="web-camera-live-controls" class="flex items-center gap-3">
+                    <div class="w-full sm:w-auto order-3 sm:order-none flex items-center justify-center gap-2 sm:gap-3">
+                        <!-- Live State: Shutter Button & Finish (if photos exist) -->
+                        <div id="web-camera-live-controls" class="flex items-center gap-2.5">
                             <button type="button" id="btn-capture-photo" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl text-sm font-semibold shadow-lg shadow-blue-600/30 transition cursor-pointer">
                                 <i class="fa-solid fa-camera text-base"></i>
                                 <span>Ambil Foto</span>
                             </button>
+                            <button type="button" id="btn-finish-web-camera" class="hidden inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/30 transition cursor-pointer">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Selesai</span>
+                            </button>
                         </div>
 
-                        <!-- Preview State: Retake / Use Photo -->
-                        <div id="web-camera-preview-controls" class="hidden flex items-center gap-2.5">
-                            <button type="button" id="btn-retake-photo" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer border border-slate-600">
+                        <!-- Preview State: Retake / Save & Take Another / Save & Finish -->
+                        <div id="web-camera-preview-controls" class="hidden flex flex-wrap items-center justify-center gap-2">
+                            <button type="button" id="btn-retake-photo" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold transition cursor-pointer border border-slate-600">
                                 <i class="fa-solid fa-rotate-left"></i>
                                 <span>Foto Ulang</span>
                             </button>
-                            <button type="button" id="btn-use-photo" class="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-600/30 transition cursor-pointer">
+                            <button type="button" id="btn-use-photo-and-continue" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-600/30 transition cursor-pointer">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Simpan & Ambil Lagi</span>
+                            </button>
+                            <button type="button" id="btn-use-photo" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-600/30 transition cursor-pointer">
                                 <i class="fa-solid fa-check"></i>
-                                <span>Gunakan Foto Ini</span>
+                                <span>Simpan & Selesai</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Right: Cancel Button -->
-                    <div>
+                    <!-- Right: Cancel / Close Button -->
+                    <div class="order-2 sm:order-none">
                         <button type="button" id="btn-cancel-web-camera" class="px-3.5 py-2 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition cursor-pointer">
-                            Batal
+                            Tutup
                         </button>
                     </div>
                 </div>
