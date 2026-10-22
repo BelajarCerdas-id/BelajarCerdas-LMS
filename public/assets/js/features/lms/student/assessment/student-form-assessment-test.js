@@ -298,6 +298,16 @@ function renderAssessmentFormContent(selectedIndex, response) {
     $('#assessment-time').text(formatted.time);
     $('#assessment-title').text(response.assessment_title + ' - Semester ' + response.semester);
 
+    function escapeHtml(text) {
+        if (!text) return '-';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     // Mendapatkan data soal
     questions = response.data;
 
@@ -351,118 +361,155 @@ function renderAssessmentFormContent(selectedIndex, response) {
 
         // ===== GENERATE OPTIONS =====
         const generateOptions = (options = []) => {
-
             if (!Array.isArray(options)) return '';
 
-            const optionKeys = ['A', 'B', 'C', 'D', 'E'];
-
+            const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
             const shuffleOptions = [...options];
 
-            return shuffleOptions.map((item, index) => {
+            const answerData = questionsAnswer[question.id] ?? {};
+            const rawAnswer = answerData.answer_value;
+            const answerStatus = answerData.status_answer;
 
-                const newKey = optionKeys[index] ?? '';
+            const userAnswers = Array.isArray(rawAnswer) ? rawAnswer.map(value => String(value).trim().toLowerCase()) : rawAnswer !== null && rawAnswer !== undefined
+                ? [String(rawAnswer).trim().toLowerCase()] : [];
+
+            const correctKeys = options.filter(opt => opt.is_correct == 1).map(opt => String(opt.options_key).trim().toLowerCase());
+
+            const isResultVisible = isAllAnswered && showAnswer && answerStatus === 'submitted';
+
+            return shuffleOptions.map((item, index) => {
+                const optKey = String(item.options_key).trim();
+                const normalizedKey = optKey.toLowerCase();
+
+                const isChosen = userAnswers.includes(normalizedKey);
+                const isCorrect = item.is_correct == 1;
                 const containsImage = /<img\s+[^>]*src=/.test(item.options_value ?? '');
 
-                let content = item.options_value;
+                let displayLetter = optionLetters[index] || '';
+
+                if (/^[A-Za-z]$/.test(optKey)) {
+                    displayLetter = optKey.toUpperCase();
+                } else if (/^option_?(\d+)$/i.test(optKey)) {
+                    const num = parseInt(optKey.replace(/\D/g, ''), 10);
+
+                    if (num >= 1 && num <= 26) {
+                        displayLetter = String.fromCharCode(64 + num);
+                    }
+                }
+
+                if (!displayLetter) {
+                    displayLetter = optionLetters[index] || optKey;
+                }
+
+                let optStyle = 'bg-white text-slate-700 border-slate-200';
+                let optTag = '';
+                let badgeStyle = 'bg-slate-100 text-slate-600 border border-slate-200';
+
+                // ===== RESULT BADGES =====
+                if (isResultVisible) {
+                    if (isChosen && isCorrect) {
+                        optStyle = 'bg-emerald-50/90 text-emerald-950 border-emerald-400 font-bold shadow-2xs';
+
+                        optTag = `
+                                    <span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-200/90 text-emerald-900 font-extrabold uppercase whitespace-nowrap tracking-wide">
+                                        <i class="fa-solid fa-check mr-1 text-emerald-700"></i>
+                                    </span>
+                                `;
+
+                        badgeStyle = 'bg-emerald-600 text-white shadow-2xs';
+
+                    } else if (isChosen && !isCorrect) {
+                        optStyle = 'bg-red-50/90 text-red-950 border-red-300 font-bold shadow-2xs';
+
+                        optTag = `
+                                    <span class="text-[10px] px-2.5 py-1 rounded-lg bg-red-200/90 text-red-900 font-extrabold uppercase whitespace-nowrap tracking-wide">
+                                        <i class="fa-solid fa-xmark mr-1 text-red-700"></i>
+                                    </span>
+                                `;
+
+                        badgeStyle = 'bg-red-600 text-white shadow-2xs';
+
+                    } else if (!isChosen && isCorrect) {
+                        optStyle = 'bg-emerald-50/40 text-emerald-900 border-dashed border-emerald-300 font-medium';
+
+                        optTag = `
+                                    <span class="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold uppercase whitespace-nowrap tracking-wide">
+                                        <i class="fa-solid fa-key mr-1 text-emerald-600"></i>
+                                    </span>
+                                `;
+
+                        badgeStyle = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+                    }
+
+                } else if (answerStatus === 'submitted' || answerStatus === 'draft') {
+
+                    // Pertahankan penanda jawaban yang dipilih sebelum hasil ditampilkan.
+                    if (isChosen) {
+                        optStyle = 'bg-gray-200 text-slate-700 font-bold opacity-70';
+                    }
+                }
+
+                // ===== OPTION CONTENT =====
+                let content = item.options_value ?? '';
 
                 if (containsImage) {
-                    content = addClassToImgTags(content, 'max-w-[300px] rounded my-2');
+                    content = addClassToImgTags(
+                        content,
+                        'max-w-[300px] rounded my-2'
+                    );
                 }
-
-                let statusClass = '';
-
-                const userAnswer = questionsAnswer[question.id]?.answer_value ?? [];
-                const correctOption = options.find(opt => opt.is_correct == 1);
-                const correctKey = correctOption?.options_key;
-                const correctKeys = options.filter(opt => opt.is_correct == 1).map(opt => opt.options_key);
-
-                if (isAllAnswered && showAnswer) {
-                    if (questionsAnswer[question.id]?.status_answer === 'submitted') {
-
-                        if (questionType === 'mcma') {
-
-                            if (correctKeys.includes(item.options_key) && userAnswer.includes(item.options_key)) {
-                                statusClass = 'bg-green-200 text-green-700 font-bold';
-                            }
-                            else if (!correctKeys.includes(item.options_key) && userAnswer.includes(item.options_key)) {
-                                statusClass = 'bg-red-200 text-red-700 font-bold';
-                            }
-                            else if (correctKeys.includes(item.options_key)) {
-                                statusClass = 'bg-green-200 text-green-700 font-bold';
-                            }
-
-                        } else {
-
-                            if (userAnswer === correctKey && item.options_key === correctKey) {
-                                statusClass = 'bg-green-200 text-green-700 font-bold';
-                            } else if (userAnswer !== correctKey && item.options_key === userAnswer) {
-                                statusClass = 'bg-red-200 text-red-700 font-bold';
-                            } else if (item.options_key === correctKey) {
-                                statusClass = 'bg-green-200 text-green-700 font-bold';
-                            }
-
-                        }
-                    }
-                } else {
-                    const answerValue = questionsAnswer[question.id]?.answer_value;
-                    const status = questionsAnswer[question.id]?.status_answer;
-
-                    if (status === 'submitted' || status === 'draft') {
-                        if (questionType === 'mcma') {
-                            if (Array.isArray(answerValue) && answerValue.includes(item.options_key)) {
-                                statusClass = 'bg-gray-200 font-bold opacity-70';
-                            }
-                        } else {
-                            if (answerValue === item.options_key) {
-                                statusClass = 'bg-gray-200 font-bold opacity-70';
-                            }
-                        }
-                    }
-                }
-
-                let optionsValue = '';
 
                 const inputType = questionType === 'mcma' ? 'checkbox' : 'radio';
 
-                // memeriksa apakah soal sudah dijawab oleh pengguna atau jawaban masih ditandai
-                if (!questionsAnswer[question.id] || questionsAnswer[question.id]?.status_answer === 'draft') {
-                    if (containsImage) {
-                        optionsValue = `
-                                        <input type="${inputType}" name="options_value_${question.id}${questionType === 'mcma' ? '[]' : ''}" id="soal${question.id}_${item.options_key}" value="${item.options_key}" class="hidden peer" data-soal-id="${question.id}">
-                                        <label for="soal${question.id}_${item.options_key}" class="border border-gray-300 rounded-md p-3 sm:px-4 mb-4 text-sm flex gap-2 cursor-pointer checked-option ${statusClass}">
-                                            <div class="font-bold min-w-7.5">${newKey}.</div>
-                                            <div class="w-full flex flex-col gap-8 list-style">${item.options_value}</div>
-                                        </label>
-                                    `;
-                    } else {
-                        optionsValue = `
-                                        <input type="${inputType}" name="options_value_${question.id}${questionType === 'mcma' ? '[]' : ''}" id="soal${question.id}_${item.options_key}" value="${item.options_key}" class="hidden" data-soal-id="${question.id}">
-                                        <label for="soal${question.id}_${item.options_key}" class="list-style border border-gray-300 rounded-md p-3 sm:px-4 mb-4 text-sm flex gap-2 cursor-pointer checked-option ${statusClass}">
-                                            ${newKey}. ${item.options_value}
-                                        </label>
-                                    `;
-                    }
-                } else if (questionsAnswer[question.id] && questionsAnswer[question.id]?.status_answer === 'submitted') {
-                    if (containsImage) {
-                        optionsValue = `
-                                    <div class="border border-gray-300 rounded-md p-3 sm:px-4 mb-4 text-sm flex gap-2 checked-option ${statusClass}">
-                                        <div class="font-bold min-w-7.5">${newKey}.</div>
-                                        <div class="w-full flex flex-col gap-8 list-style">${item.options_value}</div>
+                let optionsValue = '';
+
+                // ===== INPUT MODE =====
+                if (!answerData.status_answer || answerStatus === 'draft') {
+                    optionsValue = `
+                                <input type="${inputType}" name="options_value_${question.id}${questionType === 'mcma' ? '[]' : ''}" id="soal${question.id}_${item.options_key}" value="${item.options_key}" class="hidden peer" data-soal-id="${question.id}">
+
+                                <label for="soal${question.id}_${item.options_key}" class="block px-3.5 py-2.5 rounded-xl border text-xs transition-colors cursor-pointer checked-option ${optStyle}">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="flex items-start gap-3 min-w-0 flex-1">
+                                            <span class="w-7 h-7 min-w-7 rounded-lg shrink-0 flex items-center justify-center text-xs font-black select-none ${badgeStyle}"
+                                                title="Key: ${escapeHtml(optKey)}">
+                                                ${escapeHtml(displayLetter)}
+                                            </span>
+
+                                            <div class="font-medium leading-relaxed wrap-break-word text-slate-800 min-w-0">
+                                                ${content}
+                                            </div>
+                                        </div>
+
+                                        <div class="shrink-0">
+                                            ${optTag}
+                                        </div>
                                     </div>
-                                `;
-                    } else {
-                        optionsValue = `
-                                    <div class="list-style border border-gray-300 rounded-md p-3 sm:px-4 mb-4 text-sm flex gap-2 checked-option ${statusClass}">
-                                        ${newKey}. ${item.options_value}
+                                </label>
+                            `;
+
+                } else if (answerStatus === 'submitted') {
+                    optionsValue = `
+                                <div class="px-3.5 py-2.5 rounded-xl border text-xs flex items-center justify-between gap-3 transition-colors checked-option ${optStyle}">
+                                    <div class="flex items-start gap-3 min-w-0 flex-1">
+                                        <span class="w-7 h-7 min-w-7 rounded-lg shrink-0 flex items-center justify-center text-xs font-black select-none ${badgeStyle}"
+                                            title="Key: ${escapeHtml(optKey)}">
+                                            ${escapeHtml(displayLetter)}
+                                        </span>
+
+                                        <div class="font-medium leading-relaxed wrap-break-word text-slate-800 min-w-0">
+                                            ${content}
+                                        </div>
                                     </div>
-                                `;
-                    }
+
+                                    <div class="shrink-0">
+                                        ${optTag}
+                                    </div>
+                                </div>
+                            `;
                 }
 
-                // Render opsi jawaban
-                return `
-                            ${optionsValue}
-                        `;
+                return optionsValue;
             }).join('');
         };
 
