@@ -103,6 +103,10 @@ Route::delete('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}', [Teach
 Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher/polling/vote', [TeacherInformationController::class, 'submitVote'])->name('lms.teacherPolling.submitVote');
 Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-polling/{id}/breakdown', [TeacherInformationController::class, 'getPollingBreakdown'])->name('lms.teacherPolling.breakdown');
 
+// Jadwal & Kalender Akademik Guru
+Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-schedule-calendar', [TeacherInformationController::class, 'teacherScheduleCalendarView'])
+    ->name('lms.teacherScheduleCalendar.view');
+
 // Rute detail kelas
 Route::get('/lms/guru/api/get-students/{classId}', [LmsController::class, 'getStudentsForAttendance'])
     ->name('lms.guru.get_students');

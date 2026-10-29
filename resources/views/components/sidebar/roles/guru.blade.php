@@ -1,825 +1,538 @@
 @php
     $staffProfile = Auth::user()?->SchoolStaffProfile;
     $schoolPartner = $staffProfile?->SchoolPartner;
-    $schoolName = $schoolPartner?->nama_sekolah ?? 'sekolah';
+    $schoolName = $schoolPartner?->nama_sekolah ?? 'Sekolah Masa';
     $schoolId = $schoolPartner?->id ?? 0;
     $schoolLogo = $schoolPartner?->logo;
     $profileName = $staffProfile?->nama_lengkap ?? Auth::user()?->name ?? 'Guru';
+    $userInitials = collect(explode(' ', trim($profileName)))->map(fn($w) => strtoupper(substr($w, 0, 1)))->take(2)->join('');
 @endphp
-    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
 
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+    {{-- ============================================================ --}}
+    {{-- DESKTOP SIDEBAR --}}
+    {{-- ============================================================ --}}
+    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72 bg-surface border-r border-dpai min-h-screen text-dpai-primary" style="background: var(--color-surface); border-color: var(--color-border); color: var(--color-text-primary);">
 
-            <!-- LOGO WRAPPER -->
-            <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
-
+        {{-- BRAND & IDENTITAS SEKOLAH --}}
+        <div class="h-20 shrink-0 flex items-center border-b border-dpai px-5 py-3 relative group" style="border-color: var(--color-border);">
+            <div class="flex items-center gap-3">
                 @if(!empty($schoolLogo))
-                    <img id="school-logo-preview" src="{{ asset($schoolLogo) }}" class="h-26 object-cover">
+                    <div id="logo-wrapper" class="w-10 h-10 flex items-center justify-center overflow-hidden shrink-0" style="border-radius: var(--radius-tile);">
+                        <img id="school-logo-preview" src="{{ asset($schoolLogo) }}" alt="{{ $schoolName }}" class="max-h-10 max-w-full object-contain">
+                    </div>
                 @else
-                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                    <div class="w-10 h-10 flex items-center justify-center shrink-0 font-extrabold text-sm text-white" style="border-radius: var(--radius-tile); background: var(--color-ink);">
+                        <span>{{ substr($schoolName, 0, 2) }}</span>
+                    </div>
                 @endif
+                <div class="flex flex-col min-w-0">
+                    <span class="text-[14.5px] font-extrabold leading-tight tracking-tight truncate text-dpai-primary">
+                        {{ $schoolName }}
+                    </span>
+                    <span class="text-[11px] font-medium text-dpai-muted truncate">
+                        Tahun Ajaran 2025/2026
+                    </span>
+                </div>
             </div>
-
-            <!-- TEXT -->
-            @if(empty($schoolLogo))
-                <span class="text-center">
-                    Logo sekolah tidak tersedia.
-                </span>
-            @endif
         </div>
 
-        <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
+        {{-- NAVIGASI UTAMA SIDEBAR --}}
+        <div class="flex-1 overflow-y-auto px-3 py-4">
 
-            <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
+            <ul class="space-y-1">
+
+                {{-- KATEGORI: MENU GURU --}}
+                <p class="px-3 pt-2 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Menu Guru
+                </p>
 
                 <li class="list-item">
-                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                        <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-house"></i>
+                        </span>
                         <a href="{{ route('lms.teacher.view', [
                                 'role' => Auth::user()->role, 
                                 'schoolName' => $schoolName, 
                                 'schoolId' => $schoolId
-                            ]) }}" class="link-href text-[14px]">
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
                             Beranda
                         </a>
                     </div>
                 </li>
 
-                {{-- ====================================================== --}}
-                {{-- REGISTRASI GURU --}}
-                {{-- ====================================================== --}}
+                {{-- KATEGORI: PEMBELAJARAN --}}
+                <p class="px-3 pt-3.5 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Pembelajaran
+                </p>
+
+                {{-- MODUL PEMBELAJARAN --}}
                 <li class="list-item">
-
                     <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        {{-- TOGGLE REGISTRASI GURU --}}
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-
-                            {{-- ICON --}}
-                            <i class="fa-solid fa-user-plus text-[15px] w-5 text-center"></i>
-
-                            {{-- NAMA MENU --}}
-                            <span class="text-[14px]">
-                                Administrasi Guru
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                            <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                                <i class="fa-solid fa-book-open"></i>
                             </span>
-
-                            {{-- CHEVRON --}}
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-
+                            <span class="flex-1 text-[13.5px]">Modul Pembelajaran</span>
+                            <i class="fas fa-chevron-down text-[11px] text-dpai-muted transition-transform duration-200"></i>
                         </div>
 
-
-                        {{-- ================================================== --}}
-                        {{-- DROPDOWN CONTENT --}}
-                        {{-- ================================================== --}}
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-
-
-                            {{-- ================================================== --}}
-                            {{-- 1. ANALISIS CP HINGGA ATP --}}
-                            {{-- ================================================== --}}
-                            <div class="flex flex-col py-2 mt-1">
-
-                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
+                        <div class="content-dropdown pl-10 pr-2 w-full">
+                            <div class="flex flex-col py-1 space-y-0.5 border-l-2 pl-3 my-1" style="border-color: var(--color-border);">
+                                <a href="{{ route('lms.teacherContentManagement.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}"
-                                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                    Analisis CP hingga ATP
-
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Katalog Modul
                                 </a>
-
-                            </div>
-
-
-                            {{-- ================================================== --}}
-                            {{-- 2. PROTA DAN PROSEM --}}
-                            {{-- ================================================== --}}
-                            <div class="flex flex-col py-2 mt-1">
-
-                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
+                                <a href="{{ route('lms.teacherContentForRelease.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}"
-                                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                    PROTA & PROSEM
-
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Rilis Modul
                                 </a>
-
-                            </div>
-
-
-                            {{-- ================================================== --}}
-                            {{-- 3. ANALISIS RPPM DAN RPPM --}}
-                            {{-- ================================================== --}}
-                            <div class="flex flex-col py-2 mt-1">
-
-                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => $schoolName,
-                                        'schoolId' => $schoolId
-                                    ]) }}"
-                                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                    RPP & RPPM
-
-                                </a>
-
-                            </div>
-
-
-                            {{-- ================================================== --}}
-                            {{-- 4. REFLEKSI GURU --}}
-                            {{-- ================================================== --}}
-                            <div class="flex flex-col py-2 mt-1">
-
-                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => $schoolName,
-                                        'schoolId' => $schoolId
-                                    ]) }}"
-                                class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                    Refleksi Guru
-
-                                </a>
-
-                            </div>
-
-
-                        </div>
-
-                    </div>
-
-                </li>
-
-                <li class="list-item">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Aktivitas Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                        </div>
-
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Assessment</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherAssessmentManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Assessment Mangement
-                                    </a>
-                                    <a href="{{ route('lms.assessmentGradingManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Assessment Belum Dinilai
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Content</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherContentManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Content Management
-                                    </a>
-                                    <a href="{{ route('lms.teacherContentForRelease.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Content For Release
-                                    </a>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-col">
-                                <div
-                                    class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                    <span>Question</span>
-                                    <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                </div>
-
-                                <div class="list-content-dropdown pl-4">
-                                    <a href="{{ route('lms.teacherQuestionBankManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Question Bank Management
-                                    </a>
-                                    <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Question Bank For Release
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </li>
 
-                <!-- MEJA GURU -->
+                {{-- BANK SOAL --}}
                 <li class="list-item">
                     <div class="dropdown-menu w-full flex flex-col items-start">
-
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Meja Guru</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                            <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </span>
+                            <span class="flex-1 text-[13.5px]">Bank Soal</span>
+                            <i class="fas fa-chevron-down text-[11px] text-dpai-muted transition-transform duration-200"></i>
                         </div>
 
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col">
-                                <a href="{{ route('lms.teacherClassListSubjectAttendance.view', [
+                        <div class="content-dropdown pl-10 pr-2 w-full">
+                            <div class="flex flex-col py-1 space-y-0.5 border-l-2 pl-3 my-1" style="border-color: var(--color-border);">
+                                <a href="{{ route('lms.teacherQuestionBankManagement.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Presensi Mata Pelajaran
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Daftar Bank Soal
                                 </a>
-
-                                <a href="{{ route('lms.teacherDailyAgenda.view', [
+                                <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Agenda Harian
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Rilis Bank Soal
                                 </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
 
-                                <a href="{{ route('lms.teacherClassList.view', [
-                                        'role' => Auth::user()->role,
-                                        'schoolName' => $schoolName,
-                                        'schoolId' => $schoolId
-                                    ]) }}" class="link-href block py-2 text-[12px]">
-                                    Buku Nilai
-                                </a>
+                {{-- ASESMEN --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherAssessmentManagement.view', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => $schoolName,
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
+                            Asesmen
+                        </a>
+                    </div>
+                </li>
 
+                {{-- KATEGORI: AKADEMIK & NILAI --}}
+                <p class="px-3 pt-3.5 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Akademik & Nilai
+                </p>
+
+                {{-- PENILAIAN --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </span>
+                        <a href="{{ route('lms.assessmentGradingManagement.view', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => $schoolName,
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
+                            Penilaian
+                        </a>
+                    </div>
+                </li>
+
+                {{-- BUKU NILAI --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-table-list"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherClassList.view', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => $schoolName,
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
+                            Buku Nilai
+                        </a>
+                    </div>
+                </li>
+
+                {{-- LEGER & TRANSKRIP --}}
+                <li class="list-item">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                            <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </span>
+                            <span class="flex-1 text-[13.5px]">Leger & Transkrip</span>
+                            <i class="fas fa-chevron-down text-[11px] text-dpai-muted transition-transform duration-200"></i>
+                        </div>
+
+                        <div class="content-dropdown pl-10 pr-2 w-full">
+                            <div class="flex flex-col py-1 space-y-0.5 border-l-2 pl-3 my-1" style="border-color: var(--color-border);">
                                 <a href="{{ route('lms.teacherClassListGradeLedger.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
                                     Leger Nilai
                                 </a>
-
                                 <a href="{{ route('lms.teacherClassListAcademicTranscript.view', [
                                         'role' => Auth::user()->role,
                                         'schoolName' => $schoolName,
                                         'schoolId' => $schoolId
-                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
                                     Transkrip Nilai
                                 </a>
                             </div>
                         </div>
-
                     </div>
                 </li>
 
-                <!-- INFORMASI -->
-                <li class="list-item mt-1">
-                    <div class="dropdown-menu w-full flex flex-col items-start">
+                {{-- KATEGORI: AKTIVITAS --}}
+                <p class="px-3 pt-3.5 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Aktivitas
+                </p>
 
-                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                            <span class="text-[14px]">Informasi</span>
-                            <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
+                {{-- PRESENSI SISWA --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-user-check"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherClassListSubjectAttendance.view', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => $schoolName,
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
+                            Presensi Siswa
+                        </a>
+                    </div>
+                </li>
+
+                {{-- AGENDA HARIAN --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherDailyAgenda.view', [
+                                'role' => Auth::user()->role,
+                                'schoolName' => $schoolName,
+                                'schoolId' => $schoolId
+                            ]) }}" class="link-href flex-1 text-[13.5px]">
+                            Agenda Harian
+                        </a>
+                    </div>
+                </li>
+
+                {{-- KATEGORI: ADMINISTRASI --}}
+                <p class="px-3 pt-3.5 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Administrasi
+                </p>
+
+                {{-- PERANGKAT KURIKULUM --}}
+                <li class="list-item">
+                    <div class="dropdown-menu w-full flex flex-col items-start">
+                        <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                            <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                                <i class="fa-solid fa-folder-closed"></i>
+                            </span>
+                            <span class="flex-1 text-[13.5px]">Perangkat Kurikulum</span>
+                            <i class="fas fa-chevron-down text-[11px] text-dpai-muted transition-transform duration-200"></i>
                         </div>
 
-                        <div class="content-dropdown pl-6 pr-3.5 w-full">
-                            <div class="flex flex-col py-2 mt-1">
-                                <a href="{{ route('lms.teacherPolling.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                    Polling
+                        <div class="content-dropdown pl-10 pr-2 w-full">
+                            <div class="flex flex-col py-1 space-y-0.5 border-l-2 pl-3 my-1" style="border-color: var(--color-border);">
+                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => $schoolName,
+                                        'schoolId' => $schoolId
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Analisis CP hingga ATP
+                                </a>
+                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => $schoolName,
+                                        'schoolId' => $schoolId
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    PROTA & PROSEM
+                                </a>
+                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => $schoolName,
+                                        'schoolId' => $schoolId
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    RPP & RPPM
+                                </a>
+                                <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => $schoolName,
+                                        'schoolId' => $schoolId
+                                    ]) }}" class="link-href block py-1.5 px-2 text-[12.5px] text-dpai-secondary transition" style="border-radius: var(--radius-sm);">
+                                    Refleksi Guru
                                 </a>
                             </div>
                         </div>
+                    </div>
+                </li>
 
+                {{-- KATEGORI: INFORMASI --}}
+                <p class="px-3 pt-3.5 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">
+                    Informasi
+                </p>
+
+                {{-- JADWAL & KALENDER --}}
+                <li class="list-item {{ request()->routeIs('lms.teacherScheduleCalendar.*') ? 'active' : '' }}">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl transition font-medium text-[13.5px] {{ request()->routeIs('lms.teacherScheduleCalendar.*') ? 'bg-dpai-accent-soft text-dpai-accent-text font-bold active' : 'text-dpai-secondary hover:text-dpai-primary hover:bg-[#F1EFEA]' }}" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px] {{ request()->routeIs('lms.teacherScheduleCalendar.*') ? 'bg-white text-dpai-accent shadow-xs' : '' }}" style="border-radius: var(--radius-tile); {{ !request()->routeIs('lms.teacherScheduleCalendar.*') ? 'background: var(--color-surface-muted); color: var(--color-text-secondary);' : '' }}">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherScheduleCalendar.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex-1 text-[13.5px] {{ request()->routeIs('lms.teacherScheduleCalendar.*') ? 'active text-dpai-accent-text font-bold' : '' }}">
+                            Jadwal & Kalender
+                        </a>
+                    </div>
+                </li>
+
+                {{-- POLLING --}}
+                <li class="list-item">
+                    <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary transition font-medium text-[13.5px]" style="border-radius: var(--radius-nav-item);">
+                        <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px]" style="border-radius: var(--radius-tile); background: var(--color-surface-muted); color: var(--color-text-secondary);">
+                            <i class="fa-solid fa-square-poll-vertical"></i>
+                        </span>
+                        <a href="{{ route('lms.teacherPolling.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex-1 text-[13.5px]">
+                            Polling
+                        </a>
                     </div>
                 </li>
             </ul>
+        </div>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
-
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
-                        Partnership By:
-                    </span>
-
-                    <div class="flex justify-center w-full">
-                        <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
-                        >
-                    </div>
-                </div>
+        {{-- FOOTER PARTNERSHIP (STICKY DI BAWAH) --}}
+        <div class="p-3 border-t border-dpai shrink-0 sticky bottom-0 z-10" style="border-color: var(--color-border); background: var(--color-surface);">
+            <div class="flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl" style="border-radius: var(--radius-lg); background: var(--color-bg-page);">
+                <span class="text-[10px] font-bold text-dpai-muted tracking-wide uppercase">
+                    Partnership By:
+                </span>
+                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-5 object-contain">
             </div>
         </div>
     </aside>
 
-    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
-        <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
-                <header class="text-[20px] font-bold flex items-center gap-3.5">
-                    @if (isset($linkBackButton))
-                        <a href="{{ $linkBackButton }}">
-                            @if (isset($backButton))
-                                <div class="flex items-center gap-2">
-                                    <button class="font-bold text-xl cursor-pointer text-white">{!! $backButton !!}</button>
-                                    <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
-                                </div>
-                            @endif
-                        </a>
-                    @else
-                        @if (isset($backButton))
-                            <div class="flex items-center gap-2">
-                                <button class="font-bold text-xl cursor-pointer">{!! $backButton !!}</button>
-                                <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
-                            </div>
-                        @else
-                            <span class="font-bold text-xl cursor-pointer text-white">{{ $headerSideNav ?? '' }}</span>
-                        @endif
-                    @endif
-                </header>
+    {{-- ============================================================ --}}
+    {{-- DESKTOP TOP HEADER / NAVBAR (MATCHING LMS-SHELL LAYOUT) --}}
+    {{-- ============================================================ --}}
+    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block z-30">
+        <header class="w-full h-16 border-b border-dpai flex items-center justify-between px-6 sm:px-8 sticky top-0" style="background: rgba(244, 242, 238, 0.95); backdrop-filter: blur(10px); border-color: var(--color-border);">
+            
+            {{-- BREADCRUMB --}}
+            <div class="flex items-center gap-2 text-[12.5px] text-dpai-muted font-medium min-w-0">
+                <span>{{ $schoolName }}</span>
+                <i class="fa-solid fa-chevron-right text-[10px] text-dpai-muted"></i>
+                <b class="text-dpai-primary font-bold truncate">{{ $headerSideNav ?? 'Beranda Guru' }}</b>
+            </div>
 
-                <div class="list-item-button-profile m-2 z-40">
-                    <div class="dropdown-menu hidden lg:block">
-                        <div class="flex items-center gap-3.5 relative">
-                            <div class="flex flex-col">
-                                <span class="text-[12px] text-white font-semibold leading-6">
-                                    {{ Str::limit($profileName ?? '', 20) }}
-                                </span>
-                                <span class="text-[11px] text-white font-semibold leading-6">
-                                    {{ Str::limit(Auth::user()->role ?? '', 20) }}
-                                </span>
-                            </div>
-                            <i class="fas fa-circle-user text-4xl text-white opacity-85 toggle-menu-button-profile cursor-pointer"></i>
+            {{-- SEARCH, NOTIFICATION & PROFILE --}}
+            <div class="flex items-center gap-3">
+                
+                {{-- SEARCH BAR --}}
+                <label class="flex items-center gap-2 px-3.5 py-1.5 w-64 bg-surface border border-dpai text-dpai-muted" style="background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-badge);">
+                    <i class="fa-solid fa-magnifying-glass text-[13px] text-dpai-muted"></i>
+                    <input type="search" placeholder="Cari modul, soal, atau murid" class="w-full bg-transparent border-0 outline-none text-[12.5px] text-dpai-primary placeholder-dpai-muted" />
+                </label>
 
-                            <div
-                                class="content-dropdown-button-profile absolute right-0 top-full mt-2 bg-white border border-gray-200 shadow-lg w-55 rounded-lg">
-                                <a href="{{ route('lms.teacher.view', [
-                                    'role' => Auth::user()->role, 
-                                    'schoolName' => $schoolName, 
-                                    'schoolId' => $schoolId
-                                ]) }}">
-                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
-                                        <i class="fa-solid fa-house"></i>
-                                        Beranda
-                                    </div>
-                                </a>
+                {{-- NOTIFICATION ICON BUTTON --}}
+                <button type="button" aria-label="Notifikasi" class="w-9 h-9 flex items-center justify-center bg-surface border border-dpai relative cursor-pointer text-dpai-secondary hover:text-dpai-primary transition" style="background: var(--color-surface); border-color: var(--color-border); border-radius: 50%;">
+                    <i class="fa-solid fa-bell text-[14px]"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 rounded-full border border-white" style="background: var(--color-accent);" aria-hidden="true"></span>
+                </button>
 
-                                <a href="{{ route('profile-account-school-partner.view', [
-                                    'role'       => Auth::user()->role,
-                                    'schoolName' => $schoolName,
-                                    'schoolId'   => $schoolId
-                                ]) }}">
-                                    <div class="flex items-center pl-3 py-3 gap-2 text-[13px] hover:bg-gray-100">
-                                        <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
-                                    </div>
-                                </a>
-
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button
-                                        class="w-full flex items-center pl-3.5 py-3 gap-2 text-[13px] hover:bg-gray-100 cursor-pointer">
-                                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-                                        Keluar
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="list-item-button-profile relative lg:hidden z-40">
+                {{-- PROFILE AREA --}}
+                <div class="list-item-button-profile relative z-40">
                     <div class="dropdown-menu">
-                        <div class="toggle-menu-button-profile cursor-pointer">
-                            <i class="fas fa-circle-user text-4xl text-white"></i>
-                        </div>
-                        <div
-                            class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
-                            <a href="{{ route('lms.teacher.view', [
-                                'role' => Auth::user()->role, 
-                                'schoolName' => $schoolName, 
-                                'schoolId' => $schoolId
-                            ]) }}">
-                                <div
-                                    class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
-                                    <i class="fa-solid fa-house"></i>
-                                    Beranda
-                                </div>
-                            </a>
+                        <div class="toggle-menu-button-profile flex items-center gap-2.5 py-1 px-2.5 bg-surface border border-dpai cursor-pointer transition shadow-xs" style="background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-badge);">
                             
-                            <a href="{{ route('profile-account-school-partner.view', [
-                                'role'       => Auth::user()->role,
-                                'schoolName' => $schoolName,
-                                'schoolId'   => $schoolId
-                            ]) }}">
-                                <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
-                                    <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
-                                </div>
-                            </a>
+                            {{-- USER INITIALS AVATAR --}}
+                            <span class="w-8 h-8 rounded-full text-white flex items-center justify-center font-extrabold text-xs" style="background: var(--color-ink);">
+                                {{ $userInitials }}
+                            </span>
 
+                            <div class="flex flex-col text-left leading-tight pr-1">
+                                <span class="text-[12.5px] font-bold text-dpai-primary truncate max-w-[130px]">
+                                    {{ $profileName }}
+                                </span>
+                                <span class="text-[10.5px] font-medium text-dpai-muted">
+                                    {{ Auth::user()->role ?? 'Guru' }}
+                                </span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-dpai-muted"></i>
+                        </div>
+
+                        {{-- DROPDOWN MENU --}}
+                        <div class="content-dropdown hidden absolute right-0 mt-2 w-48 bg-surface border border-dpai shadow-lg py-1.5 z-50" style="background: var(--color-surface); border-color: var(--color-border); border-radius: var(--radius-card); box-shadow: var(--shadow-dropdown);">
+                            <a href="{{ route('profile-account-school-partner.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="flex items-center gap-2 px-3 py-2 text-xs text-dpai-secondary hover:bg-surface-muted hover:text-dpai-primary">
+                                <i class="fa-solid fa-user-circle w-4"></i> Profil Saya
+                            </a>
+                            <div class="my-1 border-t border-dpai" style="border-color: var(--color-divider);"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button
-                                    class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                    <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
-                                    Keluar
+                                <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left" style="color: var(--color-danger);">
+                                    <i class="fa-solid fa-arrow-right-from-bracket w-4"></i> Keluar
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
-            </div>            
-        </div>
+            </div>
+        </header>
     </div>
 
-    <nav class="navbar-beranda-phone w-full h-20 flex justify-between items-center md:hidden bg-white shadow-lg px-6">
-        <div class="flex items-center h-full">
-            <label for="my-drawer-1">
-                <i class="fas fa-bars text-2xl relative top-1 cursor-pointer"></i>
-            </label>
-            <a href="{{ route('lms.teacher.view', [
-                'role' => Auth::user()->role, 
-                'schoolName' => $schoolName, 
-                'schoolId' => $schoolId
-            ]) }}">
-                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="" class="w-30 ml-4">
-            </a>
-        </div>
-        <div class="flex items-center gap-8 text-2xl relative top-1 z-40">
-            <div class="list-item-button-profile relative md:hidden">
-                <div class="dropdown-menu">
-                    <div class="toggle-menu-button-profile cursor-pointer">
-                        <i class="fas fa-circle-user text-4xl text-[#0071BC] font-bold"></i>
-                    </div>
-                    <div
-                        class="content-dropdown-button-profile absolute bg-white border border-gray-200 shadow-lg w-35 rounded-lg mt-2 right-0">
-                        <a href="{{ route('lms.teacher.view', [
-                                'role' => Auth::user()->role, 
-                                'schoolName' => $schoolName, 
-                                'schoolId' => $schoolId
-                            ]) }}">
-                            <div
-                                class="flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black">
-                                <i class="fa-solid fa-house"></i>
-                                Beranda
-                            </div>
-                        </a>
-                        
-                        <a href="{{ route('profile-account-school-partner.view', [
-                            'role'       => Auth::user()->role,
-                            'schoolName' => $schoolName,
-                            'schoolId'   => $schoolId
-                        ]) }}">
-                            <div class="flex items-center pl-2 py-3 gap-2 text-[13px] hover:bg-gray-100">
-                                <i class="fa-regular fa-circle-user text-base"></i> Profil Akun
-                            </div>
-                        </a>
-
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button
-                                class="w-full flex items-center pl-2 py-3.75 gap-1.5 text-[13px] hover:bg-gray-100 hover:text-black cursor-pointer">
-                                <i class="fa-solid fa-arrow-right-from-bracket text-base ml-0.75"></i>
-                                Keluar
-                            </button>
-                        </form>
-                    </div>
-                </div>
+    {{-- ============================================================ --}}
+    {{-- MOBILE DRAWER / SIDEBAR --}}
+    {{-- ============================================================ --}}
+    <div class="block md:hidden">
+        {{-- Mobile Top Bar --}}
+        <header class="w-full h-14 bg-surface border-b border-dpai px-4 flex items-center justify-between sticky top-0 z-30" style="background: var(--color-surface); border-color: var(--color-border);">
+            <div class="flex items-center gap-2">
+                <button type="button" id="mobile-sidebar-toggle" aria-label="Buka Menu" class="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-muted text-dpai-secondary" style="border-radius: var(--radius-btn-sm); background: var(--color-surface-muted);">
+                    <i class="fa-solid fa-bars text-sm"></i>
+                </button>
+                <b class="text-sm font-extrabold text-dpai-primary truncate">{{ $headerSideNav ?? 'Beranda Guru' }}</b>
             </div>
-        </div>
-    </nav>
+            <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs" style="background: var(--color-ink);">
+                    {{ $userInitials }}
+                </span>
+            </div>
+        </header>
 
-    <div class="drawer md:hidden z-9999">
-        <input id="my-drawer-1" type="checkbox" class="drawer-toggle"/>
-
-        <div class="drawer-side">
-            <label for="my-drawer-1" class="drawer-overlay"></label>
-
-            <div class="bg-gray-50 h-full min-w-[65vw] flex flex-col">
-
-                <header class="h-20 px-4 bg-[#0071BC] flex items-center justify-between shadow-sm">
-                    <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" class="h-9 object-contain" alt="Belajar Cerdas">
-
-                    <label for="my-drawer-1">
-                        <i class="fas fa-xmark text-2xl text-white cursor-pointer"></i>
-                    </label>
-                </header>
-
-                <div class="relative flex flex-col items-center">
-
-                    <div class="mx-4 mt-4 p-4 flex flex-col items-center">
-                        <!-- LOGO -->
-                        @if(!empty($schoolLogo))
-                            <img src="{{ asset($schoolLogo) }}"
-                                class="w-32 h-20 rounded-full object-contain bg-white" alt="Logo Sekolah">
-                        @else
-                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 mb-2">
-                                <i class="fa-solid fa-school text-3xl text-gray-400"></i>
-                            </div>
-
-                            <span class="text-center text-sm">
-                                Logo sekolah tidak tersedia.
-                            </span>
-                        @endif
+        {{-- Mobile Drawer Overlay & Container --}}
+        <div id="mobile-sidebar-drawer" class="fixed inset-0 z-50 hidden">
+            <div id="mobile-sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"></div>
+            <aside class="sidebar-beranda-student fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-surface flex flex-col justify-between overflow-y-auto z-50 shadow-2xl" style="background: var(--color-surface);">
+                
+                {{-- Drawer Header --}}
+                <div class="p-4 border-b border-dpai flex items-center justify-between" style="border-color: var(--color-border);">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-9 h-9 rounded-xl text-white flex items-center justify-center font-black text-sm" style="border-radius: var(--radius-tile); background: var(--color-ink);">
+                            {{ substr($schoolName, 0, 2) }}
+                        </span>
+                        <div class="leading-tight">
+                            <span class="text-sm font-extrabold text-dpai-primary block truncate max-w-[150px]">{{ $schoolName }}</span>
+                            <span class="text-[11px] text-dpai-muted font-medium">Guru</span>
+                        </div>
                     </div>
-
+                    <button type="button" id="mobile-sidebar-close" aria-label="Tutup Menu" class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-muted text-dpai-muted" style="background: var(--color-surface-muted);">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
                 </div>
 
-                <div class="border border-gray-200"></div>
-
-                <div class="flex items-center gap-3 px-4 py-4 mt-2">
-                    <i class="fas fa-circle-user text-3xl text-gray-400"></i>
-                    <div>
-                        <p class="text-sm font-semibold leading-tight">
-                            {{ Str::limit($profileName ?? '', 20) }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            {{ Auth::user()->role }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="border border-gray-200"></div>
-
-                <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
-                    
-                    <li class="list-item">
-                        <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                            <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
-                            <a href="{{ route('lms.teacher.view', [
-                                    'role' => Auth::user()->role, 
-                                    'schoolName' => $schoolName, 
-                                    'schoolId' => $schoolId
-                                ]) }}" class="link-href text-[14px]">
-                                Beranda
+                {{-- Drawer Links --}}
+                <div class="flex-1 overflow-y-auto px-3 py-3">
+                    <ul class="space-y-1">
+                        <p class="px-3 pt-1 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">Menu Guru</p>
+                        <li>
+                            <a href="{{ route('lms.teacher.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-house w-5 text-center"></i> Beranda
                             </a>
-                        </div>
-                    </li>
+                        </li>
 
-                    <li class="list-item">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                                <i class="fa-solid fa-user-plus text-[15px] w-5 text-center"></i>
+                        <p class="px-3 pt-3 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">Pembelajaran</p>
+                        <li>
+                            <a href="{{ route('lms.teacherContentManagement.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-book-open w-5 text-center"></i> Modul Pembelajaran
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherQuestionBankManagement.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-layer-group w-5 text-center"></i> Bank Soal
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherAssessmentManagement.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-clipboard-list w-5 text-center"></i> Asesmen
+                            </a>
+                        </li>
 
-                                <span class="text-[14px]">
-                                    Informasi Guru
-                                </span>
+                        <p class="px-3 pt-3 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">Akademik & Nilai</p>
+                        <li>
+                            <a href="{{ route('lms.assessmentGradingManagement.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-pen-to-square w-5 text-center"></i> Penilaian
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherClassList.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-table-list w-5 text-center"></i> Buku Nilai
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherClassListGradeLedger.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-file-excel w-5 text-center"></i> Leger & Transkrip
+                            </a>
+                        </li>
 
-                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                            </div>
+                        <p class="px-3 pt-3 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">Aktivitas</p>
+                        <li>
+                            <a href="{{ route('lms.teacherClassListSubjectAttendance.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-user-check w-5 text-center"></i> Presensi Siswa
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherDailyAgenda.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-dpai-secondary text-[13px] font-medium" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-book-bookmark w-5 text-center"></i> Agenda Harian
+                            </a>
+                        </li>
 
-                            <div class="content-dropdown pl-6 pr-3.5 w-full">
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.schoolAdmin.registrasiGuru.analisis', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
+                        <p class="px-3 pt-3 pb-1 text-[10.5px] font-bold text-dpai-muted uppercase tracking-wider">Informasi</p>
+                        <li>
+                            <a href="{{ route('lms.teacherScheduleCalendar.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium {{ request()->routeIs('lms.teacherScheduleCalendar.*') ? 'bg-dpai-accent-soft text-dpai-accent-text font-bold active' : 'text-dpai-secondary' }}" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-calendar-days w-5 text-center"></i> Jadwal & Kalender
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('lms.teacherPolling.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName, 'schoolId' => $schoolId]) }}" class="link-href flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium {{ request()->routeIs('lms.teacherPolling.*') ? 'bg-dpai-accent-soft text-dpai-accent-text font-bold active' : 'text-dpai-secondary' }}" style="border-radius: var(--radius-nav-item);">
+                                <i class="fa-solid fa-square-poll-vertical w-5 text-center"></i> Polling
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                                        Analisis CP hingga ATP
-                                    </a>
-                                </div>
-
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.schoolAdmin.registrasiGuru.prota-prosem', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                        PROTA & PROSEM
-                                    </a>
-                                </div>
-
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.schoolAdmin.registrasiGuru.rppm', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                        RPP & RPPM
-                                    </a>
-                                </div>
-
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.schoolAdmin.registrasiGuru.refleksiGuru', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-
-                                        Refleksi Guru
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-
-                    <li class="list-item">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                                <i class="fa-solid fa-person-chalkboard text-[15px] w-5 text-center"></i>
-                                <span class="text-[14px]">Aktivitas Guru</span>
-                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                            </div>
-
-                            <div class="content-dropdown pl-6 pr-3.5 w-full">
-                                <div class="flex flex-col">
-                                    <div
-                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                        <span>Assessment</span>
-                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                    </div>
-
-                                    <div class="list-content-dropdown pl-4">
-                                        <a href="{{ route('lms.teacherAssessmentManagement.view', [
-                                                'role' => Auth::user()->role,
-                                                'schoolName' => $schoolName,
-                                                'schoolId' => $schoolId
-                                            ]) }}" class="link-href block py-2 text-[12px]">
-                                            Assessment Mangement
-                                        </a>
-                                        <a href="{{ route('lms.assessmentGradingManagement.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Assessment Belum Dinilai
-                                    </a>
-                                </div>
-                                </div>
-                                
-                                <div class="flex flex-col">
-                                    <div
-                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                        <span>Content</span>
-                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                    </div>
-
-                                    <div class="list-content-dropdown pl-4">
-                                        <a href="{{ route('lms.teacherContentManagement.view', [
-                                                'role' => Auth::user()->role,
-                                                'schoolName' => $schoolName ?? 'sekolah',
-                                                'schoolId' => $schoolId ?? 1
-                                            ]) }}" class="link-href block py-2 text-[12px]">
-                                            Content Mangement
-                                        </a>
-                                        <a href="{{ route('lms.teacherContentForRelease.view', [
-                                                'role' => Auth::user()->role,
-                                                'schoolName' => $schoolName ?? 'sekolah',
-                                                'schoolId' => $schoolId ?? 1
-                                            ]) }}" class="link-href block py-2 text-[12px]">
-                                            Content For Release
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-col">
-                                    <div
-                                        class="toggle-sub-menu-sidebar flex items-center justify-between cursor-pointer py-2 text-[14px]">
-                                        <span>Question</span>
-                                        <i class="fas fa-chevron-down text-[12px]" id="rotate-icon-2"></i>
-                                    </div>
-
-                                    <div class="list-content-dropdown pl-4">
-                                        <a href="{{ route('lms.teacherQuestionBankManagement.view', [
-                                                'role' => Auth::user()->role,
-                                                'schoolName' => $schoolName ?? 'sekolah',
-                                                'schoolId' => $schoolId ?? 1
-                                            ]) }}" class="link-href block py-2 text-[12px]">
-                                            Question Bank Management
-                                        </a>
-                                        <a href="{{ route('lms.teacherQuestionBankForRelease.view', [
-                                                'role' => Auth::user()->role,
-                                                'schoolName' => $schoolName ?? 'sekolah',
-                                                'schoolId' => $schoolId ?? 1
-                                            ]) }}" class="link-href block py-2 text-[12px]">
-                                            Question Bank For Release
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-
-                    <!-- MEJA GURU -->
-                    <li class="list-item">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                                <i class="fa-solid fa-folder-open text-[15px] w-5 text-center"></i>
-                                <span class="text-[14px]">Meja Guru</span>
-                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                            </div>
-
-                            <div class="content-dropdown pl-6 pr-3.5 w-full">
-                                <div class="flex flex-col">
-                                    <a href="{{ route('lms.teacherClassListSubjectAttendance.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Presensi Mata Pelajaran
-                                    </a>
-
-                                    <a href="{{ route('lms.teacherDailyAgenda.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Agenda Harian
-                                    </a>
-
-                                    <a href="{{ route('lms.teacherClassList.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Buku Nilai
-                                    </a>
-
-                                    <a href="{{ route('lms.teacherClassListGradeLedger.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Leger Nilai
-                                    </a>
-                                    <a href="{{ route('lms.teacherClassListAcademicTranscript.view', [
-                                            'role' => Auth::user()->role,
-                                            'schoolName' => $schoolName,
-                                            'schoolId' => $schoolId
-                                        ]) }}" class="link-href block py-2 text-[12px]">
-                                        Transkrip Nilai
-                                    </a>
-                                </div>
-                            </div>
-
-                        </div>
-                    </li>
-
-                    <!-- INFORMASI -->
-                    <li class="list-item mt-1">
-                        <div class="dropdown-menu w-full flex flex-col items-start">
-
-                            <div class="toggle-menu-sidebar w-full flex items-center gap-3 relative cursor-pointer px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
-                                <i class="fa-solid fa-circle-info text-[15px] w-5 text-center"></i>
-                                <span class="text-[14px]">Informasi</span>
-                                <i class="fas fa-chevron-down absolute right-3 text-[13px]"></i>
-                            </div>
-
-                            <div class="content-dropdown pl-6 pr-3.5 w-full">
-                                <div class="flex flex-col py-2 mt-1">
-                                    <a href="{{ route('lms.teacherPolling.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 1]) }}" class="link-href block py-2 text-[13px] hover:text-gray-300 cursor-pointer">
-                                        Polling
-                                    </a>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="p-4 border-t border-gray-300">
+                {{-- Drawer Logout Button --}}
+                <div class="p-4 border-t border-dpai" style="border-color: var(--color-border);">
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button
-                            class="w-full flex items-center justify-center py-3 bg-red-300 rounded-full gap-2 cursor-pointer transition-all duration-300 hover:bg-red-400 focus:ring-2 focus:ring-red-400 active:scale-95">
-                            <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+                        <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 font-bold text-sm gap-2 cursor-pointer transition active:scale-95" style="border-radius: var(--radius-btn); background: var(--color-danger-soft); color: var(--color-danger);">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
                             Keluar
                         </button>
                     </form>
                 </div>
-            </div>
+            </aside>
         </div>
     </div>

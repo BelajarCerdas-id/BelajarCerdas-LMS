@@ -291,4 +291,82 @@ class TeacherInformationController extends Controller
         }
     }
 
+    /**
+     * Tampilan Jadwal Mengajar & Kalender Akademik Guru
+     */
+    public function teacherScheduleCalendarView($role, $schoolName, $schoolId)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'Guru') {
+            abort(403, 'Akses Ditolak.');
+        }
+
+        $teacherId = $user->teacher_id ?? $user->id;
+        $tanggalDipilih = request('date', date('Y-m-d'));
+
+        // 1. Ambil data jadwal mengajar guru ini di sekolah ini
+        $schedules = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('lesson_schedule_items') && \Illuminate\Support\Facades\Schema::hasTable('lesson_schedules')) {
+            try {
+                $schedules = DB::table('lesson_schedule_items')
+                    ->join('lesson_schedules', 'lesson_schedule_items.lesson_schedule_id', '=', 'lesson_schedules.id')
+                    ->where('lesson_schedules.school_partner_id', $schoolId)
+                    ->where('lesson_schedule_items.teacher_id', $teacherId)
+                    ->where('lesson_schedules.status', 'published')
+                    ->select(
+                        'lesson_schedules.id as schedule_id',
+                        'lesson_schedules.class_id',
+                        'lesson_schedules.class_name',
+                        'lesson_schedule_items.id as item_id',
+                        'lesson_schedule_items.subject_name',
+                        'lesson_schedule_items.day_of_week',
+                        'lesson_schedule_items.start_time',
+                        'lesson_schedule_items.end_time',
+                        'lesson_schedule_items.mapel_id'
+                    )
+                    ->orderBy('lesson_schedule_items.start_time', 'asc')
+                    ->get();
+            } catch (\Exception $e) {
+                $schedules = collect();
+            }
+        }
+
+        // Hitung statistik
+        $totalSesi = $schedules->count();
+        $totalKelas = $schedules->pluck('class_id')->unique()->count();
+        $totalJP = $totalSesi * 2; // Estimasi JP
+
+        // Grouping berdasarkan hari (Senin - Jumat/Sabtu)
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $jadwalPerHari = [];
+        foreach ($hariList as $hari) {
+            $jadwalPerHari[$hari] = $schedules->where('day_of_week', $hari)->values();
+        }
+
+        // 2. Ambil kegiatan kalender akademik
+        $monthlyEvents = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('academic_calendars')) {
+            try {
+                $monthlyEvents = \App\Models\AcademicCalendar::where('school_partner_id', $schoolId)
+                    ->orderBy('date', 'asc')
+                    ->get();
+            } catch (\Exception $e) {
+                $monthlyEvents = collect();
+            }
+        }
+
+        return view('features.lms.teacher.information.schedule_calendar', compact(
+            'role',
+            'schoolName',
+            'schoolId',
+            'tanggalDipilih',
+            'schedules',
+            'jadwalPerHari',
+            'totalSesi',
+            'totalJP',
+            'totalKelas',
+            'monthlyEvents',
+            'hariList'
+        ));
+    }
 }

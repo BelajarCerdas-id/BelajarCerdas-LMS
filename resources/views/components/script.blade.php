@@ -64,6 +64,12 @@
     <!-- Your custom BelajarCerdas.css (consider merging into app.css if possible) -->
     <link rel="stylesheet" href="{{ asset('assets/css/BelajarCerdas.css') }}?v={{ file_exists(public_path('assets/css/BelajarCerdas.css')) ? filemtime(public_path('assets/css/BelajarCerdas.css')) : time() }}">
 
+    <!-- DesainPakeAI Design Tokens -->
+    <link rel="stylesheet" href="{{ asset('assets/css/dpai-tokens.css') }}?v={{ file_exists(public_path('assets/css/dpai-tokens.css')) ? filemtime(public_path('assets/css/dpai-tokens.css')) : time() }}">
+
+    <!-- Iconify CDN for modern icons -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
     <!-- jQuery CDN -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

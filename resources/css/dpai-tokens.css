@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ========================================================
+     1. TYPOGRAPHY
+     ======================================================== */
+  --font-family-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* ========================================================
+     2. BRAND ACCENT (DESAINPAKEAI CENTRAL TOKEN)
+     Ubah nilai di bawah ini untuk mengubah seluruh aksen web!
+     ======================================================== */
+  --color-accent: #0071BC;
+  --color-accent-soft: #DCEBF8;
+  --color-accent-hover: #005FA0;
+  --color-accent-text: #004D80;
+  --shadow-accent-glow: 0 6px 14px rgba(0, 113, 188, 0.28);
+
+  /* ========================================================
+     3. SEMANTIC TONES & FEEDBACK
+     ======================================================== */
+  --color-info: #fb7f3c;
+  --color-info-soft: #fef7ec;
+  --color-teal: #17B3A6;
+  --color-teal-soft: #E0F5F3;
+  --color-success: #1E9E5A;
+  --color-success-soft: #E4F5EB;
+  --color-warning: #C98A12;
+  --color-warning-soft: #FCF3DC;
+  --color-danger: #DE3B2B;
+  --color-danger-soft: #FBEAE7;
+  --color-yellow: #FFC42E;
+  --color-ink: #1D1B16;
+
+  /* Map Colors */
+  --color-map-bg: #F6EDDD;
+  --color-map-water: #A9CBE4;
+  --color-map-park: #BEE3AE;
+
+  /* ========================================================
+     4. SURFACES, BACKGROUNDS & BORDERS
+     ======================================================== */
+  --color-bg-page: #F4F2EE;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F1EFEA;
+  --color-divider: #F1EFEA;
+  --color-border: #EFEDE7;
+
+  /* ========================================================
+     5. TYPOGRAPHY COLORS
+     ======================================================== */
+  --color-text-primary: #1B1913;
+  --color-text-secondary: #5D5A52;
+  --color-text-muted: #8E8B84;
+  --color-text-faint: #A09D95;
+
+  /* ========================================================
+     6. CENTRALIZED BORDER RADIUS TOKENS
+     Ubah nilai di bawah ini untuk mengubah seluruh radius elemen web!
+     ======================================================== */
+  --radius-btn: 12px;
+  --radius-btn-sm: 10px;
+  --radius-btn-pill: 9999px;
+  --radius-card: 18px;
+  --radius-hero: 22px;
+  --radius-tile: 10px;
+  --radius-dialog: 20px;
+  --radius-input: 10px;
+  --radius-nav-item: 10px;
+  --radius-badge: 9999px;
+  --radius-avatar: 9999px;
+
+  /* Basic scale */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+  --radius-pill: 9999px;
+
+  /* ========================================================
+     7. SHADOWS
+     ======================================================== */
+  --shadow-card: 0 1px 3px rgba(27, 25, 19, 0.04), 0 4px 12px rgba(27, 25, 19, 0.03);
+  --shadow-dropdown: 0 10px 25px -5px rgba(27, 25, 19, 0.08), 0 8px 10px -6px rgba(27, 25, 19, 0.05);
+  --shadow-dialog: 0 24px 60px rgba(27, 25, 19, 0.24);
+}
+
+/* Base resets & typography */
+body {
+  font-family: var(--font-family-sans);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* ========================================================
+   GLOBAL CENTRALIZED UTILITIES
+   ======================================================== */
+.bg-page { background-color: var(--color-bg-page) !important; }
+.bg-surface { background-color: var(--color-surface) !important; }
+.bg-surface-muted { background-color: var(--color-surface-muted) !important; }
+.border-dpai { border-color: var(--color-border) !important; }
+.border-dpai-divider { border-color: var(--color-divider) !important; }
+
+.text-dpai-primary { color: var(--color-text-primary) !important; }
+.text-dpai-secondary { color: var(--color-text-secondary) !important; }
+.text-dpai-muted { color: var(--color-text-muted) !important; }
+.text-dpai-faint { color: var(--color-text-faint) !important; }
+
+.text-dpai-accent { color: var(--color-accent) !important; }
+.bg-dpai-accent { background-color: var(--color-accent) !important; }
+.bg-dpai-accent-soft { background-color: var(--color-accent-soft) !important; }
+.border-dpai-accent { border-color: var(--color-accent) !important; }
+.text-dpai-accent-text { color: var(--color-accent-text) !important; }
+
+/* Centralized Button Shapes & Radii */
+.btn-rounded { border-radius: var(--radius-btn) !important; }
+.btn-pill { border-radius: var(--radius-btn-pill) !important; }
+.btn-sm-radius { border-radius: var(--radius-btn-sm) !important; }
+.card-rounded { border-radius: var(--radius-card) !important; }
+.hero-rounded { border-radius: var(--radius-hero) !important; }
+.tile-rounded { border-radius: var(--radius-tile) !important; }
+.input-rounded { border-radius: var(--radius-input) !important; }
+.badge-rounded { border-radius: var(--radius-badge) !important; }
+
+/* Centralized Button Styles */
+.btn-dpai {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: var(--radius-btn);
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+.btn-dpai:active { transform: scale(0.98); }
+.btn-dpai-pill { border-radius: var(--radius-btn-pill) !important; }
+.btn-dpai-primary {
+  background: var(--color-accent) !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--shadow-accent-glow);
+}
+.btn-dpai-primary:hover {
+  background: var(--color-accent-hover) !important;
+}
+.btn-dpai-dark {
+  background: var(--color-ink) !important;
+  color: #FFFFFF !important;
+}
+.btn-dpai-neutral {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border) !important;
+}
+.btn-dpai-outline {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+}
+.btn-dpai-plain {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border) !important;
+}
+.btn-dpai-plain:hover {
+  border-color: #D8D4C9 !important;
+}
+.btn-dpai-ghost {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFF3EC !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+.btn-dpai-ghost:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+.btn-dpai-danger {
+  background: var(--color-danger-soft) !important;
+  color: var(--color-danger) !important;
+  border-radius: var(--radius-btn);
+}
+.btn-dpai-danger:hover {
+  background: #fadad4 !important;
+}
+
+/* Centralized Card Styles */
+.card-dpai {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* ========================================================
+   SIDEBAR CENTRALIZED PURE SURFACE & ACTIVE/HOVER STATES
+   ======================================================== */
+.sidebar-beranda-student,
+.sidebar-beranda-administrator,
+.sidebar-beranda-school-admin {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+
+.sidebar-beranda-student .link-href.active,
+.sidebar-beranda-administrator .link-href.active,
+.sidebar-beranda-school-admin .link-href.active {
+  background-color: var(--color-accent-soft) !important;
+  color: var(--color-accent-text) !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius-nav-item) !important;
+}
+
+.sidebar-beranda-student .link-href.active i,
+.sidebar-beranda-student .link-href.active iconify-icon,
+.sidebar-beranda-administrator .link-href.active i,
+.sidebar-beranda-administrator .link-href.active iconify-icon,
+.sidebar-beranda-school-admin .link-href.active i,
+.sidebar-beranda-school-admin .link-href.active iconify-icon {
+  color: var(--color-accent) !important;
+}
+
+.sidebar-beranda-student .list-item.active > .content-menu,
+.sidebar-beranda-student .list-item.active > .dropdown-menu > .toggle-menu-sidebar,
+.sidebar-beranda-administrator .list-item.active > .content-menu,
+.sidebar-beranda-administrator .list-item.active > .dropdown-menu > .toggle-menu-sidebar,
+.sidebar-beranda-school-admin .list-item.active > .content-menu,
+.sidebar-beranda-school-admin .list-item.active > .dropdown-menu > .toggle-menu-sidebar {
+  background-color: var(--color-accent-soft) !important;
+  color: var(--color-accent-text) !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius-nav-item) !important;
+}
+
+.sidebar-beranda-student .list-item.active > .content-menu .link-href,
+.sidebar-beranda-administrator .list-item.active > .content-menu .link-href,
+.sidebar-beranda-school-admin .list-item.active > .content-menu .link-href {
+  color: var(--color-accent-text) !important;
+  font-weight: 700 !important;
+}
+
+.sidebar-beranda-student .list-item.active > .content-menu i,
+.sidebar-beranda-administrator .list-item.active > .content-menu i,
+.sidebar-beranda-school-admin .list-item.active > .content-menu i {
+  color: var(--color-accent) !important;
+}
+
+.sidebar-beranda-student .list-item.active > .content-menu span:first-child,
+.sidebar-beranda-student .list-item.active > .dropdown-menu > .toggle-menu-sidebar span:first-child,
+.sidebar-beranda-administrator .list-item.active > .content-menu span:first-child,
+.sidebar-beranda-administrator .list-item.active > .dropdown-menu > .toggle-menu-sidebar span:first-child,
+.sidebar-beranda-school-admin .list-item.active > .content-menu span:first-child,
+.sidebar-beranda-school-admin .list-item.active > .dropdown-menu > .toggle-menu-sidebar span:first-child {
+  background-color: var(--color-surface) !important;
+  color: var(--color-accent) !important;
+  border-radius: var(--radius-tile) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.sidebar-beranda-student .link-href:hover,
+.sidebar-beranda-administrator .link-href:hover,
+.sidebar-beranda-school-admin .link-href:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-primary);
+}
+
+.sidebar-beranda-student .toggle-menu-sidebar:hover,
+.sidebar-beranda-administrator .toggle-menu-sidebar:hover,
+.sidebar-beranda-school-admin .toggle-menu-sidebar:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-primary);
+}

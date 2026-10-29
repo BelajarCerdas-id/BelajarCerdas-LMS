@@ -79,10 +79,11 @@ body:has(.sidebar-beranda-student) {
 /* dropdown sidebar administrator */
 .sidebar-beranda-administrator {
     width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-text-primary, #1B1913);
     height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--color-border, #EFEDE7);
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
     position: fixed;
     top: 0;
     left: 0;
@@ -99,17 +100,17 @@ body:has(.sidebar-beranda-student) {
 }
 
 .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--color-border, #EFEDE7);
     border-radius: 9999px;
 }
 
 .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.45);
+    background: var(--color-text-muted, #8E8B84);
 }
 
 .custom-sidebar-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    scrollbar-color: var(--color-border, #EFEDE7) transparent;
 }
 
 /* sembunyikan dropdown */
@@ -127,16 +128,16 @@ body:has(.sidebar-beranda-student) {
 .list-item .content-menu:hover,
 .toggle-menu-sidebar:hover,
 .content-dropdown .link-href:hover {
-    color: orange;
+    color: var(--color-text-primary, #1B1913);
 }
 
-/* ketika aktif, text orange */
+/* ketika aktif */
 .list-item.active .toggle-menu-sidebar,
 .list-item.active .content-menu i,
 .toggle-sub-menu-sidebar.active,
 .link-href.active,
 .list-item.active>.dropdown-menu>.toggle-menu-sidebar i {
-    color: orange;
+    color: var(--color-accent, #0071BC);
 }
 
 /* open untuk dropdown utama */
@@ -151,7 +152,7 @@ body:has(.sidebar-beranda-student) {
 /* hover */
 .toggle-sub-menu-sidebar:hover,
 .list-content-dropdown .link-href:hover {
-    color: orange;
+    color: var(--color-text-primary, #1B1913);
 }
 
 .list-item-button-profile.show .content-dropdown-button-profile {
@@ -309,38 +310,40 @@ figure.table {
 /* sidebar beranda siswa  */
 .sidebar-beranda-student {
     width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-text-primary, #1B1913);
     height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--color-border, #EFEDE7);
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
     position: fixed;
     top: 0;
     left: 0;
 }
 
 .list-menu-sidebar-dekstop-student a.active {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-left: 6px solid #ffffff;
-    border-radius: 8px;
-    color: #ffffff;
+    background-color: var(--color-accent-soft, #DCEBF8);
+    border-left: 4px solid var(--color-accent, #0071BC);
+    border-radius: var(--radius-tile, 10px);
+    color: var(--color-accent-text, #004D80);
     font-weight: bold;
 }
 
 .list-menu-sidebar-mobile-student a.active {
-    background-color: #0071BC;
-    border-left: 6px solid #ffffff;
-    border-radius: 8px;
-    color: #ffffff;
+    background-color: var(--color-accent-soft, #DCEBF8);
+    border-left: 4px solid var(--color-accent, #0071BC);
+    border-radius: var(--radius-tile, 10px);
+    color: var(--color-accent-text, #004D80);
     font-weight: bold;
 }
 
 /* sidebar beranda school admin  */
 .sidebar-beranda-school-admin {
     width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
+    background-color: var(--color-surface, #ffffff);
+    color: var(--color-text-primary, #1B1913);
     height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--color-border, #EFEDE7);
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.03);
     position: fixed;
     top: 0;
     left: 0;
