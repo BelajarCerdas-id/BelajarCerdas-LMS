@@ -8,22 +8,24 @@ use App\Models\AcademicDocumentComment;
 use App\Models\AcademicDocumentSheet;
 use App\Models\Mapel;
 use App\Models\TeacherMapel;
-
+use App\Services\AcademicDocument\AcademicDocumentService;
+use App\Services\AcademicDocument\SpreadsheetImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-
 use Throwable;
 
 class AcademicDocumentController extends Controller
 {
+    public function __construct(
+        protected SpreadsheetImportService $spreadsheetImportService,
+        protected AcademicDocumentService $documentService
+    ) {}
+
     /*
     |--------------------------------------------------------------------------
     | CONSTANTS
@@ -42,7 +44,6 @@ class AcademicDocumentController extends Controller
     private const PROTA_PROSEM_TYPE = 'prota_prosem';
 
     private const BAGAN_ANALISIS_TYPE = 'bagan_analisis';
-
 
     /*
     |--------------------------------------------------------------------------
@@ -64,7 +65,6 @@ class AcademicDocumentController extends Controller
         );
     }
 
-
     protected function isGuru(): bool
     {
         return $this->currentRole()
@@ -80,7 +80,7 @@ class AcademicDocumentController extends Controller
     {
         $authId = (int) Auth::id();
 
-        if (!$this->isGuru()) {
+        if (! $this->isGuru()) {
             return $authId;
         }
 
@@ -123,7 +123,6 @@ class AcademicDocumentController extends Controller
         );
     }
 
-
     protected function authorizeRole(): void
     {
         abort_unless(
@@ -136,7 +135,6 @@ class AcademicDocumentController extends Controller
             'Anda tidak memiliki akses ke fitur ini.'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -153,7 +151,6 @@ class AcademicDocumentController extends Controller
         );
     }
 
-
     protected function sheetColumnExists(
         string $column
     ): bool {
@@ -162,7 +159,6 @@ class AcademicDocumentController extends Controller
             $column
         );
     }
-
 
     protected function cellColumnExists(
         string $column
@@ -173,7 +169,6 @@ class AcademicDocumentController extends Controller
         );
     }
 
-
     protected function commentColumnExists(
         string $column
     ): bool {
@@ -183,7 +178,6 @@ class AcademicDocumentController extends Controller
         );
     }
 
-
     /**
      * Ambil identitas pengomentar dari user_accounts.
      *
@@ -192,90 +186,10 @@ class AcademicDocumentController extends Controller
      * ke tabel users tidak selalu memiliki nama/jabatan, sehingga
      * identitas komentar harus diambil dari sumber akun aplikasi.
      */
-    protected function resolveCommentAuthor(
-        ?int $userId = null
-    ): array {
-        $userId = (int) ($userId ?? Auth::id());
-
-        $name = null;
-        $role = null;
-
-        if (
-            $userId > 0
-            && Schema::hasTable('user_accounts')
-            && Schema::hasColumn('user_accounts', 'id')
-        ) {
-            $account = DB::table('user_accounts')
-                ->where('id', $userId)
-                ->first();
-
-            if ($account) {
-                foreach (
-                    [
-                        'name',
-                        'nama',
-                        'nama_lengkap',
-                        'full_name',
-                        'display_name',
-                        'username',
-                        'email',
-                    ] as $field
-                ) {
-                    $value = $account->{$field} ?? null;
-
-                    if (
-                        is_string($value)
-                        && trim($value) !== ''
-                    ) {
-                        $name = trim($value);
-                        break;
-                    }
-                }
-
-                foreach (
-                    [
-                        'role',
-                        'jabatan',
-                        'position',
-                    ] as $field
-                ) {
-                    $value = $account->{$field} ?? null;
-
-                    if (
-                        is_string($value)
-                        && trim($value) !== ''
-                    ) {
-                        $role = trim($value);
-                        break;
-                    }
-                }
-            }
-        }
-
-        $authUser = Auth::user();
-
-        $name =
-            $name
-            ?? $authUser?->name
-            ?? $authUser?->nama
-            ?? $authUser?->nama_lengkap
-            ?? $authUser?->full_name
-            ?? $authUser?->username
-            ?? $authUser?->email
-            ?? 'Pengguna';
-
-        $role =
-            $role
-            ?? $authUser?->role
-            ?? $authUser?->jabatan
-            ?? '';
-
-        return [
-            'name' => (string) $name,
-            'role' => (string) $role,
-        ];
+    protected function resolveCommentAuthor(?int $userId = null): array
+    {
+        return $this->documentService->resolveCommentAuthor($userId);
     }
-
 
     protected function documentOwnerColumn(): ?string
     {
@@ -299,7 +213,6 @@ class AcademicDocumentController extends Controller
 
         return null;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -327,7 +240,6 @@ class AcademicDocumentController extends Controller
         return true;
     }
 
-
     protected function getSchoolUserIds(
         int $schoolId
     ) {
@@ -342,8 +254,8 @@ class AcademicDocumentController extends Controller
             $this->documentOwnerColumn();
 
         if (
-            !$ownerColumn ||
-            !$this->documentColumnExists(
+            ! $ownerColumn ||
+            ! $this->documentColumnExists(
                 'school_partner_id'
             )
         ) {
@@ -365,7 +277,6 @@ class AcademicDocumentController extends Controller
             ->unique()
             ->values();
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -446,7 +357,6 @@ class AcademicDocumentController extends Controller
         return $query->get();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DOCUMENT QUERIES
@@ -473,7 +383,6 @@ class AcademicDocumentController extends Controller
         return $query;
     }
 
-
     protected function protaProsemDocumentQuery()
     {
         $query =
@@ -494,7 +403,6 @@ class AcademicDocumentController extends Controller
         return $query;
     }
 
-
     protected function applyDocumentOwner(
         $query,
         int $userId
@@ -512,7 +420,6 @@ class AcademicDocumentController extends Controller
 
         return $query;
     }
-
 
     protected function getDocumentForSchoolOrFail(
         int $schoolId,
@@ -559,17 +466,15 @@ class AcademicDocumentController extends Controller
                 $documentType
             );
         }
-if ($ownerOnly) {
-    $this->applyDocumentOwner(
-        $query,
-        $this->requestedTeacherId(request(), $schoolId)
-    );
-}
-
+        if ($ownerOnly) {
+            $this->applyDocumentOwner(
+                $query,
+                $this->requestedTeacherId(request(), $schoolId)
+            );
+        }
 
         return $query->firstOrFail();
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -580,7 +485,7 @@ if ($ownerOnly) {
     protected function mapelName(
         $mapel
     ): string {
-        if (!$mapel) {
+        if (! $mapel) {
             return 'Mata Pelajaran';
         }
 
@@ -591,103 +496,16 @@ if ($ownerOnly) {
             ?? 'Mata Pelajaran';
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CELL STYLE
     |--------------------------------------------------------------------------
     */
 
-    protected function extractCellStyle(
-        $cell
-    ): array {
-        try {
-
-            $style =
-                $cell->getStyle();
-
-            $font =
-                $style->getFont();
-
-            $fill =
-                $style->getFill();
-
-            $alignment =
-                $style->getAlignment();
-
-            $border =
-                $style->getBorders();
-
-            return [
-
-                'font' => [
-                    'name' =>
-                        $font->getName(),
-
-                    'size' =>
-                        $font->getSize(),
-
-                    'bold' =>
-                        $font->getBold(),
-
-                    'italic' =>
-                        $font->getItalic(),
-
-                    'underline' =>
-                        $font->getUnderline(),
-                ],
-
-                'fill' => [
-                    'type' =>
-                        $fill->getFillType(),
-
-                    'color' =>
-                        $fill
-                            ->getStartColor()
-                            ->getARGB(),
-                ],
-
-                'alignment' => [
-                    'horizontal' =>
-                        $alignment->getHorizontal(),
-
-                    'vertical' =>
-                        $alignment->getVertical(),
-
-                    'wrap_text' =>
-                        $alignment->getWrapText(),
-                ],
-
-                'border' => [
-
-                    'left' =>
-                        $border
-                            ->getLeft()
-                            ->getBorderStyle(),
-
-                    'right' =>
-                        $border
-                            ->getRight()
-                            ->getBorderStyle(),
-
-                    'top' =>
-                        $border
-                            ->getTop()
-                            ->getBorderStyle(),
-
-                    'bottom' =>
-                        $border
-                            ->getBottom()
-                            ->getBorderStyle(),
-                ],
-            ];
-
-        } catch (Throwable $e) {
-
-            return [];
-        }
+    protected function extractCellStyle($cell): array
+    {
+        return $this->spreadsheetImportService->extractCellStyle($cell);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -715,10 +533,9 @@ if ($ownerOnly) {
         $mapelGroups =
             $teacherMapels
                 ->filter(
-                    fn ($teacherMapel) =>
-                        !empty(
-                            $teacherMapel->mapel_id
-                        )
+                    fn ($teacherMapel) => ! empty(
+                        $teacherMapel->mapel_id
+                    )
                 )
                 ->groupBy(
                     'mapel_id'
@@ -769,8 +586,7 @@ if ($ownerOnly) {
         $documentMapelIds =
             $documents
                 ->map(
-                    fn ($document) =>
-                        $document->subject_id
+                    fn ($document) => $document->subject_id
                         ??
                         $document->mapel_id
                         ??
@@ -778,65 +594,50 @@ if ($ownerOnly) {
                 )
                 ->filter()
                 ->map(
-                    fn ($id) =>
-                        (int) $id
+                    fn ($id) => (int) $id
                 )
                 ->unique()
                 ->values();
 
         $mapelGroups =
             $mapelGroups->filter(
-                fn ($items, $mapelId) =>
-                    $documentMapelIds
-                        ->contains(
-                            (int) $mapelId
-                        )
+                fn ($items, $mapelId) => $documentMapelIds
+                    ->contains(
+                        (int) $mapelId
+                    )
             );
 
         return view(
-             'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
             [
-                'schoolName' =>
-                    $schoolName,
+                'schoolName' => $schoolName,
 
-                'schoolId' =>
-                    $schoolId,
+                'schoolId' => $schoolId,
 
-                'teacherMapels' =>
-                    $teacherMapels,
+                'teacherMapels' => $teacherMapels,
 
-                'mapelGroups' =>
-                    $mapelGroups,
+                'mapelGroups' => $mapelGroups,
 
-                'documents' =>
-                    $documents,
+                'documents' => $documents,
 
-                'academicDocuments' =>
-                    $documents,
+                'academicDocuments' => $documents,
 
-                'currentRole' =>
-                    $this->currentRole(),
+                'currentRole' => $this->currentRole(),
 
-                'role' =>
-                    $role,
+                'role' => $role,
 
-                'isGuru' =>
-                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
 
-                'viewingTeacherId' =>
-                    $this->requestedTeacherId($request, $schoolId),
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
 
-                'isTeacherViewer' =>
-                    $this->isTeacherViewer($request, $schoolId),
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
 
                 // Halaman /bagan-analisis adalah halaman input utama.
                 // Jika Guru sudah punya dokumen, tampilkan dokumen terbaru.
-                'document' =>
-                    $documents->first(),
+                'document' => $documents->first(),
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -913,36 +714,28 @@ if ($ownerOnly) {
 
             $documentData = [
 
-                'title' =>
-                    $request->input(
-                        'title',
-                        'Program Tahunan / Program Semester'
-                    ),
+                'title' => $request->input(
+                    'title',
+                    'Program Tahunan / Program Semester'
+                ),
 
-                'original_filename' =>
-                    $file->getClientOriginalName(),
+                'original_filename' => $file->getClientOriginalName(),
 
-                'file_path' =>
-                    $path,
+                'file_path' => $path,
 
-                'school_partner_id' =>
-                    $schoolId,
+                'school_partner_id' => $schoolId,
 
-                'owner_user_id' =>
-                    Auth::id(),
+                'owner_user_id' => Auth::id(),
 
-                'subject_id' =>
-                    $mapelId,
+                'subject_id' => $mapelId,
 
-                'document_type' =>
-                    self::BAGAN_ANALISIS_TYPE,
+                'document_type' => self::BAGAN_ANALISIS_TYPE,
             ];
 
             $filteredDocumentData = [];
 
             foreach (
-                $documentData
-                as $column => $value
+                $documentData as $column => $value
             ) {
 
                 if (
@@ -958,7 +751,7 @@ if ($ownerOnly) {
             }
 
             $document =
-                new AcademicDocument();
+                new AcademicDocument;
 
             $document
                 ->forceFill(
@@ -1013,7 +806,7 @@ if ($ownerOnly) {
             }
 
             if (
-                !empty($legacyData)
+                ! empty($legacyData)
             ) {
 
                 $document
@@ -1033,360 +826,7 @@ if ($ownerOnly) {
                 'File Excel tidak ditemukan.'
             );
 
-            $spreadsheet =
-                IOFactory::load(
-                    $fullPath
-                );
-
-            $sheetIndex = 0;
-
-            foreach (
-                $spreadsheet
-                    ->getWorksheetIterator()
-                as $worksheet
-            ) {
-
-                $sheetIndex++;
-
-                $sheetData = [
-
-                    'academic_document_id' =>
-                        $document->id,
-
-                    'name' =>
-                        $worksheet->getTitle(),
-
-                    'sheet_index' =>
-                        $sheetIndex,
-                ];
-
-                $filteredSheetData = [];
-
-                foreach (
-                    $sheetData
-                    as $column => $value
-                ) {
-
-                    if (
-                        $this->sheetColumnExists(
-                            $column
-                        )
-                    ) {
-
-                        $filteredSheetData[
-                            $column
-                        ] = $value;
-                    }
-                }
-
-                $sheet =
-                    new AcademicDocumentSheet();
-
-                $sheet
-                    ->forceFill(
-                        $filteredSheetData
-                    )
-                    ->save();
-
-                $highestRow =
-                    $worksheet
-                        ->getHighestRow();
-
-                $highestColumn =
-                    $worksheet
-                        ->getHighestColumn();
-
-                $highestColumnIndex =
-                    Coordinate::columnIndexFromString(
-                        $highestColumn
-                    );
-
-                /*
-                 * Merge lookup.
-                 */
-
-                $mergedLookup = [];
-
-                foreach (
-                    $worksheet
-                        ->getMergeCells()
-                    as $mergeRange
-                ) {
-
-                    $parts =
-                        explode(
-                            ':',
-                            $mergeRange
-                        );
-
-                    $startCell =
-                        $parts[0] ?? null;
-
-                    $endCell =
-                        $parts[1]
-                        ?? $startCell;
-
-                    if (
-                        !$startCell
-                    ) {
-                        continue;
-                    }
-
-                    [
-                        $startColumn,
-                        $startRow
-                    ] =
-                        Coordinate::coordinateFromString(
-                            $startCell
-                        );
-
-                    [
-                        $endColumn,
-                        $endRow
-                    ] =
-                        Coordinate::coordinateFromString(
-                            $endCell
-                        );
-
-                    $startColumnIndex =
-                        Coordinate::columnIndexFromString(
-                            $startColumn
-                        );
-
-                    $endColumnIndex =
-                        Coordinate::columnIndexFromString(
-                            $endColumn
-                        );
-
-                    for (
-                        $r = $startRow;
-                        $r <= $endRow;
-                        $r++
-                    ) {
-
-                        for (
-                            $c = $startColumnIndex;
-                            $c <= $endColumnIndex;
-                            $c++
-                        ) {
-
-                            $coordinate =
-                                Coordinate::stringFromColumnIndex(
-                                    $c
-                                ) . $r;
-
-                            $mergedLookup[
-                                $coordinate
-                            ] =
-                                $mergeRange;
-                        }
-                    }
-                }
-
-                /*
-                 * Cells.
-                 */
-
-                for (
-                    $row = 1;
-                    $row <= $highestRow;
-                    $row++
-                ) {
-
-                    for (
-                        $column = 1;
-                        $column <=
-                            $highestColumnIndex;
-                        $column++
-                    ) {
-
-                        $cell =
-                            $worksheet
-                                ->getCellByColumnAndRow(
-                                    $column,
-                                    $row
-                                );
-
-                        $value =
-                            $cell->getValue();
-
-                        $formula = null;
-
-                        if (
-                            is_string($value) &&
-                            str_starts_with(
-                                $value,
-                                '='
-                            )
-                        ) {
-
-                            $formula =
-                                $value;
-                        }
-
-                        $calculatedValue =
-                            null;
-
-                        if (
-                            $formula !== null
-                        ) {
-
-                            try {
-
-                                $calculatedValue =
-                                    $cell
-                                        ->getCalculatedValue();
-
-                            } catch (
-                                Throwable $e
-                            ) {
-                            }
-                        }
-
-                        $coordinate =
-                            $cell
-                                ->getCoordinate();
-
-                        $isMerged =
-                            isset(
-                                $mergedLookup[
-                                    $coordinate
-                                ]
-                            );
-
-                        $mergeRange =
-                            $mergedLookup[
-                                $coordinate
-                            ]
-                            ?? null;
-
-                        $dataType = null;
-
-                        try {
-
-                            $dataType =
-                                $cell
-                                    ->getDataType();
-
-                        } catch (
-                            Throwable $e
-                        ) {
-                        }
-
-                        $style =
-                            $this->extractCellStyle(
-                                $cell
-                            );
-
-                        $hasStyle = false;
-
-                        try {
-
-                            $hasStyle =
-                                $cell
-                                    ->getStyle()
-                                    ->getFill()
-                                    ->getFillType()
-                                    !== Fill::FILL_NONE;
-
-                        } catch (
-                            Throwable $e
-                        ) {
-                        }
-
-                        if (
-                            $value === null &&
-                            !$hasStyle &&
-                            !$isMerged
-                        ) {
-                            continue;
-                        }
-
-                        $cellData = [
-
-                            'academic_document_sheet_id' =>
-                                $sheet->id,
-
-                            'coordinate' =>
-                                $coordinate,
-
-                            'row_number' =>
-                                $row,
-
-                            'column_number' =>
-                                $column,
-
-                            'column_index' =>
-                                $column,
-
-                            'value' =>
-                                $formula !== null
-                                    ? null
-                                    : $value,
-
-                            'formula' =>
-                                $formula,
-
-                            'calculated_value' =>
-                                $calculatedValue,
-
-                            'data_type' =>
-                                $dataType,
-
-                            'style' =>
-                                !empty($style)
-                                    ? json_encode(
-                                        $style,
-                                        JSON_UNESCAPED_UNICODE
-                                        | JSON_UNESCAPED_SLASHES
-                                    )
-                                    : null,
-
-                            'is_merged' =>
-                                $isMerged,
-
-                            'merge_range' =>
-                                $mergeRange,
-                        ];
-
-                        foreach (
-                            [
-                                'column_index',
-                                'formula',
-                                'calculated_value',
-                                'data_type',
-                                'style',
-                                'is_merged',
-                                'merge_range',
-                            ]
-                            as $optionalColumn
-                        ) {
-
-                            if (
-                                !$this->cellColumnExists(
-                                    $optionalColumn
-                                )
-                            ) {
-
-                                unset(
-                                    $cellData[
-                                        $optionalColumn
-                                    ]
-                                );
-                            }
-                        }
-
-                        $academicCell =
-                            new AcademicDocumentCell();
-
-                        $academicCell
-                            ->forceFill(
-                                $cellData
-                            )
-                            ->save();
-                    }
-                }
-            }
+            $this->spreadsheetImportService->import($fullPath, $document);
 
             DB::commit();
 
@@ -1394,17 +834,13 @@ if ($ownerOnly) {
                 ->route(
                     'lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan',
                     [
-                        'role' =>
-                            $role,
+                        'role' => $role,
 
-                        'schoolName' =>
-                            $schoolName,
+                        'schoolName' => $schoolName,
 
-                        'schoolId' =>
-                            $schoolId,
+                        'schoolId' => $schoolId,
 
-                        'mapel_id' =>
-                            $mapelId,
+                        'mapel_id' => $mapelId,
                     ]
                 )
                 ->with(
@@ -1431,7 +867,6 @@ if ($ownerOnly) {
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | BAGAN ANALISIS DOWNLOAD
@@ -1456,7 +891,7 @@ if ($ownerOnly) {
                 $schoolId,
                 $document,
                 self::BAGAN_ANALISIS_TYPE,
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
+                $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId)
             );
 
         abort_unless(
@@ -1483,7 +918,6 @@ if ($ownerOnly) {
                 ?: 'bagan-analisis.xlsx'
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1604,7 +1038,6 @@ if ($ownerOnly) {
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | BAGAN ANALISIS UPDATE CELL
@@ -1682,8 +1115,7 @@ if ($ownerOnly) {
         }
 
         $data = [
-            'value' =>
-                $value,
+            'value' => $value,
         ];
 
         /*
@@ -1754,25 +1186,19 @@ if ($ownerOnly) {
                 );
 
         return response()->json([
-            'success' =>
-                true,
+            'success' => true,
 
-            'message' =>
-                'Cell berhasil diperbarui.',
+            'message' => 'Cell berhasil diperbarui.',
 
             'cell' => [
                 'id' => $savedCell->id,
                 'value' => $savedCell->value,
-                'formula' =>
-                    $savedCell->formula ?? null,
-                'calculated_value' =>
-                    $savedCell->calculated_value ?? null,
-                'data_type' =>
-                    $savedCell->data_type ?? null,
+                'formula' => $savedCell->formula ?? null,
+                'calculated_value' => $savedCell->calculated_value ?? null,
+                'data_type' => $savedCell->data_type ?? null,
             ],
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1780,122 +1206,89 @@ if ($ownerOnly) {
     |--------------------------------------------------------------------------
     */
 
-public function storeBaganAnalisisComment(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId,
-    int $cell
-) {
-    $this->authorizeRole();
-    $this->getSchoolProfileOrFail($schoolId);
+    public function storeBaganAnalisisComment(
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId,
+        int $cell
+    ) {
+        $this->authorizeRole();
+        $this->getSchoolProfileOrFail($schoolId);
 
-    $request->validate([
-        'academic_document_cell_id' => [
-            'nullable',
-            'integer',
-            'min:0',
-        ],
-        'academic_document_sheet_id' => [
-            'nullable',
-            'integer',
-            'exists:academic_document_sheets,id',
-        ],
-        'academic_document_id' => [
-            'nullable',
-            'integer',
-            'exists:academic_documents,id',
-        ],
-        'comment_text' => [
-            'required',
-            'string',
-            'max:5000',
-        ],
-        'selected_text' => [
-            'nullable',
-            'string',
-            'max:10000',
-        ],
-        'anchor_key' => [
-            'nullable',
-            'string',
-            'max:255',
-        ],
-        'is_revision' => [
-            'nullable',
-            'boolean',
-        ],
-    ]);
+        $request->validate([
+            'academic_document_cell_id' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'academic_document_sheet_id' => [
+                'nullable',
+                'integer',
+                'exists:academic_document_sheets,id',
+            ],
+            'academic_document_id' => [
+                'nullable',
+                'integer',
+                'exists:academic_documents,id',
+            ],
+            'comment_text' => [
+                'required',
+                'string',
+                'max:5000',
+            ],
+            'selected_text' => [
+                'nullable',
+                'string',
+                'max:10000',
+            ],
+            'anchor_key' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'is_revision' => [
+                'nullable',
+                'boolean',
+            ],
+        ]);
 
-    $requestedCellId = (int) (
-        $request->input('academic_document_cell_id')
-        ?? 0
-    );
-
-    /*
-     * CELL = 0 berarti komentar umum.
-     * Komentar umum tidak membutuhkan cell dan tidak menjadi revisi.
-     */
-    $isGeneralComment = $requestedCellId <= 0;
-
-    if (!$isGeneralComment) {
-        abort_unless(
-            $requestedCellId === (int) $cell,
-            422,
-            'Cell komentar tidak sesuai.'
+        $requestedCellId = (int) (
+            $request->input('academic_document_cell_id')
+            ?? 0
         );
 
-        abort_unless(
-            AcademicDocumentCell::query()
-                ->whereKey($requestedCellId)
-                ->exists(),
-            422,
-            'Cell akademik yang dipilih tidak valid.'
-        );
-    }
-
-    $academicCell = null;
-    $sheet = null;
-
-    if (!$isGeneralComment) {
-        $academicCell = AcademicDocumentCell::query()
-            ->with('sheet')
-            ->findOrFail($requestedCellId);
-
-        $sheet = $academicCell->sheet;
-
-        abort_unless(
-            $sheet,
-            404,
-            'Sheet dokumen tidak ditemukan.'
-        );
-
-        abort_unless(
-            filled($academicCell->coordinate),
-            422,
-            'Coordinate cell tidak ditemukan.'
-        );
-    }
-
-    $sheetIdFromRequest = (int) (
-        $request->input('academic_document_sheet_id')
-        ?? 0
-    );
-
-    $documentIdFromRequest = (int) (
-        $request->input('academic_document_id')
-        ?? 0
-    );
-
-    if ($isGeneralComment) {
         /*
-         * Untuk komentar umum, sheet dipilih dari form.
-         * Jika sheet tidak dikirim, gunakan sheet pertama dari dokumen.
+         * CELL = 0 berarti komentar umum.
+         * Komentar umum tidak membutuhkan cell dan tidak menjadi revisi.
          */
-        if ($sheetIdFromRequest > 0) {
-            $sheet = AcademicDocumentSheet::query()
-                ->whereKey($sheetIdFromRequest)
-                ->first();
+        $isGeneralComment = $requestedCellId <= 0;
+
+        if (! $isGeneralComment) {
+            abort_unless(
+                $requestedCellId === (int) $cell,
+                422,
+                'Cell komentar tidak sesuai.'
+            );
+
+            abort_unless(
+                AcademicDocumentCell::query()
+                    ->whereKey($requestedCellId)
+                    ->exists(),
+                422,
+                'Cell akademik yang dipilih tidak valid.'
+            );
+        }
+
+        $academicCell = null;
+        $sheet = null;
+
+        if (! $isGeneralComment) {
+            $academicCell = AcademicDocumentCell::query()
+                ->with('sheet')
+                ->findOrFail($requestedCellId);
+
+            $sheet = $academicCell->sheet;
 
             abort_unless(
                 $sheet,
@@ -1903,278 +1296,283 @@ public function storeBaganAnalisisComment(
                 'Sheet dokumen tidak ditemukan.'
             );
 
-            $documentIdFromRequest =
-                (int) $sheet->academic_document_id;
-        } elseif ($documentIdFromRequest > 0) {
-            $sheet = AcademicDocumentSheet::query()
-                ->where(
-                    'academic_document_id',
-                    $documentIdFromRequest
-                )
-                ->orderBy('sheet_index')
-                ->first();
-
             abort_unless(
-                $sheet,
-                404,
-                'Sheet dokumen tidak ditemukan.'
+                filled($academicCell->coordinate),
+                422,
+                'Coordinate cell tidak ditemukan.'
+            );
+        }
+
+        $sheetIdFromRequest = (int) (
+            $request->input('academic_document_sheet_id')
+            ?? 0
+        );
+
+        $documentIdFromRequest = (int) (
+            $request->input('academic_document_id')
+            ?? 0
+        );
+
+        if ($isGeneralComment) {
+            /*
+             * Untuk komentar umum, sheet dipilih dari form.
+             * Jika sheet tidak dikirim, gunakan sheet pertama dari dokumen.
+             */
+            if ($sheetIdFromRequest > 0) {
+                $sheet = AcademicDocumentSheet::query()
+                    ->whereKey($sheetIdFromRequest)
+                    ->first();
+
+                abort_unless(
+                    $sheet,
+                    404,
+                    'Sheet dokumen tidak ditemukan.'
+                );
+
+                $documentIdFromRequest =
+                    (int) $sheet->academic_document_id;
+            } elseif ($documentIdFromRequest > 0) {
+                $sheet = AcademicDocumentSheet::query()
+                    ->where(
+                        'academic_document_id',
+                        $documentIdFromRequest
+                    )
+                    ->orderBy('sheet_index')
+                    ->first();
+
+                abort_unless(
+                    $sheet,
+                    404,
+                    'Sheet dokumen tidak ditemukan.'
+                );
+            } else {
+                abort(
+                    422,
+                    'Dokumen komentar tidak ditemukan.'
+                );
+            }
+        }
+
+        $documentQuery =
+            $this->baganAnalisisDocumentQuery()
+                ->where(
+                    'id',
+                    (int) $sheet->academic_document_id
+                );
+
+        if ($this->isGuru()) {
+            $this->applyDocumentOwner(
+                $documentQuery,
+                (int) Auth::id()
             );
         } else {
-            abort(
-                422,
-                'Dokumen komentar tidak ditemukan.'
-            );
+            $ownerColumn =
+                $this->documentOwnerColumn();
+
+            $ownerIds =
+                $this->getSchoolUserIds($schoolId);
+
+            if (
+                $ownerColumn
+                && $ownerIds->isNotEmpty()
+            ) {
+                $documentQuery->whereIn(
+                    $ownerColumn,
+                    $ownerIds
+                );
+            }
         }
-    }
-
-    $documentQuery =
-        $this->baganAnalisisDocumentQuery()
-            ->where(
-                'id',
-                (int) $sheet->academic_document_id
-            );
-
-    if ($this->isGuru()) {
-        $this->applyDocumentOwner(
-            $documentQuery,
-            (int) Auth::id()
-        );
-    } else {
-        $ownerColumn =
-            $this->documentOwnerColumn();
-
-        $ownerIds =
-            $this->getSchoolUserIds($schoolId);
 
         if (
-            $ownerColumn
-            && $ownerIds->isNotEmpty()
+            $this->documentColumnExists('school_partner_id')
         ) {
-            $documentQuery->whereIn(
-                $ownerColumn,
-                $ownerIds
+            $documentQuery->where(
+                'school_partner_id',
+                $schoolId
             );
         }
-    }
 
-    if (
-        $this->documentColumnExists('school_partner_id')
-    ) {
-        $documentQuery->where(
-            'school_partner_id',
-            $schoolId
-        );
-    }
+        $document = $documentQuery->first();
 
-    $document = $documentQuery->first();
-
-    abort_unless(
-        $document,
-        404,
-        'Dokumen Bagan Analisis tidak ditemukan.'
-    );
-
-    abort_unless(
-        (int) $sheet->academic_document_id
-            === (int) $document->id,
-        404,
-        'Sheet tidak termasuk dokumen ini.'
-    );
-
-    if (
-        !$isGeneralComment
-        && $academicCell
-    ) {
         abort_unless(
-            (int) $academicCell->sheet?->academic_document_id
+            $document,
+            404,
+            'Dokumen Bagan Analisis tidak ditemukan.'
+        );
+
+        abort_unless(
+            (int) $sheet->academic_document_id
                 === (int) $document->id,
             404,
-            'Cell tidak termasuk dokumen ini.'
+            'Sheet tidak termasuk dokumen ini.'
         );
-    }
 
-    $commentText =
-        $request->input('comment_text');
-
-    /*
-     * Komentar umum tidak boleh berubah menjadi revisi walaupun
-     * checkbox lama masih mengirim nilai tertentu.
-     */
-    $isRevision =
-        !$isGeneralComment
-        && $request->boolean('is_revision');
-
-    $commentData = [
-        'academic_document_id' =>
-            $document->id,
-
-        'academic_document_sheet_id' =>
-            $sheet->id,
-
-        'academic_document_cell_id' =>
-            $isGeneralComment
-                ? null
-                : $academicCell?->id,
-
-        'coordinate' =>
-            $isGeneralComment
-                ? '__GENERAL__'
-                : $academicCell?->coordinate,
-
-        'user_id' =>
-            Auth::id(),
-
-        'comment' =>
-            $commentText,
-
-        'comment_text' =>
-            $commentText,
-
-        'selected_text' =>
-            $isGeneralComment
-                ? null
-                : $request->input('selected_text'),
-
-        'anchor_key' =>
-            $isGeneralComment
-                ? null
-                : $request->input('anchor_key'),
-
-        'is_revision' =>
-            $isRevision,
-
-        'is_resolved' =>
-            false,
-    ];
-
-    $filteredData = [];
-
-    foreach (
-        $commentData
-        as $column => $value
-    ) {
         if (
-            $this->commentColumnExists(
-                $column
-            )
+            ! $isGeneralComment
+            && $academicCell
         ) {
-            $filteredData[$column] =
-                $value;
+            abort_unless(
+                (int) $academicCell->sheet?->academic_document_id
+                    === (int) $document->id,
+                404,
+                'Cell tidak termasuk dokumen ini.'
+            );
         }
-    }
 
-    /*
-     * Kolom inti tetap dipastikan ada bila schema memang memilikinya.
-     */
-    foreach (
-        [
-            'academic_document_id' =>
-                $document->id,
+        $commentText =
+            $request->input('comment_text');
 
-            'academic_document_sheet_id' =>
-                $sheet->id,
+        /*
+         * Komentar umum tidak boleh berubah menjadi revisi walaupun
+         * checkbox lama masih mengirim nilai tertentu.
+         */
+        $isRevision =
+            ! $isGeneralComment
+            && $request->boolean('is_revision');
 
-            'academic_document_cell_id' =>
-                $isGeneralComment
+        $commentData = [
+            'academic_document_id' => $document->id,
+
+            'academic_document_sheet_id' => $sheet->id,
+
+            'academic_document_cell_id' => $isGeneralComment
                     ? null
                     : $academicCell?->id,
 
-            'coordinate' =>
-                $isGeneralComment
+            'coordinate' => $isGeneralComment
                     ? '__GENERAL__'
                     : $academicCell?->coordinate,
 
-            'comment' =>
-                $commentText,
-        ] as $column => $value
-    ) {
-        if (
-            $this->commentColumnExists(
-                $column
-            )
+            'user_id' => Auth::id(),
+
+            'comment' => $commentText,
+
+            'comment_text' => $commentText,
+
+            'selected_text' => $isGeneralComment
+                    ? null
+                    : $request->input('selected_text'),
+
+            'anchor_key' => $isGeneralComment
+                    ? null
+                    : $request->input('anchor_key'),
+
+            'is_revision' => $isRevision,
+
+            'is_resolved' => false,
+        ];
+
+        $filteredData = [];
+
+        foreach (
+            $commentData as $column => $value
         ) {
-            $filteredData[$column] =
-                $value;
+            if (
+                $this->commentColumnExists(
+                    $column
+                )
+            ) {
+                $filteredData[$column] =
+                    $value;
+            }
         }
-    }
 
-    $comment =
-        new AcademicDocumentComment();
+        /*
+         * Kolom inti tetap dipastikan ada bila schema memang memilikinya.
+         */
+        foreach (
+            [
+                'academic_document_id' => $document->id,
 
-    $comment->forceFill(
-        $filteredData
-    );
+                'academic_document_sheet_id' => $sheet->id,
 
-    $comment->save();
+                'academic_document_cell_id' => $isGeneralComment
+                        ? null
+                        : $academicCell?->id,
 
-    if (
-        $isRevision
-        && $academicCell
-        && $this->cellColumnExists(
-            'has_revision'
-        )
-    ) {
-        $academicCell
-            ->forceFill([
-                'has_revision' => true,
-            ])
-            ->save();
-    }
+                'coordinate' => $isGeneralComment
+                        ? '__GENERAL__'
+                        : $academicCell?->coordinate,
 
-    $author =
-        $this->resolveCommentAuthor(
-            (int) Auth::id()
+                'comment' => $commentText,
+            ] as $column => $value
+        ) {
+            if (
+                $this->commentColumnExists(
+                    $column
+                )
+            ) {
+                $filteredData[$column] =
+                    $value;
+            }
+        }
+
+        $comment =
+            new AcademicDocumentComment;
+
+        $comment->forceFill(
+            $filteredData
         );
 
-    try {
-        $comment->load('user');
-    } catch (Throwable $e) {
-        // Relasi legacy user tidak boleh menggagalkan komentar.
-    }
+        $comment->save();
 
-    return response()->json([
-        'success' => true,
-
-        'message' =>
+        if (
             $isRevision
-                ? 'Komentar revisi berhasil ditambahkan.'
-                : 'Komentar berhasil ditambahkan.',
+            && $academicCell
+            && $this->cellColumnExists(
+                'has_revision'
+            )
+        ) {
+            $academicCell
+                ->forceFill([
+                    'has_revision' => true,
+                ])
+                ->save();
+        }
 
-        'comment_id' =>
-            $comment->id,
+        $author =
+            $this->resolveCommentAuthor(
+                (int) Auth::id()
+            );
 
-        'document_id' =>
-            $document->id,
+        try {
+            $comment->load('user');
+        } catch (Throwable $e) {
+            // Relasi legacy user tidak boleh menggagalkan komentar.
+        }
 
-        'sheet_id' =>
-            $sheet->id,
+        return response()->json([
+            'success' => true,
 
-        'cell_id' =>
-            $isGeneralComment
-                ? null
-                : $academicCell?->id,
+            'message' => $isRevision
+                    ? 'Komentar revisi berhasil ditambahkan.'
+                    : 'Komentar berhasil ditambahkan.',
 
-        'coordinate' =>
-            $isGeneralComment
-                ? '__GENERAL__'
-                : $academicCell?->coordinate,
+            'comment_id' => $comment->id,
 
-        'is_general_comment' =>
-            $isGeneralComment,
+            'document_id' => $document->id,
 
-        'is_revision' =>
-            $isRevision,
+            'sheet_id' => $sheet->id,
 
-        'user_id' =>
-            Auth::id(),
+            'cell_id' => $isGeneralComment
+                    ? null
+                    : $academicCell?->id,
 
-        'user_name' =>
-            $author['name'],
+            'coordinate' => $isGeneralComment
+                    ? '__GENERAL__'
+                    : $academicCell?->coordinate,
 
-        'role' =>
-            $author['role'],
-    ]);
-}
+            'is_general_comment' => $isGeneralComment,
+
+            'is_revision' => $isRevision,
+
+            'user_id' => Auth::id(),
+
+            'user_name' => $author['name'],
+
+            'role' => $author['role'],
+        ]);
+    }
 
     public function analisis(
         Request $request,
@@ -2196,10 +1594,9 @@ public function storeBaganAnalisisComment(
         $mapelGroups =
             $teacherMapels
                 ->filter(
-                    fn ($teacherMapel) =>
-                        !empty(
-                            $teacherMapel->mapel_id
-                        )
+                    fn ($teacherMapel) => ! empty(
+                        $teacherMapel->mapel_id
+                    )
                 )
                 ->groupBy(
                     'mapel_id'
@@ -2250,8 +1647,7 @@ public function storeBaganAnalisisComment(
         $documentMapelIds =
             $documents
                 ->map(
-                    fn ($document) =>
-                        $document->subject_id
+                    fn ($document) => $document->subject_id
                         ??
                         $document->mapel_id
                         ??
@@ -2259,48 +1655,38 @@ public function storeBaganAnalisisComment(
                 )
                 ->filter()
                 ->map(
-                    fn ($id) =>
-                        (int) $id
+                    fn ($id) => (int) $id
                 )
                 ->unique()
                 ->values();
 
         $mapelGroups =
             $mapelGroups->filter(
-                fn ($items, $mapelId) =>
-                    $documentMapelIds
-                        ->contains(
-                            (int) $mapelId
-                        )
+                fn ($items, $mapelId) => $documentMapelIds
+                    ->contains(
+                        (int) $mapelId
+                    )
             );
 
         return view(
             'features.lms.school-admin.registrasi-guru.analisis',
             [
-                'schoolName' =>
-                    $schoolName,
+                'schoolName' => $schoolName,
 
-                'schoolId' =>
-                    $schoolId,
+                'schoolId' => $schoolId,
 
-                'teacherMapels' =>
-                    $teacherMapels,
+                'teacherMapels' => $teacherMapels,
 
-                'mapelGroups' =>
-                    $mapelGroups,
+                'mapelGroups' => $mapelGroups,
 
-                'documents' =>
-                    $documents,
+                'documents' => $documents,
 
-                'academicDocuments' =>
-                    $documents,
+                'academicDocuments' => $documents,
 
-                'currentRole' =>
-                    $this->currentRole(),
+                'currentRole' => $this->currentRole(),
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -2325,7 +1711,7 @@ public function storeBaganAnalisisComment(
                 'mapel_id'
             );
 
-        if (!$mapelId) {
+        if (! $mapelId) {
 
             $mapelId =
                 $request->integer(
@@ -2334,7 +1720,7 @@ public function storeBaganAnalisisComment(
         }
 
         abort_if(
-            !$mapelId,
+            ! $mapelId,
             404,
             'Mata pelajaran belum dipilih.'
         );
@@ -2521,142 +1907,106 @@ public function storeBaganAnalisisComment(
         return view(
             'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
             [
-                'schoolName' =>
-                    $schoolName,
+                'schoolName' => $schoolName,
 
-                'schoolId' =>
-                    $schoolId,
+                'schoolId' => $schoolId,
 
-                'mapel' =>
-                    $mapel,
+                'mapel' => $mapel,
 
-                'mapelId' =>
-                    $mapelId,
+                'mapelId' => $mapelId,
 
-                'mapelName' =>
-                    $this->mapelName(
-                        $mapel
-                    ),
+                'mapelName' => $this->mapelName(
+                    $mapel
+                ),
 
-                'teacherMapels' =>
-                    $teacherMapels,
+                'teacherMapels' => $teacherMapels,
 
-                'jumlahGuruMapel' =>
-                    $jumlahGuruMapel,
+                'jumlahGuruMapel' => $jumlahGuruMapel,
 
-                'currentRole' =>
-                    $this->currentRole(),
+                'currentRole' => $this->currentRole(),
 
-                'document' =>
-                    $document,
+                'document' => $document,
 
-                'documents' =>
-                    $document
+                'documents' => $document
                         ? collect([
-                            $document,
-                        ])
+                        $document,
+                    ])
                         : collect(),
 
-                'academicDocuments' =>
-                    $document
+                'academicDocuments' => $document
                         ? collect([
-                            $document,
-                        ])
+                        $document,
+                    ])
                         : collect(),
 
-                'comments' =>
-                    $comments,
+                'comments' => $comments,
 
-                'isGuru' =>
-                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
 
-                'viewingTeacherId' =>
-                    $this->requestedTeacherId($request, $schoolId),
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
 
-                'isTeacherViewer' =>
-                    $this->isTeacherViewer($request, $schoolId),
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
 
-                'uploadRoute' =>
-                    route(
-                        'lms.schoolAdmin.registrasiGuru.analisis.upload',
-                        [
-                            'role' =>
-                                $role,
+                'uploadRoute' => route(
+                    'lms.schoolAdmin.registrasiGuru.analisis.upload',
+                    [
+                        'role' => $role,
 
-                            'schoolName' =>
-                                $schoolName,
+                        'schoolName' => $schoolName,
 
-                            'schoolId' =>
-                                $schoolId,
-                        ]
-                    ),
+                        'schoolId' => $schoolId,
+                    ]
+                ),
 
-                'downloadRoute' =>
-                    $document
+                'downloadRoute' => $document
                         ? route(
                             'lms.schoolAdmin.registrasiGuru.analisis.download',
                             [
-                                'role' =>
-                                    $role,
+                                'role' => $role,
 
-                                'schoolName' =>
-                                    $schoolName,
+                                'schoolName' => $schoolName,
 
-                                'schoolId' =>
-                                    $schoolId,
+                                'schoolId' => $schoolId,
 
-                                'document' =>
-                                    $document->id,
+                                'document' => $document->id,
                             ]
                         )
                         : '#',
 
-                'deleteRoute' =>
-                    $document
+                'deleteRoute' => $document
                         ? route(
                             'lms.schoolAdmin.registrasiGuru.analisis.delete',
                             [
-                                'role' =>
-                                    $role,
+                                'role' => $role,
 
-                                'schoolName' =>
-                                    $schoolName,
+                                'schoolName' => $schoolName,
 
-                                'schoolId' =>
-                                    $schoolId,
+                                'schoolId' => $schoolId,
 
-                                'document' =>
-                                    $document->id,
+                                'document' => $document->id,
                             ]
                         )
                         : '#',
 
-                'updateCellRoute' =>
-                    route(
-                        'lms.schoolAdmin.registrasiGuru.analisis.cells.update',
-                        [
-                            'role' =>
-                                $role,
+                'updateCellRoute' => route(
+                    'lms.schoolAdmin.registrasiGuru.analisis.cells.update',
+                    [
+                        'role' => $role,
 
-                            'schoolName' =>
-                                $schoolName,
+                        'schoolName' => $schoolName,
 
-                            'schoolId' =>
-                                $schoolId,
+                        'schoolId' => $schoolId,
 
-                            'cell' =>
-                                '__CELL__',
-                        ]
-                    ),
+                        'cell' => '__CELL__',
+                    ]
+                ),
 
-                'mapels' =>
-                    $this->isGuru()
+                'mapels' => $this->isGuru()
                         ? collect()
                         : Mapel::query()->get(),
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -2671,6 +2021,7 @@ public function storeBaganAnalisisComment(
         int $schoolId
     ) {
         $this->authorizeTeacherWrite($request, (int) $schoolId);
+
         return $this->baganAnalisisUpload(
             $request,
             $role,
@@ -2678,7 +2029,6 @@ public function storeBaganAnalisisComment(
             $schoolId
         );
     }
-
 
     public function analisisDownload(
         Request $request,
@@ -2696,7 +2046,6 @@ public function storeBaganAnalisisComment(
         );
     }
 
-
     public function analisisDestroy(
         Request $request,
         string $role,
@@ -2705,6 +2054,7 @@ public function storeBaganAnalisisComment(
         int $document
     ) {
         $this->authorizeTeacherWrite($request, (int) $schoolId);
+
         return $this->baganAnalisisDestroy(
             $request,
             $role,
@@ -2714,7 +2064,6 @@ public function storeBaganAnalisisComment(
         );
     }
 
-
     public function updateAnalisisCell(
         Request $request,
         string $role,
@@ -2723,6 +2072,7 @@ public function storeBaganAnalisisComment(
         int $cell
     ) {
         $this->authorizeTeacherWrite($request, (int) $schoolId);
+
         return $this->updateBaganAnalisisCell(
             $request,
             $role,
@@ -2731,7 +2081,6 @@ public function storeBaganAnalisisComment(
             $cell
         );
     }
-
 
     public function storeAnalisisComment(
         Request $request,
@@ -2749,13 +2098,11 @@ public function storeBaganAnalisisComment(
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | PROTA / PROSEM COMMENT
     |--------------------------------------------------------------------------
     */
-
 
     /*
     |--------------------------------------------------------------------------
@@ -2763,205 +2110,189 @@ public function storeBaganAnalisisComment(
     |--------------------------------------------------------------------------
     */
 
-public function protaProsem(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId
-) {
-    $this->authorizeRole();
+    public function protaProsem(
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId
+    ) {
+        $this->authorizeRole();
 
-    $this->getSchoolProfileOrFail(
-        $schoolId
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATA GURU & MATA PELAJARAN
-    |--------------------------------------------------------------------------
-    */
-
-    $teacherMapels = $this->getTeacherMapel(
-        $schoolId
-    );
-
-    $mapelGroups = $teacherMapels
-        ->filter(
-            fn ($teacherMapel) =>
-                !empty($teacherMapel->mapel_id)
-        )
-        ->groupBy(
-            'mapel_id'
-        );
-
-    /*
-    |--------------------------------------------------------------------------
-    | AMBIL DOKUMEN PROTA / PROSEM
-    |--------------------------------------------------------------------------
-    */
-
-    $query = $this->protaProsemDocumentQuery();
-
-    $ownerColumn = $this->documentOwnerColumn();
-
-    /*
-    |--------------------------------------------------------------------------
-    | GURU
-    |--------------------------------------------------------------------------
-    |
-    | Guru hanya melihat dokumen PROTA / PROSEM miliknya sendiri.
-    |
-    */
-
-    if ($this->isGuru()) {
-
-        if ($ownerColumn) {
-
-            $query->where(
-                $ownerColumn,
-                $this->requestedTeacherId($request, $schoolId)
-            );
-        }
-
-    } else {
-
-        /*
-        |--------------------------------------------------------------------------
-        | NON GURU
-        |--------------------------------------------------------------------------
-        |
-        | Wakil Kepala Sekolah / Kepala Sekolah / Admin sekolah
-        | dapat melihat dokumen milik user di sekolah tersebut.
-        |
-        */
-
-        $ownerIds = $this->getSchoolUserIds(
+        $this->getSchoolProfileOrFail(
             $schoolId
         );
 
-        if (
-            $ownerColumn &&
-            $ownerIds->isNotEmpty()
-        ) {
+        /*
+        |--------------------------------------------------------------------------
+        | DATA GURU & MATA PELAJARAN
+        |--------------------------------------------------------------------------
+        */
 
-            $query->whereIn(
-                $ownerColumn,
-                $ownerIds
+        $teacherMapels = $this->getTeacherMapel(
+            $schoolId
+        );
+
+        $mapelGroups = $teacherMapels
+            ->filter(
+                fn ($teacherMapel) => ! empty($teacherMapel->mapel_id)
+            )
+            ->groupBy(
+                'mapel_id'
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL DOKUMEN PROTA / PROSEM
+        |--------------------------------------------------------------------------
+        */
+
+        $query = $this->protaProsemDocumentQuery();
+
+        $ownerColumn = $this->documentOwnerColumn();
+
+        /*
+        |--------------------------------------------------------------------------
+        | GURU
+        |--------------------------------------------------------------------------
+        |
+        | Guru hanya melihat dokumen PROTA / PROSEM miliknya sendiri.
+        |
+        */
+
+        if ($this->isGuru()) {
+
+            if ($ownerColumn) {
+
+                $query->where(
+                    $ownerColumn,
+                    $this->requestedTeacherId($request, $schoolId)
+                );
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | NON GURU
+            |--------------------------------------------------------------------------
+            |
+            | Wakil Kepala Sekolah / Kepala Sekolah / Admin sekolah
+            | dapat melihat dokumen milik user di sekolah tersebut.
+            |
+            */
+
+            $ownerIds = $this->getSchoolUserIds(
+                $schoolId
+            );
+
+            if (
+                $ownerColumn &&
+                $ownerIds->isNotEmpty()
+            ) {
+
+                $query->whereIn(
+                    $ownerColumn,
+                    $ownerIds
+                );
+            }
         }
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOKUMEN
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | DOKUMEN
+        |--------------------------------------------------------------------------
+        */
 
-    $documents = $query
-        ->latest('id')
-        ->get();
+        $documents = $query
+            ->latest('id')
+            ->get();
 
-    /*
-    |--------------------------------------------------------------------------
-    | MAPEL YANG MEMILIKI DOKUMEN PROTA / PROSEM
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | MAPEL YANG MEMILIKI DOKUMEN PROTA / PROSEM
+        |--------------------------------------------------------------------------
+        */
 
-    $documentMapelIds = $documents
-        ->map(
-            fn ($document) =>
-                $document->subject_id
-                ??
-                $document->mapel_id
-                ??
-                $document->mata_pelajaran_id  // Tambahan pengaman kolom database
-                ??
-                $document->id_mapel           // Tambahan pengaman kolom database
-                ??
-                null
-        )
-        ->filter()
-        ->map(
-            fn ($id) =>
-                (int) $id
-        )
-        ->unique()
-        ->values();
+        $documentMapelIds = $documents
+            ->map(
+                fn ($document) => $document->subject_id
+                    ??
+                    $document->mapel_id
+                    ??
+                    $document->mata_pelajaran_id  // Tambahan pengaman kolom database
+                    ??
+                    $document->id_mapel           // Tambahan pengaman kolom database
+                    ??
+                    null
+            )
+            ->filter()
+            ->map(
+                fn ($id) => (int) $id
+            )
+            ->unique()
+            ->values();
 
-    /*
-    |--------------------------------------------------------------------------
-    | FILTER KARTU MATA PELAJARAN
-    |--------------------------------------------------------------------------
-    |
-    | Hanya mata pelajaran yang mempunyai dokumen PROTA / PROSEM
-    | yang ditampilkan pada halaman utama.
-    |
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER KARTU MATA PELAJARAN
+        |--------------------------------------------------------------------------
+        |
+        | Hanya mata pelajaran yang mempunyai dokumen PROTA / PROSEM
+        | yang ditampilkan pada halaman utama.
+        |
+        */
 
-    $mapelGroups = $mapelGroups->filter(
-        fn ($items, $mapelId) =>
-            $documentMapelIds->contains(
+        $mapelGroups = $mapelGroups->filter(
+            fn ($items, $mapelId) => $documentMapelIds->contains(
                 (int) $mapelId
             )
-    );
+        );
 
-    /*
-    |--------------------------------------------------------------------------
-    | HALAMAN UTAMA PROTA / PROSEM
-    |--------------------------------------------------------------------------
-    |
-    | PENTING:
-    | Jangan arahkan ke tampilan.tamp-prota-prosem.
-    |
-    | URL tetap:
-    |
-    | /registrasi-guru/prota-prosem
-    |
-    | Sama seperti:
-    |
-    | /registrasi-guru/analisis
-    |
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | HALAMAN UTAMA PROTA / PROSEM
+        |--------------------------------------------------------------------------
+        |
+        | PENTING:
+        | Jangan arahkan ke tampilan.tamp-prota-prosem.
+        |
+        | URL tetap:
+        |
+        | /registrasi-guru/prota-prosem
+        |
+        | Sama seperti:
+        |
+        | /registrasi-guru/analisis
+        |
+        */
 
-    return view(
-        'features.lms.school-admin.registrasi-guru.prota-prosem',
-        [
-            'schoolName' =>
-                $schoolName,
+        return view(
+            'features.lms.school-admin.registrasi-guru.prota-prosem',
+            [
+                'schoolName' => $schoolName,
 
-            'schoolId' =>
-                $schoolId,
+                'schoolId' => $schoolId,
 
-            'teacherMapels' =>
-                $teacherMapels,
+                'teacherMapels' => $teacherMapels,
 
-            'mapelGroups' =>
-                $mapelGroups,
+                'mapelGroups' => $mapelGroups,
 
-            'documents' =>
-                $documents,
+                'documents' => $documents,
 
-            'academicDocuments' =>
-                $documents,
+                'academicDocuments' => $documents,
 
-            'currentRole' =>
-                $this->currentRole(),
+                'currentRole' => $this->currentRole(),
 
-            'role' =>
-                $role,
+                'role' => $role,
 
-            'isGuru' =>
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
 
-            'viewingTeacherId' =>
-                $this->requestedTeacherId($request, $schoolId),
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
 
-            'isTeacherViewer' =>
-                $this->isTeacherViewer($request, $schoolId),
-        ]
-    );
-}
-
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
+            ]
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -2969,301 +2300,286 @@ public function protaProsem(
     |--------------------------------------------------------------------------
     */
 
-public function tampilanProtaProsem(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId
-) {
-    $this->authorizeRole();
+    public function tampilanProtaProsem(
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId
+    ) {
+        $this->authorizeRole();
 
-    $this->getSchoolProfileOrFail(
-        $schoolId
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | TEACHER MAPEL
-    |--------------------------------------------------------------------------
-    */
-
-    $teacherMapels =
-        $this->getTeacherMapel(
+        $this->getSchoolProfileOrFail(
             $schoolId
         );
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENT QUERY
-    |--------------------------------------------------------------------------
-    */
-
-    $documentQuery =
-        $this->protaProsemDocumentQuery();
-
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESS
-    |--------------------------------------------------------------------------
-    */
-
-    if ($this->isGuru()) {
-
-        $this->applyDocumentOwner(
-            $documentQuery,
-            (int) $this->requestedTeacherId($request, $schoolId)
-        );
-
-    } else {
-
-        $ownerColumn =
-            $this->documentOwnerColumn();
-
-        $ownerIds =
-            $this->getSchoolUserIds(
-                $schoolId
-            );
-
-        if (
-            $ownerColumn &&
-            $ownerIds->isNotEmpty()
-        ) {
-            $documentQuery->whereIn(
-                $ownerColumn,
-                $ownerIds
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $documents =
-        $documentQuery
-            ->with([
-                'sheets.cells',
-            ])
-            ->latest('id')
-            ->get();
-
-    /*
-     * GURU TANPA DOKUMEN:
-     * Blok redirect ini DINONAKTIFKAN agar halaman tampilan 
-     * tidak memaksa kembali ke route input saat dokumen kosong.
-     */
-    /*
-    if (
-        $this->isGuru() &&
-        $documents->isEmpty()
-    ) {
-        return redirect()
-            ->route(
-                'lms.schoolAdmin.registrasiGuru.prota-prosem',
-                [
-                    'role' => $role,
-                    'schoolName' => $schoolName,
-                    'schoolId' => $schoolId,
-                ]
-            );
-    }
-    */
-
-    // Blade tamp-prota-prosem menggunakan $document sebagai dokumen aktif.
-    // Ambil dokumen terbaru yang sudah lolos filter akses di atas.
-    $document = $documents->first();
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHEET IDS
-    |--------------------------------------------------------------------------
-    |
-    | academic_document_comments TIDAK memakai
-    | academic_document_id.
-    |
-    | Komentar dihubungkan melalui:
-    |
-    | academic_document_sheet_id
-    |
-    */
-
-    $sheetIds =
-        $documents
-            ->flatMap(function ($document) {
-
-                return $document
-                    ->sheets
-                    ->pluck('id');
-            })
-            ->filter()
-            ->unique()
-            ->values();
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMMENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $comments =
-        collect();
-
-    if (
-        $sheetIds->isNotEmpty()
-    ) {
-
-        $commentsQuery =
-            AcademicDocumentComment::query()
-                ->whereIn(
-                    'academic_document_sheet_id',
-                    $sheetIds
-                )
-                ->latest('id');
-
         /*
         |--------------------------------------------------------------------------
-        | USER
+        | TEACHER MAPEL
         |--------------------------------------------------------------------------
         */
 
-        try {
-
-            $commentsQuery->with(
-                'user'
+        $teacherMapels =
+            $this->getTeacherMapel(
+                $schoolId
             );
 
-        } catch (Throwable $e) {
-            // Tidak menggagalkan halaman.
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $documentQuery =
+            $this->protaProsemDocumentQuery();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACCESS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->isGuru()) {
+
+            $this->applyDocumentOwner(
+                $documentQuery,
+                (int) $this->requestedTeacherId($request, $schoolId)
+            );
+
+        } else {
+
+            $ownerColumn =
+                $this->documentOwnerColumn();
+
+            $ownerIds =
+                $this->getSchoolUserIds(
+                    $schoolId
+                );
+
+            if (
+                $ownerColumn &&
+                $ownerIds->isNotEmpty()
+            ) {
+                $documentQuery->whereIn(
+                    $ownerColumn,
+                    $ownerIds
+                );
+            }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $documents =
+            $documentQuery
+                ->with([
+                    'sheets.cells',
+                ])
+                ->latest('id')
+                ->get();
+
+        /*
+         * GURU TANPA DOKUMEN:
+         * Blok redirect ini DINONAKTIFKAN agar halaman tampilan
+         * tidak memaksa kembali ke route input saat dokumen kosong.
+         */
+        /*
+        if (
+            $this->isGuru() &&
+            $documents->isEmpty()
+        ) {
+            return redirect()
+                ->route(
+                    'lms.schoolAdmin.registrasiGuru.prota-prosem',
+                    [
+                        'role' => $role,
+                        'schoolName' => $schoolName,
+                        'schoolId' => $schoolId,
+                    ]
+                );
+        }
+        */
+
+        // Blade tamp-prota-prosem menggunakan $document sebagai dokumen aktif.
+        // Ambil dokumen terbaru yang sudah lolos filter akses di atas.
+        $document = $documents->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SHEET IDS
+        |--------------------------------------------------------------------------
+        |
+        | academic_document_comments TIDAK memakai
+        | academic_document_id.
+        |
+        | Komentar dihubungkan melalui:
+        |
+        | academic_document_sheet_id
+        |
+        */
+
+        $sheetIds =
+            $documents
+                ->flatMap(function ($document) {
+
+                    return $document
+                        ->sheets
+                        ->pluck('id');
+                })
+                ->filter()
+                ->unique()
+                ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | COMMENTS
+        |--------------------------------------------------------------------------
+        */
+
         $comments =
-            $commentsQuery->get();
-    }
+            collect();
 
-    /*
-    |--------------------------------------------------------------------------
-    | GROUP COMMENT
-    |--------------------------------------------------------------------------
-    |
-    | Struktur komentar spreadsheet:
-    |
-    | sheet_id + coordinate
-    |
-    | Contoh:
-    |
-    | 42:B3
-    | 42:C5
-    |
-    */
+        if (
+            $sheetIds->isNotEmpty()
+        ) {
 
-    $commentsByCell =
-        $comments->groupBy(
-            function ($comment) {
+            $commentsQuery =
+                AcademicDocumentComment::query()
+                    ->whereIn(
+                        'academic_document_sheet_id',
+                        $sheetIds
+                    )
+                    ->latest('id');
 
-                return
-                    $comment
-                        ->academic_document_sheet_id
-                    . ':'
-                    .
-                    $comment->coordinate;
+            /*
+            |--------------------------------------------------------------------------
+            | USER
+            |--------------------------------------------------------------------------
+            */
+
+            try {
+
+                $commentsQuery->with(
+                    'user'
+                );
+
+            } catch (Throwable $e) {
+                // Tidak menggagalkan halaman.
             }
-        );
 
-    /*
-    |--------------------------------------------------------------------------
-    | MAPEL GROUP
-    |--------------------------------------------------------------------------
-    */
+            $comments =
+                $commentsQuery->get();
+        }
 
-    $mapelGroups =
-        $teacherMapels->groupBy(
-            function ($teacherMapel) {
+        /*
+        |--------------------------------------------------------------------------
+        | GROUP COMMENT
+        |--------------------------------------------------------------------------
+        |
+        | Struktur komentar spreadsheet:
+        |
+        | sheet_id + coordinate
+        |
+        | Contoh:
+        |
+        | 42:B3
+        | 42:C5
+        |
+        */
 
-                $mapel =
-                    $teacherMapel->Mapel
-                    ??
-                    $teacherMapel->mapel
-                    ??
-                    null;
+        $commentsByCell =
+            $comments->groupBy(
+                function ($comment) {
 
-                if (!$mapel) {
-                    return 'Tanpa Mapel';
+                    return
+                        $comment
+                            ->academic_document_sheet_id
+                        .':'
+                        .
+                        $comment->coordinate;
                 }
+            );
 
-                return
-                    $mapel->nama_mapel
-                    ??
-                    $mapel->mata_pelajaran
-                    ??
-                    $mapel->nama
-                    ??
-                    $mapel->name
-                    ??
-                    'Tanpa Mapel';
-            }
+        /*
+        |--------------------------------------------------------------------------
+        | MAPEL GROUP
+        |--------------------------------------------------------------------------
+        */
+
+        $mapelGroups =
+            $teacherMapels->groupBy(
+                function ($teacherMapel) {
+
+                    $mapel =
+                        $teacherMapel->Mapel
+                        ??
+                        $teacherMapel->mapel
+                        ??
+                        null;
+
+                    if (! $mapel) {
+                        return 'Tanpa Mapel';
+                    }
+
+                    return
+                        $mapel->nama_mapel
+                        ??
+                        $mapel->mata_pelajaran
+                        ??
+                        $mapel->nama
+                        ??
+                        $mapel->name
+                        ??
+                        'Tanpa Mapel';
+                }
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | VIEW
+        |--------------------------------------------------------------------------
+        |
+        | FILE YANG BENAR:
+        |
+        | tamp-prota-prosem.blade.php
+        |
+        */
+
+        return view(
+            'features.lms.school-admin.registrasi-guru.tampilan.tamp-prota-prosem',
+            [
+                'document' => $document,
+
+                'documents' => $documents,
+
+                'academicDocuments' => $documents,
+
+                'comments' => $comments,
+
+                'commentsByCell' => $commentsByCell,
+
+                'teacherMapels' => $teacherMapels,
+
+                'mapelGroups' => $mapelGroups,
+
+                'schoolName' => $schoolName,
+
+                'schoolId' => $schoolId,
+
+                'role' => $role,
+
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
+
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
+
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
+
+                'currentRole' => $this->currentRole(),
+            ]
         );
-
-    /*
-    |--------------------------------------------------------------------------
-    | VIEW
-    |--------------------------------------------------------------------------
-    |
-    | FILE YANG BENAR:
-    |
-    | tamp-prota-prosem.blade.php
-    |
-    */
-
-    return view(
-        'features.lms.school-admin.registrasi-guru.tampilan.tamp-prota-prosem',
-        [
-            'document' =>
-                $document,
-
-            'documents' =>
-                $documents,
-
-            'academicDocuments' =>
-                $documents,
-
-            'comments' =>
-                $comments,
-
-            'commentsByCell' =>
-                $commentsByCell,
-
-            'teacherMapels' =>
-                $teacherMapels,
-
-            'mapelGroups' =>
-                $mapelGroups,
-
-            'schoolName' =>
-                $schoolName,
-
-            'schoolId' =>
-                $schoolId,
-
-            'role' =>
-                $role,
-
-            'isGuru' =>
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
-
-            'viewingTeacherId' =>
-                $this->requestedTeacherId($request, $schoolId),
-
-            'isTeacherViewer' =>
-                $this->isTeacherViewer($request, $schoolId),
-
-            'currentRole' =>
-                $this->currentRole(),
-        ]
-    );
-}
-
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -3271,7 +2587,7 @@ public function tampilanProtaProsem(
     |--------------------------------------------------------------------------
     */
 
-public function protaProsemUpload(
+    public function protaProsemUpload(
         Request $request,
         string $role,
         string $schoolName,
@@ -3340,36 +2656,28 @@ public function protaProsemUpload(
 
             $documentData = [
 
-                'title' =>
-                    $request->input(
-                        'title',
-                        'Program Tahunan / Program Semester'
-                    ),
+                'title' => $request->input(
+                    'title',
+                    'Program Tahunan / Program Semester'
+                ),
 
-                'original_filename' =>
-                    $file->getClientOriginalName(),
+                'original_filename' => $file->getClientOriginalName(),
 
-                'file_path' =>
-                    $path,
+                'file_path' => $path,
 
-                'school_partner_id' =>
-                    $schoolId,
+                'school_partner_id' => $schoolId,
 
-                'owner_user_id' =>
-                    $this->requestedTeacherId($request, $schoolId),
+                'owner_user_id' => $this->requestedTeacherId($request, $schoolId),
 
-                'subject_id' =>
-                    $mapelId,
+                'subject_id' => $mapelId,
 
-                'document_type' =>
-                    self::PROTA_PROSEM_TYPE,
+                'document_type' => self::PROTA_PROSEM_TYPE,
             ];
 
             $filteredDocumentData = [];
 
             foreach (
-                $documentData
-                as $column => $value
+                $documentData as $column => $value
             ) {
 
                 if (
@@ -3385,7 +2693,7 @@ public function protaProsemUpload(
             }
 
             $document =
-                new AcademicDocument();
+                new AcademicDocument;
 
             $document
                 ->forceFill(
@@ -3440,7 +2748,7 @@ public function protaProsemUpload(
             }
 
             if (
-                !empty($legacyData)
+                ! empty($legacyData)
             ) {
 
                 $document
@@ -3460,360 +2768,7 @@ public function protaProsemUpload(
                 'File Excel tidak ditemukan.'
             );
 
-            $spreadsheet =
-                IOFactory::load(
-                    $fullPath
-                );
-
-            $sheetIndex = 0;
-
-            foreach (
-                $spreadsheet
-                    ->getWorksheetIterator()
-                as $worksheet
-            ) {
-
-                $sheetIndex++;
-
-                $sheetData = [
-
-                    'academic_document_id' =>
-                        $document->id,
-
-                    'name' =>
-                        $worksheet->getTitle(),
-
-                    'sheet_index' =>
-                        $sheetIndex,
-                ];
-
-                $filteredSheetData = [];
-
-                foreach (
-                    $sheetData
-                    as $column => $value
-                ) {
-
-                    if (
-                        $this->sheetColumnExists(
-                            $column
-                        )
-                    ) {
-
-                        $filteredSheetData[
-                            $column
-                        ] = $value;
-                    }
-                }
-
-                $sheet =
-                    new AcademicDocumentSheet();
-
-                $sheet
-                    ->forceFill(
-                        $filteredSheetData
-                    )
-                    ->save();
-
-                $highestRow =
-                    $worksheet
-                        ->getHighestRow();
-
-                $highestColumn =
-                    $worksheet
-                        ->getHighestColumn();
-
-                $highestColumnIndex =
-                    Coordinate::columnIndexFromString(
-                        $highestColumn
-                    );
-
-                /*
-                 * Merge lookup.
-                 */
-
-                $mergedLookup = [];
-
-                foreach (
-                    $worksheet
-                        ->getMergeCells()
-                    as $mergeRange
-                ) {
-
-                    $parts =
-                        explode(
-                            ':',
-                            $mergeRange
-                        );
-
-                    $startCell =
-                        $parts[0] ?? null;
-
-                    $endCell =
-                        $parts[1]
-                        ?? $startCell;
-
-                    if (
-                        !$startCell
-                    ) {
-                        continue;
-                    }
-
-                    [
-                        $startColumn,
-                        $startRow
-                    ] =
-                        Coordinate::coordinateFromString(
-                            $startCell
-                        );
-
-                    [
-                        $endColumn,
-                        $endRow
-                    ] =
-                        Coordinate::coordinateFromString(
-                            $endCell
-                        );
-
-                    $startColumnIndex =
-                        Coordinate::columnIndexFromString(
-                            $startColumn
-                        );
-
-                    $endColumnIndex =
-                        Coordinate::columnIndexFromString(
-                            $endColumn
-                        );
-
-                    for (
-                        $r = $startRow;
-                        $r <= $endRow;
-                        $r++
-                    ) {
-
-                        for (
-                            $c = $startColumnIndex;
-                            $c <= $endColumnIndex;
-                            $c++
-                        ) {
-
-                            $coordinate =
-                                Coordinate::stringFromColumnIndex(
-                                    $c
-                                ) . $r;
-
-                            $mergedLookup[
-                                $coordinate
-                            ] =
-                                $mergeRange;
-                        }
-                    }
-                }
-
-                /*
-                 * Cells.
-                 */
-
-                for (
-                    $row = 1;
-                    $row <= $highestRow;
-                    $row++
-                ) {
-
-                    for (
-                        $column = 1;
-                        $column <=
-                            $highestColumnIndex;
-                        $column++
-                    ) {
-
-                        $cell =
-                            $worksheet
-                                ->getCellByColumnAndRow(
-                                    $column,
-                                    $row
-                                );
-
-                        $value =
-                            $cell->getValue();
-
-                        $formula = null;
-
-                        if (
-                            is_string($value) &&
-                            str_starts_with(
-                                $value,
-                                '='
-                            )
-                        ) {
-
-                            $formula =
-                                $value;
-                        }
-
-                        $calculatedValue =
-                            null;
-
-                        if (
-                            $formula !== null
-                        ) {
-
-                            try {
-
-                                $calculatedValue =
-                                    $cell
-                                        ->getCalculatedValue();
-
-                            } catch (
-                                Throwable $e
-                            ) {
-                            }
-                        }
-
-                        $coordinate =
-                            $cell
-                                ->getCoordinate();
-
-                        $isMerged =
-                            isset(
-                                $mergedLookup[
-                                    $coordinate
-                                ]
-                            );
-
-                        $mergeRange =
-                            $mergedLookup[
-                                $coordinate
-                            ]
-                            ?? null;
-
-                        $dataType = null;
-
-                        try {
-
-                            $dataType =
-                                $cell
-                                    ->getDataType();
-
-                        } catch (
-                            Throwable $e
-                        ) {
-                        }
-
-                        $style =
-                            $this->extractCellStyle(
-                                $cell
-                            );
-
-                        $hasStyle = false;
-
-                        try {
-
-                            $hasStyle =
-                                $cell
-                                    ->getStyle()
-                                    ->getFill()
-                                    ->getFillType()
-                                    !== Fill::FILL_NONE;
-
-                        } catch (
-                            Throwable $e
-                        ) {
-                        }
-
-                        if (
-                            $value === null &&
-                            !$hasStyle &&
-                            !$isMerged
-                        ) {
-                            continue;
-                        }
-
-                        $cellData = [
-
-                            'academic_document_sheet_id' =>
-                                $sheet->id,
-
-                            'coordinate' =>
-                                $coordinate,
-
-                            'row_number' =>
-                                $row,
-
-                            'column_number' =>
-                                $column,
-
-                            'column_index' =>
-                                $column,
-
-                            'value' =>
-                                $formula !== null
-                                    ? null
-                                    : $value,
-
-                            'formula' =>
-                                $formula,
-
-                            'calculated_value' =>
-                                $calculatedValue,
-
-                            'data_type' =>
-                                $dataType,
-
-                            'style' =>
-                                !empty($style)
-                                    ? json_encode(
-                                        $style,
-                                        JSON_UNESCAPED_UNICODE
-                                        | JSON_UNESCAPED_SLASHES
-                                    )
-                                    : null,
-
-                            'is_merged' =>
-                                $isMerged,
-
-                            'merge_range' =>
-                                $mergeRange,
-                        ];
-
-                        foreach (
-                            [
-                                'column_index',
-                                'formula',
-                                'calculated_value',
-                                'data_type',
-                                'style',
-                                'is_merged',
-                                'merge_range',
-                            ]
-                            as $optionalColumn
-                        ) {
-
-                            if (
-                                !$this->cellColumnExists(
-                                    $optionalColumn
-                                )
-                            ) {
-
-                                unset(
-                                    $cellData[
-                                        $optionalColumn
-                                    ]
-                                );
-                            }
-                        }
-
-                        $academicCell =
-                            new AcademicDocumentCell();
-
-                        $academicCell
-                            ->forceFill(
-                                $cellData
-                            )
-                            ->save();
-                    }
-                }
-            }
+            $this->spreadsheetImportService->import($fullPath, $document);
 
             DB::commit();
 
@@ -3821,17 +2776,13 @@ public function protaProsemUpload(
                 ->route(
                     'lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan',
                     [
-                        'role' =>
-                            $role,
+                        'role' => $role,
 
-                        'schoolName' =>
-                            $schoolName,
+                        'schoolName' => $schoolName,
 
-                        'schoolId' =>
-                            $schoolId,
+                        'schoolId' => $schoolId,
 
-                        'mapel_id' =>
-                            $mapelId,
+                        'mapel_id' => $mapelId,
                     ]
                 )
                 ->with(
@@ -3858,14 +2809,13 @@ public function protaProsemUpload(
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | PROTA / PROSEM DOWNLOAD
     |--------------------------------------------------------------------------
     */
 
-public function protaProsemDownload(
+    public function protaProsemDownload(
         Request $request,
         string $role,
         string $schoolName,
@@ -3883,7 +2833,7 @@ public function protaProsemDownload(
                 $schoolId,
                 $document,
                 self::PROTA_PROSEM_TYPE,
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
+                $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId)
             );
 
         abort_unless(
@@ -3911,116 +2861,129 @@ public function protaProsemDownload(
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | PROTA / PROSEM DELETE
     |--------------------------------------------------------------------------
     */
 
-public function protaProsemDestroy(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId,
-    int $document
-) {
+    public function protaProsemDestroy(
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId,
+        int $document
+    ) {
         $this->authorizeTeacherWrite($request, (int) $schoolId);
-    $this->authorizeRole();
+        $this->authorizeRole();
 
-    $this->getSchoolProfileOrFail(
-        $schoolId
-    );
+        $this->getSchoolProfileOrFail(
+            $schoolId
+        );
 
-    abort_unless(
-        $this->isGuru(),
-        403,
-        'Hanya guru yang dapat menghapus PROTA / PROSEM.'
-    );
+        abort_unless(
+            $this->isGuru(),
+            403,
+            'Hanya guru yang dapat menghapus PROTA / PROSEM.'
+        );
 
-    /*
-    |--------------------------------------------------------------------------
-    | PASTIKAN DOCUMENT YANG DIMINTA MEMANG MILIK GURU
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | PASTIKAN DOCUMENT YANG DIMINTA MEMANG MILIK GURU
+        |--------------------------------------------------------------------------
+        */
 
-    $ownerColumn = $this->documentOwnerColumn();
+        $ownerColumn = $this->documentOwnerColumn();
 
-    abort_unless(
-        $ownerColumn,
-        500,
-        'Kolom pemilik dokumen belum tersedia pada tabel academic_documents.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | CARI DOKUMEN YANG DIKLIK
-    |--------------------------------------------------------------------------
-    */
-
-    $selectedDocument = $this->protaProsemDocumentQuery()
-        ->where(
-            'id',
-            $document
-        )
-        ->where(
+        abort_unless(
             $ownerColumn,
-            $this->requestedTeacherId($request, $schoolId)
-        )
-        ->firstOrFail();
+            500,
+            'Kolom pemilik dokumen belum tersedia pada tabel academic_documents.'
+        );
 
-    /*
-    |--------------------------------------------------------------------------
-    | AMBIL SEMUA DOKUMEN PROTA / PROSEM MILIK GURU
-    |--------------------------------------------------------------------------
-    |
-    | PROTA / PROSEM pada halaman ini menggunakan satu dokumen aktif.
-    | Jadi setelah Guru memilih Hapus, seluruh dokumen PROTA / PROSEM
-    | milik Guru dibersihkan agar halaman benar-benar kembali ke mode Upload.
-    |
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | CARI DOKUMEN YANG DIKLIK
+        |--------------------------------------------------------------------------
+        */
 
-    $documentsToDelete = $this->protaProsemDocumentQuery()
-        ->where(
-            $ownerColumn,
-            $this->requestedTeacherId($request, $schoolId)
-        )
-        ->get();
+        $selectedDocument = $this->protaProsemDocumentQuery()
+            ->where(
+                'id',
+                $document
+            )
+            ->where(
+                $ownerColumn,
+                $this->requestedTeacherId($request, $schoolId)
+            )
+            ->firstOrFail();
 
-    DB::beginTransaction();
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL SEMUA DOKUMEN PROTA / PROSEM MILIK GURU
+        |--------------------------------------------------------------------------
+        |
+        | PROTA / PROSEM pada halaman ini menggunakan satu dokumen aktif.
+        | Jadi setelah Guru memilih Hapus, seluruh dokumen PROTA / PROSEM
+        | milik Guru dibersihkan agar halaman benar-benar kembali ke mode Upload.
+        |
+        */
 
-    try {
+        $documentsToDelete = $this->protaProsemDocumentQuery()
+            ->where(
+                $ownerColumn,
+                $this->requestedTeacherId($request, $schoolId)
+            )
+            ->get();
 
-        foreach ($documentsToDelete as $academicDocument) {
+        DB::beginTransaction();
 
-            /*
-            |--------------------------------------------------------------------------
-            | SHEET IDS
-            |--------------------------------------------------------------------------
-            */
+        try {
 
-            $sheetIds = AcademicDocumentSheet::query()
-                ->where(
-                    'academic_document_id',
-                    $academicDocument->id
-                )
-                ->pluck('id');
+            foreach ($documentsToDelete as $academicDocument) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE COMMENTS
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | SHEET IDS
+                |--------------------------------------------------------------------------
+                */
 
-            if ($sheetIds->isNotEmpty()) {
-
-                if (
-                    $this->commentColumnExists(
-                        'academic_document_sheet_id'
+                $sheetIds = AcademicDocumentSheet::query()
+                    ->where(
+                        'academic_document_id',
+                        $academicDocument->id
                     )
-                ) {
+                    ->pluck('id');
 
-                    AcademicDocumentComment::query()
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE COMMENTS
+                |--------------------------------------------------------------------------
+                */
+
+                if ($sheetIds->isNotEmpty()) {
+
+                    if (
+                        $this->commentColumnExists(
+                            'academic_document_sheet_id'
+                        )
+                    ) {
+
+                        AcademicDocumentComment::query()
+                            ->whereIn(
+                                'academic_document_sheet_id',
+                                $sheetIds
+                            )
+                            ->delete();
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DELETE CELLS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    AcademicDocumentCell::query()
                         ->whereIn(
                             'academic_document_sheet_id',
                             $sheetIds
@@ -4030,91 +2993,77 @@ public function protaProsemDestroy(
 
                 /*
                 |--------------------------------------------------------------------------
-                | DELETE CELLS
+                | DELETE SHEETS
                 |--------------------------------------------------------------------------
                 */
 
-                AcademicDocumentCell::query()
-                    ->whereIn(
-                        'academic_document_sheet_id',
-                        $sheetIds
+                AcademicDocumentSheet::query()
+                    ->where(
+                        'academic_document_id',
+                        $academicDocument->id
                     )
                     ->delete();
+
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE FILE EXCEL
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    ! empty($academicDocument->file_path) &&
+                    Storage::disk('public')->exists(
+                        $academicDocument->file_path
+                    )
+                ) {
+
+                    Storage::disk('public')->delete(
+                        $academicDocument->file_path
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | DELETE DOCUMENT
+                |--------------------------------------------------------------------------
+                */
+
+                $academicDocument->delete();
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE SHEETS
-            |--------------------------------------------------------------------------
-            */
-
-            AcademicDocumentSheet::query()
-                ->where(
-                    'academic_document_id',
-                    $academicDocument->id
-                )
-                ->delete();
+            DB::commit();
 
             /*
             |--------------------------------------------------------------------------
-            | DELETE FILE EXCEL
+            | KEMBALI KE HALAMAN PROTA / PROSEM
             |--------------------------------------------------------------------------
+            |
+            | Karena semua dokumen Guru sudah dibersihkan,
+            | $document pada halaman berikutnya akan menjadi null.
+            |
             */
 
-            if (
-                !empty($academicDocument->file_path) &&
-                Storage::disk('public')->exists(
-                    $academicDocument->file_path
+            return redirect()
+                ->route(
+                    'lms.schoolAdmin.registrasiGuru.prota-prosem',
+                    [
+                        'role' => $role,
+                        'schoolName' => $schoolName,
+                        'schoolId' => $schoolId,
+                    ]
                 )
-            ) {
-
-                Storage::disk('public')->delete(
-                    $academicDocument->file_path
+                ->with(
+                    'success',
+                    'PROTA / PROSEM berhasil dihapus. Silakan upload dokumen baru.'
                 );
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | DELETE DOCUMENT
-            |--------------------------------------------------------------------------
-            */
+        } catch (Throwable $e) {
 
-            $academicDocument->delete();
+            DB::rollBack();
+
+            throw $e;
         }
-
-        DB::commit();
-
-        /*
-        |--------------------------------------------------------------------------
-        | KEMBALI KE HALAMAN PROTA / PROSEM
-        |--------------------------------------------------------------------------
-        |
-        | Karena semua dokumen Guru sudah dibersihkan,
-        | $document pada halaman berikutnya akan menjadi null.
-        |
-        */
-
-        return redirect()
-            ->route(
-                'lms.schoolAdmin.registrasiGuru.prota-prosem',
-                [
-                    'role' => $role,
-                    'schoolName' => $schoolName,
-                    'schoolId' => $schoolId,
-                ]
-            )
-            ->with(
-                'success',
-                'PROTA / PROSEM berhasil dihapus. Silakan upload dokumen baru.'
-            );
-
-    } catch (Throwable $e) {
-
-        DB::rollBack();
-
-        throw $e;
     }
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -4122,7 +3071,7 @@ public function protaProsemDestroy(
     |--------------------------------------------------------------------------
     */
 
-public function showProtaProsem(
+    public function showProtaProsem(
         Request $request,
         string $role,
         string $schoolName,
@@ -4140,7 +3089,7 @@ public function showProtaProsem(
                 $schoolId,
                 $document,
                 self::PROTA_PROSEM_TYPE,
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
+                $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId)
             );
 
         $academicDocument->load([
@@ -4183,49 +3132,36 @@ public function showProtaProsem(
         return view(
             'features.lms.school-admin.registrasi-guru.tampilan.tamp-prota-prosem',
             [
-                'schoolName' =>
-                    $schoolName,
+                'schoolName' => $schoolName,
 
-                'schoolId' =>
-                    $schoolId,
+                'schoolId' => $schoolId,
 
-                'document' =>
+                'document' => $academicDocument,
+
+                'academicDocuments' => collect([
                     $academicDocument,
+                ]),
 
-                'academicDocuments' =>
-                    collect([
-                        $academicDocument,
-                    ]),
+                'documents' => collect([
+                    $academicDocument,
+                ]),
 
-                'documents' =>
-                    collect([
-                        $academicDocument,
-                    ]),
+                'comments' => $comments,
 
-                'comments' =>
-                    $comments,
+                'mapel' => null,
 
-                'mapel' =>
-                    null,
+                'mapelName' => 'Mata Pelajaran',
 
-                'mapelName' =>
-                    'Mata Pelajaran',
+                'currentRole' => $this->currentRole(),
 
-                'currentRole' =>
-                    $this->currentRole(),
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
 
-                'isGuru' =>
-                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
 
-                'viewingTeacherId' =>
-                    $this->requestedTeacherId($request, $schoolId),
-
-                'isTeacherViewer' =>
-                    $this->isTeacherViewer($request, $schoolId),
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -4233,7 +3169,7 @@ public function showProtaProsem(
     |--------------------------------------------------------------------------
     */
 
-public function protaProsemComments(
+    public function protaProsemComments(
         Request $request,
         string $role,
         string $schoolName,
@@ -4249,382 +3185,356 @@ public function protaProsemComments(
         );
     }
 
-
     public function storeProtaProsemComment(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId,
-    int $cell
-) {
-    $this->authorizeRole();
-
-    $this->getSchoolProfileOrFail(
-        $schoolId
-    );
-
-    $request->validate([
-        'academic_document_cell_id' => [
-            'required',
-            'integer',
-            'exists:academic_document_cells,id',
-        ],
-
-        'comment_text' => [
-            'required',
-            'string',
-            'max:5000',
-        ],
-
-        'selected_text' => [
-            'nullable',
-            'string',
-            'max:10000',
-        ],
-
-        'anchor_key' => [
-            'nullable',
-            'string',
-            'max:255',
-        ],
-    ]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | CELL ID HARUS SAMA DENGAN ROUTE
-    |--------------------------------------------------------------------------
-    */
-
-    abort_unless(
-        (int) $request->academic_document_cell_id
-        ===
-        (int) $cell,
-
-        422,
-
-        'Cell komentar tidak sesuai.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | CELL -> SHEET
-    |--------------------------------------------------------------------------
-    */
-
-    $academicCell =
-        AcademicDocumentCell::query()
-            ->with('sheet')
-            ->findOrFail($cell);
-
-    $sheet =
-        $academicCell->sheet;
-
-    abort_unless(
-        $sheet,
-        404,
-        'Sheet dokumen tidak ditemukan.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | COORDINATE WAJIB
-    |--------------------------------------------------------------------------
-    */
-
-    abort_unless(
-        filled($academicCell->coordinate),
-        422,
-        'Coordinate cell tidak ditemukan.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHEET -> DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-
-    $documentQuery =
-        $this->protaProsemDocumentQuery();
-
-    $documentQuery->where(
-        'id',
-        $sheet->academic_document_id
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | OWNER ACCESS
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        $this->isGuru()
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId,
+        int $cell
     ) {
+        $this->authorizeRole();
 
-        $this->applyDocumentOwner(
-            $documentQuery,
-            (int) Auth::id()
+        $this->getSchoolProfileOrFail(
+            $schoolId
         );
 
-    } else {
+        $request->validate([
+            'academic_document_cell_id' => [
+                'required',
+                'integer',
+                'exists:academic_document_cells,id',
+            ],
 
-        $ownerColumn =
-            $this->documentOwnerColumn();
+            'comment_text' => [
+                'required',
+                'string',
+                'max:5000',
+            ],
 
-        $ownerIds =
-            $this->getSchoolUserIds(
-                $schoolId
-            );
+            'selected_text' => [
+                'nullable',
+                'string',
+                'max:10000',
+            ],
+
+            'anchor_key' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | CELL ID HARUS SAMA DENGAN ROUTE
+        |--------------------------------------------------------------------------
+        */
+
+        abort_unless(
+            (int) $request->academic_document_cell_id
+            ===
+            (int) $cell,
+
+            422,
+
+            'Cell komentar tidak sesuai.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | CELL -> SHEET
+        |--------------------------------------------------------------------------
+        */
+
+        $academicCell =
+            AcademicDocumentCell::query()
+                ->with('sheet')
+                ->findOrFail($cell);
+
+        $sheet =
+            $academicCell->sheet;
+
+        abort_unless(
+            $sheet,
+            404,
+            'Sheet dokumen tidak ditemukan.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | COORDINATE WAJIB
+        |--------------------------------------------------------------------------
+        */
+
+        abort_unless(
+            filled($academicCell->coordinate),
+            422,
+            'Coordinate cell tidak ditemukan.'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SHEET -> DOCUMENT
+        |--------------------------------------------------------------------------
+        */
+
+        $documentQuery =
+            $this->protaProsemDocumentQuery();
+
+        $documentQuery->where(
+            'id',
+            $sheet->academic_document_id
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | OWNER ACCESS
+        |--------------------------------------------------------------------------
+        */
 
         if (
-            $ownerColumn &&
-            $ownerIds->isNotEmpty()
+            $this->isGuru()
         ) {
 
-            $documentQuery->whereIn(
-                $ownerColumn,
-                $ownerIds
+            $this->applyDocumentOwner(
+                $documentQuery,
+                (int) Auth::id()
             );
+
+        } else {
+
+            $ownerColumn =
+                $this->documentOwnerColumn();
+
+            $ownerIds =
+                $this->getSchoolUserIds(
+                    $schoolId
+                );
+
+            if (
+                $ownerColumn &&
+                $ownerIds->isNotEmpty()
+            ) {
+
+                $documentQuery->whereIn(
+                    $ownerColumn,
+                    $ownerIds
+                );
+            }
         }
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENT
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT
+        |--------------------------------------------------------------------------
+        */
 
-    $document =
-        $documentQuery->first();
+        $document =
+            $documentQuery->first();
 
-    abort_unless(
-        $document,
-        404,
-        'Dokumen PROTA/PROSEM tidak ditemukan.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | PASTIKAN SHEET MILIK DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-
-    abort_unless(
-        (int) $sheet->academic_document_id
-        ===
-        (int) $document->id,
-
-        404,
-
-        'Sheet tidak termasuk dokumen ini.'
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMMENT DATA
-    |--------------------------------------------------------------------------
-    */
-
-    $commentText =
-        $request->input(
-            'comment_text'
+        abort_unless(
+            $document,
+            404,
+            'Dokumen PROTA/PROSEM tidak ditemukan.'
         );
 
-    $commentData = [
+        /*
+        |--------------------------------------------------------------------------
+        | PASTIKAN SHEET MILIK DOCUMENT
+        |--------------------------------------------------------------------------
+        */
 
-        'academic_document_id' =>
-            $document->id,
+        abort_unless(
+            (int) $sheet->academic_document_id
+            ===
+            (int) $document->id,
 
-        'academic_document_sheet_id' =>
-            $sheet->id,
+            404,
 
-        'academic_document_cell_id' =>
-            $academicCell->id,
-
-        'coordinate' =>
-            $academicCell->coordinate,
-
-        'user_id' =>
-            Auth::id(),
+            'Sheet tidak termasuk dokumen ini.'
+        );
 
         /*
-         * DATABASE MEMAKAI "comment"
-         */
-        'comment' =>
-            $commentText,
+        |--------------------------------------------------------------------------
+        | COMMENT DATA
+        |--------------------------------------------------------------------------
+        */
 
-        /*
-         * Tetap kompatibel jika kolom ini ada.
-         */
-        'comment_text' =>
-            $commentText,
-
-        'selected_text' =>
+        $commentText =
             $request->input(
+                'comment_text'
+            );
+
+        $commentData = [
+
+            'academic_document_id' => $document->id,
+
+            'academic_document_sheet_id' => $sheet->id,
+
+            'academic_document_cell_id' => $academicCell->id,
+
+            'coordinate' => $academicCell->coordinate,
+
+            'user_id' => Auth::id(),
+
+            /*
+             * DATABASE MEMAKAI "comment"
+             */
+            'comment' => $commentText,
+
+            /*
+             * Tetap kompatibel jika kolom ini ada.
+             */
+            'comment_text' => $commentText,
+
+            'selected_text' => $request->input(
                 'selected_text'
             ),
 
-        'anchor_key' =>
-            $request->input(
+            'anchor_key' => $request->input(
                 'anchor_key'
             ),
 
-        'is_resolved' =>
-            false,
-    ];
+            'is_resolved' => false,
+        ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | FILTER SESUAI KOLOM DATABASE
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER SESUAI KOLOM DATABASE
+        |--------------------------------------------------------------------------
+        */
 
-    $filteredData = [];
+        $filteredData = [];
 
-    foreach (
-        $commentData as $column => $value
-    ) {
-
-        if (
-            $this->commentColumnExists(
-                $column
-            )
+        foreach (
+            $commentData as $column => $value
         ) {
 
-            $filteredData[$column] =
-                $value;
+            if (
+                $this->commentColumnExists(
+                    $column
+                )
+            ) {
+
+                $filteredData[$column] =
+                    $value;
+            }
         }
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORCE REQUIRED COLUMNS
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | FORCE REQUIRED COLUMNS
+        |--------------------------------------------------------------------------
+        */
 
-    $filteredData[
-        'academic_document_sheet_id'
-    ] =
-        $sheet->id;
+        $filteredData[
+            'academic_document_sheet_id'
+        ] =
+            $sheet->id;
 
-    $filteredData[
-        'coordinate'
-    ] =
-        $academicCell->coordinate;
+        $filteredData[
+            'coordinate'
+        ] =
+            $academicCell->coordinate;
 
-    $filteredData[
-        'comment'
-    ] =
-        $commentText;
+        $filteredData[
+            'comment'
+        ] =
+            $commentText;
 
-    /*
-    |--------------------------------------------------------------------------
-    | SIMPAN
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN
+        |--------------------------------------------------------------------------
+        */
 
-    $comment =
-        new AcademicDocumentComment();
+        $comment =
+            new AcademicDocumentComment;
 
-    $comment->forceFill(
-        $filteredData
-    );
-
-    $comment->save();
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD USER
-    |--------------------------------------------------------------------------
-    */
-
-    try {
-
-        $comment->load(
-            'user'
+        $comment->forceFill(
+            $filteredData
         );
 
-    } catch (Throwable $e) {
-        // Jangan gagalkan penyimpanan.
-    }
+        $comment->save();
 
-    /*
-    |--------------------------------------------------------------------------
-    | RESPONSE
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD USER
+        |--------------------------------------------------------------------------
+        */
 
-    return response()->json([
+        try {
 
-        'success' =>
-            true,
+            $comment->load(
+                'user'
+            );
 
-        'message' =>
-            'Komentar PROTA/PROSEM berhasil ditambahkan.',
+        } catch (Throwable $e) {
+            // Jangan gagalkan penyimpanan.
+        }
 
-        'comment' => [
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSE
+        |--------------------------------------------------------------------------
+        */
 
-            'id' =>
-                $comment->id,
+        return response()->json([
 
-            'academic_document_id' =>
-                $comment->academic_document_id,
+            'success' => true,
 
-            'academic_document_sheet_id' =>
-                $comment->academic_document_sheet_id,
+            'message' => 'Komentar PROTA/PROSEM berhasil ditambahkan.',
 
-            'academic_document_cell_id' =>
-                $comment->academic_document_cell_id,
+            'comment' => [
 
-            'coordinate' =>
-                $comment->coordinate,
+                'id' => $comment->id,
 
-            'user_id' =>
-                $comment->user_id,
+                'academic_document_id' => $comment->academic_document_id,
 
-            'user_name' =>
-                $comment->user?->name
-                ??
-                $comment->user?->nama
-                ??
-                'Pengguna',
+                'academic_document_sheet_id' => $comment->academic_document_sheet_id,
 
-            'comment_text' =>
-                $comment->comment_text
-                ??
-                $comment->comment
-                ??
-                '',
+                'academic_document_cell_id' => $comment->academic_document_cell_id,
 
-            'comment' =>
-                $comment->comment
-                ??
-                $comment->comment_text
-                ??
-                '',
+                'coordinate' => $comment->coordinate,
 
-            'selected_text' =>
-                $comment->selected_text,
+                'user_id' => $comment->user_id,
 
-            'anchor_key' =>
-                $comment->anchor_key,
+                'user_name' => $comment->user?->name
+                    ??
+                    $comment->user?->nama
+                    ??
+                    'Pengguna',
 
-            'is_resolved' =>
-                (bool) (
+                'comment_text' => $comment->comment_text
+                    ??
+                    $comment->comment
+                    ??
+                    '',
+
+                'comment' => $comment->comment
+                    ??
+                    $comment->comment_text
+                    ??
+                    '',
+
+                'selected_text' => $comment->selected_text,
+
+                'anchor_key' => $comment->anchor_key,
+
+                'is_resolved' => (bool) (
                     $comment->is_resolved
                     ??
                     false
                 ),
 
-            'created_at' =>
-                optional(
+                'created_at' => optional(
                     $comment->created_at
                 )->format(
                     'd M Y H:i'
                 ),
-        ],
-    ]);
-}
+            ],
+        ]);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -4700,8 +3610,7 @@ public function protaProsemComments(
             );
 
         $data = [
-            'value' =>
-                $value,
+            'value' => $value,
         ];
 
         if (
@@ -4721,17 +3630,13 @@ public function protaProsemComments(
             ->save();
 
         return response()->json([
-            'success' =>
-                true,
+            'success' => true,
 
-            'message' =>
-                'Cell PROTA/PROSEM berhasil diperbarui.',
+            'message' => 'Cell PROTA/PROSEM berhasil diperbarui.',
 
-            'cell' =>
-                $academicCell->fresh(),
+            'cell' => $academicCell->fresh(),
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -4795,65 +3700,52 @@ public function protaProsemComments(
                     function ($comment) {
 
                         return [
-                            'id' =>
-                                $comment->id,
+                            'id' => $comment->id,
 
-                            'user_id' =>
-                                $comment->user_id,
+                            'user_id' => $comment->user_id,
 
-                            'user_name' =>
-                                $comment->user?->name
+                            'user_name' => $comment->user?->name
                                 ??
                                 $comment->user?->nama
                                 ??
                                 'Pengguna',
 
-                            'comment_text' =>
-                                $comment->comment_text
+                            'comment_text' => $comment->comment_text
                                 ??
                                 $comment->comment
                                 ??
                                 '',
 
-                            'selected_text' =>
-                                $comment->selected_text,
+                            'selected_text' => $comment->selected_text,
 
-                            'anchor_key' =>
-                                $comment->anchor_key,
+                            'anchor_key' => $comment->anchor_key,
 
-                            'is_resolved' =>
-                                (bool) (
-                                    $comment->is_resolved
-                                    ??
-                                    false
-                                ),
+                            'is_resolved' => (bool) (
+                                $comment->is_resolved
+                                ??
+                                false
+                            ),
 
-                            'created_at' =>
-                                optional(
-                                    $comment->created_at
-                                )->format(
-                                    'd M Y H:i'
-                                ),
+                            'created_at' => optional(
+                                $comment->created_at
+                            )->format(
+                                'd M Y H:i'
+                            ),
                         ];
                     }
                 )
                 ->values();
 
         return response()->json([
-            'success' =>
-                true,
+            'success' => true,
 
-            'document_id' =>
-                $document->id,
+            'document_id' => $document->id,
 
-            'cell_id' =>
-                $academicCell->id,
+            'cell_id' => $academicCell->id,
 
-            'comments' =>
-                $comments,
+            'comments' => $comments,
         ]);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -4862,295 +3754,283 @@ public function protaProsemComments(
     */
 
     public function tampilanBaganAnalisis(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId
-) {
-    $this->authorizeRole();
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId
+    ) {
+        $this->authorizeRole();
 
-    $this->getSchoolProfileOrFail(
-        $schoolId
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | TEACHER MAPEL
-    |--------------------------------------------------------------------------
-    */
-
-    $teacherMapels =
-        $this->getTeacherMapel(
+        $this->getSchoolProfileOrFail(
             $schoolId
         );
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENT QUERY
-    |--------------------------------------------------------------------------
-    */
-
-    $documentQuery =
-        $this->baganAnalisisDocumentQuery();
-
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESS
-    |--------------------------------------------------------------------------
-    */
-
-    if ($this->isGuru()) {
-
-        $this->applyDocumentOwner(
-            $documentQuery,
-            (int) Auth::id()
-        );
-
-    } else {
-
-        $ownerColumn =
-            $this->documentOwnerColumn();
-
-        $ownerIds =
-            $this->getSchoolUserIds(
-                $schoolId
-            );
-
-        if (
-            $ownerColumn &&
-            $ownerIds->isNotEmpty()
-        ) {
-            $documentQuery->whereIn(
-                $ownerColumn,
-                $ownerIds
-            );
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $documents =
-        $documentQuery
-            ->with([
-                'sheets.cells',
-            ])
-            ->latest('id')
-            ->get();
-
-    /*
-     * GURU TANPA DOKUMEN:
-     * Jangan biarkan Guru berhenti di halaman tampilan dengan pesan
-     * "Belum ada dokumen". Arahkan selalu ke halaman input utama.
-     *
-     * Ini juga membuat perilaku tetap benar ketika Guru berpindah tab,
-     * membuka ulang URL lama /bagan-analisis/tampilan, atau melakukan
-     * refresh setelah dokumen dihapus.
-     */
-    if (
-        $this->isGuru() &&
-        $documents->isEmpty()
-    ) {
-        return redirect()
-            ->route(
-                'lms.schoolAdmin.registrasiGuru.baganAnalisis',
-                [
-                    'role' => $role,
-                    'schoolName' => $schoolName,
-                    'schoolId' => $schoolId,
-                ]
-            );
-    }
-
-    // Blade tamp-analisis menggunakan $document sebagai dokumen aktif.
-    // Ambil dokumen terbaru yang sudah lolos filter akses di atas.
-    $document = $documents->first();
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHEET IDS
-    |--------------------------------------------------------------------------
-    |
-    | academic_document_comments TIDAK memakai
-    | academic_document_id.
-    |
-    | Komentar dihubungkan melalui:
-    |
-    | academic_document_sheet_id
-    |
-    */
-
-    $sheetIds =
-        $documents
-            ->flatMap(function ($document) {
-
-                return $document
-                    ->sheets
-                    ->pluck('id');
-            })
-            ->filter()
-            ->unique()
-            ->values();
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMMENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $comments =
-        collect();
-
-    if (
-        $sheetIds->isNotEmpty()
-    ) {
-
-        $commentsQuery =
-            AcademicDocumentComment::query()
-                ->whereIn(
-                    'academic_document_sheet_id',
-                    $sheetIds
-                )
-                ->latest('id');
-
         /*
         |--------------------------------------------------------------------------
-        | USER
+        | TEACHER MAPEL
         |--------------------------------------------------------------------------
         */
 
-        try {
-
-            $commentsQuery->with(
-                'user'
+        $teacherMapels =
+            $this->getTeacherMapel(
+                $schoolId
             );
 
-        } catch (Throwable $e) {
-            // Tidak menggagalkan halaman.
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $documentQuery =
+            $this->baganAnalisisDocumentQuery();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACCESS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->isGuru()) {
+
+            $this->applyDocumentOwner(
+                $documentQuery,
+                (int) Auth::id()
+            );
+
+        } else {
+
+            $ownerColumn =
+                $this->documentOwnerColumn();
+
+            $ownerIds =
+                $this->getSchoolUserIds(
+                    $schoolId
+                );
+
+            if (
+                $ownerColumn &&
+                $ownerIds->isNotEmpty()
+            ) {
+                $documentQuery->whereIn(
+                    $ownerColumn,
+                    $ownerIds
+                );
+            }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $documents =
+            $documentQuery
+                ->with([
+                    'sheets.cells',
+                ])
+                ->latest('id')
+                ->get();
+
+        /*
+         * GURU TANPA DOKUMEN:
+         * Jangan biarkan Guru berhenti di halaman tampilan dengan pesan
+         * "Belum ada dokumen". Arahkan selalu ke halaman input utama.
+         *
+         * Ini juga membuat perilaku tetap benar ketika Guru berpindah tab,
+         * membuka ulang URL lama /bagan-analisis/tampilan, atau melakukan
+         * refresh setelah dokumen dihapus.
+         */
+        if (
+            $this->isGuru() &&
+            $documents->isEmpty()
+        ) {
+            return redirect()
+                ->route(
+                    'lms.schoolAdmin.registrasiGuru.baganAnalisis',
+                    [
+                        'role' => $role,
+                        'schoolName' => $schoolName,
+                        'schoolId' => $schoolId,
+                    ]
+                );
+        }
+
+        // Blade tamp-analisis menggunakan $document sebagai dokumen aktif.
+        // Ambil dokumen terbaru yang sudah lolos filter akses di atas.
+        $document = $documents->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SHEET IDS
+        |--------------------------------------------------------------------------
+        |
+        | academic_document_comments TIDAK memakai
+        | academic_document_id.
+        |
+        | Komentar dihubungkan melalui:
+        |
+        | academic_document_sheet_id
+        |
+        */
+
+        $sheetIds =
+            $documents
+                ->flatMap(function ($document) {
+
+                    return $document
+                        ->sheets
+                        ->pluck('id');
+                })
+                ->filter()
+                ->unique()
+                ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | COMMENTS
+        |--------------------------------------------------------------------------
+        */
+
         $comments =
-            $commentsQuery->get();
-    }
+            collect();
 
-    /*
-    |--------------------------------------------------------------------------
-    | GROUP COMMENT
-    |--------------------------------------------------------------------------
-    |
-    | Struktur komentar spreadsheet:
-    |
-    | sheet_id + coordinate
-    |
-    | Contoh:
-    |
-    | 42:B3
-    | 42:C5
-    |
-    */
+        if (
+            $sheetIds->isNotEmpty()
+        ) {
 
-    $commentsByCell =
-        $comments->groupBy(
-            function ($comment) {
+            $commentsQuery =
+                AcademicDocumentComment::query()
+                    ->whereIn(
+                        'academic_document_sheet_id',
+                        $sheetIds
+                    )
+                    ->latest('id');
 
-                return
-                    $comment
-                        ->academic_document_sheet_id
-                    . ':'
-                    .
-                    $comment->coordinate;
+            /*
+            |--------------------------------------------------------------------------
+            | USER
+            |--------------------------------------------------------------------------
+            */
+
+            try {
+
+                $commentsQuery->with(
+                    'user'
+                );
+
+            } catch (Throwable $e) {
+                // Tidak menggagalkan halaman.
             }
-        );
 
-    /*
-    |--------------------------------------------------------------------------
-    | MAPEL GROUP
-    |--------------------------------------------------------------------------
-    */
+            $comments =
+                $commentsQuery->get();
+        }
 
-    $mapelGroups =
-        $teacherMapels->groupBy(
-            function ($teacherMapel) {
+        /*
+        |--------------------------------------------------------------------------
+        | GROUP COMMENT
+        |--------------------------------------------------------------------------
+        |
+        | Struktur komentar spreadsheet:
+        |
+        | sheet_id + coordinate
+        |
+        | Contoh:
+        |
+        | 42:B3
+        | 42:C5
+        |
+        */
 
-                $mapel =
-                    $teacherMapel->Mapel
-                    ??
-                    $teacherMapel->mapel
-                    ??
-                    null;
+        $commentsByCell =
+            $comments->groupBy(
+                function ($comment) {
 
-                if (!$mapel) {
-                    return 'Tanpa Mapel';
+                    return
+                        $comment
+                            ->academic_document_sheet_id
+                        .':'
+                        .
+                        $comment->coordinate;
                 }
+            );
 
-                return
-                    $mapel->nama_mapel
-                    ??
-                    $mapel->mata_pelajaran
-                    ??
-                    $mapel->nama
-                    ??
-                    $mapel->name
-                    ??
-                    'Tanpa Mapel';
-            }
+        /*
+        |--------------------------------------------------------------------------
+        | MAPEL GROUP
+        |--------------------------------------------------------------------------
+        */
+
+        $mapelGroups =
+            $teacherMapels->groupBy(
+                function ($teacherMapel) {
+
+                    $mapel =
+                        $teacherMapel->Mapel
+                        ??
+                        $teacherMapel->mapel
+                        ??
+                        null;
+
+                    if (! $mapel) {
+                        return 'Tanpa Mapel';
+                    }
+
+                    return
+                        $mapel->nama_mapel
+                        ??
+                        $mapel->mata_pelajaran
+                        ??
+                        $mapel->nama
+                        ??
+                        $mapel->name
+                        ??
+                        'Tanpa Mapel';
+                }
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | VIEW
+        |--------------------------------------------------------------------------
+        |
+        | FILE YANG BENAR:
+        |
+        | tamp-analisis.blade.php
+        |
+        */
+
+        return view(
+            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            [
+                'document' => $document,
+
+                'documents' => $documents,
+
+                'academicDocuments' => $documents,
+
+                'comments' => $comments,
+
+                'commentsByCell' => $commentsByCell,
+
+                'teacherMapels' => $teacherMapels,
+
+                'mapelGroups' => $mapelGroups,
+
+                'schoolName' => $schoolName,
+
+                'schoolId' => $schoolId,
+
+                'role' => $role,
+
+                'isGuru' => $this->isGuru(),
+
+                'currentRole' => $this->currentRole(),
+            ]
         );
-
-    /*
-    |--------------------------------------------------------------------------
-    | VIEW
-    |--------------------------------------------------------------------------
-    |
-    | FILE YANG BENAR:
-    |
-    | tamp-analisis.blade.php
-    |
-    */
-
-    return view(
-        'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
-        [
-            'document' =>
-                $document,
-
-            'documents' =>
-                $documents,
-
-            'academicDocuments' =>
-                $documents,
-
-            'comments' =>
-                $comments,
-
-            'commentsByCell' =>
-                $commentsByCell,
-
-            'teacherMapels' =>
-                $teacherMapels,
-
-            'mapelGroups' =>
-                $mapelGroups,
-
-            'schoolName' =>
-                $schoolName,
-
-            'schoolId' =>
-                $schoolId,
-
-            'role' =>
-                $role,
-
-            'isGuru' =>
-                $this->isGuru(),
-
-            'currentRole' =>
-                $this->currentRole(),
-        ]
-    );
-}
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -5159,146 +4039,129 @@ public function protaProsemComments(
     */
 
     public function analisisComments(
-    Request $request,
-    string $role,
-    string $schoolName,
-    int $schoolId,
-    int $cell
-): JsonResponse {
-    $this->authorizeRole($role);
+        Request $request,
+        string $role,
+        string $schoolName,
+        int $schoolId,
+        int $cell
+    ): JsonResponse {
+        $this->authorizeRole($role);
 
-    $academicCell = AcademicDocumentCell::query()
-        ->with([
-            'sheet.document',
-        ])
-        ->findOrFail($cell);
+        $academicCell = AcademicDocumentCell::query()
+            ->with([
+                'sheet.document',
+            ])
+            ->findOrFail($cell);
 
-    $sheet = $academicCell->sheet;
+        $sheet = $academicCell->sheet;
 
-    abort_unless(
-        $sheet !== null,
-        404,
-        'Sheet dokumen tidak ditemukan.'
-    );
+        abort_unless(
+            $sheet !== null,
+            404,
+            'Sheet dokumen tidak ditemukan.'
+        );
 
-    $document = $sheet->document;
+        $document = $sheet->document;
 
-    abort_unless(
-        $document !== null,
-        404,
-        'Dokumen tidak ditemukan.'
-    );
+        abort_unless(
+            $document !== null,
+            404,
+            'Dokumen tidak ditemukan.'
+        );
 
-    /*
-     * Pastikan dokumen memang berada pada sekolah
-     * yang sedang dibuka.
-     */
-    $this->getDocumentForSchoolOrFail(
-        $document->id,
-        $schoolId,
-        self::BAGAN_ANALISIS_TYPE
-    );
+        /*
+         * Pastikan dokumen memang berada pada sekolah
+         * yang sedang dibuka.
+         */
+        $this->getDocumentForSchoolOrFail(
+            $document->id,
+            $schoolId,
+            self::BAGAN_ANALISIS_TYPE
+        );
 
-    /*
-     * Schema komentar project kamu menggunakan:
-     *
-     * academic_document_sheet_id
-     * coordinate
-     * user_id
-     * comment
-     *
-     * BUKAN:
-     * academic_document_id
-     * academic_document_cell_id
-     * comment_text
-     */
-    $comments = AcademicDocumentComment::query()
-        ->where(
-            'academic_document_sheet_id',
-            $sheet->id
-        )
-        ->where(
-            'coordinate',
-            $academicCell->coordinate
-        )
-        ->with('user')
-        ->latest('id')
-        ->get();
+        /*
+         * Schema komentar project kamu menggunakan:
+         *
+         * academic_document_sheet_id
+         * coordinate
+         * user_id
+         * comment
+         *
+         * BUKAN:
+         * academic_document_id
+         * academic_document_cell_id
+         * comment_text
+         */
+        $comments = AcademicDocumentComment::query()
+            ->where(
+                'academic_document_sheet_id',
+                $sheet->id
+            )
+            ->where(
+                'coordinate',
+                $academicCell->coordinate
+            )
+            ->with('user')
+            ->latest('id')
+            ->get();
 
-    return response()->json([
-        'success' => true,
+        return response()->json([
+            'success' => true,
 
-        'cell_id' =>
-            $academicCell->id,
+            'cell_id' => $academicCell->id,
 
-        'sheet_id' =>
-            $sheet->id,
+            'sheet_id' => $sheet->id,
 
-        'coordinate' =>
-            $academicCell->coordinate,
+            'coordinate' => $academicCell->coordinate,
 
-        'comments' =>
-            $comments->map(function ($comment) {
+            'comments' => $comments->map(function ($comment) {
 
                 return [
-                    'id' =>
-                        $comment->id,
+                    'id' => $comment->id,
 
-                    'academic_document_sheet_id' =>
-                        $comment->academic_document_sheet_id,
+                    'academic_document_sheet_id' => $comment->academic_document_sheet_id,
 
-                    'coordinate' =>
-                        $comment->coordinate,
+                    'coordinate' => $comment->coordinate,
 
                     /*
                      * Alias untuk JavaScript/Blade lama.
                      */
-                    'comment_text' =>
-                        $comment->comment ?? '',
+                    'comment_text' => $comment->comment ?? '',
 
                     /*
                      * Kolom database sebenarnya.
                      */
-                    'comment' =>
-                        $comment->comment ?? '',
+                    'comment' => $comment->comment ?? '',
 
-                    'user_id' =>
-                        $comment->user_id,
+                    'user_id' => $comment->user_id,
 
-                    'user_name' =>
-                        $comment->user?->name
+                    'user_name' => $comment->user?->name
                         ?? $comment->user?->nama
                         ?? $comment->user?->username
                         ?? 'Pengguna',
 
-                    'is_resolved' =>
-                        (bool) (
-                            $comment->is_resolved
-                            ?? false
-                        ),
+                    'is_resolved' => (bool) (
+                        $comment->is_resolved
+                        ?? false
+                    ),
 
-                    'is_revision' =>
-                        (bool) (
-                            $comment->is_revision
-                            ?? false
-                        ),
+                    'is_revision' => (bool) (
+                        $comment->is_revision
+                        ?? false
+                    ),
 
-                    'created_at' =>
-                        optional(
-                            $comment->created_at
-                        )->toISOString(),
+                    'created_at' => optional(
+                        $comment->created_at
+                    )->toISOString(),
 
-                    'updated_at' =>
-                        optional(
-                            $comment->updated_at
-                        )->toISOString(),
+                    'updated_at' => optional(
+                        $comment->updated_at
+                    )->toISOString(),
                 ];
             })->values(),
-        'count' =>
-            $comments->count(),
-    ]);
-}
-
+            'count' => $comments->count(),
+        ]);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -5419,7 +4282,6 @@ public function protaProsemComments(
         ]);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | RESOLVE BAGAN ANALISIS
@@ -5435,12 +4297,12 @@ public function protaProsemComments(
     ) {
         $this->authorizeRole();
         $this->getSchoolProfileOrFail($schoolId);
-    
+
         $commentModel = AcademicDocumentComment::query()->findOrFail($comment);
         $sheet = AcademicDocumentSheet::query()->findOrFail($commentModel->academic_document_sheet_id);
-    
+
         $documentQuery = $this->baganAnalisisDocumentQuery()->where('id', $sheet->academic_document_id);
-    
+
         if ($this->isGuru()) {
             $this->applyDocumentOwner($documentQuery, (int) Auth::id());
         } else {
@@ -5450,15 +4312,15 @@ public function protaProsemComments(
                 $documentQuery->whereIn($ownerColumn, $ownerIds);
             }
         }
-    
+
         $document = $documentQuery->firstOrFail();
-    
+
         abort_unless(
             (int) $sheet->academic_document_id === (int) $document->id,
             404,
             'Komentar bukan milik dokumen Bagan Analisis ini.'
         );
-    
+
         if ($this->commentColumnExists('is_resolved')) {
             $commentModel->forceFill(['is_resolved' => true]);
         }
@@ -5468,12 +4330,12 @@ public function protaProsemComments(
         if ($this->commentColumnExists('resolved_at')) {
             $commentModel->forceFill(['resolved_at' => now()]);
         }
-    
+
         $commentModel->save();
-    
+
         if ($this->cellColumnExists('has_revision')) {
             $coordinate = strtoupper(trim((string) $commentModel->coordinate));
-    
+
             $hasOpenRevision = AcademicDocumentComment::query()
                 ->where('academic_document_sheet_id', $sheet->id)
                 ->whereRaw('UPPER(TRIM(coordinate)) = ?', [$coordinate])
@@ -5482,25 +4344,25 @@ public function protaProsemComments(
                     $query->whereNull('is_resolved')->orWhere('is_resolved', false);
                 })
                 ->exists();
-    
+
             $cellModel = AcademicDocumentCell::query()
                 ->where('academic_document_sheet_id', $sheet->id)
                 ->whereRaw('UPPER(TRIM(coordinate)) = ?', [$coordinate])
                 ->first();
-    
+
             if ($cellModel) {
                 $cellModel->forceFill(['has_revision' => $hasOpenRevision])->save();
             }
         }
-    
+
         return response()->json([
             'success' => true,
             'message' => 'Revisi Bagan Analisis berhasil diselesaikan.',
             'comment_id' => $commentModel->id,
         ]);
     }
-    
-        public function resolveAnalisisRevision(
+
+    public function resolveAnalisisRevision(
         Request $request,
         string $role,
         string $schoolName,
@@ -5515,7 +4377,6 @@ public function protaProsemComments(
             $comment
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -5541,7 +4402,7 @@ public function protaProsemComments(
                 $schoolId,
                 $document,
                 self::BAGAN_ANALISIS_TYPE,
-                $this->isGuru() && !$this->isTeacherViewer($request, $schoolId)
+                $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId)
             );
 
         $academicDocument->load([
@@ -5584,49 +4445,36 @@ public function protaProsemComments(
         return view(
             'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
             [
-                'schoolName' =>
-                    $schoolName,
+                'schoolName' => $schoolName,
 
-                'schoolId' =>
-                    $schoolId,
+                'schoolId' => $schoolId,
 
-                'document' =>
+                'document' => $academicDocument,
+
+                'academicDocuments' => collect([
                     $academicDocument,
+                ]),
 
-                'academicDocuments' =>
-                    collect([
-                        $academicDocument,
-                    ]),
+                'documents' => collect([
+                    $academicDocument,
+                ]),
 
-                'documents' =>
-                    collect([
-                        $academicDocument,
-                    ]),
+                'comments' => $comments,
 
-                'comments' =>
-                    $comments,
+                'mapel' => null,
 
-                'mapel' =>
-                    null,
+                'mapelName' => 'Mata Pelajaran',
 
-                'mapelName' =>
-                    'Mata Pelajaran',
+                'currentRole' => $this->currentRole(),
 
-                'currentRole' =>
-                    $this->currentRole(),
+                'isGuru' => $this->isGuru() && ! $this->isTeacherViewer($request, $schoolId),
 
-                'isGuru' =>
-                    $this->isGuru() && !$this->isTeacherViewer($request, $schoolId),
+                'viewingTeacherId' => $this->requestedTeacherId($request, $schoolId),
 
-                'viewingTeacherId' =>
-                    $this->requestedTeacherId($request, $schoolId),
-
-                'isTeacherViewer' =>
-                    $this->isTeacherViewer($request, $schoolId),
+                'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
             ]
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -5680,7 +4528,7 @@ public function protaProsemComments(
                 ?? $u?->full_name
                 ?? $u?->username
                 ?? $u?->email
-                ?? ('Guru #' . $id);
+                ?? ('Guru #'.$id);
 
             return [
                 'id' => $id,
@@ -5787,8 +4635,8 @@ public function protaProsemComments(
         $search = trim((string) $request->input('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('original_filename', 'like', '%' . $search . '%');
+                $q->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('original_filename', 'like', '%'.$search.'%');
             });
         }
 
@@ -5804,7 +4652,7 @@ public function protaProsemComments(
             $owners = DB::table('user_accounts')->whereIn('id', $ownerIds->all())->get()->keyBy('id');
         }
 
-        $base = url('/lms/' . rawurlencode($role) . '/' . rawurlencode($schoolName) . '/' . rawurlencode((string) $schoolId) . '/registrasi-guru/academic-document/' . $type);
+        $base = url('/lms/'.rawurlencode($role).'/'.rawurlencode($schoolName).'/'.rawurlencode((string) $schoolId).'/registrasi-guru/academic-document/'.$type);
 
         return response()->json([
             'success' => true,
@@ -5824,7 +4672,7 @@ public function protaProsemComments(
                     'owner_user_id' => $ownerId,
                     'is_saved' => $isSaved,
                     'updated_at_label' => optional($doc->updated_at)->format('d/m/Y H:i'),
-                    'view_url' => $base . '/' . $doc->id . '/view',
+                    'view_url' => $base.'/'.$doc->id.'/view',
                 ];
             })->values(),
         ]);
@@ -5860,7 +4708,7 @@ public function protaProsemComments(
         }
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.' . ($documentType === self::BAGAN_ANALISIS_TYPE ? 'tamp-analisis' : 'tamp-prota-prosem'),
+            'features.lms.school-admin.registrasi-guru.tampilan.'.($documentType === self::BAGAN_ANALISIS_TYPE ? 'tamp-analisis' : 'tamp-prota-prosem'),
             [
                 'schoolName' => $schoolName,
                 'schoolId' => $schoolId,
@@ -5876,7 +4724,6 @@ public function protaProsemComments(
             ]
         );
     }
-
 
     protected function getProtaProsemDocumentOrFail(
         int $schoolId,
@@ -5902,14 +4749,12 @@ public function protaProsemComments(
             );
         }
 
-
-if ($ownerOnly) {
-    $this->applyDocumentOwner(
-        $query,
-        $this->requestedTeacherId(request(), $schoolId)
-    );
-}
-
+        if ($ownerOnly) {
+            $this->applyDocumentOwner(
+                $query,
+                $this->requestedTeacherId(request(), $schoolId)
+            );
+        }
 
         return $query->firstOrFail();
     }

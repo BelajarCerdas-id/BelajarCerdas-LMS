@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;   // Tambahkan ini
 use Illuminate\Support\Facades\Hash; // Tambahkan ini
 
-class DatabaseSeeder extends Seeder
+class SampleSeeder extends Seeder
 {
     /**
      * Seed the application's database.

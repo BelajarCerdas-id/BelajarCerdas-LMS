@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Http\Requests\Profile;
+
+use App\Http\Requests\BaseApiRequest;
+
+class UpdateStaffFullPersonalRequest extends BaseApiRequest
+{
+    public function rules(): array
+    {
+        return [
+            'nama_lengkap' => ['required', 'string'],
+            'no_hp' => [
+                'required',
+                'regex:/^08\d{8,11}$/',
+            ],
+            'personal_email' => ['required', 'email'],
+            'nik' => ['required'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'nama_lengkap.required' => 'Nama lengkap harus diisi.',
+            'no_hp.required' => 'Nomor HP harus diisi.',
+            'no_hp.regex' => 'Nomor HP tidak valid.',
+            'personal_email.required' => 'Email pribadi harus diisi.',
+            'personal_email.email' => 'Format email tidak valid.',
+            'nik.required' => 'NIK harus diisi.',
+        ];
+    }
+}

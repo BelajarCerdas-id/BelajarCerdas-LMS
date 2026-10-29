@@ -33,3 +33,5 @@ Thumbs.db
 .agents/
 .gemini/
 .graf/
+sync.ffs_lock
+sync.ffs_db

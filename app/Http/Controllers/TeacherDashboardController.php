@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class TeacherContentController extends Controller
+class TeacherDashboardController extends Controller
 {
     /**
      * Menampilkan halaman Dashboard / Content Management Guru
