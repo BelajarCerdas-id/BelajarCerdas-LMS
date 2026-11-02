@@ -416,7 +416,7 @@ class LmsHandler
             '*.email_user' => [
                 'required',
                 'email',
-                'regex:/^[a-zA-z0-9._%+-]+@gmail\.com$/',
+                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
             ],
             '*.no_hp' => [
                 'required',
@@ -425,7 +425,7 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
             ],
             '*.timezone' => [
                 'required',
@@ -446,8 +446,12 @@ class LmsHandler
             '*.nama_kepsek.required'      => 'Nama tidak boleh kosong.',
 
             '*.email_user.required'       => 'Email tidak boleh kosong.',
-            '*.email_user.email'          => 'Format email_user harus @gmail.com.',
-            '*.email_user.regex'          => 'Format email_user harus @gmail.com.',
+            '*.email_user.email'          => 'Format email tidak valid.',
+            '*.email_user.regex'          => 'Domain email user tidak diperbolehkan.',
+
+            '*.email_akun.required'       => 'Email akun tidak boleh kosong.',
+            '*.email_akun.email'          => 'Format email tidak valid.',
+            '*.email_akun.regex'          => 'Domain email akun tidak diperbolehkan.',
 
             '*.no_hp.required'            => 'No.HP tidak boleh kosong.',
             '*.no_hp.regex'               => 'No.HP tidak valid.',

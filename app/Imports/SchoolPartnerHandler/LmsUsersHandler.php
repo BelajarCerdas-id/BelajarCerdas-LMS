@@ -364,20 +364,22 @@ class LmsUsersHandler
                         throw new \Exception("Wali Kelas tidak terdaftar.");
                     }
 
-                    $checkNisn = StudentProfile::where('nisn', $row['nisn'])->first();
+                    if (filled($row['nisn'] ?? null)) {
+                        $checkNisn = StudentProfile::where('nisn', $row['nisn'])->first();
 
-                    if ($checkNisn) {
-                        throw new \Exception("NISN {$row['nisn']} sudah terdaftar.");
+                        if ($checkNisn) {
+                            throw new \Exception("NISN {$row['nisn']} sudah terdaftar.");
+                        }
+
+                        // NISN duplikat dalam file
+                        $nisn = trim($row['nisn']);
+
+                        if (in_array($nisn, $nisnInFile)) {
+                            throw new \Exception("NISN {$row['nisn']} duplikat dalam file.");
+                        }
+
+                        $nisnInFile[] = $nisn;
                     }
-
-                    // nisn duplikat dalam file
-                    $nisn = strtolower($row['nisn']);
-
-                    if (in_array($nisn, $nisnInFile)) {
-                        throw new \Exception("NISN {$row['nisn']} duplikat dalam file.");
-                    }
-
-                    $nisnInFile[] = $nisn;
                 }
 
             } catch (\Throwable $e) {
@@ -395,13 +397,15 @@ class LmsUsersHandler
     // Mengembalikan array error validasi berdasarkan index baris
     private function getBulkValidationErrors(array $rowsArray): array
     {
+        $emailDomainRegex = '/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/';
+
         $rules = [
             '*.enrollment_type' => 'required',
             '*.role_account'    => 'required',
             '*.nama_sekolah'    => 'required',
             '*.npsn'            => 'required',
             '*.jenjang_sekolah' => 'required',
-            '*.email_akun'      => ['required', 'email', 'unique:user_accounts,email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'],
+            '*.email_akun'      => ['required', 'email', 'unique:user_accounts,email', "regex:{$emailDomainRegex}"],
             '*.pembelian_fitur' => 'required',
         ];
 
@@ -409,11 +413,11 @@ class LmsUsersHandler
             if (($row['role_account_orang_tua'] ?? null) === 'Orang Tua' && ($row['role_account'] ?? null) === 'Siswa') {
                 $rules["{$index}.nama_orang_tua_siswa"] = 'required';
                 $rules["{$index}.no_hp_orang_tua"] = ['required', 'regex:/^08\d{8,11}$/'];
-                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'unique:user_accounts,email', 'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/'];
+                $rules["{$index}.email_akun_orang_tua"] = ['required', 'email', 'unique:user_accounts,email', "regex:{$emailDomainRegex}"];
                 $rules["{$index}.password_akun_orang_tua"] = 'required';
             } else {
                 $rules["{$index}.nama_user"] = 'required';
-                $rules["{$index}.email_user"] = ['required', 'email', 'regex:/^[a-zA-z0-9._%+-]+@gmail\.com$/'];
+                $rules["{$index}.email_user"] = ['required', 'email', "regex:{$emailDomainRegex}"];
                 $rules["{$index}.password_akun"] = 'required';
                 $rules["{$index}.no_hp"] = ['required', 'regex:/^08\d{8,11}$/'];
             }
@@ -439,7 +443,7 @@ class LmsUsersHandler
             '*.nik_user.required' => 'NIK tidak boleh kosong.',
             '*.email_user.required' => 'Email tidak boleh kosong.',
             '*.email_user.email' => 'Email tidak valid.',
-            '*.email_user.regex' => 'Email tidak valid.',
+            '*.email_user.regex' => 'Domain email user tidak diperbolehkan.',
             '*.no_hp.required' => 'Nomor HP tidak boleh kosong.',
             '*.no_hp.regex' => 'Nomor HP tidak valid.',
             '*.tipe_kelas.required' => 'Tipe Kelas tidak boleh kosong.',
@@ -450,7 +454,7 @@ class LmsUsersHandler
             '*.email_akun.required' => 'Email Akun tidak boleh kosong.',
             '*.email_akun.email' => 'Email akun tidak valid.',
             '*.email_akun.unique' => 'Email akun telah terdaftar.',
-            '*.email_akun.regex' => 'Email akun tidak valid.',
+            '*.email_akun.regex' => 'Domain email akun tidak diperbolehkan.',
             '*.password_akun.required' => 'Password Akun tidak boleh kosong.',
             '*.nama_orang_tua_siswa.required' => 'Nama Orang Tua Siswa tidak boleh kosong.',
             '*.no_hp_orang_tua.required' => 'Nomor HP Orang Tua tidak boleh kosong.',
@@ -458,7 +462,7 @@ class LmsUsersHandler
             '*.email_akun_orang_tua.required' => 'Email Akun Orang Tua tidak boleh kosong.',
             '*.email_akun_orang_tua.unique' => 'Email Akun Orang Tua telah terdaftar.',
             '*.email_akun_orang_tua.email' => 'Email akun orang tua tidak valid.',
-            '*.email_akun_orang_tua.regex' => 'Email akun orang tua tidak valid.',
+            '*.email_akun_orang_tua.regex' => 'Domain email akun orang tua tidak diperbolehkan.',
             '*.password_akun_orang_tua.required' => 'Password Akun Orang Tua tidak boleh kosong.',
             '*.enrollment_type.required' => 'Tipe Pendaftaran tidak boleh kosong.',
             '*.role_account.required' => 'Role Akun tidak boleh kosong.',
