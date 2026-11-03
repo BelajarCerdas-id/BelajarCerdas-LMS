@@ -25,13 +25,13 @@ class AuthController extends Controller
             'email' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
             ],
             'password' => 'required',
         ], [
             'email.required' => 'Email harus diisi.',
             'email.email' => 'Format email tidak valid.',
-            'email.regex' => 'Format email tidak valid.',
+            'email.regex' => 'Domain email akun tidak diperbolehkan.',
             'password.required' => 'Password harus diisi.',
         ]);
 
