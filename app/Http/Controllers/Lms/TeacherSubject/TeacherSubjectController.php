@@ -174,7 +174,7 @@ class TeacherSubjectController extends Controller
             'teacher' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._%+-]+@belajarcerdas\.id$/',
+                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
                 Rule::unique('teacher_mapels', 'user_id')->where('school_class_id', $request->school_class_id),
             ],
         ], [
@@ -184,7 +184,7 @@ class TeacherSubjectController extends Controller
             'school_class_id.required' => 'Harap pilih rombel kelas.',
             'teacher.required' => 'Harap isi nama guru.',
             'teacher.email'    => 'Format email tidak valid.',
-            'teacher.regex'    => 'Format email harus @belajarcerdas.id.',
+            'teacher.regex'    => 'Domain email akun tidak diperbolehkan.',
             'teacher.unique'    => 'Guru telah terdaftar pada rombel kelas di tahun ini.',
         ]);
 
@@ -238,11 +238,15 @@ class TeacherSubjectController extends Controller
     public function lmsTeacherSubjectManagementEdit(Request $request, $schoolName, $schoolId, $teacherSubjectId)
     {
         $validator = Validator::make($request->all(), [
-            'teacher' => 'required|email|regex:/^[A-Za-z0-9._%+-]+@belajarcerdas\.id$/',
+            'teacher' => [
+                'required',
+                'email',
+                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+            ],
         ], [
             'teacher.required' => 'Harap isi nama guru.',
             'teacher.email'    => 'Format email tidak valid.',
-            'teacher.regex'    => 'Format email harus @belajarcerdas.id.',
+            'teacher.regex'    => 'Domain email akun tidak diperbolehkan.',
         ]);
 
         if ($validator->fails()) {
