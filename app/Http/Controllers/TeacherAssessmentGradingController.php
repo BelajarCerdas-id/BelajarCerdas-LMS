@@ -486,12 +486,36 @@ class TeacherAssessmentGradingController extends Controller
         // STUDENT DATA
         $student = UserAccount::with(['studentProfile', 'StudentSchoolClass.SchoolClass'])->findOrFail($studentId);
 
-        $students = StudentSchoolClass::where('school_class_id', $assessment->school_class_id)
-            ->orderBy('student_id')
+        $students = StudentSchoolClass::with(['UserAccount.StudentProfile'])
+            ->where('school_class_id', $assessment->school_class_id)
             ->get()
             ->sortBy(function ($item) {
                 return strtolower($item->UserAccount->StudentProfile->nama_lengkap ?? '');
-            });
+            })->values();
+
+        $currentIndex = $students->search(function ($item) use ($studentId) {
+            return (int) $item->student_id === (int) $studentId;
+        });
+
+        $previousStudent = null;
+        $nextStudent = null;
+
+        if ($currentIndex !== false) {
+            if ($currentIndex > 0) {
+                $prevItem = $students[$currentIndex - 1];
+                $previousStudent = [
+                    'id' => $prevItem->student_id,
+                    'name' => $prevItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Sebelumnya',
+                ];
+            }
+            if ($currentIndex < $students->count() - 1) {
+                $nextItem = $students[$currentIndex + 1];
+                $nextStudent = [
+                    'id' => $nextItem->student_id,
+                    'name' => $nextItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Selanjutnya',
+                ];
+            }
+        }
 
         $studentIds = $students->pluck('student_id');
 
@@ -511,6 +535,8 @@ class TeacherAssessmentGradingController extends Controller
             'questionsAnswer' => $questionsAnswer,
             'assessment' => $assessment,
             'student' => $student,
+            'previousStudent' => $previousStudent,
+            'nextStudent' => $nextStudent,
         ]);
     }
 
@@ -603,10 +629,43 @@ class TeacherAssessmentGradingController extends Controller
 
         $student = UserAccount::with(['studentProfile', 'StudentSchoolClass.SchoolClass'])->findOrFail($studentId);
 
+        $students = StudentSchoolClass::with(['UserAccount.StudentProfile'])
+            ->where('school_class_id', $assessment->school_class_id)
+            ->get()
+            ->sortBy(function ($item) {
+                return strtolower($item->UserAccount->StudentProfile->nama_lengkap ?? '');
+            })->values();
+
+        $currentIndex = $students->search(function ($item) use ($studentId) {
+            return (int) $item->student_id === (int) $studentId;
+        });
+
+        $previousStudent = null;
+        $nextStudent = null;
+
+        if ($currentIndex !== false) {
+            if ($currentIndex > 0) {
+                $prevItem = $students[$currentIndex - 1];
+                $previousStudent = [
+                    'id' => $prevItem->student_id,
+                    'name' => $prevItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Sebelumnya',
+                ];
+            }
+            if ($currentIndex < $students->count() - 1) {
+                $nextItem = $students[$currentIndex + 1];
+                $nextStudent = [
+                    'id' => $nextItem->student_id,
+                    'name' => $nextItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Selanjutnya',
+                ];
+            }
+        }
+
         return response()->json([
             'assessment' => $assessment,
             'student' => $student,
             'submission' => $submission,
+            'previousStudent' => $previousStudent,
+            'nextStudent' => $nextStudent,
         ]);
     }
 

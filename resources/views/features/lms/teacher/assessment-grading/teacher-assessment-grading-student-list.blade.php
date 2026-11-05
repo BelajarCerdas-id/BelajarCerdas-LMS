@@ -10,7 +10,7 @@
     <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
         <!-- HEADER -->
-        <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-2xl p-6 md:p-8 mb-8 shadow-lg hidden">
+        <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 mb-4 shadow-md hidden">
             <!-- show header in ajax -->
         </div>
 

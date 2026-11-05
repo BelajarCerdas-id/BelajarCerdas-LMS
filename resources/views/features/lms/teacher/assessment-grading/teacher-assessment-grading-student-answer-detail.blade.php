@@ -6,7 +6,7 @@
 
 @if (Auth::user()->role === 'Guru')
     <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
-        <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
+        <div class="mt-3 sm:mt-4 mb-8 mx-4 sm:mx-7.5">
 
             <div id="alert-success-assessment-grading"></div>
 
@@ -15,7 +15,7 @@
                     data-assessment-id="{{ $assessmentId }}" data-mode="{{ $mode }}" data-student-id="{{ $studentId }}">
 
                     <!-- HEADER -->
-                    <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-2xl p-5 md:p-7 mb-8 shadow-lg">
+                    <div id="header-assessment-info" class="bg-[linear-gradient(to_bottom,#0071BC_45%,#003456_100%)] text-white rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 mb-4 shadow-md">
                         <!-- show assessment info in ajax -->
                     </div>
 

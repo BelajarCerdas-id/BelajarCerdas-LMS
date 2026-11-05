@@ -79,28 +79,55 @@ function assesmentGradingStudentProject() {
 
                 // HEADER INFO
                 const assessmentInfo = $('#header-assessment-info');
+                const previousStudent = response.previousStudent;
+                const nextStudent = response.nextStudent;
 
                 assessmentInfo.html(`
-                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                        <div class="space-y-3 min-w-0 flex-1">
-
-                            <h1 class="text-md md:text-lg font-semibold leading-snug tracking-wide wrap-break-word">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <h1 class="text-base sm:text-lg font-bold leading-tight wrap-break-word text-white">
                                 ${assessment.title ?? '-'}
                             </h1>
 
-                            <p class="text-sm flex flex-col gap-4">
-                                <span class="font-semibold text-white">
-                                    Siswa: ${student.student_profile?.nama_lengkap ?? '-'}
+                            <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-blue-100">
+                                <span class="inline-flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-user text-[11px] text-blue-200"></i>
+                                    <span class="text-white font-semibold">Siswa:</span> ${student.student_profile?.nama_lengkap ?? '-'}
                                 </span>
 
-                                <span class="font-semibold text-white">
-                                    Mata Pelajaran: ${assessment.mapel?.mata_pelajaran ?? '-'}
+                                <span class="hidden md:inline text-blue-300/60">•</span>
+
+                                <span class="inline-flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-book-open text-[11px] text-blue-200"></i>
+                                    <span class="text-white font-semibold">Mata Pelajaran:</span> ${assessment.mapel?.mata_pelajaran ?? '-'}
                                 </span>
 
-                                <span class="font-semibold text-white">
-                                    Kelas: ${student.student_school_class?.[0]?.school_class?.class_name ?? '-'}
+                                <span class="hidden md:inline text-blue-300/60">•</span>
+
+                                <span class="inline-flex items-center gap-1.5 font-medium">
+                                    <i class="fa-solid fa-graduation-cap text-[11px] text-blue-200"></i>
+                                    <span class="text-white font-semibold">Kelas:</span> ${student.student_school_class?.[0]?.school_class?.class_name ?? '-'}
                                 </span>
-                            </p>
+                            </div>
+                        </div>
+
+                        <!-- Next / Previous Student Navigation Buttons -->
+                        <div class="flex items-center gap-2 shrink-0 self-start md:self-center">
+                            <button type="button" class="btn-navigate-student px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${previousStudent ? 'bg-white/20 hover:bg-white/30 text-white cursor-pointer active:scale-95 shadow-xs' : 'bg-white/10 text-white/40 cursor-not-allowed opacity-50'}"
+                                ${!previousStudent ? 'disabled' : ''}
+                                data-student-id="${previousStudent?.id ?? ''}"
+                                title="${previousStudent ? 'Siswa Sebelumnya: ' + (previousStudent.name ?? '') : 'Tidak ada siswa sebelumnya'}">
+                                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                                <span class="hidden sm:inline">Siswa</span> Sebelumnya
+                            </button>
+
+                            <button type="button" class="btn-navigate-student px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${nextStudent ? 'bg-white/20 hover:bg-white/30 text-white cursor-pointer active:scale-95 shadow-xs' : 'bg-white/10 text-white/40 cursor-not-allowed opacity-50'}"
+                                ${!nextStudent ? 'disabled' : ''}
+                                data-student-id="${nextStudent?.id ?? ''}"
+                                title="${nextStudent ? 'Siswa Selanjutnya: ' + (nextStudent.name ?? '') : 'Tidak ada siswa selanjutnya'}">
+                                <span class="hidden sm:inline">Siswa</span> Selanjutnya
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                 `);
@@ -360,4 +387,23 @@ $(document).on('click', '#submit-button-assessment-grading-student-project', fun
             btn.prop('disabled', false);
         }
     });
+});
+
+// Navigate between students (Next / Previous Student)
+$(document).on('click', '.btn-navigate-student', function (e) {
+    e.preventDefault();
+    const studentId = $(this).data('student-id');
+    if (!studentId) return;
+
+    const container = document.getElementById('container-assessment-grading-student-project')
+        || document.getElementById('container-assessment-grading-student-answer');
+    if (!container) return;
+
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+    const assessmentId = container.dataset.assessmentId;
+    const mode = container.dataset.mode || 'main';
+
+    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/mode/${mode}/student-list/${studentId}/scoring`;
 });
