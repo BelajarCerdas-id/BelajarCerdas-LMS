@@ -36,3 +36,4 @@ Thumbs.db
 sync.ffs_lock
 sync.ffs_db
 /.*
+/scratch
