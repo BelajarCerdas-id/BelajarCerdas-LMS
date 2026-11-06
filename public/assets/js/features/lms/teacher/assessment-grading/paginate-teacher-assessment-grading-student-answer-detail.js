@@ -943,7 +943,34 @@ function paginateAssessmentGradingStudentAnswer(selectedIndex = 0, forceFetch = 
 }
 
 $(document).ready(function () {
-    paginateAssessmentGradingStudentAnswer();
+    const container = document.getElementById('container-assessment-grading-student-answer');
+    const assessmentId = container ? container.dataset.assessmentId : null;
+    const mode = container ? (container.dataset.mode || 'main') : 'main';
+    const stateKey = `scoring_state_${assessmentId}_${mode}`;
+
+    let savedIndex = 0;
+    let savedQuestionsScroll = 0;
+
+    if (assessmentId) {
+        const savedState = sessionStorage.getItem(stateKey);
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                savedIndex = typeof parsed.questionIndex === 'number' ? parsed.questionIndex : 0;
+                savedQuestionsScroll = typeof parsed.questionsScrollTop === 'number' ? parsed.questionsScrollTop : 0;
+            } catch (e) {
+                savedIndex = 0;
+                savedQuestionsScroll = 0;
+            }
+            sessionStorage.removeItem(stateKey);
+        }
+    }
+
+    currentQuestionIndex = savedIndex;
+    paginateAssessmentGradingStudentAnswer(savedIndex, false, {
+        savedQuestionsScroll: savedQuestionsScroll,
+        savedWindowScroll: 0
+    });
 });
 
 // Navigate between students (Next / Previous Student)
@@ -961,6 +988,16 @@ $(document).on('click', '.btn-navigate-student', function (e) {
     const schoolId = container.dataset.schoolId;
     const assessmentId = container.dataset.assessmentId;
     const mode = container.dataset.mode || 'main';
+
+    // Save current question index and question list scroll position for the next page load
+    if (document.getElementById('container-assessment-grading-student-answer')) {
+        const stateKey = `scoring_state_${assessmentId}_${mode}`;
+        const qListEl = document.getElementById('container-questions-list');
+        sessionStorage.setItem(stateKey, JSON.stringify({
+            questionIndex: currentQuestionIndex,
+            questionsScrollTop: qListEl ? qListEl.scrollTop : 0
+        }));
+    }
 
     window.location.href = `/lms/${role}/${schoolName}/${schoolId}/assessment-grading/${assessmentId}/mode/${mode}/student-list/${studentId}/scoring`;
 });

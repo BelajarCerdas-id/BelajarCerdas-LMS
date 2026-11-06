@@ -132,11 +132,13 @@ function paginateQuestionForReleaseDetail() {
                             textAfterImage = restText.trim(); // Hapus spasi berlebih pada teks setelah gambar
                         }
 
-                        // Gabungkan menjadi HTML: bungkus gambar dan teks
+                        // Gabungkan menjadi HTML: tampilkan teks sebelum gambar (questionTextOnly),
+                        // lalu gambar (jika ada), lalu teks setelah gambar
                         const questionHTML = `
-                        <div class="flex flex-col gap-10 items-start">
+                        <div class="flex flex-col gap-4 items-start">
+                            ${questionTextOnly ? `<div>${questionTextOnly}</div>` : ''}
                             ${questionImage}
-                            <div>${textAfterImage}</div>
+                            ${textAfterImage ? `<div>${textAfterImage}</div>` : ''}
                         </div>
                     `;
 
@@ -355,6 +357,17 @@ function paginateQuestionForReleaseDetail() {
                     $('.pagination-container-paginate-teacher-review-question-bank-for-release-list').html(response.links);
                     $('#emptyMessageBankSoalDetail').hide();
                     $('.thead-table-bank-soal-detail').show();
+
+                    // Render MathJax — wait for it to finish async loading before typesetting
+                    function runMathJax() {
+                        if (window._mathJaxReady && window.MathJax && window.MathJax.typesetPromise) {
+                            window.MathJax.typesetPromise([containerQuestion[0]])
+                                .catch(err => console.warn('MathJax error:', err));
+                        } else {
+                            setTimeout(runMathJax, 200);
+                        }
+                    }
+                    runMathJax();
                 } else {
                     $('#emptyMessageBankSoalDetail').show();
                     $('.thead-table-bank-soal-detail').hide();

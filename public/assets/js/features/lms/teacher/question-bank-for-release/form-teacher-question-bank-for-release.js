@@ -490,6 +490,17 @@ function renderTeacherQuestionReleasePreview(question) {
         modal.showModal();
     }
 
+    // Render MathJax in modal after content is injected
+    function runMathJaxPreview() {
+        if (window._mathJaxReady && window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([modalContent])
+                .catch(err => console.warn('MathJax preview error:', err));
+        } else {
+            setTimeout(runMathJaxPreview, 200);
+        }
+    }
+    runMathJaxPreview();
+
     setTimeout(() => {
         document
             .querySelectorAll('.matching-container')

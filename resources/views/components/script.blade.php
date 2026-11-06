@@ -73,13 +73,20 @@
     <!-- MathJax for rendering math formulas (MathML, LaTeX) -->
     <script>
         window.MathJax = {
-            version: '3.2.2',
             tex: {
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
                 displayMath: [['$$', '$$'], ['\\[', '\\]']]
             },
             options: {
                 skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            },
+            startup: {
+                ready() {
+                    MathJax.startup.defaultReady();
+                    MathJax.startup.promise.then(() => {
+                        window._mathJaxReady = true;
+                    });
+                }
             }
         };
     </script>

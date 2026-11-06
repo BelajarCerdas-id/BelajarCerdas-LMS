@@ -7,7 +7,15 @@ let currentActiveEditor = null; // Menyimpan instance CKEditor yang sedang aktif
  * Ini mencegah CKEditor menghapus tag MathML dan membuat MathJax dapat me-render rumus secara sempurna.
  */
 function convertMathMlToLatex(html) {
-    if (!html || typeof html !== 'string' || !html.includes('<math')) {
+    if (!html || typeof html !== 'string') {
+        return html;
+    }
+
+    // Strip MathJax-rendered span wrappers e.g. <span class="math display">\[...\]</span>
+    // and <span class="math inline">\(...\)</span> — keep the raw LaTeX inside
+    html = html.replace(/<span\s+class="math\s+(?:display|inline)">([\s\S]*?)<\/span>/g, (match, inner) => inner.trim());
+
+    if (!html.includes('<math')) {
         return html;
     }
 
@@ -937,9 +945,14 @@ function formQuestionBankEdit() {
 
             ensureEquationEditorModal();
 
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise();
+            function runMathJaxEdit() {
+                if (window._mathJaxReady && window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise().catch(err => console.warn('MathJax error:', err));
+                } else {
+                    setTimeout(runMathJaxEdit, 200);
+                }
             }
+            runMathJaxEdit();
         }
     });
 }

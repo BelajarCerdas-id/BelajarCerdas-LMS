@@ -539,9 +539,6 @@ function renderAssessmentFormContent(selectedIndex, response) {
                                             <div>
                                                 <div class="flex items-center gap-2">
                                                     <h4 class="font-semibold text-gray-800 text-sm">Lampirkan Foto Jawaban Langsung</h4>
-                                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0071BC] font-medium flex items-center gap-1">
-                                                        <i class="fa-solid fa-layer-group text-[9px]"></i> Bisa Lebih Dari 1 Foto
-                                                    </span>
                                                 </div>
                                                 <p class="text-[11px] text-gray-500 mt-0.5">Ambil satu atau beberapa foto lembar jawaban langsung melalui kamera</p>
                                             </div>
@@ -1820,14 +1817,18 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
     const questionId = formData.get('school_assessment_question_id');
     const answerVal = formData.get('answer_value');
 
-    // Validasi: jika 'submitted', jawaban tidak boleh kosong
+    // Validasi: jika 'submitted', jawaban tidak boleh kosong (harus ada teks ATAU gambar)
     let isEmptyAnswer = !answerVal || answerVal.trim() === '' || answerVal === '[]' || answerVal === '{}';
     if (!isEmptyAnswer && typeof answerVal === 'string') {
         const hasImg = /<img\b[^>]*src=/i.test(answerVal);
         const strippedText = answerVal.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-        // Jika tidak ada gambar dan teks bersih kosong (misal hanya tag kosong <p></p> atau spasi)
+        // Jika tidak ada gambar DAN teks bersih kosong (misal hanya tag kosong <p></p> atau spasi)
+        // Maka dianggap kosong
         if (!hasImg && strippedText === '') {
             isEmptyAnswer = true;
+        } else {
+            // Jika ada gambar ATAU ada teks, maka valid
+            isEmptyAnswer = false;
         }
     }
 
