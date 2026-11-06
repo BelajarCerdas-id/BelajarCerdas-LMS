@@ -1811,6 +1811,18 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
     const form = $('#assessment-test-submit-form')[0];
     if (!form) return;
 
+    // #answer_value is only populated by CKEditor's change:data handler. If the
+    // editor failed to boot the user's text lives solely in the raw <textarea>,
+    // so fall back to it or the answer would be submitted empty.
+    const answerValueInput = form.querySelector('input[name="answer_value"]');
+    const essayTextarea = form.querySelector('textarea.editor');
+    if (answerValueInput && essayTextarea && (!answerValueInput.value || answerValueInput.value.trim() === '')) {
+        const rawText = (essayTextarea.value || '').trim();
+        if (rawText !== '') {
+            answerValueInput.value = `<p>${rawText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '</p><p>')}</p>`;
+        }
+    }
+
     const formData = new FormData(form);
     formData.set('status_answer', statusAnswer);
 
