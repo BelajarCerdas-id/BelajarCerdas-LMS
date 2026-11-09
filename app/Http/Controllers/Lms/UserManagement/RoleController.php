@@ -27,7 +27,7 @@ class RoleController extends Controller
             ->orWhereHas('ParentProfile', function ($q) use ($schoolId) {
                 $q->where('school_partner_id', $schoolId);
             });
-        })->where('status_akun', 'aktif')->get();
+        })->get();
 
         $groupedRoles = $users->groupBy('role');
 
