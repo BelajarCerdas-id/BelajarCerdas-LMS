@@ -902,7 +902,7 @@ class StudentAssessmentExamController extends Controller
             $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessmentId)->count();
         }
 
-        $scorePerQuestion = $totalQuestions > 0 ? (100 / $totalQuestions) : 0;
+        $scorePerQuestion = (float) $schoolQuestion->question_weight;
 
         // hitung score
         $score = 0;
@@ -918,9 +918,9 @@ class StudentAssessmentExamController extends Controller
                         ->where('is_correct', 1)
                         ->first();
 
-                    if ($correctOption && $answerData === $correctOption->options_key) {
-                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
-                    }
+                        if ($correctOption && $answerData === $correctOption->options_key) {
+                            $score = $scorePerQuestion;
+                        }
 
                 break;
 
@@ -939,7 +939,7 @@ class StudentAssessmentExamController extends Controller
 
                         if ($totalCorrect > 0) {
                             $normalizedAnswers = array_map(fn($val) => trim((string)$val), $answerData);
-                            $maxScore = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                            $maxScore = $scorePerQuestion;
                             $wrongSelected = count(array_diff($normalizedAnswers, $correctOptions));
 
                             if ($wrongSelected === 0) {
@@ -976,7 +976,7 @@ class StudentAssessmentExamController extends Controller
                         ksort($answerData);
 
                         if ($correctPairs === $answerData) {
-                            $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                            $score = $scorePerQuestion;
                         }
 
                     }
@@ -998,7 +998,7 @@ class StudentAssessmentExamController extends Controller
                     ksort($answerData);
 
                     if ($correctAnswers === $answerData) {
-                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                        $score = $scorePerQuestion;
                     }
                 break;
 
@@ -1244,7 +1244,7 @@ class StudentAssessmentExamController extends Controller
                     $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($assessment->parent_assessment_id);
                     $wrongBankIds = Cache::get($cacheKeyWrong, []);
                     if (!empty($wrongBankIds)) {
-                        $allQuestionsQuery->whereIn('id', $wrongBankIds);
+                        $allQuestionsQuery->whereIn('question_bank_id', $wrongBankIds);
                     }
                 }
 
@@ -1336,7 +1336,7 @@ class StudentAssessmentExamController extends Controller
             $totalQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->count();
         }
 
-        $scorePerQuestion = $totalQuestions > 0 ? (100 / $totalQuestions) : 0;
+        $scorePerQuestion = (float) $schoolQuestion->question_weight;
         $score = 0;
 
         switch ($question->tipe_soal) {
@@ -1344,9 +1344,9 @@ class StudentAssessmentExamController extends Controller
                 $correctOption = $question->lmsQuestionOption()
                     ->where('is_correct', 1)
                     ->first();
-                if ($correctOption && $answerData === $correctOption->options_key) {
-                    $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
-                }
+                    if ($correctOption && $answerData === $correctOption->options_key) {
+                        $score = $scorePerQuestion;
+                    }
                 break;
 
             case 'MCMA':
@@ -1361,7 +1361,7 @@ class StudentAssessmentExamController extends Controller
 
                     if ($totalCorrect > 0) {
                         $normalizedAnswers = array_map(fn($val) => trim((string)$val), $answerData);
-                        $maxScore = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                        $maxScore = $scorePerQuestion;
                         $wrongSelected = count(array_diff($normalizedAnswers, $correctOptions));
 
                         if ($wrongSelected === 0) {
@@ -1390,7 +1390,7 @@ class StudentAssessmentExamController extends Controller
                     ksort($answerData);
 
                     if ($correctPairs === $answerData) {
-                        $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                        $score = $scorePerQuestion;
                     }
                 }
                 break;
@@ -1407,7 +1407,7 @@ class StudentAssessmentExamController extends Controller
                 ksort($answerData);
 
                 if ($correctAnswers === $answerData) {
-                    $score = $isRemedial ? $scorePerQuestion : $schoolQuestion->question_weight;
+                    $score = $scorePerQuestion;
                 }
                 break;
 
