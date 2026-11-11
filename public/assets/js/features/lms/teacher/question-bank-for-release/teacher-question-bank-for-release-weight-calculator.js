@@ -26,20 +26,8 @@ function calculateTotal() {
     if (total > 100) {
         colorClass = 'bg-red-500';
         errorWeight.classList.remove('hidden');
-    }
-    else if (total === 100) {
+    } else {
         colorClass = 'bg-green-600';
-        errorWeight.classList.add('hidden');
-    }
-    else if (total >= 60) {
-        colorClass = 'bg-yellow-400';
-        errorWeight.classList.add('hidden');
-    }
-    else if (total >= 30) {
-        colorClass = 'bg-red-500';
-        errorWeight.classList.add('hidden');
-    }
-    else {
         errorWeight.classList.add('hidden');
     }
 

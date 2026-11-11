@@ -782,7 +782,7 @@ function renderTeacherQuestionReleaseAssessmentCard(assessment) {
                         <i class="fa-solid fa-percent"></i>
                         <span>Total Bobot</span>
                     </div>
-                    <div class="mt-1 text-xs font-black ${assignedTotalWeight === 100 ? 'text-emerald-600' : assignedTotalWeight > 0 ? 'text-amber-600' : 'text-gray-400'}">
+                    <div class="mt-1 text-xs font-black ${assignedTotalWeight > 100 ? 'text-red-600' : assignedTotalWeight > 0 ? 'text-emerald-600' : 'text-gray-400'}">
                         ${formatTeacherQuestionReleaseWeight(assignedTotalWeight)}
                     </div>
                 </div>
@@ -1523,27 +1523,24 @@ function getTeacherQuestionReleaseQuestionWeight(questionId) {
     return 0;
 }
 
+
 function normalizeTeacherQuestionReleaseWeights() {
-    const selectedIds = Array.from(teacherQuestionReleaseSelectedQuestions);
+    const selectedIds = Array.from(
+        teacherQuestionReleaseSelectedQuestions
+    );
 
     if (!selectedIds.length) {
         teacherQuestionReleaseSelectedQuestionWeights = {};
         return;
     }
 
-    const weight = 100 / selectedIds.length;
-    const roundedWeight = Math.floor(weight * 100) / 100;
-    const remainder = Number(
-        (100 - roundedWeight * selectedIds.length).toFixed(2)
-    );
-
-    selectedIds.forEach((id, index) => {
-        teacherQuestionReleaseSelectedQuestionWeights[id] = Number(
-            (
-                roundedWeight +
-                (index === selectedIds.length - 1 ? remainder : 0)
-            ).toFixed(2)
-        );
+    selectedIds.forEach(id => {
+        if (
+            teacherQuestionReleaseSelectedQuestionWeights[id] === undefined ||
+            teacherQuestionReleaseSelectedQuestionWeights[id] === null
+        ) {
+            teacherQuestionReleaseSelectedQuestionWeights[id] = 1;
+        }
     });
 
     Object.keys(teacherQuestionReleaseSelectedQuestionWeights).forEach(id => {
@@ -1552,6 +1549,7 @@ function normalizeTeacherQuestionReleaseWeights() {
         }
     });
 }
+
 
 function updateTeacherQuestionReleaseQuestionWeight(questionId, value) {
     const id = String(questionId);
@@ -1746,7 +1744,7 @@ function updateTeacherQuestionReleaseRatioCalculations() {
     });
 
     totalPercentage = Number(totalPercentage.toFixed(2));
-    const isExact = Math.abs(totalPercentage - 100) < 0.01;
+    const isValid = totalPercentage > 0 && totalPercentage <= 100;
 
     $('#ratio-weight-total-percentage').text(`${totalPercentage}%`);
 
@@ -1754,21 +1752,19 @@ function updateTeacherQuestionReleaseRatioCalculations() {
     const helperText = $('#ratio-weight-helper-text');
     const applyBtn = $('#btn-apply-ratio-weight');
 
-    if (isExact) {
-        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-red-100 text-red-600')
-            .addClass('bg-emerald-100 text-emerald-700').text('100% Pas');
-        helperText.removeClass('text-red-500 text-gray-400')
-            .addClass('text-emerald-600').text('Rasio total sudah 100%. Siap diterapkan.');
+
+    if (isValid) {
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-red-100 text-red-600').addClass('bg-emerald-100 text-emerald-700').text(`${totalPercentage}% Valid`);
+        helperText.removeClass('text-red-500 text-gray-400').addClass('text-emerald-600').text('Total rasio tidak melebihi 100%. Siap diterapkan.');
         applyBtn.prop('disabled', false);
     } else {
-        const diff = Number((100 - totalPercentage).toFixed(2));
-        const diffText = diff > 0 ? `Kurang ${diff}%` : `Lebih ${Math.abs(diff)}%`;
-        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-emerald-100 text-emerald-700')
-            .addClass('bg-red-100 text-red-600').text(diffText);
-        helperText.removeClass('text-emerald-600 text-gray-400')
-            .addClass('text-red-500').text(`Total persentase harus 100% (${diffText}).`);
+        const diff = Number((totalPercentage - 100).toFixed(2));
+
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-emerald-100 text-emerald-700').addClass('bg-red-100 text-red-600').text(`Lebih ${diff}%`);
+        helperText.removeClass('text-emerald-600 text-gray-400').addClass('text-red-500').text(`Total rasio melebihi batas maksimal 100%.`);
         applyBtn.prop('disabled', true);
     }
+
 }
 
 function applyTeacherQuestionReleaseWeightsByRatio() {
@@ -1833,16 +1829,17 @@ function getTeacherQuestionReleaseTotalWeight() {
     );
 }
 
+
 function isTeacherQuestionReleaseWeightValid() {
     if (!teacherQuestionReleaseSelectedQuestions.size) {
         return false;
     }
 
-    const totalWeight = getTeacherQuestionReleaseTotalWeight();
+    const totalWeight = Number(
+        getTeacherQuestionReleaseTotalWeight().toFixed(2)
+    );
 
-    return Math.abs(
-        Number(totalWeight.toFixed(2)) - 100
-    ) < 0.01;
+    return totalWeight > 0 && totalWeight <= 100;
 }
 
 function updateTeacherQuestionReleaseQuestionSummary() {
@@ -1850,7 +1847,7 @@ function updateTeacherQuestionReleaseQuestionSummary() {
 
     const totalWeight = getTeacherQuestionReleaseTotalWeight();
 
-    const averageWeight = selectedCount > 0 ? 100 / selectedCount : 0;
+    const averageWeight = selectedCount > 0 ? totalWeight / selectedCount : 0;
 
     $('#question-release-selected-question-count').text(selectedCount);
 
@@ -1896,11 +1893,11 @@ function updateTeacherQuestionReleaseQuestionSummary() {
     const warning = $('#question-release-weight-warning');
 
     if (warning.length) {
-        if (selectedCount > 0 && !isTeacherQuestionReleaseWeightValid()) {
+        if (selectedCount > 0 && totalWeight > 100) {
             warning.removeClass('hidden');
 
             warning.text(
-                totalWeight > 100 ? `Bobot melebihi 100 (${formatTeacherQuestionReleaseWeight(totalWeight)})` : `Bobot belum mencapai 100 (${formatTeacherQuestionReleaseWeight(totalWeight)})`
+                `Total bobot melebihi batas maksimal 100 (${formatTeacherQuestionReleaseWeight(totalWeight)})`
             );
         } else {
             warning.addClass('hidden');

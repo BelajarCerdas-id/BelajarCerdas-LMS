@@ -352,13 +352,13 @@ class TeacherQuestionBankReleaseController extends Controller
             'question_weight.*' => [
                 'required',
                 'numeric',
-                'min:0',
+                'min:1',
                 'max:100',
             ],
             'total_weight' => [
                 'required',
                 'numeric',
-                'min:0',
+                'min:1',
                 'max:100',
             ],
         ], [
@@ -420,13 +420,13 @@ class TeacherQuestionBankReleaseController extends Controller
 
         $totalWeight = round(collect($questionIds)->sum(fn($questionId) => $weights->get($questionId)), 2);
 
-        if (abs($totalWeight - 100) > 0.01) {
+        if ($totalWeight > 100) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Total bobot soal harus tepat 100%.',
+                'message' => 'Total bobot soal tidak boleh melebihi 100%.',
                 'errors' => [
                     'total_weight' => [
-                        "Total bobot saat ini {$totalWeight}%. Total bobot harus tepat 100%."
+                        "Total bobot saat ini {$totalWeight}%. Maksimal total bobot adalah 100%."
                     ],
                 ],
             ], 422);
