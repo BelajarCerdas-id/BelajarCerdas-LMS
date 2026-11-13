@@ -8,7 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('academic_document_cells', function (Blueprint $table) {
+        // index di atas row_index harus ikut dibuang, sqlite menolak drop column yang masih ter-index
+        $indexes = collect(Schema::getIndexes('academic_document_cells'))->pluck('name');
+
+        Schema::table('academic_document_cells', function (Blueprint $table) use ($indexes) {
+            if ($indexes->contains('doc_cells_position_index')) {
+                $table->dropIndex('doc_cells_position_index');
+            }
+
             $table->dropColumn('row_index');
         });
     }

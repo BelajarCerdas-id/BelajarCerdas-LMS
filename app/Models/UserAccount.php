@@ -34,11 +34,6 @@ class UserAccount extends Authenticatable
         return $this->hasOne(SchoolPartner::class, 'kepsek_id');
     }
 
-    // TRANSACTION
-    public function Transaction() {
-        return $this->hasMany(Transaction::class, 'user_id');
-    }
-
     // SYLLABUS
     public function Kurikulum() {
         return $this->hasMany(Kurikulum::class, 'user_id');

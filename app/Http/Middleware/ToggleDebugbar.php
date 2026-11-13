@@ -16,7 +16,7 @@ class ToggleDebugbar
     public function handle(Request $request, Closure $next): Response
     {
         if (app()->bound('debugbar')) {
-            if ($request->getHost() === 'dev.belajarcerdas.id') {
+            if (app()->environment('local', 'staging') && $request->getHost() === 'dev.belajarcerdas.id') {
                 app('debugbar')->enable();
             } else {
                 app('debugbar')->disable();

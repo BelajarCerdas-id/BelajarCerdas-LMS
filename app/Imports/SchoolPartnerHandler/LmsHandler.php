@@ -15,6 +15,7 @@ use App\Models\UserAccount;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -260,7 +261,12 @@ class LmsHandler
         });
 
         foreach ($usersToBroadcast as $contract) {
-            broadcast(new LmsSchoolSubscription($contract))->toOthers();
+            // Broadcast must not break the import when Pusher is down
+            try {
+                broadcast(new LmsSchoolSubscription($contract))->toOthers();
+            } catch (\Throwable $e) {
+                Log::warning('broadcast failed: ' . $e->getMessage());
+            }
         }
     }
 
@@ -440,6 +446,9 @@ class LmsHandler
             '*.nik_kepsek'       => 'required',
             '*.pembelian_fitur'  => 'required',
             '*.durasi_kontrak'   => 'required',
+            '*.jumlah_siswa'     => 'required|integer|min:0',
+            '*.harga_per_siswa'  => 'required|numeric|min:0',
+            '*.total_term'       => 'required|integer|min:1',
         ];
 
         $messages = [

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // shortcut: sqlite (testing) tidak mendukung drop FK by name; bab_id sudah NOT NULL constrained di create-table
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // 1. Drop existing custom foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->dropForeign('lms_question_banks_FK_6_0');

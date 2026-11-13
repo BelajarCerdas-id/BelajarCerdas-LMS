@@ -2,12 +2,10 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-class ActivateQuestionBankPG implements ShouldBroadcastNow
+class ActivateQuestionBankPG
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -23,16 +21,6 @@ class ActivateQuestionBankPG implements ShouldBroadcastNow
         $this->source = $source;
         $this->status = $status;
         $this->affectedRows = $affectedRows;
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): Channel
-    {
-        return new Channel('activateQuestionBankPG');
     }
 
     public function broadcastAs(): string

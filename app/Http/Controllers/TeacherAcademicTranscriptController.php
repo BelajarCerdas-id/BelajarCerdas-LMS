@@ -20,16 +20,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TeacherAcademicTranscriptController extends Controller
 {
-    private function extractClassLevel($className)
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->extractClassLevel($className);
-    }
-    private function resolveClassLevel($class): ?int
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->resolveClassLevel($class);
-    }
     
     public function teacherClassList($role, $schoolName, $schoolId)
     {
@@ -69,12 +59,12 @@ class TeacherAcademicTranscriptController extends Controller
         $schoolClasses = $subjectTeacher->where('SchoolClass.tahun_ajaran', $searchYear)->values();
 
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
         // AMBIL MAPEL GURU
         $subjects = $schoolClasses->unique('mapel_id')->map(function ($item) {
@@ -92,7 +82,7 @@ class TeacherAcademicTranscriptController extends Controller
                     return false;
                 }
 
-                return $this->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
+                return app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
             });
         }
 
@@ -168,7 +158,7 @@ class TeacherAcademicTranscriptController extends Controller
             $mapelName = $assessment->Mapel->mata_pelajaran ?? null;
             $tahun = $assessment->SchoolClass->tahun_ajaran ?? 'Tanpa Tahun';
             $className = $assessment->SchoolClass->class_name;
-            $classLevel = $this->extractClassLevel($className);
+            $classLevel = app(ClassNameService::class)->extractClassLevel($className);
             $semester = $assessment->semester;
 
             if (!$mapelName) continue;
@@ -191,7 +181,7 @@ class TeacherAcademicTranscriptController extends Controller
 
         foreach ($studentClasses as $sc) {
             if ($sc->SchoolClass) {
-                $level = $this->extractClassLevel($sc->SchoolClass->class_name);
+                $level = app(ClassNameService::class)->extractClassLevel($sc->SchoolClass->class_name);
                 $classLevelsFromStudentHistory[$level] = true;
             }
         }
@@ -211,13 +201,13 @@ class TeacherAcademicTranscriptController extends Controller
         sort($classList);
 
         // default selected class (10, 11, 12, dst)
-        $selectedClass = $this->resolveClassLevel(
+        $selectedClass = app(ClassNameService::class)->resolveClassLevel(
             $request->class_level ?? (count($classList) ? min($classList) : $defaultLevel)
         );
 
         // Ambil semua id pada tabel kelas yang merepresentasikan level ini
         $selectedKelasIds = Kelas::query()->get()->filter(function ($item) use ($selectedClass) {
-            return $this->extractClassLevel($item->kelas) == $selectedClass;
+            return app(ClassNameService::class)->extractClassLevel($item->kelas) == $selectedClass;
         })->pluck('id')->toArray();
 
         // ambil mapel default dan custom by school
@@ -254,7 +244,7 @@ class TeacherAcademicTranscriptController extends Controller
 
         // Ambil tahun ajaran
         $years = $assessments->filter(function ($a) use ($selectedClass) {
-            return $this->extractClassLevel($a->SchoolClass->class_name) == $selectedClass;
+            return app(ClassNameService::class)->extractClassLevel($a->SchoolClass->class_name) == $selectedClass;
         })->pluck('SchoolClass.tahun_ajaran')->filter()->unique()->sort()->values();
 
         if ($years->isEmpty()) {
@@ -402,7 +392,7 @@ class TeacherAcademicTranscriptController extends Controller
 
         foreach ($studentClasses as $sc) {
             if ($sc->SchoolClass) {
-                $level = $this->extractClassLevel($sc->SchoolClass->class_name);
+                $level = app(ClassNameService::class)->extractClassLevel($sc->SchoolClass->class_name);
                 $year  = $sc->SchoolClass->tahun_ajaran ?? 'Tanpa Tahun';
 
                 $classYears[$level][$year] = true;

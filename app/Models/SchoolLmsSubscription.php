@@ -25,9 +25,4 @@ class SchoolLmsSubscription extends Model
     {
         return $this->belongsTo(SchoolPartner::class, 'school_partner_id');
     }
-
-    public function Transaction()
-    {
-        return $this->belongsTo(Transaction::class, 'transaction_id');
-    }
 }

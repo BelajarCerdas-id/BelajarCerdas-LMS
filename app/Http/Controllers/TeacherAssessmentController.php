@@ -22,16 +22,6 @@ class TeacherAssessmentController extends Controller
     {}
 
     // function extract class level
-    private function extractClassLevel($className)
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->extractClassLevel($className);
-    }
-    private function resolveClassLevel($class): ?int
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->resolveClassLevel($class);
-    }
     
     // function teacher assessment management view
     public function teacherAssessmentManagement($role, $schoolName, $schoolId, $mode = null, $parentAssessmentId = null)
@@ -95,7 +85,7 @@ class TeacherAssessmentController extends Controller
         $searchYear = $request->filled('search_year') ? $request->search_year : null;
 
         if (!$searchYear && $request->filled('search_class')) {
-            $requestedClass = $this->resolveClassLevel($request->search_class);
+            $requestedClass = app(ClassNameService::class)->resolveClassLevel($request->search_class);
 
             $matchingData = $allData->filter(function ($item) use ($requestedClass, $searchSubject) {
                 if (!$item->SchoolClass) {
@@ -141,7 +131,7 @@ class TeacherAssessmentController extends Controller
             ];
         })->filter()->unique('value')->sortBy('value')->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classOptions->first()['value'] ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classOptions->first()['value'] ?? $defaultLevel);
 
         $dataByClass = $dataByYear->filter(function ($item) use ($selectedClass) {
             if (!$item->SchoolClass) {
@@ -453,12 +443,12 @@ class TeacherAssessmentController extends Controller
         })->values();
 
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
 		$schoolAssessment = $schoolClasses;
         // Filter berdasarkan level kelas
@@ -469,7 +459,7 @@ class TeacherAssessmentController extends Controller
                     return false;
                 }
 
-                return $this->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
+                return app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
             })->values();
         }
 

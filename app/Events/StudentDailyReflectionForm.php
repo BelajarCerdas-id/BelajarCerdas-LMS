@@ -2,13 +2,11 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class StudentDailyReflectionForm implements ShouldBroadcastNow
+class StudentDailyReflectionForm
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,15 +22,6 @@ class StudentDailyReflectionForm implements ShouldBroadcastNow
         $this->tipe_model = $tipe_model;
         $this->action = $action;
         $this->data = $data;
-    }
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): Channel
-    {
-        return new Channel('studentDailyReflectionForm');
     }
 
     public function broadcastAs(): string

@@ -4,13 +4,10 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class LmsManagementClass implements ShouldBroadcastNow
+class LmsManagementClass
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -26,15 +23,6 @@ class LmsManagementClass implements ShouldBroadcastNow
         $this->tipe_model = $tipe_model;
         $this->action = $action;
         $this->data = $data;
-    }
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): Channel
-    {
-        return new Channel('lmsManagementClass');
     }
 
     public function broadcastAs(): string

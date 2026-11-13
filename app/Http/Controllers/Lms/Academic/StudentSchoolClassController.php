@@ -3,57 +3,19 @@
 namespace App\Http\Controllers\Lms\Academic;
 
 use App\Events\LmsManagementStudentInClass;
+use App\Services\ClassName\ClassNameService;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use App\Models\SchoolPartner;
 use App\Models\StudentSchoolClass;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class StudentSchoolClassController extends Controller
 {
     // HELPER NAMING CLASS
-    private function extractClassLevel(string $className): int
-    {
-        $className = trim(strtoupper($className));
 
-        // 1. Coba angka di depan (7, 10, 12, dst)
-        if (preg_match('/^\d+/', $className, $match)) {
-            return (int) $match[0];
-        }
-
-        // 1b. Coba label kelas baku seperti "Kelas 10"
-        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
-            return (int) $match[1];
-        }
-
-        // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
-        if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
-            return $this->romanToInt($match[0]);
-        }
-
-        return 0; // fallback aman
-    }
-
-    private function romanToInt(string $roman): int
-    {
-        $map = [
-            'I' => 1,
-            'II' => 2,
-            'III' => 3,
-            'IV' => 4,
-            'V' => 5,
-            'VI' => 6,
-            'VII' => 7,
-            'VIII' => 8,
-            'IX' => 9,
-            'X' => 10,
-            'XI' => 11,
-            'XII' => 12,
-        ];
-
-        return $map[$roman] ?? 0;
-    }
     
     // function lms management students view
     public function lmsManagementStudentsView($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
@@ -134,7 +96,7 @@ public function paginateLmsSchoolSubscriptionUsers(
         $currentClass = SchoolClass::findOrFail($currentClassId);
 
         // ambil tingkat kelas (7 dari 7.1)
-        $currentLevel = $this->extractClassLevel($currentClass->class_name);
+        $currentLevel = app(ClassNameService::class)->extractClassLevel($currentClass->class_name);
         $currentYear  = $currentClass->tahun_ajaran;
 
         $targetLevel = $currentLevel + 1;
@@ -152,7 +114,7 @@ public function paginateLmsSchoolSubscriptionUsers(
                 return false;
             }
 
-            $level = $this->extractClassLevel($cls->class_name);
+            $level = app(ClassNameService::class)->extractClassLevel($cls->class_name);
 
             // hanya memunculkan options 1 tingkat kelas dari kelas sebelumnya
             return $level === $targetLevel;
@@ -194,7 +156,7 @@ public function paginateLmsSchoolSubscriptionUsers(
         $currentClass = SchoolClass::findOrFail($currentClassId);
 
         // ambil tingkat kelas (7 dari 7.1)
-        $currentLevel = $this->extractClassLevel($currentClass->class_name);
+        $currentLevel = app(ClassNameService::class)->extractClassLevel($currentClass->class_name);
         $currentYear  = $currentClass->tahun_ajaran;
 
         $classesQuery = SchoolClass::where('school_partner_id', $schoolId)->orderBy('tahun_ajaran');
@@ -210,7 +172,7 @@ public function paginateLmsSchoolSubscriptionUsers(
                 return false;
             }
 
-            $level = $this->extractClassLevel($cls->class_name);
+            $level = app(ClassNameService::class)->extractClassLevel($cls->class_name);
 
             // hanya memunculkan options 1 tingkat kelas dari kelas sebelumnya
             return $level === $currentLevel;
@@ -227,7 +189,7 @@ public function paginateLmsSchoolSubscriptionUsers(
         $currentClass = SchoolClass::findOrFail($currentClassId);
 
         // ambil tingkat kelas (7 dari 7.1)
-        $currentLevel = $this->extractClassLevel($currentClass->class_name);
+        $currentLevel = app(ClassNameService::class)->extractClassLevel($currentClass->class_name);
         $currentYear  = $currentClass->tahun_ajaran;
 
         $classesQuery = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $currentYear)
@@ -239,7 +201,7 @@ public function paginateLmsSchoolSubscriptionUsers(
 
         // ambil semua kelas sekolah
         $classes = $classesQuery->get()->filter(function ($cls) use ($currentYear, $currentLevel) {
-            $level = $level = $this->extractClassLevel($cls->class_name);;
+            $level = $level = app(ClassNameService::class)->extractClassLevel($cls->class_name);;
 
             // hanya memunculkan options 1 tingkat kelas dari kelas sebelumnya
             return $level === $currentLevel;
@@ -252,7 +214,7 @@ public function paginateLmsSchoolSubscriptionUsers(
     public function moveMajorOptions(Request $request, $schoolId, $majorId = null)
     {
         $currentClass = SchoolClass::findOrFail($request->class_id);
-        $currentLevel = $this->extractClassLevel($currentClass->class_name);
+        $currentLevel = app(ClassNameService::class)->extractClassLevel($currentClass->class_name);
 
         $classes = SchoolClass::with(['SchoolMajor'])->where('school_partner_id', $schoolId)
             ->where('tahun_ajaran', $currentClass->tahun_ajaran)
@@ -260,7 +222,7 @@ public function paginateLmsSchoolSubscriptionUsers(
             ->when($majorId, fn ($q) => $q->where('major_id', '!=', $majorId))
             ->get()
             ->filter(fn ($cls) =>
-                $this->extractClassLevel($cls->class_name) === $currentLevel
+                app(ClassNameService::class)->extractClassLevel($cls->class_name) === $currentLevel
             )
             ->values();
 
@@ -297,18 +259,20 @@ public function paginateLmsSchoolSubscriptionUsers(
                 'message' => 'tidak dapat menggunakan aksi akademik kembali pada siswa yang telah memiliki keterangan.',
             ], 422);
         } else {
-            foreach ($explodeStudentIds as $studentId) {
-                StudentSchoolClass::where('student_id', $studentId) ->where('school_class_id', $classId)->update([
-                    'student_class_status' => 'inactive',
-                    'academic_action' => 'PROMOTED_CLASS',
-                ]);
-    
-                StudentSchoolClass::create([
-                    'student_id' => $studentId,
-                    'school_class_id' => $request->school_class_id,
-                    'student_class_status' => 'active',
-                ]);
-            }
+            DB::transaction(function () use ($explodeStudentIds, $classId, $request) {
+                foreach ($explodeStudentIds as $studentId) {
+                    StudentSchoolClass::where('student_id', $studentId) ->where('school_class_id', $classId)->update([
+                        'student_class_status' => 'inactive',
+                        'academic_action' => 'PROMOTED_CLASS',
+                    ]);
+
+                    StudentSchoolClass::create([
+                        'student_id' => $studentId,
+                        'school_class_id' => $request->school_class_id,
+                        'student_class_status' => 'active',
+                    ]);
+                }
+            });
         }
 
         broadcast(new LmsManagementStudentInClass('StudentSchoolClass', 'promote-class', $studentSchoolClass))->toOthers();

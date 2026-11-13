@@ -9,12 +9,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileAccountContorller extends Controller
 {
     // shortcut: the {userId} URL parameter is ignored on purpose — every profile
     // update below writes to the logged-in user's own account (the only caller,
     // profile-user.blade.php, passes Auth::user()->id anyway)
+    // ceiling: a mismatching {userId} is rejected, not honored. upgrade: an
+    // admin profile-edit feature needs its own controller, not a param here.
+    private function assertOwnProfile($userId)
+    {
+        if ((int) $userId !== (int) Auth::user()->id) {
+            abort(403, 'You can only update your own profile.');
+        }
+    }
     public function index($role, $schoolName = null, $schoolId = null)
     {
         $user = Auth::user();
@@ -30,6 +39,7 @@ class ProfileAccountContorller extends Controller
     // update personal information student
     public function updatePersonalInformationStudent(Request $request, $role, $schoolName, $schoolId, $userId)
     {
+        $this->assertOwnProfile($userId);
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
             'no_hp' => [
@@ -77,6 +87,7 @@ class ProfileAccountContorller extends Controller
     // update personal information office
     public function updatePersonalInformationOffice(Request $request, $role, $userId)
     {
+        $this->assertOwnProfile($userId);
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
             'no_hp' => [
@@ -119,6 +130,7 @@ class ProfileAccountContorller extends Controller
     // update personal information school staff
     public function updatePersonalInformationSchoolStaff(Request $request, $role, $schoolName, $schoolId, $userId)
     {
+        $this->assertOwnProfile($userId);
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
             'no_hp' => [
@@ -170,6 +182,7 @@ class ProfileAccountContorller extends Controller
     // update personal information parent
     public function updatePersonalInformationParent(Request $request, $role, $schoolName, $schoolId, $userId)
     {
+        $this->assertOwnProfile($userId);
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
             'no_hp' => [
@@ -212,6 +225,7 @@ class ProfileAccountContorller extends Controller
     // update personal information school foundation (yayasan sekolah)
     public function updatePersonalInformationSchoolFoundation(Request $request, $role, $userId)
     {
+        $this->assertOwnProfile($userId);
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required',
             'no_hp' => [
@@ -262,7 +276,7 @@ class ProfileAccountContorller extends Controller
 
         $validator = Validator::make($request->all(), [
             'current_password' => 'required',
-            'new_password' => 'required',
+            'new_password' => ['required', Password::min(8)],
             'new_password_confirmation' => 'required',
         ], [
             'current_password.required' => 'Kata sandi lama tidak boleh kosong.',

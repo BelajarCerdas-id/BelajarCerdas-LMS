@@ -439,6 +439,10 @@
         </div>
     </div>
 @endif
+
+<div class="mt-4">
+    {{ $books->appends(request()->query())->links() }}
+</div>
 </main>
 </div>
 </div>

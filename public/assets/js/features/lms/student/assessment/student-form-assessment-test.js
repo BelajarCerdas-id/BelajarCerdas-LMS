@@ -373,8 +373,6 @@ function renderAssessmentFormContent(selectedIndex, response) {
             const userAnswers = Array.isArray(rawAnswer) ? rawAnswer.map(value => String(value).trim().toLowerCase()) : rawAnswer !== null && rawAnswer !== undefined
                 ? [String(rawAnswer).trim().toLowerCase()] : [];
 
-            const correctKeys = options.filter(opt => opt.is_correct == 1).map(opt => String(opt.options_key).trim().toLowerCase());
-
             const isResultVisible = isAllAnswered && showAnswer && answerStatus === 'submitted';
 
             return shuffleOptions.map((item, index) => {
@@ -382,7 +380,8 @@ function renderAssessmentFormContent(selectedIndex, response) {
                 const normalizedKey = optKey.toLowerCase();
 
                 const isChosen = userAnswers.includes(normalizedKey);
-                const isCorrect = item.is_correct == 1;
+                // kunci per opsi tidak dikirim server; benar/salah memakai hasil hitung server di questionsAnswer
+                const isCorrect = isChosen && answerData.is_correct === true;
                 const containsImage = /<img\s+[^>]*src=/.test(item.options_value ?? '');
 
                 let displayLetter = optionLetters[index] || '';
@@ -688,7 +687,8 @@ function renderAssessmentFormContent(selectedIndex, response) {
 
             let correctAnswer = '';
 
-            if (isAllAnswered && showAnswer) {
+            // panel kunci jawaban hanya dirender saat data kunci masih ada dari server
+            if (isAllAnswered && showAnswer && leftItems.some(item => item.extra_data?.pair_with)) {
                 correctAnswer = `
                             <div class="relative matching-container bg-green-50 border border-green-200 rounded-2xl p-6 mt-8 shadow-sm">
     
@@ -853,7 +853,7 @@ function renderAssessmentFormContent(selectedIndex, response) {
                 const userAnswer = existingAnswer[item.options_key];
 
                 let rowClass = '';
-                if (isReviewMode) {
+                if (isReviewMode && correctAnswer !== undefined) {
                     rowClass = userAnswer === correctAnswer ? 'bg-green-50' : 'bg-red-50';
                 }
 
@@ -874,7 +874,7 @@ function renderAssessmentFormContent(selectedIndex, response) {
                     let icon = '';
                     let badge = '';
 
-                    if (isReviewMode) {
+                    if (isReviewMode && correctAnswer !== undefined) {
 
                         // Jawaban benar & dipilih
                         if (selected && isCorrect) {

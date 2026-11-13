@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\SchoolAssessment;
 use App\Models\StudentAssessmentSummary;
+use App\Models\StudentSchoolClass;
 use App\Models\TeacherMapel;
 use App\Models\UserAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class GradebookAssessmentController extends Controller
@@ -69,6 +71,32 @@ class GradebookAssessmentController extends Controller
             return response()->json([
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Ownership: subjectTeacherId must belong to the logged-in teacher
+        $teacherMapel = TeacherMapel::where('id', $subjectTeacherId)->where('user_id', Auth::id())->firstOrFail();
+
+        // Student must be actively enrolled in the teacher's class
+        $studentEnrolled = StudentSchoolClass::where('school_class_id', $teacherMapel->school_class_id)
+            ->where('student_id', $studentId)
+            ->where('student_class_status', 'active')
+            ->exists();
+
+        if (!$studentEnrolled) {
+            abort(403, 'Siswa tidak terdaftar di kelas ini.');
+        }
+
+        // Assessments must belong to the teacher's class and subject
+        $assessmentIds = collect($request->data)->pluck('assessment_id')->unique()->all();
+
+        $validAssessmentIds = SchoolAssessment::whereIn('id', $assessmentIds)
+            ->where('school_class_id', $teacherMapel->school_class_id)
+            ->where('mapel_id', $teacherMapel->mapel_id)
+            ->pluck('id')
+            ->all();
+
+        if (count($validAssessmentIds) !== count($assessmentIds)) {
+            abort(403, 'Akses ditolak.');
         }
 
         foreach ($request->data as $item) {

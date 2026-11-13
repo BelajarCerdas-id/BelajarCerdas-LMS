@@ -9,6 +9,17 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // shortcut: MySQL-only statement, sqlite (testing) tidak mendukungnya
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::table('lms_meeting_contents', function (Blueprint $table) {
+                $table->unique(
+                    ['school_class_id', 'mapel_id', 'semester', 'meeting_number', 'service_id', 'school_partner_id'],
+                    'lms_meeting_contents_comprehensive_unique'
+                );
+            });
+            return;
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         // 1. Get all table indices using Laravel's native Schema methods

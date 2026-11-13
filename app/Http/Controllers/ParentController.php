@@ -31,7 +31,7 @@ class ParentController extends Controller
 
         // logika pencarian anak
         if ($studentId) {
-            $studentProfile = StudentProfile::where('user_id', $studentId)->first();
+            $studentProfile = StudentProfile::where('user_id', $studentId)->where('parent_id', $user->id)->first();
         } else {
             $studentProfile = StudentProfile::where('parent_id', $user->id)->first();
         }

@@ -67,14 +67,10 @@ class LibraryController extends Controller
 
     }
 
-    $books = $books->get();
+    $books = $books->paginate(24);
 
     $uploadingVideos = UploadSession::where('status', 'uploading')
         ->latest()
-        ->get();
-
-    $uploadingVideos = UploadSession::where('status', 'uploading')
-        ->orderByDesc('created_at')
         ->get();
 
         $topiks = TopikMateri::with(['kelas','mapel'])
@@ -1031,7 +1027,25 @@ public function deleteTopik($id)
     {
     $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
 
+    // Only assemble a complete, still-open session: prevents re-calling append mode
+    if (!$session->isUploading() || $session->uploaded_chunks !== $session->total_chunks) {
+        return response()->json(['message' => 'Upload belum lengkap atau sudah selesai.'], 422);
+    }
+
     $dir = storage_path("app/video_chunks/{$session->upload_id}");
+
+    // missing chunks must fail loudly instead of being silently skipped
+    $missing = [];
+    for ($i = 0; $i < $session->total_chunks; $i++) {
+        if (!file_exists($dir . "/" . $i)) {
+            $missing[] = $i;
+        }
+    }
+    if (!empty($missing)) {
+        return response()->json(['message' => 'Chunk belum lengkap. Chunk hilang: ' . implode(', ', $missing)], 422);
+    }
+
+    // shortcut: status enum has no 'assembling' value, so concurrent duplicate assembly isn't locked out — add enum value, upgrade when needed
 
     // file_name was slugified with a video extension at init time.
     $fileName = time() . "_" . $session->file_name;

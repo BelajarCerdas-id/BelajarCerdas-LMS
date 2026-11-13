@@ -16,36 +16,45 @@ class FinanceDashboardController extends Controller
         return view('features.lms.finance.dashboard', compact('role'));
     }
 
-    private function calculateRevenue($term)
+    // Paid revenue per term in SQL: active students (correlated subquery) * price * term months
+    private function revenueExpression(): string
     {
-        $contract = $term->SchContract;
+        return "(SELECT COUNT(*) FROM sch_term_students sts WHERE sts.term_id = sch_contract_terms.id AND sts.status = 'active')"
+            . " * sch_contracts.price_per_student"
+            . " * TIMESTAMPDIFF(MONTH, sch_contracts.start_contract, sch_contracts.end_contract)"
+            . " / NULLIF(sch_contracts.total_term, 0)";
+    }
 
-        if (!$contract) return 0;
+    private function sumPaidRevenue(?int $year = null)
+    {
+        $query = SchContractTerm::query()->where('status', 'paid')
+            ->join('sch_contracts', 'sch_contracts.id', '=', 'sch_contract_terms.contract_id');
 
-        $contractMonths = $contract->start_contract->diffInMonths($contract->end_contract);
+        if ($year) {
+            $query->whereYear('paid_at', $year);
+        }
 
-        $monthsPerTerm = $contract->total_term > 0 ? ($contractMonths / $contract->total_term) : 0;
+        return (float) $query->selectRaw('COALESCE(SUM(' . $this->revenueExpression() . '), 0) as revenue')->value('revenue');
+    }
 
-        $students = $term->SchTermStudent->where('status', 'active')->count();
-
-        return $students * $contract->price_per_student * $monthsPerTerm;
+    private function schoolsRevenueQuery()
+    {
+        return SchoolPartner::query()
+            ->withCount('SchContract')
+            ->addSelect([
+                'student_count' => StudentProfile::selectRaw('COUNT(*)')->whereColumn('student_profiles.school_partner_id', 'school_partners.id'),
+                'lifetime_revenue' => SchContractTerm::selectRaw('COALESCE(SUM(' . $this->revenueExpression() . '), 0)')
+                    ->join('sch_contracts', 'sch_contracts.id', '=', 'sch_contract_terms.contract_id')
+                    ->whereColumn('sch_contracts.school_partner_id', 'school_partners.id')
+                    ->where('sch_contract_terms.status', 'paid'),
+            ]);
     }
 
     public function loadKpiDashboard($role)
     {
-        
         $now = now()->format('Y-m-d');
 
-        $terms = SchContractTerm::with(['SchContract', 'SchTermStudent'])->where('status', 'paid')->get();
-
-        $lifetimeRevenue = 0;
-
-        foreach ($terms as $term) {
-
-            $revenue = $this->calculateRevenue($term);
-
-            $lifetimeRevenue += $revenue;
-        }
+        $lifetimeRevenue = $this->sumPaidRevenue();
 
         $schoolCount = SchoolPartner::count();
 
@@ -63,68 +72,42 @@ class FinanceDashboardController extends Controller
         ]);
     }
 
-    public function loadChartDashboard($role)
+    public function loadChartDashboard(Request $request, $role)
     {
         $period = $request->period ?? 'monthly';
         $year   = $request->year ?? now()->year;
 
-        $query = SchContractTerm::query()->where('status', 'paid')->with(['SchContract', 'SchTermStudent']);
-
-        if ($period === 'monthly') {
-            $query->whereYear('paid_at', $year);
-        }
-
-        $terms = $query->get();
+        $query = SchContractTerm::query()->where('status', 'paid')
+            ->join('sch_contracts', 'sch_contracts.id', '=', 'sch_contract_terms.contract_id')
+            ->when($period === 'monthly', fn ($q) => $q->whereYear('paid_at', $year))
+            ->selectRaw('YEAR(paid_at) as y, MONTH(paid_at) as m, COALESCE(SUM(' . $this->revenueExpression() . '), 0) as revenue')
+            ->groupByRaw('YEAR(paid_at), MONTH(paid_at)');
 
         if ($period === 'yearly') {
+            $rows = $query->orderBy('y')->get();
 
-            $grouped = $terms->groupBy(fn ($t) => $t->paid_at->format('Y'));
-
-            $data = $grouped->map(fn ($items) => $items->sum(fn ($term) => $this->calculateRevenue($term)));
-
-            $labels = $data->keys();
-            $values = $data->values();
-
+            $labels = $rows->pluck('y');
         } else {
+            $rows = $query->orderBy('m')->get();
 
-            $grouped = $terms->groupBy(fn ($t) => $t->paid_at->format('m'));
-
-            $data = $grouped->map(fn ($items) => $items->sum(fn ($term) => $this->calculateRevenue($term)));
-
-            $labels = $data->keys() ->map(fn ($m) => date('F', mktime(0, 0, 0, $m, 1)));
-
-            $values = $data->values();
+            $labels = $rows->map(fn ($r) => date('F', mktime(0, 0, 0, $r->m, 1)));
         }
 
         return response()->json([
             'labels' => $labels->values(),
-            'data'   => $values->values(),
+            'data'   => $rows->pluck('revenue')->map(fn ($v) => (float) $v)->values(),
             'years'  => SchContractTerm::selectRaw('YEAR(paid_at) as year')->whereNotNull('paid_at')->distinct()->orderBy('year', 'desc')->pluck('year'),
         ]);
     }
 
     public function loadTopRevenueDashboard(Request $request, $role)
     {
-        $schools = SchoolPartner::query()->with(['SchContract.SchContractTerm.SchTermStudent'])->withCount('SchContract')->addSelect([
-            'student_count' => StudentProfile::selectRaw('COUNT(*)')->whereColumn('student_profiles.school_partner_id', 'school_partners.id')
-        ])->get();
+        $schools = $this->schoolsRevenueQuery()->orderByDesc('lifetime_revenue')->limit(10)->get();
 
         // hitung revenue per school + total global
-        $totalRevenueAll = 0;
+        $totalRevenueAll = $this->sumPaidRevenue();
 
-        $processed = $schools->map(function ($school) use (&$totalRevenueAll) {
-
-            $lifetimeRevenue = 0;
-
-            foreach ($school->SchContract as $contract) {
-
-                foreach ($contract->SchContractTerm->where('status', 'paid') as $term) {
-
-                    $lifetimeRevenue += $this->calculateRevenue($term);
-                }
-            }
-
-            $totalRevenueAll += $lifetimeRevenue;
+        $processed = $schools->map(function ($school) use ($totalRevenueAll) {
 
             return [
                 'id' => $school->id,
@@ -132,15 +115,12 @@ class FinanceDashboardController extends Controller
                 'logo' => $school->logo,
                 'student_count' => $school->student_count,
                 'sch_contract_count' => $school->sch_contract_count,
-                'lifetime_revenue' => $lifetimeRevenue,
+                'lifetime_revenue' => (float) $school->lifetime_revenue,
             ];
         });
 
-        // sort
-        $sorted = $processed->sortByDesc('lifetime_revenue')->values()->take(10);
-
         return response()->json([
-            'data' => $sorted->values(),
+            'data' => $processed->values(),
         ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lms\TeacherSubject;
 
 use App\Http\Controllers\Controller;
+use App\Services\ClassName\ClassNameService;
 use App\Models\Kurikulum;
 use App\Models\SchoolClass;
 use App\Models\SchoolPartner;
@@ -16,56 +17,8 @@ use Illuminate\Validation\Rule;
 class TeacherSubjectController extends Controller
 {
     // HELPER NAMING CLASS
-    private function extractClassLevel(string $className): int
-    {
-        $className = trim(strtoupper($className));
 
-        // 1. Coba angka di depan (7, 10, 12, dst)
-        if (preg_match('/^\d+/', $className, $match)) {
-            return (int) $match[0];
-        }
 
-        // 1b. Coba label kelas baku seperti "Kelas 10"
-        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
-            return (int) $match[1];
-        }
-
-        // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
-        if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
-            return $this->romanToInt($match[0]);
-        }
-
-        return 0; // fallback aman
-    }
-
-    private function romanToInt(string $roman): int
-    {
-        $map = [
-            'I' => 1,
-            'II' => 2,
-            'III' => 3,
-            'IV' => 4,
-            'V' => 5,
-            'VI' => 6,
-            'VII' => 7,
-            'VIII' => 8,
-            'IX' => 9,
-            'X' => 10,
-            'XI' => 11,
-            'XII' => 12,
-        ];
-
-        return $map[$roman] ?? 0;
-    }
-
-    private function resolveClassLevel($class): ?int
-    {
-        if ($class === null || $class === '') {
-            return null;
-        }
-
-        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
-    }
 
     // TEACHER SUBJECT MANAGEMENT
     // function teacher suject management view
@@ -96,13 +49,13 @@ class TeacherSubjectController extends Controller
 
         $defaultLevel = $startLevelMap[$getSchool->jenjang_sekolah] ?? 1;
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $defaultLevel;
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : $defaultLevel;
 
         // dropdown data
         $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->pluck('tahun_ajaran')->unique()->sortDesc()->values();
 
         $className = SchoolClass::where('school_partner_id', $schoolId)->pluck('class_name')->map(function ($className) {
-            return $this->extractClassLevel($className);
+            return app(ClassNameService::class)->extractClassLevel($className);
         })->unique()->sort()->values();
 
         $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
@@ -135,7 +88,7 @@ class TeacherSubjectController extends Controller
                     return false;
                 }
 
-                return $this->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
+                return app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
             });
         }
 

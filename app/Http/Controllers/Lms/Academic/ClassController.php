@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lms\Academic;
 
 use App\Events\LmsManagementClass;
+use App\Services\ClassName\ClassNameService;
 use App\Http\Controllers\Controller;
 use App\Models\Fase;
 use App\Models\SchoolClass;
@@ -16,56 +17,8 @@ use Illuminate\Validation\Rule;
 class ClassController extends Controller
 {
     // HELPER NAMING CLASS
-    private function extractClassLevel(string $className): int
-    {
-        $className = trim(strtoupper($className));
 
-        // 1. Coba angka di depan (7, 10, 12, dst)
-        if (preg_match('/^\d+/', $className, $match)) {
-            return (int) $match[0];
-        }
 
-        // 1b. Coba label kelas baku seperti "Kelas 10"
-        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
-            return (int) $match[1];
-        }
-
-        // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
-        if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
-            return $this->romanToInt($match[0]);
-        }
-
-        return 0; // fallback aman
-    }
-
-    private function romanToInt(string $roman): int
-    {
-        $map = [
-            'I' => 1,
-            'II' => 2,
-            'III' => 3,
-            'IV' => 4,
-            'V' => 5,
-            'VI' => 6,
-            'VII' => 7,
-            'VIII' => 8,
-            'IX' => 9,
-            'X' => 10,
-            'XI' => 11,
-            'XII' => 12,
-        ];
-
-        return $map[$roman] ?? 0;
-    }
-
-    private function resolveClassLevel($class): ?int
-    {
-        if ($class === null || $class === '') {
-            return null;
-        }
-
-        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
-    }
     
     // function lms management class view
     public function lmsManagementClassView($role, $schoolName, $schoolId, $managedRole, $majorId = null)
@@ -116,15 +69,15 @@ class ClassController extends Controller
 
         // Level kelas yang tersedia pada jurusan tersebut
         $availableClassLevels = $classes->map(function ($class) {
-            return $this->extractClassLevel($class->class_name);
+            return app(ClassNameService::class)->extractClassLevel($class->class_name);
         })->unique()->sort()->values();
 
         // Default ke level kelas paling rendah yang tersedia
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : $availableClassLevels->first();
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : $availableClassLevels->first();
 
         // Filter kelas berdasarkan level yang dipilih
         $getClass = $classes->filter(function ($class) use ($selectedClass) {
-            return $this->extractClassLevel($class->class_name) === $selectedClass;
+            return app(ClassNameService::class)->extractClassLevel($class->class_name) === $selectedClass;
         })->values();
 
         // Tahun ajaran berdasarkan major dan level kelas
@@ -133,7 +86,7 @@ class ClassController extends Controller
         })->when($majorId !== null && $majorId !== 'general', function ($q) use ($majorId) {
             $q->where('major_id', $majorId);
         })->get()->filter(function ($class) use ($selectedClass) {
-            return $this->extractClassLevel($class->class_name) === $selectedClass;
+            return app(ClassNameService::class)->extractClassLevel($class->class_name) === $selectedClass;
         })->pluck('tahun_ajaran')->unique()->sort()->values();
 
         return response()->json([

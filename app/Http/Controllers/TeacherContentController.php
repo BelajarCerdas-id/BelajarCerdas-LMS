@@ -19,16 +19,6 @@ class TeacherContentController extends Controller
     public function __construct(protected LmsReviewContentService $reviewContentService) 
     {}
 
-    private function extractClassLevel($className)
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->extractClassLevel($className);
-    }
-    private function resolveClassLevel($class): ?int
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->resolveClassLevel($class);
-    }
     
     // function teacher content management view
     public function teacherContentManagement($role, $schoolName, $schoolId)
@@ -87,12 +77,12 @@ class TeacherContentController extends Controller
         $schoolClasses = $teacherMapels->where('SchoolClass.tahun_ajaran', $searchYear)->values();
 
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
         // AMBIL MAPEL ID GURU
         $mapelIds = $teacherMapels->pluck('mapel_id')->unique();
@@ -130,7 +120,7 @@ class TeacherContentController extends Controller
                     return false;
                 }
 
-                return $this->extractClassLevel($item->Kelas->kelas) == $selectedClass;
+                return app(ClassNameService::class)->extractClassLevel($item->Kelas->kelas) == $selectedClass;
             });
         }
 

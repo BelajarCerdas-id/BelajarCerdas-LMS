@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lms\SubjectPassingGradeCriteria;
 
 use App\Events\LmsSubjectPassingGradeCriteria;
+use App\Services\ClassName\ClassNameService;
 use App\Http\Controllers\Controller;
 use App\Imports\SubjectPassingGradeCriteria\SubjectPassingGradeCriteriaSheetImport;
 use App\Models\Kurikulum;
@@ -20,56 +21,8 @@ use Maatwebsite\Excel\Facades\Excel;
 class SubjectPassingGradeCriteriaController extends Controller
 {
     // HELPER NAMING CLASS
-    private function extractClassLevel(string $className): int
-    {
-        $className = trim(strtoupper($className));
 
-        // 1. Coba angka di depan (7, 10, 12, dst)
-        if (preg_match('/^\d+/', $className, $match)) {
-            return (int) $match[0];
-        }
 
-        // 1b. Coba label kelas baku seperti "Kelas 10"
-        if (preg_match('/^KELAS\s+(\d+)/', $className, $match)) {
-            return (int) $match[1];
-        }
-
-        // 2. Coba romawi di depan (I, II, III, IV, V, VI, VII, VIII, IX, X, XI, XII)
-        if (preg_match('/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/', $className, $match)) {
-            return $this->romanToInt($match[0]);
-        }
-
-        return 0; // fallback aman
-    }
-
-    private function romanToInt(string $roman): int
-    {
-        $map = [
-            'I' => 1,
-            'II' => 2,
-            'III' => 3,
-            'IV' => 4,
-            'V' => 5,
-            'VI' => 6,
-            'VII' => 7,
-            'VIII' => 8,
-            'IX' => 9,
-            'X' => 10,
-            'XI' => 11,
-            'XII' => 12,
-        ];
-
-        return $map[$roman] ?? 0;
-    }
-
-    private function resolveClassLevel($class): ?int
-    {
-        if ($class === null || $class === '') {
-            return null;
-        }
-
-        return is_numeric($class) ? (int) $class : $this->extractClassLevel((string) $class);
-    }
 
     // function subject passing grade criteria management
     public function subjectPassingGradeCriteria($role, $schoolName, $schoolId) {
@@ -119,10 +72,10 @@ class SubjectPassingGradeCriteriaController extends Controller
         $searchYear = $request->filled('search_year') ? $request->search_year : ($tahunAjaran->first() ?? null);
 
         // CLASS LEVEL (BERDASARKAN TAHUN AJARAN)
-        $classLevels = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $searchYear)->pluck('class_name')->map(fn($c) => (int) $this->extractClassLevel($c))
+        $classLevels = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $searchYear)->pluck('class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))
         ->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // QUERY DATA KKM
         $query = SubjectPassingGradeCriteria::with(['SchoolPartner', 'Kelas', 'Mapel', 'UserAccount.SchoolStaffProfile', 'UserAccount.OfficeProfile'])
@@ -131,7 +84,7 @@ class SubjectPassingGradeCriteriaController extends Controller
         // FILTER KELAS
         if ($selectedClass) {
             $kelasIds = SchoolClass::where('school_partner_id', $schoolId)->where('tahun_ajaran', $searchYear)->get()->filter(function ($item) use ($selectedClass) {
-                return (int) $this->extractClassLevel($item->class_name) === (int) $selectedClass;
+                return (int) app(ClassNameService::class)->extractClassLevel($item->class_name) === (int) $selectedClass;
             })->pluck('kelas_id')->unique()->values();
 
             $query->whereIn('kelas_id', $kelasIds);

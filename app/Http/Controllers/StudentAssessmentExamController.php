@@ -549,6 +549,23 @@ class StudentAssessmentExamController extends Controller
             $status = 'expired';
         }
 
+        // kunci jawaban tidak boleh sampai ke browser; 'side' tetap dikirim untuk UI matching
+        $questions->each(function ($question) {
+            $bank = $question->LmsQuestionBank;
+
+            if ($bank && $bank->LmsQuestionOption) {
+                $bank->LmsQuestionOption->each(function ($opt) {
+                    unset($opt->is_correct);
+
+                    if (is_array($opt->extra_data)) {
+                        $extra = $opt->extra_data;
+                        unset($extra['answer'], $extra['pair_with']);
+                        $opt->extra_data = $extra;
+                    }
+                });
+            }
+        });
+
         return response()->json([
             'data' => $questions,
             'questionsAnswer' => $questionsAnswer,
@@ -837,7 +854,9 @@ class StudentAssessmentExamController extends Controller
         }
 
         // ambil soal
-        $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->findOrFail($request->school_assessment_question_id);
+        $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')
+            ->where('school_assessment_id', $assessmentId)
+            ->findOrFail($request->school_assessment_question_id);
 
         $question = $schoolQuestion->lmsQuestionBank;
 
@@ -1489,6 +1508,13 @@ class StudentAssessmentExamController extends Controller
         $fullImagePath = public_path($relativePath);
 
         if (file_exists($fullImagePath) && is_file($fullImagePath)) {
+            // Security check: resolve symlinks/.. to block path traversal outside the upload directory
+            $realpath = realpath($fullImagePath);
+            $allowedRealBase = realpath(public_path('lms-assessment-submission/assessment-test')) . DIRECTORY_SEPARATOR;
+            if ($realpath === false || !str_starts_with($realpath, $allowedRealBase)) {
+                return response()->json(['message' => 'Akses ditolak.'], 403);
+            }
+
             unlink($fullImagePath);
             return response()->json(['message' => 'Gambar berhasil dihapus']);
         }

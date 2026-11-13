@@ -13,6 +13,7 @@ use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class LmsController extends Controller
@@ -60,13 +61,20 @@ class LmsController extends Controller
     // function activate lms school subscription
     public function lmsSchoolSubscriptionActivate(Request $request, $subscriptionId)
     {
+        abort_unless(in_array($request->user()->role, ['Administrator', 'Finance'], true), 403, 'Akses ditolak: halaman ini bukan untuk peran Anda.');
+
         $subscription = SchoolLmsSubscription::findOrFail($subscriptionId);
 
         $subscription->update([
             'subscription_status' => $request->subscription_status,
         ]);
 
-        broadcast(new LmsSchoolSubscription($subscription))->toOthers();
+        // Broadcast must not break the web request when Pusher is down
+        try {
+            broadcast(new LmsSchoolSubscription($subscription))->toOthers();
+        } catch (\Throwable $e) {
+            Log::warning('broadcast failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'status' => 'success',

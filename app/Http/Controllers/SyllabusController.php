@@ -699,6 +699,7 @@ class SyllabusController extends Controller
 
         try {
 
+            // shortcut: runs inline in the request, large files block a PHP-FPM worker, convert to ShouldQueue once a queue worker runs in prod
             Excel::import(new SyllabusSheetImport(Auth::id(), $request->file('bulkUpload-syllabus'), true), $request->file('bulkUpload-syllabus'));
 
             return response()->json([

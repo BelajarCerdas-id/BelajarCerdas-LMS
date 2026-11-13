@@ -20,17 +20,7 @@ use Illuminate\Support\Facades\Validator;
 
 class TeacherContentReleaseController extends Controller
 {
-    private function extractClassLevel($className)
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->extractClassLevel($className);
-    }
 
-    private function resolveClassLevel($class): ?int
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->resolveClassLevel($class);
-    }
 
     // private function guessMime
     private function guessMime($ext)
@@ -147,12 +137,12 @@ class TeacherContentReleaseController extends Controller
         $schoolClasses = $teacherMapels->where('SchoolClass.tahun_ajaran', $searchYear)->values();
 
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
         // AMBIL MAPEL ID GURU
         $mapelIds = $teacherMapels->pluck('mapel_id')->unique();

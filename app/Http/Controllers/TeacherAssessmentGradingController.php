@@ -11,6 +11,7 @@ use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentSchoolClass;
 use App\Models\SubjectPassingGradeCriteria;
+use App\Models\TeacherMapel;
 use App\Models\UserAccount;
 use App\Services\ClassName\ClassNameService;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
@@ -22,17 +23,7 @@ use Illuminate\Support\Facades\Validator;
 class TeacherAssessmentGradingController extends Controller
 {
     // function extract class level
-    private function extractClassLevel($className)
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->extractClassLevel($className);
-    }
 
-    private function resolveClassLevel($class): ?int
-    {
-        $classNameService = new ClassNameService();
-        return $classNameService->resolveClassLevel($class);
-    }
 
     private $summaryService;
 
@@ -77,12 +68,12 @@ class TeacherAssessmentGradingController extends Controller
         })->values();
         
         // LEVEL KELAS UNIK
-        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) $this->extractClassLevel($c))->unique()->sort()->values();
+        $classLevels = $schoolClasses->pluck('SchoolClass.class_name')->map(fn($c) => (int) app(ClassNameService::class)->extractClassLevel($c))->unique()->sort()->values();
 
-        $selectedClass = $request->filled('search_class') ? $this->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
+        $selectedClass = $request->filled('search_class') ? app(ClassNameService::class)->resolveClassLevel($request->search_class) : ($classLevels->first() ?? $defaultLevel);
 
         // FILTER ROMBEL SESUAI LEVEL
-        $schoolClasses = $schoolClasses->filter(fn($item) => (int)$this->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
+        $schoolClasses = $schoolClasses->filter(fn($item) => (int)app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) === $selectedClass)->values();
 
 		$assessments = $schoolClasses;
         // Filter berdasarkan level kelas
@@ -93,7 +84,7 @@ class TeacherAssessmentGradingController extends Controller
                     return false;
                 }
 
-                return $this->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
+                return app(ClassNameService::class)->extractClassLevel($item->SchoolClass->class_name) == $selectedClass;
             });
         }
 
@@ -575,6 +566,26 @@ class TeacherAssessmentGradingController extends Controller
 
         // REMEDIAL LOGIC
         $assessment = SchoolAssessment::findOrFail($assessmentId);
+
+        // Ownership: the logged-in teacher must teach this assessment's class & subject
+        $ownsAssessment = TeacherMapel::where('user_id', Auth::id())
+            ->where('school_class_id', $assessment->school_class_id)
+            ->where('mapel_id', $assessment->mapel_id)
+            ->exists();
+
+        if (!$ownsAssessment) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Student must be actively enrolled in the assessment's class
+        $studentEnrolled = StudentSchoolClass::where('school_class_id', $assessment->school_class_id)
+            ->where('student_id', $studentId)
+            ->where('student_class_status', 'active')
+            ->exists();
+
+        if (!$studentEnrolled) {
+            abort(403, 'Siswa tidak terdaftar di kelas ini.');
+        }
 
         $assessmentCategory = strtolower($assessment->assessment_category ?? '');
         $parentAssessmentId = $assessment->parent_assessment_id;

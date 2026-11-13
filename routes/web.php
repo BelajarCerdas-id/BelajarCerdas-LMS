@@ -106,35 +106,37 @@ Route::middleware([RedirectIfAuthenticated::class])->group(function () {
 });
 
 // routes auth login & logout
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
-Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']);
-
-// service for school partner & non school partner
-Route::get('/kurikulum/{curriculumId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']);
-Route::get('/kurikulum/{curriculumId}/{schoolId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']);
-
-// kelas for school partner & non school partner
-Route::get('/kurikulum/{curriculumId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']);
-Route::get('/kurikulum/{curriculumId}/{schoolId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']);
-
-// route dependent dropdown mapel by kelas non school partner & school partner
-Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']);
-Route::get('/kelas/{kelasId}/{schoolId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']);
-
-// route dependent dropdown rombel kelas by kelas
-Route::get('/kelas/{kelasId}/rombel-kelas/{schoolId}', [MasterAcademicController::class, 'getRombelByKelas']);
-
-Route::get('/mapel/{mapelId}/bab', [MasterAcademicController::class, 'getBabByMapel']);
-Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabByBab']);
-
-Route::get('/service/{service}/rules', [ServiceRuleController::class, 'index']);
+// ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB moved inside the login middleware group below
 
 // MIDDLEWARE LOGIN
 Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(function () {
-    Route::middleware([CheckSchoolContract::class])->group(function () {
+    // ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
+    Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']);
+
+    // service for school partner & non school partner
+    Route::get('/kurikulum/{curriculumId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']);
+    Route::get('/kurikulum/{curriculumId}/{schoolId}/service', [MasterAcademicController::class, 'getServiceByKurikulum']);
+
+    // kelas for school partner & non school partner
+    Route::get('/kurikulum/{curriculumId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']);
+    Route::get('/kurikulum/{curriculumId}/{schoolId}/kelas', [MasterAcademicController::class, 'getKelasByKurikulum']);
+
+    // route dependent dropdown mapel by kelas non school partner & school partner
+    Route::get('/kelas/{kelasId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']);
+    Route::get('/kelas/{kelasId}/{schoolId}/mapel', [MasterAcademicController::class, 'getMapelByKelas']);
+
+    // route dependent dropdown rombel kelas by kelas
+    Route::get('/kelas/{kelasId}/rombel-kelas/{schoolId}', [MasterAcademicController::class, 'getRombelByKelas']);
+
+    Route::get('/mapel/{mapelId}/bab', [MasterAcademicController::class, 'getBabByMapel']);
+    Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabByBab']);
+
+    Route::get('/service/{service}/rules', [ServiceRuleController::class, 'index']);
+
+    Route::middleware([CheckSchoolContract::class, 'school.member'])->group(function () {
 
         // DASHBOARD
         Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('beranda');
@@ -2660,7 +2662,7 @@ Route::prefix(
 Route::prefix(
     'lms/{role}/{schoolName}/{schoolId}/registrasi-guru/academic-drive'
 )
-    ->middleware('auth')
+    ->middleware(['auth', 'school.member'])
     ->name('lms.schoolAdmin.registrasiGuru.academic-drive.')
     ->group(function () {
 

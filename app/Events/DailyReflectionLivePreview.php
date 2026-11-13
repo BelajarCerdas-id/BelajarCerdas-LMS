@@ -2,13 +2,11 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DailyReflectionLivePreview implements ShouldBroadcastNow
+class DailyReflectionLivePreview
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,15 +22,6 @@ class DailyReflectionLivePreview implements ShouldBroadcastNow
         $this->tipe_model = $tipe_model;
         $this->action = $action;
         $this->data = $data;
-    }
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): Channel
-    {
-        return new Channel('dailyReflectionLivePreview');
     }
 
     public function broadcastAs(): string

@@ -615,6 +615,12 @@ class HeadmasterController extends Controller
 
     public function saveCalendarData(Request $request, $role, $schoolName, $schoolId)
     {
+        $schoolId = optional(SchoolStaffProfile::where('user_id', Auth::user()->id)->first())->school_partner_id;
+
+        if (!$schoolId) {
+            abort(403, 'Profil Kepala/Wakil Sekolah tidak terdaftar.');
+        }
+
         try {
             $status = $request->status; 
             $events = $request->events;
@@ -687,6 +693,12 @@ class HeadmasterController extends Controller
 
     public function getScheduleDataAjax($schoolId, $classId)
     {
+        $schoolId = optional(SchoolStaffProfile::where('user_id', Auth::user()->id)->first())->school_partner_id;
+
+        if (!$schoolId) {
+            abort(403, 'Profil Kepala/Wakil Sekolah tidak terdaftar.');
+        }
+
         try {
             $classInfo = DB::table('school_classes')
                 ->where('id', $classId)

@@ -18,11 +18,6 @@ class SchoolPartner extends Model
         'timezone',
     ];
 
-    public function Transactions()
-    {
-        return $this->hasMany(Transaction::class, 'school_partner_id');
-    }
-
     public function UserAccount()
     {
         return $this->belongsTo(UserAccount::class, 'kepsek_id');

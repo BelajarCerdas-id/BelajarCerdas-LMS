@@ -323,8 +323,14 @@ class FinanceContractController extends Controller
         ]);
     }
 
-    public function contractDetailActivate(Request $request, $role, $schoolId, $contractId) 
+    public function contractDetailActivate(Request $request, $role, $schoolId, $contractId)
     {
+        $validator = Validator::make($request->all(), ['status' => 'required|in:active,inactive']);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Status tidak valid.'], 422);
+        }
+
         return DB::transaction(function () use ($request, $contractId) {
 
             // LOCK CONTRACT
@@ -417,12 +423,32 @@ class FinanceContractController extends Controller
 
     public function markContractTerm(Request $request, $role, $schoolId, $contractId, $termId)
     {
-        $term = SchContractTerm::findOrFail($termId);
+        $validator = Validator::make($request->all(), ['status' => 'required|in:paid,unpaid,overdue']);
 
-        $term->update([
-            'status' => $request->status,
-            'paid_at' => now()
-        ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Status tidak valid.'], 422);
+        }
+
+        return DB::transaction(function () use ($request, $schoolId, $contractId, $termId) {
+
+            // Fetch the term through its contract so termId must belong to contractId/schoolId
+            $term = SchContractTerm::where('id', $termId)
+                ->whereHas('SchContract', function ($q) use ($contractId, $schoolId) {
+                    $q->where('id', $contractId)->where('school_partner_id', $schoolId);
+                })
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $term->update([
+                'status' => $request->status,
+                'paid_at' => $request->status === 'paid' ? now() : null,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status termin berhasil diperbarui.',
+            ]);
+        });
     }
 
     public function studentList($role, $schoolId, $contractId, $termId)
@@ -502,6 +528,7 @@ class FinanceContractController extends Controller
 
         try {
             $userId = Auth::id();
+            // shortcut: runs inline in the request, large files block a PHP-FPM worker, convert to ShouldQueue once a queue worker runs in prod
             Excel::import(new contractStudentSheetImport($userId, $contractId, $termId, $request->file('bulkUpload-contract-students')), 
                 $request->file('bulkUpload-contract-students'));
 

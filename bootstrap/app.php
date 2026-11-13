@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ToggleDebugbar::class,
             \App\Http\Middleware\TrackUserActivity::class,
         ]);
+
+        $middleware->alias([
+            'school.member' => \App\Http\Middleware\EnsureSchoolMemberAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

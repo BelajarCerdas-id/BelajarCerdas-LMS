@@ -137,18 +137,32 @@ class TeacherGradebookController extends Controller
         $data = [];
         $semester = $request->semester ?? 1;
 
+        // Prefetch: one summaries query for all students + one grouped count per assessment type
+        $allStudentIds = $students->pluck('student_id')->all();
+
+        $summariesByStudent = StudentAssessmentSummary::with('SchoolAssessment.SchoolAssessmentType')
+            ->whereIn('student_id', $allStudentIds)
+            ->whereHas('SchoolAssessment', function ($q) use ($teacherMapel, $semester) {
+                $q->where('school_class_id', $teacherMapel->school_class_id)
+                ->where('mapel_id', $teacherMapel->mapel_id)
+                ->where('semester', $semester);
+            })
+            ->get()
+            ->groupBy('student_id');
+
+        $totalAssessmentsByType = SchoolAssessment::where('school_class_id', $teacherMapel->school_class_id)
+            ->where('mapel_id', $teacherMapel->mapel_id)
+            ->where('semester', $semester)
+            ->where('assessment_category', 'main')
+            ->selectRaw('assessment_type_id, COUNT(*) as total')
+            ->groupBy('assessment_type_id')
+            ->pluck('total', 'assessment_type_id');
+
         foreach ($students as $student) {
 
             $studentId = $student->student_id;
 
-            $summaries = StudentAssessmentSummary::with('SchoolAssessment.SchoolAssessmentType')
-                ->where('student_id', $studentId)
-                ->whereHas('SchoolAssessment', function ($q) use ($teacherMapel, $semester) {
-                    $q->where('school_class_id', $teacherMapel->school_class_id)
-                    ->where('mapel_id', $teacherMapel->mapel_id)
-                    ->where('semester', $semester);
-                })
-                ->get();
+            $summaries = $summariesByStudent[$studentId] ?? collect();
 
             $row = [
                 'student_id' => $studentId,
@@ -177,8 +191,7 @@ class TeacherGradebookController extends Controller
 
                 $avg = count($scores) ? array_sum($scores) / count($scores) : 0;
 
-                $totalAssessments = SchoolAssessment::where('assessment_type_id', $type->id)->where('school_class_id', $teacherMapel->school_class_id)
-                    ->where('mapel_id', $teacherMapel->mapel_id)->where('semester', $semester)->where('assessment_category', 'main')->count();
+                $totalAssessments = $totalAssessmentsByType[$type->id] ?? 0;
 
                 $row['types'][] = [
                     'type_id' => $type->id,
