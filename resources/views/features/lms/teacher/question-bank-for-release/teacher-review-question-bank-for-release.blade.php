@@ -38,4 +38,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/paginate-teacher-review-question-bank-for-release.js') }}"></script> <!--- paginate review question bank for release ---->
+<script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/paginate-teacher-review-question-bank-for-release.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/paginate-teacher-review-question-bank-for-release.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/paginate-teacher-review-question-bank-for-release.js')) : time() }}"></script> <!--- paginate review question bank for release ---->

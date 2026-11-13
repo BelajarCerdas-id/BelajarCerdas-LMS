@@ -117,7 +117,14 @@ function paginateQuestionForReleaseDetail() {
 
                         const previewLimit = 350;
 
-                        const previewTextOnly = questionTextOnly.length > previewLimit ? questionTextOnly.substring(0, previewLimit) + '...' : questionTextOnly;
+                        // Preview harus teks polos: potongan HTML yang terpotong di tengah tag
+                        // akan menelan ikon dan body accordion di belakangnya.
+                        const previewPlainText = questionTextOnly.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+                        const previewTextOnly = previewPlainText.length > previewLimit ? previewPlainText.substring(0, previewLimit) + '...' : previewPlainText;
+
+                        // HTML masuk ke atribut, bukan innerHTML: escape " dan & agar attribute tidak putus di tengah tag soal
+                        const questionFullTextAttr = questionTextOnly.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
                         // Inisialisasi variabel kosong untuk menampung elemen gambar dan teks setelah gambar
                         let questionImage = '', textAfterImage = '';
@@ -172,7 +179,7 @@ function paginateQuestionForReleaseDetail() {
 
                         const matchingHTML = `
                             <!-- DEKSTOP -->
-                            <div class="relative matching-container hidden lg:block" data-pairs='${JSON.stringify(pairsData)}'>
+                            <div class="relative matching-container hidden lg:block" data-pairs='${JSON.stringify(pairsData).replace(/'/g, '&#39;')}'>
 
                                 <!-- SVG GARIS -->
                                 <svg class="absolute inset-0 w-full h-full pointer-events-none matching-lines"></svg>
@@ -312,7 +319,7 @@ function paginateQuestionForReleaseDetail() {
                                     <div class="toggleButton-questions w-full flex items-center justify-between bg-transparent border-none outline-none cursor-pointer py-3.75">
                                         <div class="flex gap-1 max-w-362.5">
                                             <span>${index + 1}.</span>
-                                            <span class="preview-text-only w-full" data-fulltext="${questionTextOnly}">${previewTextOnly}</span>
+                                            <span class="preview-text-only w-full" data-fulltext="${questionFullTextAttr}">${previewTextOnly}</span>
                                         </div>
                                         <i class="fa-solid fa-chevron-up icon"></i>
                                     </div>
@@ -441,8 +448,11 @@ function initAccordionQuestion() {
     //ini buat buka accordion nya
     for (let i = 0; i < toggles.length; i++) {
 
-        const fullText = previewTexts[i].dataset.fulltext;
-        const shortText = fullText.length > 350 ? fullText.slice(0, 350) + "..." : fullText;
+        // Teks preview harus polos: potongan HTML terpotong di tengah tag akan merusak DOM.
+        const plainPreview = (html) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+        const fullPlainText = plainPreview(previewTexts[i].dataset.fulltext);
+        const shortText = fullPlainText.length > 350 ? fullPlainText.slice(0, 350) + "..." : fullPlainText;
 
         // set default
         previewTexts[i].innerHTML = shortText;
@@ -459,21 +469,22 @@ function initAccordionQuestion() {
                     icons[j].classList.remove('fa-chevron-down');
                     icons[j].classList.add('fa-chevron-up');
 
-                    // kembalikan shortText accordion lain
+                    // kembalikan shortText accordion lain (dan pastikan preview terlihat lagi)
                     const otherFullText = previewTexts[j].dataset.fulltext;
                     const otherShortText =
-                        otherFullText.length > 350
-                            ? otherFullText.slice(0, 350) + "..."
-                            : otherFullText;
+                        plainPreview(otherFullText).length > 350
+                            ? plainPreview(otherFullText).slice(0, 350) + "..."
+                            : plainPreview(otherFullText);
 
                     previewTexts[j].innerHTML = otherShortText;
+                    previewTexts[j].style.display = '';
                 }
             }
 
             // ====== TOGGLE ACCORDION YANG DIKLIK ======
             if (!isOpen) {
-                // buka
-                previewTexts[i].innerHTML = fullText;
+                // buka: sembunyikan preview di header agar konten tidak dirender dua kali
+                previewTexts[i].style.display = 'none';
                 contentDiv[i].style.height = contentDiv[i].scrollHeight + "px";
                 setTimeout(() => {
                     const matchingContainer = contentDiv[i].querySelector('.matching-container');
@@ -490,6 +501,7 @@ function initAccordionQuestion() {
             } else {
                 // tutup
                 previewTexts[i].innerHTML = shortText;
+                previewTexts[i].style.display = '';
                 contentDiv[i].style.height = "0px";
                 toggles[i].style.color = "#111130";
                 icons[i].classList.remove('fa-chevron-down');

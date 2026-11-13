@@ -667,6 +667,11 @@ class QuestionBankController extends Controller
     
     // function edit image bank soal (for ckeditor)
     public function editImageBankSoal(Request $request) {
+        $request->validate([
+            'upload' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:10240',
+        ], [
+            'upload.mimes' => 'Format file harus berupa gambar (JPG, PNG, GIF, WEBP).',
+        ]);
         if ($request->hasFile('upload')) {
             $originName = $request->file('upload')->getClientOriginalName();
             $fileName = pathInfo($originName, PATHINFO_FILENAME);

@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\UploadSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class LibraryController extends Controller
@@ -402,6 +401,8 @@ class LibraryController extends Controller
     'tipe' => 'required|in:buku,ppt,lks,video',
 
     'file' => 'nullable|mimes:pdf,ppt,pptx|max:20480',
+
+    'cover' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:4096',
 
     'video_url' => 'nullable|string',
 
@@ -961,12 +962,22 @@ public function deleteTopik($id)
 
     public function initVideoUpload(Request $request)
         {
-            $uploadId = Str::uuid()->toString();
+            $data = $request->validate([
+                'file_name' => 'required|string|max:200',
+                'total_chunks' => 'required|integer|min:1|max:10000',
+            ]);
+
+            // The merged file lands in public/, so only video extensions and a
+            // slug name are allowed — anything else becomes executable junk.
+            $ext = strtolower(pathinfo($data['file_name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['mp4', 'webm', 'mov'])) {
+                return response()->json(['message' => 'Hanya file video yang diperbolehkan.'], 422);
+            }
 
             $session = UploadSession::create([
-                'upload_id' => $uploadId,
-                'file_name' => $request->file_name,
-                'total_chunks' => $request->total_chunks,
+                'upload_id' => Str::uuid()->toString(),
+                'file_name' => Str::slug(pathinfo($data['file_name'], PATHINFO_FILENAME)) . '.' . $ext,
+                'total_chunks' => $data['total_chunks'],
                 'uploaded_chunks' => 0,
                 'status' => 'uploading'
             ]);
@@ -978,19 +989,26 @@ public function deleteTopik($id)
     {
     $request->validate([
         'upload_id' => 'required',
-        'chunk_index' => 'required',
-        'file' => 'required|file'
+        'chunk_index' => 'required|integer|min:0|max:99999',
+        'file' => 'required|file|max:20480'
     ]);
 
     $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
 
-    $dir = storage_path("app/video_chunks/{$request->upload_id}");
-
-    if (!file_exists($dir)) {
-        mkdir($dir, 0777, true);
+    // The chunk index is used as the stored file's name: keep it inside the
+    // session's declared range so it can never traverse out of the directory.
+    $chunkIndex = $request->integer('chunk_index');
+    if ($chunkIndex >= $session->total_chunks) {
+        return response()->json(['message' => 'chunk_index di luar jumlah chunk.'], 422);
     }
 
-    $request->file('file')->move($dir, $request->chunk_index);
+    $dir = storage_path("app/video_chunks/{$session->upload_id}");
+
+    if (!file_exists($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
+    $request->file('file')->move($dir, (string) $chunkIndex);
 
     $session->increment('uploaded_chunks');
 
@@ -1008,17 +1026,19 @@ public function deleteTopik($id)
 
     }
 
-    public function completeVideoUpload(Request $request)
+    // Route library.video.finish calls finishVideoUpload (the old completeVideoUpload name).
+    public function finishVideoUpload(Request $request)
     {
     $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
 
     $dir = storage_path("app/video_chunks/{$session->upload_id}");
 
+    // file_name was slugified with a video extension at init time.
     $fileName = time() . "_" . $session->file_name;
     $finalPath = public_path("library/video/" . $fileName);
 
     if (!file_exists(public_path("library/video"))) {
-        mkdir(public_path("library/video"), 0777, true);
+        mkdir(public_path("library/video"), 0755, true);
     }
 
     $out = fopen($finalPath, "ab");
@@ -1068,130 +1088,6 @@ public function deleteTopik($id)
     );
 }
 
-public function startUpload(Request $request)
-{
-    $request->validate([
-        'file_name'     => 'required|string',
-        'file_size'     => 'required|integer',
-        'chunk_size'    => 'required|integer',
-        'total_chunks'  => 'required|integer',
-        'title'         => 'required|string',
-        'kelas_id'      => 'nullable',
-        'mapel_id'      => 'required',
-        'bab_id'        => 'nullable',
-        'description'   => 'nullable',
-        'cover'         => 'nullable|string',
-    ]);
-
-    $upload = UploadSession::create([
-        'upload_id'        => (string) Str::uuid(),
-        'file_name'        => $request->file_name,
-        'file_size'        => $request->file_size,
-        'chunk_size'       => $request->chunk_size,
-        'total_chunks'     => $request->total_chunks,
-        'uploaded_chunks'  => 0,
-        'status'           => 'uploading',
-
-        'title'            => $request->title,
-        'description'      => $request->description,
-        'kelas_id'         => $request->kelas_id,
-        'mapel_id'         => $request->mapel_id,
-        'bab_id'           => $request->bab_id,
-        'cover'            => $request->cover,
-    ]);
-
-    Storage::makeDirectory("uploads/{$upload->upload_id}");
-
-    return response()->json([
-        'success'   => true,
-        'upload_id' => $upload->upload_id
-    ]);
-}
-
-public function uploadChunk(Request $request)
-{
-    $request->validate([
-        'upload_id' => 'required',
-        'chunk' => 'required|file',
-        'index' => 'required|integer'
-    ]);
-
-    $upload = UploadSession::where(
-        'upload_id',
-        $request->upload_id
-    )->firstOrFail();
-
-    $dir = storage_path(
-        'app/uploads/'.$upload->upload_id
-    );
-
-    if (!file_exists($dir)) {
-        mkdir($dir,0777,true);
-    }
-
-    $chunkName = "chunk_".$request->index;
-
-    move_uploaded_file(
-        $request->file('chunk')->getPathname(),
-        $dir.'/'.$chunkName
-    );
-
-    $upload->uploaded_chunks = max(
-        $upload->uploaded_chunks,
-        $request->index + 1
-    );
-
-    $upload->save();
-
-    return response()->json([
-        'success'=>true,
-        'uploaded'=>$upload->uploaded_chunks,
-        'total'=>$upload->total_chunks
-    ]);
-}
-
-public function finishUpload(Request $request)
-{
-    $request->validate([
-        'upload_id'=>'required'
-    ]);
-
-    $upload = UploadSession::where(
-        'upload_id',
-        $request->upload_id
-    )->firstOrFail();
-
-    if($upload->uploaded_chunks < $upload->total_chunks){
-
-        return response()->json([
-            'success'=>false,
-            'message'=>'Chunk belum lengkap.'
-        ],422);
-
-    }
-
-    $fileName = $this->mergeChunks($upload);
-
-    $book = LibraryBook::create([
-        'title'=>$upload->title,
-        'description'=>$upload->description,
-        'kelas_id'=>$upload->kelas_id,
-        'mapel_id'=>$upload->mapel_id,
-        'bab_id'=>$upload->bab_id,
-        'cover'=>$upload->cover,
-        'file'=>$fileName,
-        'tipe'=>'video'
-    ]);
-
-    $upload->status='finished';
-    $upload->save();
-
-    return response()->json([
-        'success'=>true,
-        'book'=>$book
-    ]);
-}
-
 public function uploadStatus($uploadId)
 {
     $upload = UploadSession::where(
@@ -1224,48 +1120,6 @@ public function uploadStatus($uploadId)
     ]);
 }
 
-private function mergeChunks(UploadSession $upload)
-{
-    $folder = storage_path(
-        'app/uploads/'.$upload->upload_id
-    );
-
-    $extension = pathinfo(
-        $upload->file_name,
-        PATHINFO_EXTENSION
-    );
-
-    $finalName =
-        time().'_'.$upload->file_name;
-
-    $output =
-        public_path('library/video/'.$finalName);
-
-    $dest = fopen($output,'ab');
-
-    for($i=0;$i<$upload->total_chunks;$i++){
-
-        $chunk = $folder."/chunk_".$i;
-
-        $source = fopen($chunk,'rb');
-
-        stream_copy_to_stream(
-            $source,
-            $dest
-        );
-
-        fclose($source);
-
-        unlink($chunk);
-
-    }
-
-    fclose($dest);
-
-    @rmdir($folder);
-
-    return $finalName;
-}
 
     // STUDENT TKA PRACTICE TEST
     public function studentTKASubjectList($role)

@@ -12,6 +12,9 @@ use Illuminate\Validation\Rule;
 
 class ProfileAccountContorller extends Controller
 {
+    // shortcut: the {userId} URL parameter is ignored on purpose — every profile
+    // update below writes to the logged-in user's own account (the only caller,
+    // profile-user.blade.php, passes Auth::user()->id anyway)
     public function index($role, $schoolName = null, $schoolId = null)
     {
         $user = Auth::user();
@@ -49,7 +52,7 @@ class ProfileAccountContorller extends Controller
             ], 422);
         }
 
-        $dataStudentProfile = UserAccount::with('StudentProfile')->findOrFail($userId);
+        $dataStudentProfile = UserAccount::with('StudentProfile')->findOrFail(Auth::user()->id);
 
         $dataStudentProfile->StudentProfile->update([
             'nama_lengkap' => $request->nama_lengkap,
@@ -93,7 +96,7 @@ class ProfileAccountContorller extends Controller
             ], 422);
         }
 
-        $dataOfficeProfile = UserAccount::with('OfficeProfile')->findOrFail($userId);
+        $dataOfficeProfile = UserAccount::with('OfficeProfile')->findOrFail(Auth::user()->id);
 
         $dataOfficeProfile->OfficeProfile->update([
             'nama_lengkap' => $request->nama_lengkap,
@@ -140,7 +143,7 @@ class ProfileAccountContorller extends Controller
             ], 422);
         }
 
-        $dataSchoolStaffProfile = UserAccount::with('StudentProfile')->findOrFail($userId);
+        $dataSchoolStaffProfile = UserAccount::with('StudentProfile')->findOrFail(Auth::user()->id);
 
         $dataSchoolStaffProfile->SchoolStaffProfile->update([
             'nama_lengkap' => $request->nama_lengkap,
@@ -186,7 +189,7 @@ class ProfileAccountContorller extends Controller
             ], 422);
         }
 
-        $dataParentProfile = UserAccount::with('OfficeProfile')->findOrFail($userId);
+        $dataParentProfile = UserAccount::with('OfficeProfile')->findOrFail(Auth::user()->id);
 
         $dataParentProfile->ParentProfile->update([
             'nama_lengkap' => $request->nama_lengkap,
@@ -228,7 +231,7 @@ class ProfileAccountContorller extends Controller
             ], 422);
         }
 
-        $dataSchoolFoundationProfile = UserAccount::with('SchoolFoundationProfile')->findOrFail($userId);
+        $dataSchoolFoundationProfile = UserAccount::with('SchoolFoundationProfile')->findOrFail(Auth::user()->id);
 
         $dataSchoolFoundationProfile->SchoolFoundationProfile->update([
             'nama_lengkap' => $request->nama_lengkap,

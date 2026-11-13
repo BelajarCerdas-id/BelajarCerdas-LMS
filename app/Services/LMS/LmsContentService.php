@@ -9,6 +9,7 @@ use App\Models\SchoolLmsContent;
 use App\Models\SchoolPartner;
 use App\Models\ServiceRule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class LmsContentService {
     
@@ -85,8 +86,16 @@ class LmsContentService {
             if ($rule->upload_type === 'file' && request()->hasFile("files.{$rule->id}")) {
                 $file = request()->file("files.{$rule->id}");
 
-                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('lms-contents'), $filename);
+                // Files land in public/lms-contents — only known document/media types may pass.
+                $ext = strtolower($file->getClientOriginalExtension() ?: '');
+                $allowed = ['pdf','doc','docx','ppt','pptx','xls','xlsx','mp4','webm','mp3','jpg','jpeg','png','webp','zip'];
+                if (!in_array($ext, $allowed, true)) {
+                    throw ValidationException::withMessages([
+                        "files.{$rule->id}" => 'Tipe file tidak diperbolehkan.',
+                    ]);
+                }
+
+                $filename = uniqid() . '.' . $ext;
 
                 LmsContentItem::updateOrCreate(
                     [

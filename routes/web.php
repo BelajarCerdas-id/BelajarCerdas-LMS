@@ -44,6 +44,7 @@ use App\Http\Controllers\TeacherAcademicTranscriptController;
 use App\Http\Controllers\TeacherGradeLedgerController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\CheckSchoolContract;
+use App\Http\Middleware\EnsureRoleAccess;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -69,6 +70,8 @@ use App\Http\Controllers\AcademicDocumentController;
 use App\Http\Controllers\AcademicDocumentWordController;
 use App\Http\Controllers\AcademicDocumentDriveController;
 use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutPeriodController;
+use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutSessionController;
+use App\Http\Controllers\Student\TkaTryout\StudentTkaTryoutTestController;
 use App\Models\AcademicDocument;
 use App\Http\Controllers\StudentVicePrincipalController;
 use App\Http\Controllers\TeacherDailyAgendaController;
@@ -130,7 +133,7 @@ Route::get('/bab/{babId}/sub-bab', [MasterAcademicController::class, 'getSubBabB
 Route::get('/service/{service}/rules', [ServiceRuleController::class, 'index']);
 
 // MIDDLEWARE LOGIN
-Route::middleware([AuthMiddleware::class])->group(function () {
+Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(function () {
     Route::middleware([CheckSchoolContract::class])->group(function () {
 
         // DASHBOARD
