@@ -1844,7 +1844,8 @@ function renderTeacherQuestionReleasePointsList() {
         const avgCount = correctCounts.reduce((a, b) => a + b, 0) / correctCounts.length;
 
         const typeLower = group.key.toLowerCase();
-        const badgeColor = typeLower.includes('essay') || typeLower.includes('uraian')
+        const isEssayType = typeLower.includes('essay') || typeLower.includes('uraian');
+        const badgeColor = isEssayType
             ? 'bg-amber-50 text-amber-600 border border-amber-200'
             : typeLower.includes('mcma') || typeLower.includes('majemuk') || typeLower.includes('kompleks')
             ? 'bg-purple-50 text-purple-600 border border-purple-200'
@@ -1854,12 +1855,22 @@ function renderTeacherQuestionReleasePointsList() {
             ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
             : 'bg-blue-50 text-blue-600 border border-blue-200';
 
-        const defaultVal = correctCounts.reduce((a, b) => a + b, 0) > 0
+        // default poin: 1 untuk semua tipe, 4 untuk essay — hanya saat bobot masih default (semua 1);
+        // jika bobot sudah pernah diatur, prefill diturunkan dari bobot saat ini
+        const fallbackPoints = isEssayType ? 4 : 1;
+        const untouchedWeights = teacherQuestionReleaseSelectedQuestions.size > 0
+            && Array.from(teacherQuestionReleaseSelectedQuestions).every(
+                id => Number(getTeacherQuestionReleaseQuestionWeight(id)) === 1
+            );
+
+        const defaultVal = untouchedWeights
+            ? fallbackPoints
+            : correctCounts.reduce((a, b) => a + b, 0) > 0
             ? Number((
                 group.ids.reduce((sum, id) => sum + getTeacherQuestionReleaseQuestionWeight(id), 0)
                 / correctCounts.reduce((a, b) => a + b, 0)
             ).toFixed(2))
-            : 1;
+            : fallbackPoints;
 
         list.append(`
             <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-[#CFEAFF] hover:shadow-xs transition">
