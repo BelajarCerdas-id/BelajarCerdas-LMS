@@ -423,14 +423,6 @@
                                                             Total Bobot: <span id="question-release-selected-question-weight">0</span>
                                                         </span>
     
-                                                        <button type="button" id="question-release-normalize-weight" class="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-gray-500 hover:bg-gray-50">
-                                                            Ratakan Bobot
-                                                        </button>
-
-                                                        <button type="button" id="question-release-scale-to-100" class="rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0071BC] hover:bg-[#D5EEFF] transition-colors">
-                                                            <i class="fa-solid fa-arrow-up-right-dots text-[9px] mr-1"></i> Skala ke 100
-                                                        </button>
-
                                                         <button type="button" id="question-release-ratio-weight" class="rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0071BC] hover:bg-[#D5EEFF] transition-colors">
                                                             <i class="fa-solid fa-sliders text-[9px] mr-1"></i> Atur Rasio Tipe
                                                         </button>

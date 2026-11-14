@@ -1627,71 +1627,6 @@ function updateTeacherQuestionReleaseQuestionWeight(questionId, value) {
     }
 }
 
-function scaleTeacherQuestionReleaseWeightsTo100() {
-    const total = Number(getTeacherQuestionReleaseTotalWeight().toFixed(2));
-
-    if (total <= 0) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Belum Ada Bobot',
-                text: 'Pilih soal dan atur bobot terlebih dahulu.',
-                confirmButtonColor: '#0071BC'
-            });
-        }
-        return;
-    }
-
-    if (Math.abs(total - 100) < 0.01) {
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'info',
-                title: 'Sudah 100%',
-                text: 'Total bobot sudah tepat 100.',
-                timer: 1500,
-                showConfirmButton: false
-            });
-        }
-        return;
-    }
-
-    const scaled = Array.from(teacherQuestionReleaseSelectedQuestions).map(id => ({
-        id,
-        weight: Number(((getTeacherQuestionReleaseQuestionWeight(id) * 100) / total).toFixed(2))
-    }));
-
-    // pembulatan: selisih diberikan ke soal dengan bobot terbesar
-    const sum = Number(scaled.reduce((a, s) => a + s.weight, 0).toFixed(2));
-    const diff = Number((100 - sum).toFixed(2));
-    if (diff !== 0) {
-        const largest = scaled.reduce((a, b) => (b.weight > a.weight ? b : a));
-        largest.weight = Number((largest.weight + diff).toFixed(2));
-    }
-
-    scaled.forEach(s => {
-        teacherQuestionReleaseSelectedQuestionWeights[s.id] = s.weight;
-    });
-
-    renderTeacherQuestionReleaseSelectedQuestions();
-    updateTeacherQuestionReleaseQuestionSummary();
-    updateTeacherQuestionReleaseStepper();
-    updateTeacherQuestionReleasePublishButton();
-
-    if (teacherQuestionReleaseStep === 3) {
-        loadTeacherQuestionReleaseStep3();
-    }
-
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            icon: 'success',
-            title: 'Bobot Diskalakan ke 100',
-            text: `Total bobot ${total} diskalakan proporsional menjadi tepat 100.`,
-            timer: 2000,
-            showConfirmButton: false
-        });
-    }
-}
-
 function resetTeacherQuestionReleaseWeights() {
     normalizeTeacherQuestionReleaseWeights();
     renderTeacherQuestionReleaseSelectedQuestions();
@@ -3363,22 +3298,6 @@ function bindTeacherQuestionReleaseEvents() {
             if (teacherQuestionReleaseStep === 3) {
                 loadTeacherQuestionReleaseStep3();
             }
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-normalize-weight, #question-release-reset-weight',
-        function () {
-            resetTeacherQuestionReleaseWeights();
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-scale-to-100',
-        function () {
-            scaleTeacherQuestionReleaseWeightsTo100();
         }
     );
 
