@@ -67,15 +67,15 @@
 
                         @php
                             $isLibraryActive =
-                                request()->routeIs('teacher.library') ||
-                                request()->routeIs('teacher.library.ppt') ||
-                                request()->routeIs('teacher.library.lks') ||
-                                request()->routeIs('teacher.library.video') ||
+                                request()->routeIs('student.library') ||
+                                request()->routeIs('student.library.ppt') ||
+                                request()->routeIs('student.library.lks') ||
+                                request()->routeIs('student.library.video') ||
                                 request()->routeIs('student.tka-subject-list.view');
                         @endphp
 
                         <!-- MAIN MENU -->
-                        <a href="{{ route('teacher.library') }}"
+                        <a href="{{ route('student.library') }}"
                         class="{{ $isLibraryActive
                                 ? 'cursor-pointer flex items-center justify-between px-4 py-3 bg-[#FFFFFF26] rounded-lg transition'
                                 : 'cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition' }}">
@@ -94,22 +94,22 @@
                                 ? 'ml-7 mt-1 flex flex-col gap-1'
                                 : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
 
-                            <a href="{{ route('teacher.library.ppt') }}"
-                            class="{{ request()->routeIs('teacher.library.ppt')
+                            <a href="{{ route('student.library.ppt') }}"
+                            class="{{ request()->routeIs('student.library.ppt')
                                     ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
                                     : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
                                 Power Point
                             </a>
 
-                            <a href="{{ route('teacher.library.lks') }}"
-                            class="{{ request()->routeIs('teacher.library.lks')
+                            <a href="{{ route('student.library.lks') }}"
+                            class="{{ request()->routeIs('student.library.lks')
                                     ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
                                     : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
                                 LKPD
                             </a>
 
-                            <a href="{{ route('teacher.library.video') }}"
-                            class="{{ request()->routeIs('teacher.library.video')
+                            <a href="{{ route('student.library.video') }}"
+                            class="{{ request()->routeIs('student.library.video')
                                     ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
                                     : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
                                 Video
