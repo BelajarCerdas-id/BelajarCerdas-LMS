@@ -14,22 +14,22 @@ use Illuminate\Support\Facades\Route;
 */
 
 // 1. Public & Authentication Routes
-require __DIR__.'/web/auth.php';
+require __DIR__.'/web/Auth.php';
 
 // 2. Authenticated LMS Domain Routes
 Route::middleware([AuthMiddleware::class, CheckSchoolContract::class])->group(function () {
-    require __DIR__.'/web/profile.php';
-    require __DIR__.'/web/library.php';
-    require __DIR__.'/web/foundation.php';
-    require __DIR__.'/web/syllabus.php';
-    require __DIR__.'/web/academic.php';
-    require __DIR__.'/web/assessment.php';
-    require __DIR__.'/web/finance.php';
-    require __DIR__.'/web/student.php';
-    require __DIR__.'/web/teacher.php';
-    require __DIR__.'/web/headmaster.php';
-    require __DIR__.'/web/student_vice_principal.php';
-    require __DIR__.'/web/parent.php';
-    require __DIR__.'/web/admin.php';
-    require __DIR__.'/web/academic_documents.php';
+    require __DIR__.'/web/Profile.php';
+    require __DIR__.'/web/Library.php';
+    require __DIR__.'/web/Foundation.php';
+    require __DIR__.'/web/Syllabus.php';
+    require __DIR__.'/web/Academic.php';
+    require __DIR__.'/web/Assessment.php';
+    require __DIR__.'/web/Finance.php';
+    require __DIR__.'/web/Student.php';
+    require __DIR__.'/web/Teacher.php';
+    require __DIR__.'/web/Headmaster.php';
+    require __DIR__.'/web/StudentVicePrincipal.php';
+    require __DIR__.'/web/Parent.php';
+    require __DIR__.'/web/Admin.php';
+    require __DIR__.'/web/AcademicDocuments.php';
 });

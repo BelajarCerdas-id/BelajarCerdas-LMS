@@ -45,7 +45,7 @@ class TeacherAssessmentController extends Controller
             $parent = SchoolAssessment::with(['SchoolClass.Kelas', 'Mapel'])->find($parentAssessmentId);
         }
 
-        return view('features.lms.teacher.assessment.teacher-assessment', compact('role', 'schoolName', 'schoolId', 'schoolAssessmentType', 'mode', 'parent', 'parentAssessmentId'));
+        return view('Features.Lms.Teacher.Assessment.TeacherAssessment', compact('role', 'schoolName', 'schoolId', 'schoolAssessmentType', 'mode', 'parent', 'parentAssessmentId'));
     }
 
     // function teacher assessment management form
@@ -514,7 +514,7 @@ class TeacherAssessmentController extends Controller
     {
         $assessment = SchoolAssessment::findOrFail($assessmentId);
 
-        return view('features.lms.teacher.assessment.teacher-assessment-edit', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'assessment'));
+        return view('Features.Lms.Teacher.Assessment.TeacherAssessmentEdit', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'assessment'));
     }
 
     // function teacher assessment management edit form

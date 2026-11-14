@@ -19,7 +19,7 @@ class TkaTryoutPeriodSubjectController extends Controller
         $period = TkaTryoutPeriod::findOrFail($periodId);
         $periodDateList = \Carbon\CarbonPeriod::create($period->start_date, $period->end_date);
 
-        return view('features.lms.administrator.tka-tryout.tka-tryout-period-subject.tka-tryout-period-subject-form', [
+        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriodSubject.TkaTryoutPeriodSubjectForm', [
             'role' => $role,
             'periodId' => $period->id,
             'periodOverrideId' => null,
@@ -34,7 +34,7 @@ class TkaTryoutPeriodSubjectController extends Controller
         $periodOverride = TkaTryoutPeriodSchOverride::findOrFail($periodOverrideId);
         $periodOverrideDateList = \Carbon\CarbonPeriod::create($periodOverride->start_date, $periodOverride->end_date);
 
-        return view('features.lms.administrator.tka-tryout.tka-tryout-period-subject.tka-tryout-period-subject-form', [
+        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriodSubject.TkaTryoutPeriodSubjectForm', [
             'role' => $role,
             'periodId' => $periodOverride->tka_tryout_period_id,
             'periodOverrideId' => $periodOverride->id,

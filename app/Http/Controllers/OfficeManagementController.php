@@ -13,7 +13,7 @@ class OfficeManagementController extends Controller
 {
     public function manageUserView($role)
     {
-        return view('features.lms.administrator.office-management.manage-user', compact('role'));
+        return view('Features.Lms.Administrator.OfficeManagement.ManageUser', compact('role'));
     }
 
     public function paginateManageUser(Request $request, $role)

@@ -13,7 +13,7 @@ class SidebarRenderingTest extends TestCase
      */
     public function test_sidebar_renders_access_denied_for_unknown_role(): void
     {
-        $rendered = View::make('components.sidebar-beranda', [
+        $rendered = View::make('Components.SidebarBeranda', [
             'headerSideNav' => 'Test Dashboard',
         ])->render();
 
@@ -47,7 +47,7 @@ class SidebarRenderingTest extends TestCase
         }
 
         $this->assertTrue(
-            View::exists('components.sidebar.access-denied'),
+            View::exists('Components.Sidebar.AccessDenied'),
             "View partial [components.sidebar.access-denied] must exist."
         );
     }
@@ -59,7 +59,7 @@ class SidebarRenderingTest extends TestCase
     {
         $roleExpectations = [
             'Siswa' => 'sidebar-beranda-student',
-            'Administrator' => 'sidebar-beranda-administrator',
+            'administrator' => 'sidebar-beranda-administrator',
             'admin' => 'sidebar-beranda-administrator',
             'Finance' => 'sidebar-beranda-administrator',
             'Guru' => 'sidebar-beranda-student',
@@ -76,7 +76,7 @@ class SidebarRenderingTest extends TestCase
             $user->role = $role;
             $this->actingAs($user);
 
-            $rendered = View::make('components.sidebar-beranda', [
+            $rendered = View::make('Components.SidebarBeranda', [
                 'headerSideNav' => "Dashboard {$role}",
                 'backButton' => '<i class="fa fa-arrow-left"></i>',
                 'linkBackButton' => '/home',
@@ -102,7 +102,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $view = View::make('features.lms.teacher.dashboard', [
+        $view = View::make('Features.Lms.Teacher.Dashboard', [
             'role' => 'Guru',
             'schoolName' => 'Sekolah Masa',
             'schoolId' => 1,
@@ -146,11 +146,11 @@ class SidebarRenderingTest extends TestCase
     public function test_administrator_sidebar_renders_with_dpai_tokens_and_correct_copywriting(): void
     {
         $user = new UserAccount();
-        $user->role = 'Administrator';
+        $user->role = 'administrator';
         $user->name = 'Super Admin';
         $this->actingAs($user);
 
-        $rendered = View::make('components.sidebar.roles.administrator')->render();
+        $rendered = View::make('Components.Sidebar.Roles.Administrator')->render();
 
         $this->assertStringContainsString('sidebar-beranda-administrator', $rendered);
         $this->assertStringContainsString('var(--color-surface)', $rendered);
@@ -174,7 +174,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $rendered = View::make('components.sidebar.roles.guru', [
+        $rendered = View::make('Components.Sidebar.Roles.Guru', [
             'schoolName' => 'SMA Belajar Cerdas',
             'schoolId' => 1,
         ])->render();
@@ -194,7 +194,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $view = View::make('features.lms.teacher.information.schedule_calendar', [
+        $view = View::make('Features.Lms.Teacher.Information.ScheduleCalendar', [
             'role' => 'Guru',
             'schoolName' => 'SMA Belajar Cerdas',
             'schoolId' => 1,

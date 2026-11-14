@@ -395,7 +395,7 @@ class StudentDashboardController extends Controller
             }
         ])->latest()->take(4)->get();
             
-        return view('features.lms.students.dashboard', compact(
+        return view('Features.Lms.Students.Dashboard', compact(
             'dataSiswa', 'role', 'schoolName', 'schoolId', 'agendaSekolah', 'selectedDate', 
             'jadwalUjian', 'statistikMapel', 'activePolls', 'votedPolls', 'pengumumanTerkini',
             'jadwalHariIni', 'hariIni', 'selectedJadwalDate', 'hariDipilih',

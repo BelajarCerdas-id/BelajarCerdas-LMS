@@ -10,7 +10,7 @@ class StudentSubjectProgressController extends Controller
 {
     public function index($role, $schoolName, $schoolId, $curriculumId, $mapelId)
     {
-        return view('features.lms.student.components.subject-header-progress', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId'));
+        return view('Features.Lms.Student.Components.SubjectHeaderProgress', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId'));
     }
 
     public function data($role, $schoolName, $schoolId, $curriculumId, $mapelId)

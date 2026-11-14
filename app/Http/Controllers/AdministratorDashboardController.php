@@ -6,6 +6,6 @@ class AdministratorDashboardController extends Controller
 {
     public function index($role)
     {
-        return view('features.lms.administrator.dashboard');     
+        return view('Features.Lms.Administrator.Dashboard');     
     }
 }

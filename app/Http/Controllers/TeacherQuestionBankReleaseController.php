@@ -37,7 +37,7 @@ class TeacherQuestionBankReleaseController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.teacher.question-bank-for-release.teacher-question-bank-for-release', compact('role', 'schoolName', 
+        return view('Features.Lms.Teacher.QuestionBankForRelease.TeacherQuestionBankForRelease', compact('role', 'schoolName', 
             'schoolId', 'schoolAssessmentType', 'getCurriculum'));
     }
 
@@ -604,7 +604,7 @@ class TeacherQuestionBankReleaseController extends Controller
     // function teacher review question bank for release
     public function teacherReviewQuestionBankForRelease(Request $request, $role, $schoolName, $schoolId, $assessmentQuestionId)
     {
-        return view('features.lms.teacher.question-bank-for-release.teacher-review-question-bank-for-release', compact('role', 'schoolName', 'schoolId', 
+        return view('Features.Lms.Teacher.QuestionBankForRelease.TeacherReviewQuestionBankForRelease', compact('role', 'schoolName', 'schoolId', 
             'assessmentQuestionId'));
     }
 

@@ -17,7 +17,7 @@ class TkaTryoutPeriodController extends Controller
     {
         $academicYears = SchoolClass::query()->select('tahun_ajaran')->distinct()->orderByDesc('tahun_ajaran')->pluck('tahun_ajaran');
 
-        return view('features.lms.administrator.tka-tryout.tka-tryout-period.tka-tryout-period-management', compact('role', 'academicYears'));
+        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriod.TkaTryoutPeriodManagement', compact('role', 'academicYears'));
     }
 
     public function loadFilter($role)
@@ -91,7 +91,7 @@ class TkaTryoutPeriodController extends Controller
     {
         $academicYears = SchoolClass::query()->select('tahun_ajaran')->distinct()->orderByDesc('tahun_ajaran')->pluck('tahun_ajaran');
 
-        return view('features.lms.administrator.tka-tryout.tka-tryout-period.tka-tryout-period-form', compact('role', 'academicYears'));
+        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriod.TkaTryoutPeriodForm', compact('role', 'academicYears'));
     }
     
     public function tkaTryoutPeriodCreate(Request $request, $role)

@@ -31,7 +31,7 @@ class TeacherGradebookController extends Controller
     
     public function teacherClassList($role, $schoolName, $schoolId)
     {
-        return view('features.lms.teacher.gradebook.teacher-class-list', compact('role', 'schoolName', 'schoolId'));
+        return view('Features.Lms.Teacher.Gradebook.TeacherClassList', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherClassList(Request $request, $role, $schoolName, $schoolId)
@@ -115,7 +115,7 @@ class TeacherGradebookController extends Controller
 
     public function gradebookManagement($role, $schoolName, $schoolId, $subjectTeacherId)
     {
-        return view('features.lms.teacher.gradebook.teacher-gradebook-management', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
+        return view('Features.Lms.Teacher.Gradebook.TeacherGradebookManagement', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
     }
 
     public function paginateGradebookManagement(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)

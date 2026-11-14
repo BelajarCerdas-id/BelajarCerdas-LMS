@@ -21,7 +21,7 @@ class FoundationDashboardController extends Controller
             })->get();
         }
         
-        return view('features.lms.foundation.dashboard', compact('role', 'foundationId', 'financeAccessLink'));
+        return view('Features.Lms.Foundation.Dashboard', compact('role', 'foundationId', 'financeAccessLink'));
     }
 
     public function dashboardKPI($role, $foundationId = null)

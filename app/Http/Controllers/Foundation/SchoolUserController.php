@@ -12,7 +12,7 @@ class SchoolUserController extends Controller
 {
     public function schoolUserView($role, $foundationId = null)
     {
-        return view('features.lms.foundation.school-user.monitoring-school-user', compact('role', 'foundationId'));
+        return view('Features.Lms.Foundation.SchoolUser.MonitoringSchoolUser', compact('role', 'foundationId'));
     }
     public function schoolUserKPI($role, $foundationId = null)
     {

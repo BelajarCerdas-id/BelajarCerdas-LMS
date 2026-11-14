@@ -13,7 +13,7 @@ class FinanceDashboardController extends Controller
 {
     public function index($role)
     {
-        return view('features.lms.finance.dashboard', compact('role'));
+        return view('Features.Lms.Finance.Dashboard', compact('role'));
     }
 
     private function calculateRevenue($term)

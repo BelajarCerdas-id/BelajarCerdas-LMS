@@ -1,0 +1,753 @@
+function paginateBankSoalDetail() {
+    const container = document.getElementById('container-bank-soal-detail');
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+    const kurikulumId = container.dataset.kurikulumId;
+    const kelasId = container.dataset.kelasId;
+    const mapelId = container.dataset.mapelId;
+    const babId = container.dataset.babId;
+    const subBabId = container.dataset.subBabId;
+    const source = container.dataset.source;
+    const questionType = container.dataset.questionType;
+    const questionCategory = container.dataset.questionCategory;
+
+    if (!container) return;
+    if (!role) return;
+    if (!kurikulumId) return;
+    if (!kelasId) return;
+    if (!mapelId) return;
+    if (!source) return;
+    if (!questionType) return;
+    if (!questionCategory) return;
+
+    function addClassToImgTags(html, className) {
+
+        if (typeof html !== 'string') {
+            return html ?? '';
+        }
+
+        return html
+            .replace(
+                /<img\b(?![^>]*class=)[^>]*>/g,
+                imgTag => imgTag.replace(
+                    '<img',
+                    `<img class="${className}"`
+                )
+            )
+            .replace(
+                /<img\b([^>]*?)class="(.*?)"/g,
+                (imgTag, before, existingClasses) =>
+                    `<img ${before}class="${existingClasses} ${className}"`
+            );
+    }
+
+    function prepareQuestionHtml(html) {
+
+        if (!html) return "";
+
+        html = addClassToImgTags(html, "max-w-[350px] rounded my-2"
+        );
+
+        return html;
+
+    }
+
+    function createPreviewHtml(html, limit = 350) {
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = html;
+
+        // cek apakah child pertama image
+        let firstElement = null;
+
+        for (const node of wrapper.childNodes) {
+
+            if (node.nodeType !== Node.ELEMENT_NODE)
+                continue;
+
+            firstElement = node;
+            break;
+        }
+
+        const firstIsImage = firstElement && firstElement.tagName.toLowerCase() === "img";
+
+        // kalau bukan image hapus seluruh image
+        if (!firstIsImage) {
+            wrapper.querySelectorAll("img").forEach(img => img.remove());
+        }
+
+        // berikan class image
+        wrapper.querySelectorAll("img").forEach(img => {
+            img.classList.add("max-w-[25%]", "rounded");
+        });
+
+        // potong text
+        let total = 0;
+
+        function walk(node) {
+
+            if (node.nodeType === Node.TEXT_NODE) {
+
+                const text = node.nodeValue;
+
+                if (!text.trim())
+                    return false;
+
+                const remain = limit - total;
+
+                if (remain <= 0) {
+                    node.nodeValue = "";
+                    return true;
+                }
+
+                if (text.length > remain) {
+                    node.nodeValue = text.substring(0, remain) + "...";
+                    total = limit;
+                    return true;
+                }
+
+                total += text.length;
+            }
+
+            else if (node.nodeType === Node.ELEMENT_NODE) {
+
+                if (node.tagName.toLowerCase() === "math" || (node.classList && node.classList.contains('math'))) {
+                    total += 25;
+                }
+
+                for (const child of [...node.childNodes]) {
+
+                    if (walk(child)) {
+
+                        let next = child.nextSibling;
+
+                        while (next) {
+                            const remove = next;
+                            next = next.nextSibling;
+                            remove.remove();
+                        }
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+
+        }
+
+        walk(wrapper);
+
+        return wrapper.innerHTML;
+
+    }
+    
+    fetchBankSoalDetail(schoolName, schoolId, kurikulumId, kelasId, mapelId, source, babId, subBabId, questionType, questionCategory);
+
+    function fetchBankSoalDetail() {
+        let url = '';
+
+        if (schoolId) {
+
+            // BAB + SUB BAB
+            if (babId && subBabId) {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/SchoolSubscription/${schoolName}/${schoolId}/Paginate/Bab/${babId}/SubBab/${subBabId}`;
+
+                // BAB ONLY
+            } else if (babId) {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/SchoolSubscription/${schoolName}/${schoolId}/Paginate/Bab/${babId}`;
+
+                // NO BAB & NO SUB BAB
+            } else {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/SchoolSubscription/${schoolName}/${schoolId}/Paginate/WithoutBab`;
+            }
+
+        } else {
+
+            // BAB + SUB BAB
+            if (babId && subBabId) {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/Paginate/Bab/${babId}/SubBab/${subBabId}`;
+
+                // BAB ONLY
+            } else if (babId) {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/Paginate/Bab/${babId}`;
+
+                // NO BAB & NO SUB BAB
+            } else {
+
+                url = `/Lms/QuestionBankManagement/Kurikulum/${kurikulumId}/Kelas/${kelasId}/Mapel/${mapelId}/Source/${source}/Review/QuestionType/${questionType}/QuestionCategory/${questionCategory}/Paginate/WithoutBab`;
+            }
+        }
+
+        $.ajax({
+            url: url,
+
+            method: 'GET',
+            success: function (response) {
+                const containerQuestion = $('#grid-list-soal');
+                containerQuestion.empty();
+
+                if (response.data.length > 0) {
+                    response.data.forEach((question, index) => {
+                    const options = question.lms_question_option || [];
+
+                    // Ambil item pertama buat pertanyaan
+                    // const first = options[0]; // Karena setiap options itu array dari soal yang sama
+
+                    const optionsMap = {
+                        OPTION1: 'A',
+                        OPTION2: 'B',
+                        OPTION3: 'C',
+                        OPTION4: 'D',
+                        OPTION5: 'E'
+                    };
+
+                    const optionsHTML = options.map(item => {
+                        const containsImage = /<img\s+[^>]*src=/.test(item.options_value);
+                        let content = item.options_value;
+                        let optionsValue = '';
+
+                        // Tambahkan class img jika ada gambar
+                        if (containsImage) {
+                            content = addClassToImgTags(item.options_value, 'max-w-[300px] rounded my-2');
+                        }
+
+                        // cek apakah optionsValue mengandung image
+                        if (containsImage) {
+                            optionsValue = `
+                                <div class="max-w-7xl border border-gray-300 rounded-md p-2 px-4 mb-4 text-sm my-6 flex gap-1
+                                    ${item.is_correct == true ? 'border-green-400 bg-green-400 text-white font-bold' : ''}">
+                                    <div class="font-bold min-w-7.5">${[optionsMap[item.options_key]]}.</div>
+                                    <div class="w-full">${content}</div>
+                                </div>
+                            `;
+                        } else {
+                            optionsValue = `
+                                <div class="max-w-7xl border border-gray-300 rounded-md p-2 px-4 mb-4 text-sm my-6 flex gap-1
+                                    ${item.is_correct == true ? 'border-green-400 bg-green-400 text-white font-bold' : ''}">
+                                    ${[optionsMap[item.options_key]]}. ${content}
+                                </div>
+                            `;
+                        }
+
+                        return `
+                            ${optionsValue}
+                        `;
+                    }).join('');
+
+                    // Ambil videoId yang sesuai dengan index pada masing" options soal
+                    const videoId = response.videoIds[index];
+                    
+                        let explanationContent = question.explanation ?? '';
+
+                        const hasImageInExplanation = /<img\s+[^>]*src=/.test(explanationContent);
+
+                        // Tambahkan class img jika ada gambar
+                        if (hasImageInExplanation) {
+                            explanationContent = addClassToImgTags(
+                                explanationContent,
+                                'max-w-[350px] rounded my-2'
+                            );
+                        }
+
+                        // Tampilkan video jika explanation itu adalah link video, jika tidak tampilkan explanation teks
+                        const videoExplanation = videoId
+                            ? `
+                                <div class="border max-w-sm h-60 flex justify-start">
+                                    <div class="w-full h-full">
+                                        <iframe
+                                            class="w-full h-full"
+                                            src="https://www.youtube.com/embed/${videoId}"
+                                            frameborder="0"
+                                            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowfullscreen>
+                                        </iframe>
+                                    </div>
+                                </div>
+                            `
+                            : `
+                                <div class="max-w-7xl flex flex-col items-start gap-4">
+                                    ${explanationContent}
+                                </div>
+                            `;
+
+                    
+                        const questionHTML = prepareQuestionHtml(question.questions);
+
+                        const previewHTML = createPreviewHtml(questionHTML);
+                        
+                    const canEdit = !schoolId || question.school_partner_id;
+
+                    let buttonEditQuestion = '';
+                    let lmsEditQuestion = '';
+                    
+                    let urlTemplate;
+
+                    if (schoolId && response.lmsEditQuestionBySchool) {
+                        urlTemplate = response.lmsEditQuestionBySchool;
+                    } else {
+                        urlTemplate = response.lmsEditQuestion;
+                    }
+
+                    lmsEditQuestion = urlTemplate.replace(':role', role ?? '').replace(':schoolName', schoolName ?? '').replace(':schoolId', schoolId ?? '')
+                    .replace(':kurikulumId', kurikulumId).replace(':kelasId', kelasId).replace(':mapelId', mapelId).replace(':source', source)
+                    .replace(':questionType', questionType).replace(':questionCategory', questionCategory).replace(':questionId', question.id);
+                        
+                    if (babId) {
+                        lmsEditQuestion += `/${babId}`;
+
+                        if (subBabId) {
+                            lmsEditQuestion += `/${subBabId}`;
+                        }
+                    }
+                    
+                    // jika role administrator, dapat akses edit soal global dan soal milik sekolah
+                    if (role === 'administrator') {
+                        buttonEditQuestion = `
+                            <div class="w-full flex justify-end gap-2 items-center">
+                                <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
+                                    <span>Edit</span>
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        `;
+                    } else if (canEdit) {
+                        buttonEditQuestion = `
+                            <div class="w-full flex justify-end gap-2 items-center">
+                                <a href="${lmsEditQuestion}" class="w-max cursor-pointer text-sm text-[#4189e0] font-bold mx-2 mt-5">
+                                    <span>Edit</span>
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+                    
+                    // tampilkan opsi jawaban benar pada tipe soal selain matching
+                    let correctAnswerHTML = '';
+                        
+                    // ambil opsi jawaban benar
+                    const correctAnswers = options.filter(item => item.is_correct).map(item => [optionsMap[item.options_key]]).join(', ');
+                        
+                    if (question.tipe_soal !== 'MATCHING' && question.tipe_soal !== 'ESSAY' && question.tipe_soal !== 'PG_KOMPLEKS') {
+                        correctAnswerHTML = `
+                            <div>
+                                <span class="font-bold opacity-70">Jawaban Benar:</span>
+                                <span class="font-bold text-green-400">${correctAnswers}</span>
+                            </div>
+                        `;
+                    }
+                        
+                        const leftItems = options.filter(item => item.options_key.startsWith('LEFT'));
+                        const rightItems = options.filter(item => item.options_key.startsWith('RIGHT'));
+                        
+                        const rightLabelMap = {};
+                        rightItems.forEach((item, index) => {
+                            rightLabelMap[item.options_key] = String.fromCharCode(65 + index); // A, B, C
+                        });
+
+                        const pairsData = leftItems.filter(i => i.extra_data?.pair_with).map(i => ({
+                            left: i.options_key,
+                            right: i.extra_data.pair_with
+                        }));
+
+                        const matchingHTML = `
+                            <!-- DEKSTOP -->
+                            <div class="relative matching-container hidden lg:block" data-pairs='${JSON.stringify(pairsData)}'>
+
+                                <!-- SVG GARIS -->
+                                <svg class="absolute inset-0 w-full h-full pointer-events-none matching-lines"></svg>
+
+                                <div class="grid grid-cols-2 gap-40 relative z-10">
+                                    <div class="flex flex-col justify-center">
+                                        <h4 class="font-bold mb-3">Kolom A</h4>
+                                        <div class="space-y-3">
+                                            ${leftItems.map(item => `
+                                                <div 
+                                                    class="px-3 min-h-10 border rounded flex justify-between items-center left-item" data-key="${item.options_key}">
+                                                    <span>${item.options_value}</span>
+                                                    <span class="text-sm bg-blue-100 text-[#0071BC] px-2 py-1 rounded">
+                                                        <i class="fa-solid fa-arrow-right"></i>
+                                                        ${rightLabelMap[item.extra_data?.pair_with] ?? '-'}
+                                                    </span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="font-bold mb-3">Kolom B</h4>
+                                        <div class="space-y-3">
+                                            ${rightItems.map(item => {
+                                                const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
+
+                                                return `
+                                                    <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
+                                                    <span class="font-bold">${rightLabelMap[item.options_key]}.</span>
+                                                    ${content}
+                                                </div>
+                                            `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- GARIS TENGAH (JALUR MERAH) -->
+                                <div class="matching-center-line absolute top-0 bottom-0 left-1/2 w-0"></div>
+                            </div>
+
+                            <!-- MOBILE -->
+                            <div class="block lg:hidden">
+
+                                <div class="grid grid-cols-1 gap-3 lg:hidden">
+                                    <p class="font-semibold mb-2">Kolom A:</p>
+                                    ${leftItems.map(item => `
+                                        <div class="flex justify-between items-center border rounded p-3">
+                                            <span>${item.options_value}</span>
+                                            <span class="font-bold text-[#0071BC]">
+                                                <i class="fa-solid fa-arrow-right"></i>
+                                                ${rightLabelMap[item.extra_data?.pair_with] ?? '-'}
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <div class="mt-4 lg:hidden border-t border-gray-400 pt-3 grid grid-cols-1 gap-3 text-sm text-gray-700">
+                                    <p class="font-semibold mb-2">Kolom B:</p>
+                                        ${rightItems.map(item => {
+                                            const content = addClassToImgTags(item.options_value, 'max-w-[200px] rounded');
+
+                                            return `
+                                                <div class="right-item p-3 border rounded flex gap-2 items-center" data-key="${item.options_key}">
+                                                <span class="font-bold">${rightLabelMap[item.options_key]}.</span>
+                                                ${content}
+                                            </div>
+                                        `;
+                                        }).join('')}
+                                </div>
+                            </div>
+                        `;
+
+                        let pgKompleksHTML = '';
+
+                        if (question.tipe_soal === 'PG_KOMPLEKS') {
+
+                            const categories = options.filter(item => item.extra_data?.side === 'category');
+                            const items = options.filter(item => item.extra_data?.side === 'item');
+
+                            pgKompleksHTML = `
+                                <div class="overflow-x-auto mt-6">
+                                    <table class="w-full border border-gray-300 text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-100 text-center">
+                                                <th class="border px-4 py-2">${question.header_item ?? 'Pernyataan'}</th>
+                                                ${categories.map(category => `<th class="border px-4 py-2">${category.options_value}</th>`).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${items.map(item => {
+                                                const answer = item.extra_data?.answer;
+                                                const content = addClassToImgTags(item.options_value, 'max-w-[100px] sm:max-w-[200px] rounded');
+
+                                                return `
+                                                    <tr>
+                                                        <td class="border px-4 py-3">
+                                                            ${content}
+                                                        </td>
+                                                        ${categories.map(cat => `
+                                                            <td class="border text-center">
+                                                                ${answer === cat.options_key
+                                                                ?
+                                                                    `
+                                                                    <div class="flex justify-center items-center">
+                                                                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600">
+                                                                            <i class="fa-solid fa-check text-xs"></i>
+                                                                        </span>
+                                                                    </div>
+                                                                    `
+                                                                : ''}
+                                                            </td>
+                                                        `).join('')}
+                                                    </tr>
+                                                `;
+                                                }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+
+                        let answerSectionHTML = '';
+
+                        if (question.tipe_soal === 'PG_KOMPLEKS') {
+                            answerSectionHTML = pgKompleksHTML;
+                        } else if (question.tipe_soal === 'MATCHING') {
+                            answerSectionHTML = matchingHTML;
+                        } else {
+                            answerSectionHTML = optionsHTML;
+                        }
+
+                        const card = `
+                            ${buttonEditQuestion}
+
+                            <div class="wrapper-content-accordion-questions bg-white border border-gray-300 px-5 mt-5 rounded-[7px]">
+
+                                <div class="toggleButton-questions w-full flex items-center justify-between bg-transparent border-none outline-none cursor-pointer py-3.75">
+
+                                    <div class="flex gap-1 max-w-362.5">
+
+                                        <span>${index + 1}.</span>
+
+                                        <span
+                                            class="preview-text-only w-full"
+                                            data-short="${encodeURIComponent(previewHTML)}"
+                                            data-full="${encodeURIComponent(questionHTML)}"
+                                        >
+                                            ${previewHTML}
+                                        </span>
+
+                                    </div>
+
+                                    <i class="fa-solid fa-chevron-up icon"></i>
+
+                                </div>
+
+                                <div class="content-accordion relative text-justify h-0 overflow-hidden transition-all duration-500 ease-in-out">
+
+                                    <div class="max-w-7xl text-sm mt-6">
+
+                                        <div>${answerSectionHTML}</div>
+
+                                        <div class="flex flex-col gap-6 mb-8 mt-6">
+
+                                            ${correctAnswerHTML}
+
+                                            <div>
+
+                                                <p class="font-bold opacity-70 mb-4">
+                                                    Penjelasan:
+                                                </p>
+
+                                                ${videoExplanation}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        `;
+
+                        const $card = $(card); // ubah string jadi jQuery element
+                        const previewElement = $card.find(".preview-text-only")[0];
+
+                        previewElement.shortText = previewHTML;
+                        previewElement.fullText = questionHTML;
+
+
+                        containerQuestion.append($card);
+
+                        if (question.tipe_soal === 'MATCHING') {
+                            requestAnimationFrame(() => {
+                                const container = $card.find('.matching-container')[0]; // ambil element DOM
+
+                                if (!container) return;
+
+                                const pairs = leftItems
+                                    .filter(i => i.extra_data?.pair_with)
+                                    .map(i => ({
+                                        left: i.options_key,
+                                        right: i.extra_data.pair_with
+                                    }));
+
+                                drawMatchingLines(container, pairs);
+                            });
+                        }
+                    });
+                    initAccordionQuestion();
+                    $('.pagination-container-bank-soal-detail').html(response.links);
+                    $('#emptyMessageBankSoalDetail').hide();
+                    $('.thead-table-bank-soal-detail').show();
+
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        window.MathJax.typesetPromise([containerQuestion[0]]).catch(err => console.warn('MathJax error:', err));
+                    }
+                } else {
+                    $('#emptyMessageBankSoalDetail').show();
+                    $('.thead-table-bank-soal-detail').hide();
+                }
+            }
+        });
+    }
+}
+
+$(document).ready(function () {
+    paginateBankSoalDetail();
+});
+
+window.addEventListener('resize', () => {
+    document.querySelectorAll('.matching-container').forEach(container => {
+        const pairs = JSON.parse(container.dataset.pairs || '[]');
+        drawMatchingLines(container, pairs);
+    });
+});
+
+function drawMatchingLines(container, pairs) {
+    const svg = container.querySelector('.matching-lines');
+    const centerLine = container.querySelector('.matching-center-line');
+    if (!svg || !centerLine) return;
+
+    svg.innerHTML = '';
+
+    const cRect = container.getBoundingClientRect();
+    const centerX = centerLine.getBoundingClientRect().left - cRect.left;
+
+    pairs.forEach(pair => {
+        const leftEl = container.querySelector(`[data-key="${pair.left}"]`);
+        const rightEl = container.querySelector(`[data-key="${pair.right}"]`);
+        if (!leftEl || !rightEl) return;
+
+        const l = leftEl.getBoundingClientRect();
+        const r = rightEl.getBoundingClientRect();
+
+        const y1 = l.top + l.height / 2 - cRect.top;
+        const y2 = r.top + r.height / 2 - cRect.top;
+
+        const xLeft = l.right - cRect.left;
+        const xRight = r.left - cRect.left;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+        path.setAttribute(
+            'd',
+            `
+                M ${xLeft} ${y1}
+                L ${xRight} ${y2}
+            `
+        );
+
+        path.setAttribute('stroke', '#0071BC');
+        path.setAttribute('stroke-width', '2.5');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+
+        svg.appendChild(path);
+    });
+}
+
+function initAccordionQuestion() {
+
+    const toggles = document.querySelectorAll('.toggleButton-questions');
+    const contents = document.querySelectorAll('.content-accordion');
+
+    toggles.forEach((toggle, i) => {
+
+        // simpan data sebelum clone
+        const preview = toggle.querySelector('.preview-text-only');
+
+        const shortText = preview.shortText;
+        const fullText = preview.fullText;
+
+        // clone agar event tidak duplikat
+        const newToggle = toggle.cloneNode(true);
+
+        const newPreview = newToggle.querySelector('.preview-text-only');
+
+        // copy property manual
+        newPreview.shortText = shortText;
+        newPreview.fullText = fullText;
+
+        toggle.parentNode.replaceChild(newToggle, toggle);
+
+        // event click
+        newToggle.addEventListener('click', function () {
+
+            const content = contents[i];
+            if (!content) return;
+
+            const preview = newToggle.querySelector('.preview-text-only');
+            if (!preview) return;
+
+            const icon = newToggle.querySelector('.icon');
+            if (!icon) return;
+
+            const isOpen = content.classList.contains('accordion-open');
+
+            // tutup accordion lain
+            contents.forEach((otherContent, j) => {
+
+                if (j === i) return;
+
+                otherContent.classList.remove('accordion-open');
+                otherContent.style.height = "0px";
+
+                const otherToggle = document.querySelectorAll('.toggleButton-questions')[j];
+
+                if (!otherToggle) return;
+
+                const otherPreview = otherToggle.querySelector('.preview-text-only');
+                const otherIcon = otherToggle.querySelector('.icon');
+
+                if (!otherPreview || !otherIcon) return;
+
+                otherPreview.innerHTML = otherPreview.shortText;
+
+                otherIcon.classList.remove('fa-chevron-down');
+                otherIcon.classList.add('fa-chevron-up');
+
+            });
+
+            // toggle sekarang
+            if (isOpen) {
+
+                content.classList.remove('accordion-open');
+                content.style.height = "0px";
+
+                preview.innerHTML = preview.shortText;
+
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+
+            } else {
+
+                content.classList.add('accordion-open');
+
+                preview.innerHTML = preview.fullText;
+
+                content.style.height = "0px";
+
+                requestAnimationFrame(() => {
+                    content.style.height = content.scrollHeight + "px";
+                });
+
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([preview, content]).then(() => {
+                        if (content.classList.contains('accordion-open')) {
+                            content.style.height = content.scrollHeight + "px";
+                        }
+                    }).catch(err => console.warn('MathJax error:', err));
+                }
+
+                setTimeout(() => {
+                    const matchingContainer = content.querySelector(".matching-container");
+                    if (matchingContainer) {
+
+                        const pairs = JSON.parse(matchingContainer.dataset.pairs || "[]");
+
+                        drawMatchingLines(matchingContainer, pairs);
+                    }
+                }, 500);
+            }
+        });
+    });
+}

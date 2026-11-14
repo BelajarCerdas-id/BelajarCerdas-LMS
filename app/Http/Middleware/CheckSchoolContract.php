@@ -24,7 +24,7 @@ class CheckSchoolContract
 
             Auth::logout();
 
-            return redirect()->route('Login')->with('failed', $result['message']);
+            return redirect()->route('login')->with('failed', $result['message']);
         }
 
         return $next($request);

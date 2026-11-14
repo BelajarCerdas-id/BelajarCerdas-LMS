@@ -44,7 +44,7 @@ class UserAnalyticsController extends Controller
             'Wakil Kesiswaan',
             'Admin Sekolah',
             'Orang Tua',
-            'Administrator',
+            'administrator',
             'Finance',
             'Yayasan'
         ];
@@ -67,7 +67,7 @@ class UserAnalyticsController extends Controller
             'Pengaturan Akun'
         ];
 
-        return view('features.lms.administrator.analytics', compact('role', 'schools', 'roles', 'modules'));
+        return view('Features.Lms.Administrator.Analytics', compact('role', 'schools', 'roles', 'modules'));
     }
 
     /**

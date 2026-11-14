@@ -66,10 +66,10 @@ class AcademicDocumentWordController extends Controller
     */
 
     private const RPPM_VIEW =
-        'features.lms.school-admin.registrasi-guru.tampilan.tamp-RPPM';
+        'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampRPPM';
 
     private const REFLEKSI_VIEW =
-        'features.lms.school-admin.registrasi-guru.tampilan.tamp-refleksi-guru';
+        'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampRefleksiGuru';
 
 
     /*
@@ -1151,7 +1151,7 @@ class AcademicDocumentWordController extends Controller
             ) {
                 $data['edit_url'] =
                     route(
-                        'lms.schoolAdmin.registrasiGuru.rppm.word.edit',
+                        'lms.school_admin.registrasi_guru.rppm.word.edit',
                         [
                             'role' =>
                                 $role,
@@ -1510,7 +1510,7 @@ class AcademicDocumentWordController extends Controller
             ) {
                 $data['edit_url'] =
                     route(
-                        'lms.schoolAdmin.registrasiGuru.refleksi-guru.edit',
+                        'lms.school_admin.registrasi_guru.refleksi_guru.edit',
                         [
                             'role' =>
                                 $role,
@@ -3449,7 +3449,7 @@ class AcademicDocumentWordController extends Controller
             ) {
                 $data['edit_url'] =
                     route(
-                        'lms.schoolAdmin.registrasiGuru.analisis-rppm.word.edit',
+                        'lms.school_admin.registrasi_guru.analisis_rppm.word.edit',
                         [
                             'role' =>
                                 $role,
@@ -3716,7 +3716,7 @@ public function browseAcademicDocuments(
         ),
 
         'view_url' => route(
-            'lms.schoolAdmin.registrasiGuru.academicWord.sharedView',
+            'lms.school_admin.registrasi_guru.academic_word.shared_view',
             [
                 'role' => $role,
                 'schoolName' => $schoolName,

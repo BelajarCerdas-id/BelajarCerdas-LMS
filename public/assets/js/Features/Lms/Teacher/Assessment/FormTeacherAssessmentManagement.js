@@ -1,0 +1,689 @@
+function formAssessment(search_year = null, search_class = null, mapel_id = null, school_class_id = null) {
+    const container = document.getElementById('container');
+    if (!container) return;
+
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+    const MODE = container.dataset.mode;
+    const PARENT = JSON.parse(container.dataset.parent || 'null');
+    const selectedMapelId = MODE && PARENT ? (PARENT.mapel_id ?? PARENT.mapel?.id ?? mapel_id) : mapel_id;
+    const parentClassName = PARENT?.school_class?.kelas?.kelas ?? PARENT?.school_class?.class_name ?? '';
+    const parentClassLevel = parentClassName.match(/\d+/)?.[0] ?? null;
+    if (!role || !schoolName || !schoolId) return;
+
+    $.ajax({
+        url: `/Lms/${role}/${schoolName}/${schoolId}/TeacherAssessmentManagement/Form`,
+        method: 'GET',
+        data: {
+            search_year,
+            search_class: MODE ? parentClassLevel : search_class,
+            mapel_id: selectedMapelId,
+        },
+        success: function (response) {
+            enableFlatpickrCreate(); // inisialisasi flatpickr
+
+            // ketika load ulang, maka reset
+            document.getElementById('total-rombel-selected').innerText = '0 Dipilih';
+            const toggleSelectRombel = document.getElementById('toggle-select-rombel');
+            toggleSelectRombel.innerText = 'Select All';
+
+            // Dropdown Tahun Ajaran
+            const containerDropdownTahunAjaran = document.getElementById('container-dropdown-tahun-ajaran');
+            containerDropdownTahunAjaran.innerHTML = `
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Tahun Ajaran
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-tahun-ajaran" name="tahun_ajaran" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Pilih Tahun Ajaran</option>
+                        ${response.tahunAjaran.map(item => `<option value="${item}" ${response.selectedYear == item ? 'selected' : ''}>Tahun Ajaran ${item}</option>`).join('')}
+                    </select>
+                    <span id="error-dropdown-tahun-ajaran" class="text-red-500 text-xs mt-1 font-bold"></span>
+                </div>
+            `;
+
+            // Dropdown Kelas
+            const containerDropdownClass = document.getElementById('container-dropdown-class');
+            const classOptions = response.classOptions || [];
+            containerDropdownClass.innerHTML = `
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Kelas
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-filter-class" name="class_level" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Pilih Kelas</option>
+                            ${classOptions.map(item => `
+                                <option value="${item.value}"${Number(response.selectedClass) === Number(item.value) ? 'selected' : ''}>${item.label}</option>
+                            `).join('')}
+                    </select>
+                    <span id="error-dropdown-filter-class" class="text-red-500 text-xs mt-1 font-bold"></span>
+                </div>
+            `;
+
+            // dropdown mapel rombel kelas
+            const containerDropdownSubject = document.getElementById('container-dropdown-subject-rombel-class');
+            const subjects = response.subject || [];
+            containerDropdownSubject.innerHTML = `
+                <div class="flex flex-col w-full">
+                    <label class="text-sm font-medium text-gray-700 mb-1.5">
+                        Mata Pelajaran
+                        <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                    </label>
+                    <select id="dropdown-filter-mapel" name="filter_mapel_id" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer shadow-xs">
+                        <option value="" class="hidden">Pilih Mata Pelajaran</option>
+                            ${subjects.map(item => `
+                                <option value="${item.id}" ${String(selectedMapelId) === String(item.id) ? 'selected' : ''}>${item.name}</option>
+                            `).join('')}
+                    </select>
+                    <span id="error-dropdown-filter-mapel" class="text-red-500 text-xs mt-1 font-bold"></span>
+                </div>
+            `;
+
+            const listContainer = $('#grid-rombel-class-list');
+            listContainer.empty();
+
+            const isMapelPicked = Boolean(selectedMapelId);
+
+            if (!isMapelPicked) {
+                listContainer.html(`
+                    <div class="col-span-full py-8 px-4 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <i class="fas fa-book-open text-blue-500 text-2xl mb-2"></i>
+                        <p class="text-sm font-semibold text-gray-700">Pilih Mata Pelajaran Terlebih Dahulu</p>
+                        <p class="text-xs text-gray-400 mt-1">Daftar target rombel kelas akan ditampilkan setelah mata pelajaran dipilih.</p>
+                    </div>
+                `);
+                $('#empty-message-rombel-class-assessment-management-list').hide();
+                $('#toggle-select-rombel').hide();
+                setupReview();
+                updateRombelSelectedCount();
+                updateAcademicInfoBadge();
+                return;
+            }
+
+            $('#toggle-select-rombel').show();
+
+            if (response.rombel.length > 0) {
+                (response.rombel || []).forEach((item) => {
+                    if (MODE && PARENT) {
+                        if (item.school_class?.id != PARENT.school_class_id) {
+                            return;
+                        }
+                    }
+
+                    const rombelClassList = `
+                        <label class="rombel-card cursor-pointer border border-gray-300 rounded-xl p-4 flex flex-col transition hover:border-blue-400">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-semibold text-gray-800 text-base">
+                                        ${item.school_class?.class_name ?? ''}
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        ${item.school_class?.student_school_class_count ?? 0} Siswa Aktif
+                                    </div>
+                                </div>
+
+                                <input type="checkbox" name="school_class_id[]" value="${item.school_class?.id ?? ''}" data-mapel="${item.mapel?.id}"
+                                    data-rombel-name="${item.school_class?.class_name ?? ''}" data-mapel-name="${item.mapel?.mata_pelajaran ?? ''}"
+                                    class="rombel-checkbox text-blue-600 cursor-pointer">
+                            </div>
+
+                            <!-- MAPEL BADGE -->
+                            <div class="mt-3">
+                                <span class="inline-block text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md">
+                                    ${item.mapel?.mata_pelajaran ?? '-'}
+                                </span>
+                            </div>
+                        </label>
+                    `;
+
+                    listContainer.append(rombelClassList);
+                });
+
+                $('#empty-message-rombel-class-assessment-management-list').hide();
+            } else {
+                $('#empty-message-rombel-class-assessment-management-list').show();
+            }
+
+            setupReview();
+            updateRombelSelectedCount();
+            updateAcademicInfoBadge();
+
+            // Prefill data assessment induk
+            if (MODE && PARENT) {
+                applyModePrefill();
+            }
+        },
+        error: function (err) {
+            console.log(err);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    formAssessment();
+    setupAssessmentMode();
+    setupReview();
+});
+
+function applyModePrefill() {
+    const container = document.getElementById('container');
+
+    if (!container) return;
+
+    const MODE = container.dataset.mode;
+    const PARENT = JSON.parse(container.dataset.parent || 'null');
+
+    if (!MODE || !PARENT) return;
+
+    const className = PARENT.school_class?.Kelas?.kelas ?? PARENT.school_class?.class_name ?? '';
+    const classLevel = className.match(/\d+/)?.[0] ?? '';
+    const classId = PARENT.school_class_id ?? PARENT.school_class?.id ?? '';
+    const mapelId = PARENT.mapel_id ?? PARENT.mapel?.id ?? '';
+
+    const prefixMap = {
+        remedial: 'remedial',
+        susulan: 'susulan',
+        pengayaan: 'pengayaan'
+    };
+
+    $('input[name="title"]').val(`${prefixMap[MODE]} - ${PARENT.title}`);
+
+    $('#dropdown-tahun-ajaran').val(PARENT.school_class?.tahun_ajaran ?? '').prop('disabled', true);
+    $('#dropdown-filter-class').val(classLevel).prop('disabled', true);
+    $('#dropdown-filter-mapel').val(mapelId).prop('disabled', true);
+
+    $('#mode').val(MODE);
+    $('#parent-assessment-id').val(PARENT.id);
+
+    $('#semester').val(PARENT.semester).prop('disabled', true);
+    $('#semester-hidden').val(PARENT.semester);
+
+    $('textarea[name="assessment_instruction"]').val(PARENT.assessment_instruction ?? '');
+
+    $('input[name="duration"]').val(PARENT.duration ?? '');
+
+    $('#create-assessment-form input[data-mapel-id]').remove();
+
+    let selectedMapelIds = [];
+
+    $('.rombel-checkbox').each(function () {
+
+        const checkboxClassId = $(this).val();
+        const checkboxMapelId = $(this).data('mapel');
+
+        if (String(checkboxClassId) === String(classId) && String(checkboxMapelId) === String(mapelId)) {
+            $(this).prop('checked', true);
+
+            selectedMapelIds.push(mapelId);
+        }
+    });
+
+    selectedMapelIds = [...new Set(selectedMapelIds)];
+
+    selectedMapelIds.forEach(function (selectedMapelId) {
+
+        $('#create-assessment-form').append(`
+            <input type="hidden" name="mapel_id[]" value="${selectedMapelId}" data-mapel-id="${selectedMapelId}">
+        `);
+    });
+
+    updateRombelSelectedCount();
+
+    $('.rombel-checkbox').off('click.modePrefill').on('click.modePrefill', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    $('#toggle-select-rombel').hide();
+
+    $('select[name="assessment_type_id"]').val(PARENT.assessment_type_id).prop('disabled', true);
+
+    $('#assessment-type-hidden').val(PARENT.assessment_type_id);
+
+    $('select[name="assessment_type_id"]').trigger('change');
+
+    const selectedOption = $('select[name="assessment_type_id"] option:selected')[0];
+
+    const assessmentMode = selectedOption?.dataset.mode;
+
+    handleAssessmentTypeUI(assessmentMode);
+
+    $('#container .mode-prefill-alert').remove();
+
+    $('#container').prepend(`
+        <div class="mode-prefill-alert mb-6 bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+            Mode <b>${MODE.toUpperCase()}</b> dari assessment:
+            <b>${PARENT.title}</b>
+        </div>
+    `);
+}
+
+function setupAssessmentMode() {
+    const assessmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
+    const questionSettingSection = document.getElementById('question-settings-section');
+    const projectSettingSection = document.getElementById('project-settings-section');
+    const durationSection = document.getElementById('duration-section');
+
+    const questionReviewExtra = document.getElementById('question-review-extra');
+    const projectReviewExtra = document.getElementById('project-review-extra');
+    const durationWrapper = document.getElementById('review-duration-wrapper');
+
+    function applyAssessmentMode(mode) {
+        const isProject = mode === 'project';
+
+        // Form Section
+        questionSettingSection?.classList.toggle('hidden', isProject);
+        projectSettingSection?.classList.toggle('hidden', !isProject);
+        durationSection?.classList.toggle('hidden', isProject);
+
+        // Review Section
+        questionReviewExtra?.classList.toggle('hidden', isProject);
+        projectReviewExtra?.classList.toggle('hidden', !isProject);
+        durationWrapper?.classList.toggle('hidden', isProject);
+
+        // Reset duration if project
+        if (isProject) {
+            const durationInput = document.querySelector('[name="duration"]');
+            if (durationInput) durationInput.value = '';
+        }
+    }
+
+    assessmentTypeSelect?.addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const mode = selectedOption.dataset.mode;
+        applyAssessmentMode(mode);
+    });
+
+    // Init on load
+    const initialMode = assessmentTypeSelect?.selectedOptions?.[0]?.dataset?.mode;
+    if (initialMode) applyAssessmentMode(initialMode);
+}
+
+function updateAcademicInfoBadge() {
+    const badge = document.getElementById('badge-academic-info-status');
+    if (!badge) return;
+
+    const tahunAjaran = $('#dropdown-tahun-ajaran').val();
+    const kelas = $('#dropdown-filter-class').val();
+    const mapel = $('#dropdown-filter-mapel').val();
+    const semester = $('#semester').val();
+
+    if (tahunAjaran && kelas && mapel && semester) {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit transition-all duration-200';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500 text-[11px]"></i><span>Informasi akademik lengkap</span>';
+    } else {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 w-fit transition-all duration-200';
+        badge.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500 text-[11px]"></i><span>Pilih semua informasi akademik</span>';
+    }
+}
+
+function setupReview() {
+    const form = document.getElementById('create-assessment-form');
+    if (!form) return;
+
+    function updateReview() {
+
+        // Ambil rombel setiap update (fix reactive bug)
+        const checkedRombel = document.querySelectorAll('.rombel-checkbox:checked');
+        const rombelNames = Array.from(checkedRombel).map(cb => cb.dataset.rombelName);
+        const subjectNames = Array.from(checkedRombel).map(cb => cb.dataset.mapelName);
+
+        const selectedMapelText = $('#dropdown-filter-mapel option:selected').text();
+        const displaySubject = (selectedMapelText && selectedMapelText !== 'Pilih Mata Pelajaran' && selectedMapelText !== 'Mata Pelajaran')
+            ? selectedMapelText
+            : (subjectNames.length ? subjectNames.join(', ') : '-');
+
+        const semesterVal = document.getElementById('semester')?.value;
+        const semesterDisplay = semesterVal ? `Semester ${semesterVal}` : '-';
+
+        document.getElementById('review-class').textContent = rombelNames.length ? rombelNames.join(', ') : '-';
+
+        document.getElementById('review-subject').textContent = displaySubject;
+
+        document.getElementById('review-tahun-ajaran').textContent = document.querySelector('#dropdown-tahun-ajaran')?.value || '-';
+
+        document.getElementById('review-semester').textContent = semesterDisplay;
+
+        document.getElementById('review-title').textContent = form.querySelector('input[name="title"]')?.value || '-';
+
+        document.getElementById('review-type').textContent = form.querySelector('select[name="assessment_type_id"]')?.selectedOptions?.[0]?.text || '-';
+
+        document.getElementById('review-instruction').textContent = form.querySelector('textarea[name="assessment_instruction"]')?.value || '-';
+
+        document.getElementById('review-duration').textContent = form.querySelector('input[name="duration"]')?.value || '-';
+
+        document.getElementById('review-start').textContent = form.querySelector('input[name="start_date"]')?.value || '-';
+
+        document.getElementById('review-end').textContent = form.querySelector('input[name="end_date"]')?.value || '-';
+
+        document.getElementById('review-shuffle-questions').textContent = form.querySelector('input[name="shuffle_questions"]')?.checked ? 'Ya' : 'Tidak';
+
+        document.getElementById('review-shuffle-options').textContent = form.querySelector('input[name="shuffle_options"]')?.checked ? 'Ya' : 'Tidak';
+
+        document.getElementById('review-show-score').textContent = form.querySelector('input[name="show_score"]')?.checked ? 'Ya' : 'Tidak';
+
+        document.getElementById('review-project-show-score').textContent = form.querySelector('input[name="show_project_score"]')?.checked ? 'Ya' : 'Tidak';
+
+        document.getElementById('review-show-answer').textContent = form.querySelector('input[name="show_answer"]')?.checked ? 'Ya' : 'Tidak';
+
+        // Project file
+        const fileInput = form.querySelector('input[name="assessment_value_file"]');
+        document.getElementById('review-filename').textContent = fileInput?.files?.[0]?.name || '-';
+    }
+
+    form.addEventListener('input', updateReview);
+    form.addEventListener('change', updateReview);
+
+    updateReview();
+}
+
+$(document).on('change', '#dropdown-tahun-ajaran', function () {
+    formAssessment($(this).val(), null, null); // null supaya auto pilih kelas paling rendah
+});
+
+$(document).on('change', '#dropdown-filter-class', function () {
+    formAssessment($('#dropdown-tahun-ajaran').val(), $(this).val(), null);
+});
+
+$(document).on('change', '#dropdown-filter-mapel', function () {
+    formAssessment($('#dropdown-tahun-ajaran').val(), $('#dropdown-filter-class').val(), $(this).val());
+});
+
+// Clear validation errors dynamically on change
+$(document).on('change', '#dropdown-tahun-ajaran, #dropdown-filter-class, #dropdown-filter-mapel, #semester', function () {
+    const val = $(this).val();
+    const id = $(this).attr('id');
+    if (val) {
+        $(this).removeClass('border-red-400 border');
+        $(`#error-${id}`).text('');
+    }
+    updateAcademicInfoBadge();
+});
+
+document.addEventListener('change', function (e) {
+
+    if (e.target.classList.contains('rombel-checkbox')) {
+        updateRombelSelectedCount();
+    }
+});
+
+$(document).off('change', '.rombel-checkbox').on('change', '.rombel-checkbox', function () {
+    // SET HIDDEN MAPEL
+    const mapelId = $(this).data('mapel');
+
+    if ($(this).is(':checked')) {
+        $('#create-assessment-form').append(
+            `<input type="hidden" id="dynamic_mapel_id" name="mapel_id[]" value="${mapelId}" data-mapel-id="${mapelId}">`
+        );
+    } else {
+        // hapus input hidden yang sesuai
+        $(`#create-assessment-form input[data-mapel-id="${mapelId}"]`).remove();
+    }
+
+    setupReview();
+});
+
+function updateRombelSelectedCount() {
+
+    const checkboxes = document.querySelectorAll('.rombel-checkbox');
+    const checked = document.querySelectorAll('.rombel-checkbox:checked');
+    const total = checked.length;
+
+    const allSelected = checkboxes.length === checked.length;
+
+    document.getElementById('toggle-select-rombel').innerText = allSelected ? 'Unselect All' : 'Select All';
+
+    if (total > 0) {
+        $('#total-rombel-selected').html(`
+            <div class="flex items-center gap-1">
+                <span>${total} Dipilih</span>
+            </div>
+        `);
+
+        $('#error-school_class_id').text('');
+    } else {
+        $('#total-rombel-selected').html(`
+            <div class="flex items-center gap-1">
+                <span>0 Dipilih</span>
+            </div>
+        `);
+    }
+}
+
+document.getElementById('toggle-select-rombel').addEventListener('click', function () {
+    const checkboxes = document.querySelectorAll('.rombel-checkbox');
+    const checked = document.querySelectorAll('.rombel-checkbox:checked');
+
+    const allSelected = checkboxes.length === checked.length;
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = !allSelected;
+    });
+
+    // Hapus semua input hidden mapel dahulu
+    $('#create-assessment-form input[data-mapel-id]').remove();
+
+    // Tambahkan input hidden mapel baru
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            const mapelId = checkbox.getAttribute('data-mapel');
+            $('#create-assessment-form').append(
+                `<input type="hidden" id="dynamic_mapel_id" name="mapel_id[]" value="${mapelId}" data-mapel-id="${mapelId}">`
+            );
+        }
+    });
+
+    updateRombelSelectedCount();
+
+    this.innerText = allSelected ? 'Select All' : 'Unselect All';
+});
+
+function enableFlatpickrCreate() {
+    const startInput = document.getElementById('start-date');
+    const endInput = document.getElementById('end-date');
+    const durationInput = document.querySelector('input[name="duration"]');
+
+    if (!startInput || !endInput) return; // exit jika elemen tidak ada
+
+    const endPicker = flatpickr(endInput, {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        disableMobile: true,
+        onChange: function (selectedDates, dateStr, instance) {
+            if (selectedDates.length > 0) {
+                startPicker.set('maxDate', selectedDates[0]);
+            }
+            document.getElementById('error-end_date').textContent = '';
+        }
+    });
+
+    const startPicker = flatpickr(startInput, {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        disableMobile: true,
+        onChange: function (selectedDates, dateStr, instance) {
+            if (selectedDates.length === 0) return;
+
+            let startDate = selectedDates[0];
+            let durationMinutes = parseInt(durationInput.value) || 0;
+
+            // Atur minDate endPicker sesuai duration
+            let minEndDate = new Date(startDate.getTime() + durationMinutes * 60000);
+            endPicker.set('minDate', minEndDate);
+
+            document.getElementById('error-start_date').textContent = '';
+        }
+    });
+
+    // update minDate ketika duration berubah
+    durationInput.addEventListener('input', function () {
+        const startDate = startPicker.selectedDates[0];
+        if (startDate) {
+            const durationMinutes = parseInt(this.value) || 0;
+            const minEndDate = new Date(startDate.getTime() + durationMinutes * 60000);
+            endPicker.set('minDate', minEndDate);
+
+            // jika end date saat ini lebih kecil dari minEndDate, reset end date
+            if (endPicker.selectedDates[0] && endPicker.selectedDates[0] < minEndDate) {
+                endPicker.clear();
+            }
+
+            // jika end date saat ini lebih besar dari minEndDate, reset end date
+            if (endPicker.selectedDates[0] && endPicker.selectedDates[0] > minEndDate) {
+                endPicker.clear();
+            }
+        }
+    });
+}
+
+function disableFlatpickr(el) {
+    if (el._flatpickr) {
+        el._flatpickr.destroy();
+    }
+}
+
+let isProcessing = false;
+
+// Form Action assessment management
+$('#submit-button-publish-create-assessment, #submit-button-draft-create-assessment').on('click', function (e) {
+    e.preventDefault();
+
+    const container = document.getElementById('container');
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+
+    if (!container) return;
+    if (!role || !schoolName || !schoolId) return;
+
+    const status = $(this).data('status'); // draft / publish
+    const isActive = status;
+
+    const form = $('#create-assessment-form')[0]; // ambil DOM Form-nya
+    const formData = new FormData(form); // buat FormData dari form, BUKAN dari tombol
+
+    formData.append('status', isActive);
+
+    if (isProcessing) return;
+    isProcessing = true;
+
+    const btn = $(this);
+    btn.prop('disabled', true);
+
+    $.ajax({
+        url: `/Lms/${role}/${schoolName}/${schoolId}/TeacherAssessmentManagement/Store`,
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+
+            $('#alert-success-create-assessment').html(`
+                    <div class=" w-full flex justify-center">
+                        <div class="fixed z-9999">
+                            <div id="alertSuccess"
+                                class="relative -top-11.25 opacity-100 scale-90 bg-green-200 w-max p-3 flex items-center space-x-2 rounded-lg shadow-lg transition-all duration-300 ease-out">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current text-green-600" fill="none"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-green-600 text-sm">${response.message}</span>
+                                <i class="fas fa-times cursor-pointer text-green-600" id="btnClose"></i>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            setTimeout(function () {
+                $('#alertSuccess').remove();
+            }, 3000);
+
+            $('#btnClose').on('click', function () {
+                $('#alertSuccess').remove();
+            });
+
+            $('#dropdown-filter-class').html('<option disabled selected>Pilih Kelas</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer').addClass('opacity-50 cursor-default');
+            $('#dropdown-filter-mapel').html('<option disabled selected>Pilih Mata Pelajaran</option>').prop('disabled', true).removeClass('opacity-100 cursor-pointer')
+                .addClass('opacity-50 cursor-default');
+
+            // RESET SEMUA
+            $('#create-assessment-form')[0].reset();
+
+            window.location.reload();
+
+            isProcessing = false;
+            btn.prop('disabled', false);
+
+            formAssessment();
+            paginateContentForRelease();
+        },
+        error: function (xhr) {
+
+            if (xhr.status === 422) {
+
+                const errors = xhr.responseJSON.errors;
+
+                // reset error
+                $('.border-red-400').removeClass('border-red-400 border');
+                $('.error-meeting-date').text('');
+                $('.text-error').text('');
+
+                $.each(errors, function (field, messages) {
+
+                    // Tampilkan pesan error
+                    $('#create-assessment-form').find(`#error-${field}`).text(messages[0]);
+
+                    // Tambahkan style error ke input (jika ada)
+                    $('#create-assessment-form').find(`[name="${field}"]`).addClass('border-red-400 border');
+
+                });
+
+            } else {
+                alert('Terjadi kesalahan saat mengirim data.');
+            }
+
+            isProcessing = false;
+            btn.prop('disabled', false);
+        }
+    });
+});
+
+function handleAssessmentTypeUI(mode) {
+    const questionSettingSection = document.getElementById('question-settings-section');
+    const projectSettingSection = document.getElementById('project-settings-section');
+    const durationSection = document.getElementById('duration-section');
+
+    if (mode === 'project') {
+        questionSettingSection.classList.add('hidden');
+        projectSettingSection.classList.remove('hidden');
+
+        durationSection.classList.add('hidden');
+        document.querySelector('[name="duration"]').value = '';
+    } else {
+        questionSettingSection.classList.remove('hidden');
+        projectSettingSection.classList.add('hidden');
+
+        durationSection.classList.remove('hidden');
+    }
+}
+
+const assesmentTypeSelect = document.querySelector('[name="assessment_type_id"]');
+
+assesmentTypeSelect.addEventListener('change', function () {
+
+    const selectedOption = this.options[this.selectedIndex];
+    const mode = selectedOption.dataset.mode;
+
+    handleAssessmentTypeUI(mode);
+});

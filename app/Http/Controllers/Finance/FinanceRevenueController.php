@@ -14,7 +14,7 @@ class FinanceRevenueController extends Controller
 {
     public function index($role)
     {
-        return view('features.lms.finance.revenue.manage-revenue', compact('role'));
+        return view('Features.Lms.Finance.Revenue.ManageRevenue', compact('role'));
     }
 
     private function calculateRevenue($term)

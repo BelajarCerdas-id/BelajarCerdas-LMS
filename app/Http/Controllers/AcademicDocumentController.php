@@ -608,7 +608,7 @@ class AcademicDocumentController extends Controller
             );
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampAnalisis',
             [
                 'schoolName' => $schoolName,
 
@@ -832,7 +832,7 @@ class AcademicDocumentController extends Controller
 
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan',
+                    'lms.school_admin.registrasi_guru.bagan_analisis.tampilan',
                     [
                         'role' => $role,
 
@@ -1018,7 +1018,7 @@ class AcademicDocumentController extends Controller
 
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.baganAnalisis',
+                    'lms.school_admin.registrasi_guru.bagan_analisis',
                     [
                         'role' => $role,
                         'schoolName' => $schoolName,
@@ -1669,7 +1669,7 @@ class AcademicDocumentController extends Controller
             );
 
         return view(
-            'features.lms.school-admin.registrasi-guru.analisis',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Analisis',
             [
                 'schoolName' => $schoolName,
 
@@ -1905,7 +1905,7 @@ class AcademicDocumentController extends Controller
         }
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampAnalisis',
             [
                 'schoolName' => $schoolName,
 
@@ -1948,7 +1948,7 @@ class AcademicDocumentController extends Controller
                 'isTeacherViewer' => $this->isTeacherViewer($request, $schoolId),
 
                 'uploadRoute' => route(
-                    'lms.schoolAdmin.registrasiGuru.analisis.upload',
+                    'lms.school_admin.registrasi_guru.analisis.upload',
                     [
                         'role' => $role,
 
@@ -1960,7 +1960,7 @@ class AcademicDocumentController extends Controller
 
                 'downloadRoute' => $document
                         ? route(
-                            'lms.schoolAdmin.registrasiGuru.analisis.download',
+                            'lms.school_admin.registrasi_guru.analisis.download',
                             [
                                 'role' => $role,
 
@@ -1975,7 +1975,7 @@ class AcademicDocumentController extends Controller
 
                 'deleteRoute' => $document
                         ? route(
-                            'lms.schoolAdmin.registrasiGuru.analisis.delete',
+                            'lms.school_admin.registrasi_guru.analisis.delete',
                             [
                                 'role' => $role,
 
@@ -1989,7 +1989,7 @@ class AcademicDocumentController extends Controller
                         : '#',
 
                 'updateCellRoute' => route(
-                    'lms.schoolAdmin.registrasiGuru.analisis.cells.update',
+                    'lms.school_admin.registrasi_guru.analisis.cells.update',
                     [
                         'role' => $role,
 
@@ -2267,7 +2267,7 @@ class AcademicDocumentController extends Controller
         */
 
         return view(
-            'features.lms.school-admin.registrasi-guru.prota-prosem',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.ProtaProsem',
             [
                 'schoolName' => $schoolName,
 
@@ -2392,7 +2392,7 @@ class AcademicDocumentController extends Controller
         ) {
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.prota-prosem',
+                    'lms.school_admin.registrasi_guru.prota_prosem',
                     [
                         'role' => $role,
                         'schoolName' => $schoolName,
@@ -2548,7 +2548,7 @@ class AcademicDocumentController extends Controller
         */
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-prota-prosem',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampProtaProsem',
             [
                 'document' => $document,
 
@@ -2774,7 +2774,7 @@ class AcademicDocumentController extends Controller
 
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.baganAnalisis.tampilan',
+                    'lms.school_admin.registrasi_guru.bagan_analisis.tampilan',
                     [
                         'role' => $role,
 
@@ -3045,7 +3045,7 @@ class AcademicDocumentController extends Controller
 
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.prota-prosem',
+                    'lms.school_admin.registrasi_guru.prota_prosem',
                     [
                         'role' => $role,
                         'schoolName' => $schoolName,
@@ -3130,7 +3130,7 @@ class AcademicDocumentController extends Controller
         }
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-prota-prosem',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampProtaProsem',
             [
                 'schoolName' => $schoolName,
 
@@ -3848,7 +3848,7 @@ class AcademicDocumentController extends Controller
         ) {
             return redirect()
                 ->route(
-                    'lms.schoolAdmin.registrasiGuru.baganAnalisis',
+                    'lms.school_admin.registrasi_guru.bagan_analisis',
                     [
                         'role' => $role,
                         'schoolName' => $schoolName,
@@ -4003,7 +4003,7 @@ class AcademicDocumentController extends Controller
         */
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampAnalisis',
             [
                 'document' => $document,
 
@@ -4443,7 +4443,7 @@ class AcademicDocumentController extends Controller
         }
 
         return view(
-            'features.lms.school-admin.registrasi-guru.tampilan.tamp-analisis',
+            'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampAnalisis',
             [
                 'schoolName' => $schoolName,
 

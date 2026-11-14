@@ -14,7 +14,7 @@ class AuthController extends Controller
     // function login view
     public function loginView()
     {
-        return view('auth.login');
+        return view('Auth.Login');
     }
 
     // function login
@@ -81,7 +81,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         // Redirect
-        if (in_array($user->role, ['Administrator', 'Finance'])) {
+        if (in_array($user->role, ['administrator', 'Finance'])) {
             return response()->json([
                 'status' => 'success',
                 'redirect' => route('lms.office.dashboard.view', [
@@ -92,7 +92,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'redirect' => route('beranda', [
+            'redirect' => route('Beranda', [
                 'role' => $user->role,
             ]),
         ]);

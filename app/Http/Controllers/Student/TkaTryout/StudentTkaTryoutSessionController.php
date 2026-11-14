@@ -35,7 +35,7 @@ class StudentTkaTryoutSessionController extends Controller
         $now = TimezoneHelper::now($timezone);
 
         if ($startDate && $now->lt($startDate)) {
-            return redirect()->route('lms.student.tka-tryout-period.view', [
+            return redirect()->route('lms.student.tka_tryout_period.view', [
                 'role' => $role,
                 'schoolName' => $schoolName,
                 'schoolId' => $schoolId
@@ -43,14 +43,14 @@ class StudentTkaTryoutSessionController extends Controller
         }
 
         if ($endDate && $now->gt($endDate)) {
-            return redirect()->route('lms.student.tka-tryout-period.view', [
+            return redirect()->route('lms.student.tka_tryout_period.view', [
                 'role' => $role,
                 'schoolName' => $schoolName,
                 'schoolId' => $schoolId
             ])->with('period_status', 'finished');
         }
 
-        return view('features.lms.student.tka-tryout.tka-tryout-session-list', compact('role', 'schoolName', 'schoolId', 'periodId'));
+        return view('Features.Lms.Student.TkaTryout.TkaTryoutSessionList', compact('role', 'schoolName', 'schoolId', 'periodId'));
     }
 
     public function paginateSessionList($role, $schoolName, $schoolId, $periodId)

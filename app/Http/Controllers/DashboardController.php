@@ -81,7 +81,7 @@ class DashboardController extends Controller
                 $school = DB::table('school_partners')->where('id', $schoolId)->first();
                 $schoolName = $school ? $school->nama_sekolah : 'sekolah';
                 
-                return redirect()->route('lms.student-vice-principal.dashboard.view', [
+                return redirect()->route('lms.student_vice_principal.dashboard.view', [
                     'role'       => $user->role,
                     'schoolName' => $schoolName,
                     'schoolId'   => $schoolId
@@ -125,7 +125,7 @@ class DashboardController extends Controller
                 $school = DB::table('school_partners')->where('id', $schoolId)->first();
                 $schoolName = $school ? $school->nama_sekolah : 'sekolah';
                 
-                return redirect()->route('lms.schoolAdmin.dashboard.view', [
+                return redirect()->route('lms.school_admin.dashboard.view', [
                     'role'       => $user->role,
                     'schoolName' => $schoolName,
                     'schoolId'   => $schoolId
@@ -136,10 +136,10 @@ class DashboardController extends Controller
         }
 
         // 6. Jika yang masuk adalah office roles
-        if (in_array($user->role, ['Administrator', 'Finance'])) {
+        if (in_array($user->role, ['administrator', 'Finance'])) {
             return match ($user->role) {
                 'Finance' => app(FinanceDashboardController::class)->index($user->role),
-                'Administrator' => app(AdministratorDashboardController::class)->index($user->role),
+                'administrator' => app(AdministratorDashboardController::class)->index($user->role),
                 default => abort(404),
             };
         }
@@ -162,6 +162,6 @@ class DashboardController extends Controller
         }
 
         // Default Fallback jika role tidak dikenali
-        return view('beranda');
+        return view('Beranda');
     }
 }

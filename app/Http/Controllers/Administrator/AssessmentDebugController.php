@@ -59,7 +59,7 @@ class AssessmentDebugController extends Controller
             ->limit(300)
             ->get();
 
-        return view('features.lms.administrator.assessment-debug', compact('role', 'schools', 'assessmentsList'));
+        return view('Features.Lms.Administrator.AssessmentDebug', compact('role', 'schools', 'assessmentsList'));
     }
 
     /**

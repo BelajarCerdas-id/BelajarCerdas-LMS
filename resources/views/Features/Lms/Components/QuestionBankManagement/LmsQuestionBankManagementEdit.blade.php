@@ -1,0 +1,11 @@
+<main>
+    <section class="bg-white shadow-lg rounded-lg p-8 border border-gray-200">
+        <div id="editor-container" data-source="{{ $source }}"  data-question-type="{{ $questionType }}" data-question-id="{{ $questionId }}"
+            data-sub-bab-id="{{ $subBabId }}"
+            data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
+            data-upload-url="{{ route('lms.edit_image', ['_token' => csrf_token()]) }}"
+            data-delete-url="{{ route('lms.delete_image') }}">
+            <!---- form in ajax ---->
+        </div>
+    </section>
+</main>

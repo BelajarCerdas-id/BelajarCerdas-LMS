@@ -18,7 +18,7 @@ class TkaTryoutPeriodSchoolOverrideController extends Controller
     {
         $schools = SchoolPartner::orderBy('nama_sekolah')->get();
 
-        return view('features.lms.administrator.tka-tryout.tka-tryout-period.tka-tryout-period-school-override-form', compact('role', 'periodId', 'schools'));
+        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriod.TkaTryoutPeriodSchoolOverrideForm', compact('role', 'periodId', 'schools'));
     }
 
     public function tkaTryoutPeriodSchoolOverrideCreate(Request $request, $role, $periodId)

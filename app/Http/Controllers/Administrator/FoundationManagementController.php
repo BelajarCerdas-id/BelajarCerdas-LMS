@@ -21,7 +21,7 @@ class FoundationManagementController extends Controller
 {
     public function index($role)
     {
-        return view('features.lms.administrator.school-foundation.school-foundation-management', compact('role'));
+        return view('Features.Lms.Administrator.SchoolFoundation.SchoolFoundationManagement', compact('role'));
     }
 
     public function paginateSchoolFoundation($role)
@@ -121,7 +121,7 @@ class FoundationManagementController extends Controller
     // view school foundation form
     public function viewSchoolFoundationForm($role)
     {
-        return view('features.lms.administrator.school-foundation.school-foundation-form', compact('role'));
+        return view('Features.Lms.Administrator.SchoolFoundation.SchoolFoundationForm', compact('role'));
     }
 
     // paginate school list
@@ -382,7 +382,7 @@ class FoundationManagementController extends Controller
 
     public function viewSchoolFoundationEditForm($role, $schoolFoundationId)
     {
-        return view('features.lms.administrator.school-foundation.school-foundation-edit-form', compact('role', 'schoolFoundationId'));
+        return view('Features.Lms.Administrator.SchoolFoundation.SchoolFoundationEditForm', compact('role', 'schoolFoundationId'));
     }
 
     public function editSchoolFoundationForm(Request $request, $role, $schoolFoundationId)
@@ -452,7 +452,7 @@ class FoundationManagementController extends Controller
     public function viewSchoolFoundationAccessControl($role, $schoolFoundationId)
     {
         $schoolFoundation = SchoolFoundation::findOrFail($schoolFoundationId);
-        return view('features.lms.administrator.school-foundation.school-foundation-access-control', compact('role', 'schoolFoundationId', 'schoolFoundation'));
+        return view('Features.Lms.Administrator.SchoolFoundation.SchoolFoundationAccessControl', compact('role', 'schoolFoundationId', 'schoolFoundation'));
     }
 
     public function paginateSchoolFoundationAccessControl(Request $request, $role, $schoolFoundationId)
@@ -613,7 +613,7 @@ class FoundationManagementController extends Controller
     {
         $schools = SchoolPartner::where('school_foundation_id', $schoolFoundationId)->get();
 
-        return view('features.lms.administrator.school-foundation.school-foundation-finance-access', compact('role', 'schoolFoundationId', 'schools'));
+        return view('Features.Lms.Administrator.SchoolFoundation.SchoolFoundationFinanceAccess', compact('role', 'schoolFoundationId', 'schools'));
     }
 
     public function paginateSchoolFoundationFinanceAccess($role, $schoolFoundationId)

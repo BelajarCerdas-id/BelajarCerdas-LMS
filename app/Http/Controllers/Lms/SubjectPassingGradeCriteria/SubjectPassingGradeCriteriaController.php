@@ -77,7 +77,7 @@ class SubjectPassingGradeCriteriaController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('features.lms.administrator.subject-passing-grade-criteria.lms-subject-passing-grade-criteria', compact('role', 'schoolName', 'schoolId', 'tahunAjaran', 
+        return view('Features.Lms.Administrator.SubjectPassingGradeCriteria.LmsSubjectPassingGradeCriteria', compact('role', 'schoolName', 'schoolId', 'tahunAjaran', 
             'getCurriculum'));
     }
 

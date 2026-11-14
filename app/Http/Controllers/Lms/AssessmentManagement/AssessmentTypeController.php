@@ -21,7 +21,7 @@ class AssessmentTypeController extends Controller
     {
         $getAssessmentMode = AssessmentMode::all();
 
-        return view('features.lms.administrator.assessment-type-management.lms-assessment-type-management', compact('role', 'schoolName', 'schoolId', 'getAssessmentMode'));
+        return view('Features.Lms.Administrator.AssessmentTypeManagement.LmsAssessmentTypeManagement', compact('role', 'schoolName', 'schoolId', 'getAssessmentMode'));
     }
 
     // function paginate lms assessment type management

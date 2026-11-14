@@ -26,7 +26,7 @@ class ProfileAccountController extends Controller
                 $query->whereNull('academic_action')->orWhere('academic_action', '');
             })->first();
 
-        return view('features.lms.profile-account.profile-user', compact('role', 'schoolName', 'schoolId', 'studentSchoolClass'));
+        return view('Features.Lms.ProfileAccount.ProfileUser', compact('role', 'schoolName', 'schoolId', 'studentSchoolClass'));
     }
 
     public function updatePersonalInformationStudent(UpdateStudentPersonalRequest $request, $role, $schoolName, $schoolId, $userId): JsonResponse
@@ -147,7 +147,7 @@ class ProfileAccountController extends Controller
 
     public function resetPasswordView($role, $schoolName = null, $schoolId = null)
     {
-        return view('features.lms.profile-account.settings.reset-password', compact('role', 'schoolName', 'schoolId'));
+        return view('Features.Lms.ProfileAccount.Settings.ResetPassword', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function resetPasswordUpdate(ResetPasswordRequest $request, $role, $schoolName = null, $schoolId = null): JsonResponse

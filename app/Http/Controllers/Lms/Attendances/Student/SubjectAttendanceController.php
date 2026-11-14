@@ -33,7 +33,7 @@ class SubjectAttendanceController extends Controller
     // function teacher class list view
     public function teacherClassList($role, $schoolName, $schoolId)
     {
-        return view('features.lms.teacher.subject-attendance.teacher-class-list', compact('role', 'schoolName', 'schoolId'));
+        return view('Features.Lms.Teacher.SubjectAttendance.TeacherClassList', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate teacher class list
@@ -121,7 +121,7 @@ class SubjectAttendanceController extends Controller
     {
         $subjectTeacher = TeacherMapel::with(['Mapel', 'SchoolClass'])->findOrFail($subjectTeacherId);
 
-        return view('features.lms.teacher.subject-attendance.subject-attendance-meeting-list', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId', 'subjectTeacher'));
+        return view('Features.Lms.Teacher.SubjectAttendance.SubjectAttendanceMeetingList', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId', 'subjectTeacher'));
     }
 
     // function paginate subject attendance meeting list
@@ -175,7 +175,7 @@ class SubjectAttendanceController extends Controller
     {
         $subjectTeacher = TeacherMapel::with(['Mapel', 'SchoolClass'])->findOrFail($subjectTeacherId);
 
-        return view('features.lms.teacher.subject-attendance.subject-attendance-meeting-management', compact('role', 'schoolName', 'schoolId', 'subjectTeacher', 'meetingNumber',
+        return view('Features.Lms.Teacher.SubjectAttendance.SubjectAttendanceMeetingManagement', compact('role', 'schoolName', 'schoolId', 'subjectTeacher', 'meetingNumber',
         'subjectTeacherId', 'semester', 'meetingNumber'));
     }
 

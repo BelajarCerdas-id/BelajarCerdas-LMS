@@ -32,7 +32,7 @@ class TeacherQuestionBankController extends Controller
     {
         $getCurriculum = Kurikulum::all();
         
-        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
+        return view('Features.Lms.Teacher.QuestionBankManagement.TeacherQuestionBankManagement', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate teacher question bank management
@@ -175,7 +175,7 @@ class TeacherQuestionBankController extends Controller
     // function teacher question bank management detail
     public function teacherQuestionBankManagementDetail($role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId = null, $subBabId = null)
     {
-        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-detail', compact('role', 'schoolName', 'schoolId', 'kurikulumId', 'kelasId', 
+        return view('Features.Lms.Teacher.QuestionBankManagement.TeacherQuestionBankManagementDetail', compact('role', 'schoolName', 'schoolId', 'kurikulumId', 'kelasId', 
             'mapelId', 'source', 'questionType', 'questionCategory', 'babId', 'subBabId'));
     }
 
@@ -186,7 +186,7 @@ class TeacherQuestionBankController extends Controller
         $editQuestion = LmsQuestionBank::find($questionId);
 
         if (!$editQuestion || !$editQuestion->school_partner_id) {
-            return redirect()->route('lms.teacherQuestionBankManagement.detail.view', [$role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId, $subBabId]);
+            return redirect()->route('lms.teacher_question_bank_management.detail.view', [$role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId, $subBabId]);
         }
 
         // Mengambil data soal yang punya pertanyaan (questions) yang sama, lalu dikelompokkan berdasarkan isi questions-nya
@@ -195,7 +195,7 @@ class TeacherQuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('features.lms.teacher.question-bank-management.teacher-question-bank-management-edit', compact('role', 'schoolId', 'schoolName',
+        return view('Features.Lms.Teacher.QuestionBankManagement.TeacherQuestionBankManagementEdit', compact('role', 'schoolId', 'schoolName',
         'kurikulumId', 'kelasId', 'mapelId', 'source', 'babId', 'subBabId', 'questionId', 'questionType', 'questionCategory'));
     }
 }

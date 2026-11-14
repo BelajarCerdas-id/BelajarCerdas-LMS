@@ -37,6 +37,23 @@ Never cut: validation at trust boundaries, error handling that prevents data los
 - **Midtrans is not used.** The `Transaction` model/relations were removed; the `transactions` table may still exist in the DB but nothing writes it.
 - **Pusher is not used.** No broadcasting: `app/Events/*` are plain events, the pusher package was removed, `BROADCAST_CONNECTION` stays `log`/`null`.
 
+## Naming conventions (dev-optimize, aligned to standard Laravel)
+
+Code is PascalCase where PHP convention says so; web-facing names follow the standard table:
+- Classes/models/controllers: PascalCase ✅ (unchanged)
+- Route names: **snake_case + dot notation** — `lms.student_assessment_exam.view`
+- Route URLs: **lowercase kebab-case** segments — `/lms/{role}/student/library/lks` (`{placeholders}` unchanged)
+- Blade views: **kebab/snake-case files** (original names restored) — `resources/views/features/lms/administrator/library.blade.php`
+- JS assets: kebab-case (original names restored)
+- Route files: PascalCase (php class files) — `routes/web/Student.php`, `StudentVicePrincipal.php`
+- DB tables/columns/FKs: snake_case, untouched ✅
+
+Exemptions (lowercase, on purpose):
+- `/lms-assessment-submission/*`, `/assessment/assessment-file*`, `/lms-docx-image/*` — URL casing is embedded in exported data (answer JSON / question HTML)
+- `/storage/*` and the `storage/app` directory tree — filesystem layout
+- `up` (Laravel health route), `storage.local*` (framework route names)
+- known pre-existing dead refs (see git history): `errors.404` views, `teachers.dashboard`, topik JS files, `route('register')`
+
 ## File storage map (dev-optimize)
 
 All uploaded files go through Laravel Storage; nothing is written to the webroot `public/` anymore except static assets. URL paths stored in the DB (bare filenames or relative zone paths) did **not** change — moving zones only changed where files live on disk.

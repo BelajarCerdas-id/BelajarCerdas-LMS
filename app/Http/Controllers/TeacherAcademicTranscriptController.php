@@ -33,7 +33,7 @@ class TeacherAcademicTranscriptController extends Controller
     
     public function teacherClassList($role, $schoolName, $schoolId)
     {
-        return view('features.lms.teacher.academic-transcript.teacher-class-list', compact('role', 'schoolName', 'schoolId'));
+        return view('Features.Lms.Teacher.AcademicTranscript.TeacherClassList', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherClassList(Request $request, $role, $schoolName, $schoolId)
@@ -117,7 +117,7 @@ class TeacherAcademicTranscriptController extends Controller
 
     public function teacherAcademicTranscript($role, $schoolName, $schoolId, $subjectTeacherId)
     {
-        return view('features.lms.teacher.academic-transcript.teacher-academic-transcript-management', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
+        return view('Features.Lms.Teacher.AcademicTranscript.TeacherAcademicTranscriptManagement', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
     }
 
     public function paginateTeacherAcademicTranscript(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)
