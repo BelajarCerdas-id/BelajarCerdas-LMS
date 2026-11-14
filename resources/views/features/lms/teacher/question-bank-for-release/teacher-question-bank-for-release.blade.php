@@ -427,6 +427,10 @@
                                                             Ratakan Bobot
                                                         </button>
 
+                                                        <button type="button" id="question-release-scale-to-100" class="rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0071BC] hover:bg-[#D5EEFF] transition-colors">
+                                                            <i class="fa-solid fa-arrow-up-right-dots text-[9px] mr-1"></i> Skala ke 100
+                                                        </button>
+
                                                         <button type="button" id="question-release-ratio-weight" class="rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0071BC] hover:bg-[#D5EEFF] transition-colors">
                                                             <i class="fa-solid fa-sliders text-[9px] mr-1"></i> Atur Rasio Tipe
                                                         </button>
@@ -447,7 +451,7 @@
                                                 <!-- RESULT FOOTER -->
                                                 <div class="border-t border-gray-100 bg-gray-50/70 px-4 py-3">
                                                     <div class="flex items-center justify-between gap-3">
-                                                        <div>
+                                                        <div class="min-w-0">
                                                             <div class="text-[10px] text-gray-400">Total Bobot</div>
                                                             <div id="question-release-total-weight-label" class="mt-0.5 text-sm font-black text-gray-700">0</div>
                                                         </div>
@@ -658,7 +662,7 @@
                                 </div>
                                 <div>
                                     <h3 class="font-bold text-sm text-white">Atur Rasio Bobot per Tipe Soal</h3>
-                                    <p class="text-[10px] text-white/80 mt-0.5">Tentukan persentase distribusi bobot untuk setiap tipe soal</p>
+                                    <p class="text-[10px] text-white/80 mt-0.5">Pilih rasio bobot per tipe soal, atau poin sama untuk setiap jawaban benar</p>
                                 </div>
                             </div>
                             <form method="dialog">
@@ -670,6 +674,19 @@
 
                         <!-- Body -->
                         <div class="p-5 max-h-[60vh] overflow-y-auto space-y-4">
+                            <!-- Mode Toggle -->
+                            <div class="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
+                                <button type="button" data-mode="ratio"
+                                    class="weight-mode-btn rounded-lg px-2 py-1.5 text-xs font-bold transition bg-white text-[#0071BC] shadow-sm">
+                                    Rasio Bobot (%)
+                                </button>
+                                <button type="button" data-mode="points"
+                                    class="weight-mode-btn rounded-lg px-2 py-1.5 text-xs font-bold transition text-gray-500 hover:text-gray-700">
+                                    Poin per Jawaban Benar
+                                </button>
+                            </div>
+
+                            <div id="ratio-mode-panel" class="space-y-4">
                             <div class="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-100">
                                 <span class="font-semibold text-gray-700">Tipe Soal & Jumlah</span>
                                 <span class="font-semibold text-gray-700">Persentase (%)</span>
@@ -690,6 +707,30 @@
                                     </div>
                                 </div>
                                 <p id="ratio-weight-helper-text" class="mt-1 text-[10px] text-gray-400">Total persentase harus tepat 100%.</p>
+                            </div>
+                            </div>
+
+                            <div id="points-mode-panel" class="hidden space-y-4">
+                                <div class="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-100">
+                                    <span class="font-semibold text-gray-700">Tipe Soal & Jumlah</span>
+                                    <span class="font-semibold text-gray-700">Poin / Jawaban Benar</span>
+                                </div>
+
+                                <!-- Dynamic List Container -->
+                                <div id="points-weight-type-list" class="space-y-2.5">
+                                    <!-- Injected via JS -->
+                                </div>
+
+                                <div class="mt-4 rounded-xl bg-gray-50 p-3.5 border border-gray-200">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="font-semibold text-gray-700">Total Bobot:</span>
+                                        <div class="flex items-center gap-2">
+                                            <span id="points-weight-total-percentage" class="font-bold text-sm text-gray-800">0</span>
+                                            <span id="points-weight-status-badge" class="rounded-md px-2 py-0.5 text-[10px] font-semibold bg-gray-200 text-gray-700">0</span>
+                                        </div>
+                                    </div>
+                                    <p id="points-weight-helper-text" class="mt-1 text-[10px] text-gray-400">Minimal 1 poin per jawaban benar.</p>
+                                </div>
                             </div>
                         </div>
 

@@ -11,7 +11,8 @@ let teacherQuestionReleaseExpandedBanks = new Set();
 let teacherQuestionReleaseSelectedClassLevel = null;
 let teacherQuestionReleaseLoading = false;
 let teacherQuestionReleaseSelectedAssessmentHasAnswers = false;
-let teacherQuestionReleaseLastRatios = {};
+// mode bobot modal: 'ratio' (persen per tipe) atau 'points' (poin per jawaban benar)
+let teacherQuestionReleaseWeightMode = 'ratio';
 
 function formQuestionForRelease(search_year = null, search_class = null, search_assessment_type = null, search_subject = null, search_semester = null, search_question = null, kurikulum_id = null, kelas_id = null, mapel_id = null, bab_id = null, sub_bab_id = null, preserveSelection = false) {
     const container = document.getElementById('container-form-teacher-question-bank-for-release');
@@ -41,7 +42,6 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
         teacherQuestionReleaseSelectedQuestions.clear();
         teacherQuestionReleaseSelectedQuestionWeights = {};
         teacherQuestionReleaseSelectedQuestionData.clear();
-        teacherQuestionReleaseLastRatios = {};
     }
 
     $('.question-release-panel, #question-release-panel-1, #question-release-panel-2, #question-release-panel-3').addClass('hidden');
@@ -632,7 +632,6 @@ function hydrateTeacherQuestionReleaseAssessmentSelection(assessment) {
     teacherQuestionReleaseSelectedQuestions.clear();
     teacherQuestionReleaseSelectedQuestionWeights = {};
     teacherQuestionReleaseSelectedQuestionData.clear();
-    teacherQuestionReleaseLastRatios = {};
 
     if (!assessment) return;
 
@@ -1431,6 +1430,8 @@ function renderTeacherQuestionReleaseSelectedQuestions() {
             renderTeacherQuestionReleaseSelectedQuestionCard(question, index)
         ).join('')
     );
+
+    updateTeacherQuestionReleasePctLabels();
 }
 
 function renderTeacherQuestionReleaseSelectedQuestionCard(question, index) {
@@ -1485,6 +1486,9 @@ function renderTeacherQuestionReleaseSelectedQuestionCard(question, index) {
                         value="${escapeTeacherQuestionReleaseHtml(formatTeacherQuestionReleaseWeight(weight))}"
                         class="w-16 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-center text-[11px] font-bold text-[#0071BC] outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-[#EAF6FF]">
                 </div>
+
+                <span class="text-[10px] font-semibold text-gray-400 w-12 text-right"
+                    data-question-release-pct="${escapeTeacherQuestionReleaseHtml(id)}">0%</span>
             </div>
         </div>
     `;
@@ -1551,6 +1555,20 @@ function normalizeTeacherQuestionReleaseWeights() {
 }
 
 
+function updateTeacherQuestionReleasePctLabels() {
+    const totalWeight = Number(getTeacherQuestionReleaseTotalWeight().toFixed(2));
+
+    $('[data-question-release-weight]').each(function () {
+        const id = $(this).attr('data-question-release-weight');
+        const weight = getTeacherQuestionReleaseQuestionWeight(id);
+        const pct = totalWeight > 0
+            ? Number(((weight / totalWeight) * 100).toFixed(1))
+            : 0;
+
+        $(`[data-question-release-pct="${id}"]`).text(`${pct}%`);
+    });
+}
+
 function updateTeacherQuestionReleaseQuestionWeight(questionId, value) {
     const id = String(questionId);
 
@@ -1599,12 +1617,78 @@ function updateTeacherQuestionReleaseQuestionWeight(questionId, value) {
         input.val(weight);
     }
 
+    updateTeacherQuestionReleasePctLabels();
     updateTeacherQuestionReleaseQuestionSummary();
     updateTeacherQuestionReleaseStepper();
     updateTeacherQuestionReleasePublishButton();
 
     if (teacherQuestionReleaseStep === 3) {
         renderTeacherQuestionReleaseReview();
+    }
+}
+
+function scaleTeacherQuestionReleaseWeightsTo100() {
+    const total = Number(getTeacherQuestionReleaseTotalWeight().toFixed(2));
+
+    if (total <= 0) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Belum Ada Bobot',
+                text: 'Pilih soal dan atur bobot terlebih dahulu.',
+                confirmButtonColor: '#0071BC'
+            });
+        }
+        return;
+    }
+
+    if (Math.abs(total - 100) < 0.01) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sudah 100%',
+                text: 'Total bobot sudah tepat 100.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+        return;
+    }
+
+    const scaled = Array.from(teacherQuestionReleaseSelectedQuestions).map(id => ({
+        id,
+        weight: Number(((getTeacherQuestionReleaseQuestionWeight(id) * 100) / total).toFixed(2))
+    }));
+
+    // pembulatan: selisih diberikan ke soal dengan bobot terbesar
+    const sum = Number(scaled.reduce((a, s) => a + s.weight, 0).toFixed(2));
+    const diff = Number((100 - sum).toFixed(2));
+    if (diff !== 0) {
+        const largest = scaled.reduce((a, b) => (b.weight > a.weight ? b : a));
+        largest.weight = Number((largest.weight + diff).toFixed(2));
+    }
+
+    scaled.forEach(s => {
+        teacherQuestionReleaseSelectedQuestionWeights[s.id] = s.weight;
+    });
+
+    renderTeacherQuestionReleaseSelectedQuestions();
+    updateTeacherQuestionReleaseQuestionSummary();
+    updateTeacherQuestionReleaseStepper();
+    updateTeacherQuestionReleasePublishButton();
+
+    if (teacherQuestionReleaseStep === 3) {
+        loadTeacherQuestionReleaseStep3();
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Bobot Diskalakan ke 100',
+            text: `Total bobot ${total} diskalakan proporsional menjadi tepat 100.`,
+            timer: 2000,
+            showConfirmButton: false
+        });
     }
 }
 
@@ -1673,12 +1757,43 @@ function openTeacherQuestionReleaseRatioModal() {
     const n = breakdown.length;
     const baseDefault = n > 0 ? Math.floor(100 / n) : 100;
     const remainder = n > 0 ? 100 - baseDefault * n : 0;
+    const defaultVals = {};
+    const totalWeightPrefill = Number(getTeacherQuestionReleaseTotalWeight().toFixed(2));
 
     breakdown.forEach((group, index) => {
-        let defaultVal = teacherQuestionReleaseLastRatios[group.key];
-        if (defaultVal === undefined || defaultVal === null) {
-            defaultVal = baseDefault + (index === n - 1 ? remainder : 0);
+        // prefill rasio dari bobot saat ini (%, per tipe), bukan dari sesi sebelumnya
+        const totalWeight = totalWeightPrefill;
+        if (totalWeight > 0) {
+            const typeWeight = group.ids.reduce(
+                (sum, id) => sum + getTeacherQuestionReleaseQuestionWeight(id),
+                0
+            );
+            group._rawPct = (typeWeight / totalWeight) * 100;
+            defaultVals[group.key] = Math.floor(group._rawPct * 100) / 100;
+        } else {
+            defaultVals[group.key] = baseDefault + (index === n - 1 ? remainder : 0);
         }
+    });
+
+    // pembulatan tidak boleh membuat total rasio melebihi 100:
+    // selisih (rounding remainder) diberikan ke tipe dengan persentase terbesar
+    const roundedSum = Number(
+        Object.values(defaultVals).reduce((a, b) => a + b, 0).toFixed(2)
+    );
+    if (totalWeightPrefill > 0 && roundedSum !== 100) {
+        const diff = Number((100 - roundedSum).toFixed(2));
+        const largest = breakdown.reduce((a, b) =>
+            ((b._rawPct ?? 0) > (a._rawPct ?? 0) ? b : a)
+        );
+        if (largest) {
+            defaultVals[largest.key] = Number(
+                (defaultVals[largest.key] + diff).toFixed(2)
+            );
+        }
+    }
+
+    breakdown.forEach(group => {
+        let defaultVal = defaultVals[group.key];
 
         const typeLower = group.key.toLowerCase();
         const badgeColor = typeLower.includes('essay') || typeLower.includes('uraian')
@@ -1721,10 +1836,244 @@ function openTeacherQuestionReleaseRatioModal() {
     });
 
     updateTeacherQuestionReleaseRatioCalculations();
+    renderTeacherQuestionReleasePointsList();
+    setTeacherQuestionReleaseWeightMode(teacherQuestionReleaseWeightMode);
 
     const modal = document.getElementById('modal-question-release-ratio-weight');
     if (modal && typeof modal.showModal === 'function') {
         modal.showModal();
+    }
+}
+
+function setTeacherQuestionReleaseWeightMode(mode) {
+    teacherQuestionReleaseWeightMode = mode === 'points' ? 'points' : 'ratio';
+
+    $('#ratio-mode-panel').toggleClass('hidden', teacherQuestionReleaseWeightMode !== 'ratio');
+    $('#points-mode-panel').toggleClass('hidden', teacherQuestionReleaseWeightMode !== 'points');
+    $('#btn-quick-equalize-ratio').toggleClass('hidden', teacherQuestionReleaseWeightMode !== 'ratio');
+
+    $('.weight-mode-btn').each(function () {
+        const active = $(this).data('mode') === teacherQuestionReleaseWeightMode;
+        $(this).toggleClass('bg-white shadow-sm text-[#0071BC]', active)
+            .toggleClass('text-gray-500 hover:text-gray-700', !active);
+    });
+
+    if (teacherQuestionReleaseWeightMode === 'ratio') {
+        updateTeacherQuestionReleaseRatioCalculations();
+    } else {
+        updateTeacherQuestionReleasePointsCalculations();
+    }
+}
+
+function getTeacherQuestionReleaseCorrectAnswerCount(question) {
+    if (!question) {
+        return 1;
+    }
+
+    const options = Array.isArray(question.lms_question_option) ? question.lms_question_option : [];
+    const type = String(
+        (question.tipe_soal || question.question_type || question.type) || ''
+    ).trim().toUpperCase();
+
+    // setiap pasangan jodoh = satu jawaban benar; tanpa pasangan = 0
+    if (type.includes('JODOH') || type === 'MATCHING') {
+        return options.filter(o => String(o.options_key || '').startsWith('LEFT')).length;
+    }
+
+    // setiap pernyataan benar/salah = satu jawaban
+    if (type.includes('KOMPLEKS')) {
+        return options.filter(o => o.extra_data?.side === 'category').length || 1;
+    }
+
+    // MCMA: jumlah opsi benar
+    if (type === 'MCMA' || type.includes('MAJEMUK')) {
+        return options.filter(o => o.is_correct).length || 1;
+    }
+
+    // MCQ, ESSAY, dll: satu jawaban
+    return 1;
+}
+
+function renderTeacherQuestionReleasePointsList() {
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+    const list = $('#points-weight-type-list');
+    list.empty();
+
+    breakdown.forEach(group => {
+        const correctCounts = group.ids.map(id => {
+            const question = teacherQuestionReleaseSelectedQuestionData.get(String(id));
+            return getTeacherQuestionReleaseCorrectAnswerCount(question);
+        });
+        const minCount = Math.min(...correctCounts);
+        const maxCount = Math.max(...correctCounts);
+        const avgCount = correctCounts.reduce((a, b) => a + b, 0) / correctCounts.length;
+
+        const typeLower = group.key.toLowerCase();
+        const badgeColor = typeLower.includes('essay') || typeLower.includes('uraian')
+            ? 'bg-amber-50 text-amber-600 border border-amber-200'
+            : typeLower.includes('mcma') || typeLower.includes('majemuk') || typeLower.includes('kompleks')
+            ? 'bg-purple-50 text-purple-600 border border-purple-200'
+            : typeLower.includes('jodoh')
+            ? 'bg-pink-50 text-pink-600 border border-pink-200'
+            : typeLower.includes('benar')
+            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+            : 'bg-blue-50 text-blue-600 border border-blue-200';
+
+        const defaultVal = correctCounts.reduce((a, b) => a + b, 0) > 0
+            ? Number((
+                group.ids.reduce((sum, id) => sum + getTeacherQuestionReleaseQuestionWeight(id), 0)
+                / correctCounts.reduce((a, b) => a + b, 0)
+            ).toFixed(2))
+            : 1;
+
+        list.append(`
+            <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-[#CFEAFF] hover:shadow-xs transition">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="rounded-md px-2 py-0.5 text-[10px] font-bold ${badgeColor}">
+                            ${group.label}
+                        </span>
+                        <span class="text-xs font-semibold text-gray-700">${group.ids.length} butir soal</span>
+                    </div>
+                    <div class="mt-1 text-[11px] text-gray-400" id="preview-points-calc-${group.key}">
+                        ${minCount === maxCount ? `${minCount} jawaban benar/soal` : `${minCount}–${maxCount} jawaban benar/soal`} • ~0 / butir
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <input type="number"
+                        min="0"
+                        step="any"
+                        data-type-key="${group.key}"
+                        data-min-correct="${minCount}"
+                        value="${defaultVal}"
+                        class="points-type-input w-20 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center text-xs font-bold text-[#0071BC] outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-[#EAF6FF]">
+                    <span class="text-xs font-bold text-gray-400">poin</span>
+                </div>
+            </div>
+        `);
+    });
+}
+
+function updateTeacherQuestionReleasePointsCalculations() {
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+    const points = {};
+
+    $('.points-type-input').each(function () {
+        const key = String($(this).data('type-key'));
+        points[key] = parseFloat($(this).val()) || 0;
+    });
+
+    let total = 0;
+    let minWeight = Infinity;
+    let hasInvalidType = false;
+
+    breakdown.forEach(group => {
+        const p = points[group.key] || 0;
+        const counts = group.ids.map(id => {
+            const question = teacherQuestionReleaseSelectedQuestionData.get(String(id));
+            return getTeacherQuestionReleaseCorrectAnswerCount(question);
+        });
+        const minCount = Math.min(...counts);
+        const avgCount = counts.reduce((a, b) => a + b, 0) / counts.length;
+
+        const perItem = p * avgCount;
+        $(`#preview-points-calc-${group.key}`).text(
+            (minCount === Math.max(...counts)
+                ? `${minCount} jawaban benar/soal`
+                : `${minCount}–${Math.max(...counts)} jawaban benar/soal`)
+            + ` • ~${perItem.toFixed(2)} / butir`
+        );
+
+        counts.forEach(c => {
+            const weight = p * c;
+            total += weight;
+            // soal tanpa jawaban benar (mis. matching kosong) diperbolehkan bernilai 0
+            if (p > 0 && c > 0) {
+                minWeight = Math.min(minWeight, weight);
+            }
+        });
+
+        if (p > 0 && minCount > 0 && p * minCount < 1) {
+            hasInvalidType = true;
+        }
+    });
+
+    total = Number(total.toFixed(2));
+    const hasInput = breakdown.length > 0 && breakdown.every(g => (points[g.key] || 0) > 0);
+    const isValid = hasInput && !hasInvalidType && total <= 100;
+
+    $('#points-weight-total-percentage').text(total);
+
+    const statusBadge = $('#points-weight-status-badge');
+    const helperText = $('#points-weight-helper-text');
+    const applyBtn = $('#btn-apply-ratio-weight');
+
+    if (isValid) {
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-red-100 text-red-600').addClass('bg-emerald-100 text-emerald-700').text('Valid');
+        helperText.removeClass('text-red-500 text-gray-400').addClass('text-emerald-600').text(`Total bobot ${total} dari maksimal 100. Siap diterapkan.`);
+        applyBtn.prop('disabled', false);
+    } else if (total > 100) {
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-emerald-100 text-emerald-700').addClass('bg-red-100 text-red-600').text('Melebihi 100');
+        helperText.removeClass('text-emerald-600 text-gray-400').addClass('text-red-500').text(`Total bobot ${total} melebihi maksimal 100. Kurangi poin per jawaban benar.`);
+        applyBtn.prop('disabled', true);
+    } else if (hasInvalidType) {
+        statusBadge.removeClass('bg-gray-200 text-gray-700 bg-emerald-100 text-emerald-700').addClass('bg-red-100 text-red-600').text('Bobot < 1');
+        helperText.removeClass('text-emerald-600 text-gray-400').addClass('text-red-500').text(`Ada soal dengan bobot di bawah 1 (poin × jawaban benar). Naikkan poin.`);
+        applyBtn.prop('disabled', true);
+    } else {
+        statusBadge.removeClass('bg-emerald-100 text-emerald-700 bg-red-100 text-red-600').addClass('bg-gray-200 text-gray-700').text('0');
+        helperText.removeClass('text-red-500 text-emerald-600').addClass('text-gray-400').text('Isi poin per jawaban benar untuk setiap tipe soal.');
+        applyBtn.prop('disabled', true);
+    }
+}
+
+function applyTeacherQuestionReleaseWeightsByPoints() {
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+    const points = {};
+
+    $('.points-type-input').each(function () {
+        const key = String($(this).data('type-key'));
+        points[key] = parseFloat($(this).val()) || 0;
+    });
+
+    if (!breakdown.every(g => (points[g.key] || 0) > 0)) {
+        return;
+    }
+
+    breakdown.forEach(group => {
+        const p = points[group.key];
+
+        group.ids.forEach(id => {
+            const question = teacherQuestionReleaseSelectedQuestionData.get(String(id));
+            const correctCount = getTeacherQuestionReleaseCorrectAnswerCount(question);
+            teacherQuestionReleaseSelectedQuestionWeights[id] =
+                Number((p * correctCount).toFixed(2));
+        });
+    });
+
+    const modal = document.getElementById('modal-question-release-ratio-weight');
+    if (modal && typeof modal.close === 'function') {
+        modal.close();
+    }
+
+    renderTeacherQuestionReleaseSelectedQuestions();
+    updateTeacherQuestionReleaseQuestionSummary();
+    updateTeacherQuestionReleaseStepper();
+    updateTeacherQuestionReleasePublishButton();
+
+    if (teacherQuestionReleaseStep === 3) {
+        loadTeacherQuestionReleaseStep3();
+    }
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Poin Berhasil Diterapkan',
+            text: 'Bobot soal = poin × jumlah jawaban benar per soal.',
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 }
 
@@ -1791,8 +2140,6 @@ function applyTeacherQuestionReleaseWeightsByRatio() {
             teacherQuestionReleaseSelectedQuestionWeights[id] = finalWeight;
         });
     });
-
-    teacherQuestionReleaseLastRatios = ratios;
 
     const modal = document.getElementById('modal-question-release-ratio-weight');
     if (modal && typeof modal.close === 'function') {
@@ -1886,9 +2233,64 @@ function updateTeacherQuestionReleaseQuestionSummary() {
         }
     }
 
-    $('#question-release-total-weight-label').removeClass('text-gray-700 text-emerald-700 text-red-700 text-amber-700')
-        .addClass(selectedCount === 0 ? 'text-gray-700' : isTeacherQuestionReleaseWeightValid() ? 'text-emerald-700' : totalWeight > 100 ? 'text-red-700' : 'text-amber-700')
-        .text(`${formatTeacherQuestionReleaseWeight(totalWeight)}`);
+    const breakdown = getTeacherQuestionReleaseTypeBreakdown();
+
+    const over = totalWeight > 100;
+    const isEmpty = selectedCount === 0;
+    const totalColor = isEmpty ? 'text-gray-700' : over ? 'text-red-600' : 'text-emerald-600';
+
+    const chips = breakdown
+        .map(group => {
+            const typeWeight = Number(
+                group.ids.reduce(
+                    (sum, id) => sum + getTeacherQuestionReleaseQuestionWeight(id),
+                    0
+                ).toFixed(2)
+            );
+            return { group, typeWeight };
+        })
+        .sort((a, b) => b.typeWeight - a.typeWeight)
+        .map(({ group, typeWeight }) => {
+            const share = totalWeight > 0
+                ? Number(((typeWeight / totalWeight) * 100).toFixed(1))
+                : 0;
+
+            const typeLower = group.key.toLowerCase();
+            const dotColor = typeLower.includes('essay') || typeLower.includes('uraian')
+                ? 'bg-amber-500'
+                : typeLower.includes('mcma') || typeLower.includes('majemuk') || typeLower.includes('kompleks')
+                ? 'bg-purple-500'
+                : typeLower.includes('jodoh')
+                ? 'bg-pink-500'
+                : typeLower.includes('benar')
+                ? 'bg-emerald-500'
+                : 'bg-blue-500';
+
+            const shortLabel = group.label
+                .replace(/PG_?KOMPLEKS/i, 'PGK')
+                .replace(/_/g, ' ');
+
+            return `<span class="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 shadow-xs">
+                <span class="h-1.5 w-1.5 rounded-full ${dotColor}"></span>
+                ${shortLabel}
+                <span class="font-black text-gray-800">${formatTeacherQuestionReleaseWeight(typeWeight)}</span>
+                <span class="text-gray-400">${share}%</span>
+            </span>`;
+        })
+        .join('');
+
+    $('#question-release-total-weight-label')
+        .removeClass('text-gray-700 text-emerald-700 text-red-700 text-amber-700')
+        .addClass(totalColor)
+        .html(`
+            <div class="flex flex-wrap items-baseline gap-1.5">
+                <span class="text-lg leading-none">${formatTeacherQuestionReleaseWeight(totalWeight)}</span>
+                <span class="text-[10px] font-semibold text-gray-400">poin</span>
+            </div>
+            ${chips ? `<div class="mt-1.5 flex flex-wrap items-center gap-1">${chips}</div>` : ''}
+        `);
+
+    renderTeacherQuestionReleaseSelectedAssessment();
 
     const warning = $('#question-release-weight-warning');
 
@@ -2029,6 +2431,10 @@ function renderTeacherQuestionReleaseSelectedAssessment() {
     const assignedQuestionCount = getTeacherQuestionReleaseAssignedQuestionCount(assessment);
     const assignedTotalWeight = getTeacherQuestionReleaseAssignedTotalWeight(assessment);
 
+    // kartu mengikuti paket yang sedang disusun (live), bukan data server yang lama
+    const liveCount = teacherQuestionReleaseSelectedQuestions.size;
+    const liveWeight = Number(getTeacherQuestionReleaseTotalWeight().toFixed(2));
+
     container.html(`
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
@@ -2047,20 +2453,21 @@ function renderTeacherQuestionReleaseSelectedAssessment() {
                     ${escapeTeacherQuestionReleaseHtml(mapelName)}
                     •
                     ${escapeTeacherQuestionReleaseHtml(className)}
+                    ${assignedQuestionCount > 0 ? ` • <span class="text-gray-400">sebelumnya terpasang ${assignedQuestionCount} butir (${formatTeacherQuestionReleaseWeight(assignedTotalWeight)})</span>` : ''}
                 </p>
             </div>
 
             <div class="shrink-0 flex items-center gap-2">
                 <div class="rounded-xl bg-white border border-[#CFEAFF] px-3 py-2.5 text-right">
-                    <div class="text-[9px] text-gray-400">Sudah Terpasang</div>
+                    <div class="text-[9px] text-gray-400">Dipilih</div>
                     <div class="mt-0.5 text-xs font-black text-gray-700">
-                        ${assignedQuestionCount} Butir
+                        ${liveCount} Butir
                     </div>
                 </div>
                 <div class="rounded-xl bg-white border border-[#CFEAFF] px-3 py-2.5 text-right">
                     <div class="text-[9px] text-gray-400">Bobot</div>
-                    <div class="mt-0.5 text-xs font-black ${assignedTotalWeight === 100 ? 'text-emerald-600' : 'text-[#0071BC]'}">
-                        ${formatTeacherQuestionReleaseWeight(assignedTotalWeight)}
+                    <div class="mt-0.5 text-xs font-black ${liveWeight === 100 ? 'text-emerald-600' : 'text-[#0071BC]'}">
+                        ${formatTeacherQuestionReleaseWeight(liveWeight)}
                     </div>
                 </div>
             </div>
@@ -2909,6 +3316,7 @@ function bindTeacherQuestionReleaseEvents() {
                 )
             );
 
+            updateTeacherQuestionReleasePctLabels();
             updateTeacherQuestionReleaseQuestionSummary();
             updateTeacherQuestionReleaseStepper();
             updateTeacherQuestionReleasePublishButton();
@@ -2968,6 +3376,14 @@ function bindTeacherQuestionReleaseEvents() {
 
     $(document).on(
         'click.teacherQuestionRelease',
+        '#question-release-scale-to-100',
+        function () {
+            scaleTeacherQuestionReleaseWeightsTo100();
+        }
+    );
+
+    $(document).on(
+        'click.teacherQuestionRelease',
         '#question-release-ratio-weight',
         function () {
             openTeacherQuestionReleaseRatioModal();
@@ -3002,7 +3418,28 @@ function bindTeacherQuestionReleaseEvents() {
         'click.teacherQuestionRelease',
         '#btn-apply-ratio-weight',
         function () {
+            if (teacherQuestionReleaseWeightMode === 'points') {
+                applyTeacherQuestionReleaseWeightsByPoints();
+                return;
+            }
+
             applyTeacherQuestionReleaseWeightsByRatio();
+        }
+    );
+
+    $(document).on(
+        'click.teacherQuestionRelease',
+        '.weight-mode-btn',
+        function () {
+            setTeacherQuestionReleaseWeightMode($(this).data('mode'));
+        }
+    );
+
+    $(document).on(
+        'input.teacherQuestionRelease',
+        '.points-type-input',
+        function () {
+            updateTeacherQuestionReleasePointsCalculations();
         }
     );
 
