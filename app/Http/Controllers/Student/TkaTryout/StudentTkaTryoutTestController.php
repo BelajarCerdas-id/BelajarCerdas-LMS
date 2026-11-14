@@ -22,7 +22,7 @@ class StudentTkaTryoutTestController extends Controller
 {
     public function index($role, $schoolName, $schoolId, $periodId, $sessionId, $subjectId)
     {
-        return view('Features.Lms.Student.TkaTryout.TkaTryoutTest', compact('role', 'schoolName', 'schoolId', 'periodId', 'sessionId', 'subjectId'));
+        return view('features.lms.student.tka-tryout.tka-tryout-test', compact('role', 'schoolName', 'schoolId', 'periodId', 'sessionId', 'subjectId'));
     }
 
     private function calculateAttemptResult($attempt)

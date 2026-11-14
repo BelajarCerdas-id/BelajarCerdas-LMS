@@ -26,7 +26,7 @@ class QuestionBankController extends Controller
     {
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.Lms.Administrator.QuestionBankManagement.LmsQuestionBankManagement', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.administrator.question-bank-management.lms-question-bank-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate bank soal
@@ -221,14 +221,14 @@ class QuestionBankController extends Controller
     // function bank soal detail view (milik bc)
     public function lmsDefaultQuestionBankManagementDetailView($role, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId = null, $subBabId = null, $schoolName = null, $schoolId = null)
     {
-        return view('Features.Lms.Administrator.QuestionBankManagement.AdministratorQuestionBankManagementDetail', compact('source', 'questionType', 'questionCategory',
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 'questionCategory',
         'kurikulumId', 'kelasId', 'mapelId', 'babId', 'subBabId', 'role', 'schoolName', 'schoolId'));
     }
 
     // function bank soal detail view (milik sekolah)
     public function lmsSchoolQuestionBankManagementDetailView($role, $schoolName, $schoolId, $kurikulumId, $kelasId, $mapelId, $source, $questionType, $questionCategory, $babId = null, $subBabId = null)
     {
-        return view('Features.Lms.Administrator.QuestionBankManagement.AdministratorQuestionBankManagementDetail', compact('source', 'questionType', 'questionCategory',
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-detail', compact('source', 'questionType', 'questionCategory',
         'kurikulumId', 'kelasId', 'mapelId', 'babId', 'subBabId', 'role', 'schoolName', 'schoolId'));
     }
 
@@ -319,7 +319,7 @@ class QuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('Features.Lms.Administrator.QuestionBankManagement.AdministratorQuestionBankManagementEdit', compact('source', 'babId', 'subBabId', 'questionId', 
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'babId', 'subBabId', 'questionId', 
         'kurikulumId', 'kelasId', 'mapelId', 'role', 'schoolName', 'schoolId', 'questionType', 'questionCategory'));
     }
 
@@ -343,7 +343,7 @@ class QuestionBankController extends Controller
         // Simpan hasil pengelompokan ke variabel baru
         $groupedSoal = $dataSoal;
 
-        return view('Features.Lms.Administrator.QuestionBankManagement.AdministratorQuestionBankManagementEdit', compact('source', 'babId', 'subBabId', 'questionId', 
+        return view('features.lms.administrator.question-bank-management.administrator-question-bank-management-edit', compact('source', 'babId', 'subBabId', 'questionId', 
         'kurikulumId', 'kelasId', 'mapelId', 'role', 'schoolName', 'schoolId', 'questionType', 'questionCategory'));
     }
 

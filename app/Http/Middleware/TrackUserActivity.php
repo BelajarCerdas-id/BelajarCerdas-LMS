@@ -241,7 +241,7 @@ class TrackUserActivity
         }
 
         // 15. DASHBOARD & BERANDA
-        if (str_contains($routeName, 'Beranda') || str_contains($path, 'dashboard') || str_contains($path, 'Beranda')) {
+        if (str_contains($routeName, 'beranda') || str_contains($path, 'dashboard') || str_contains($path, 'beranda')) {
             return ['Dashboard', 'Beranda Utama'];
         }
 

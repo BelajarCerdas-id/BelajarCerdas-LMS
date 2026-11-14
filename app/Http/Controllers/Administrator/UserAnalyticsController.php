@@ -67,7 +67,7 @@ class UserAnalyticsController extends Controller
             'Pengaturan Akun'
         ];
 
-        return view('Features.Lms.Administrator.Analytics', compact('role', 'schools', 'roles', 'modules'));
+        return view('features.lms.administrator.analytics', compact('role', 'schools', 'roles', 'modules'));
     }
 
     /**

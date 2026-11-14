@@ -162,6 +162,6 @@ class DashboardController extends Controller
         }
 
         // Default Fallback jika role tidak dikenali
-        return view('Beranda');
+        return view('beranda');
     }
 }

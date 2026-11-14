@@ -94,7 +94,7 @@ class ParentTkaTryoutController extends Controller
     
     public function index($role, $schoolName, $schoolId, $studentId = null)
     {
-        return view('Features.Lms.Parents.TkaTryout.ParentTkaTryoutMonitoring', compact('role', 'schoolName', 'schoolId', 'studentId'));
+        return view('features.lms.parents.tka-tryout.parent-tka-tryout-monitoring', compact('role', 'schoolName', 'schoolId', 'studentId'));
     }
 
     public function loadStudentInformation($role, $schoolName, $schoolId, $studentId = null)

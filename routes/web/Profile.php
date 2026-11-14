@@ -5,7 +5,7 @@ use App\Http\Controllers\ProfileAccountController;
 use Illuminate\Support\Facades\Route;
 
 // DASHBOARD
-Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('Beranda');
+Route::get('/lms/{role}', [DashboardController::class, 'index'])->name('beranda');
 
 // PROFILE USER
 // school partner & non school partner views

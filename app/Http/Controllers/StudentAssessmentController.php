@@ -23,7 +23,7 @@ class StudentAssessmentController extends Controller
 
         $getAssessment = SchoolAssessment::where('assessment_type_id', $assessmentTypeId)->first();
 
-        return view('Features.Lms.Student.Assessment.StudentPreviewAssessmentSchedule', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-preview-assessment-schedule', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
             'mapelId', 'assessmentTypeId', 'mode', 'parentAssessmentId', 'getAssessmentType', 'getAssessment'));
     }
     

@@ -15,7 +15,7 @@ class TeacherPerformanceController extends Controller
 {
     public function teacherPerformanceView($role, $foundationId = null)
     {
-        return view('Features.Lms.Foundation.TeacherPerformance.MonitoringSchoolTeacherPerformance', compact('role', 'foundationId'));
+        return view('features.lms.foundation.teacher-performance.monitoring-school-teacher-performance', compact('role', 'foundationId'));
     }
 
     public function loadAcademicYears($role, $foundationId = null)

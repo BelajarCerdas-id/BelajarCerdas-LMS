@@ -87,7 +87,7 @@ class ClassController extends Controller
 
         $phases = Fase::whereIn(DB::raw('LOWER(kode)'), $allowedPhases)->get();
 
-        return view('Features.Lms.Administrator.LmsSchoolSubscriptionManagementClass', compact('role', 'schoolName', 'schoolId', 'managedRole', 'majorId', 'phases'));
+        return view('features.lms.administrator.lms-school-subscription-management-class', compact('role', 'schoolName', 'schoolId', 'managedRole', 'majorId', 'phases'));
     }
 
     // function paginate lms management class

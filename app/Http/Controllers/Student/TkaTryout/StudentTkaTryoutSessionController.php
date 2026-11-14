@@ -50,7 +50,7 @@ class StudentTkaTryoutSessionController extends Controller
             ])->with('period_status', 'finished');
         }
 
-        return view('Features.Lms.Student.TkaTryout.TkaTryoutSessionList', compact('role', 'schoolName', 'schoolId', 'periodId'));
+        return view('features.lms.student.tka-tryout.tka-tryout-session-list', compact('role', 'schoolName', 'schoolId', 'periodId'));
     }
 
     public function paginateSessionList($role, $schoolName, $schoolId, $periodId)

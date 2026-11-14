@@ -27,7 +27,7 @@ class StudentLearningController extends Controller
 
     // function lms student view
     public function lmsStudentView($role, $schoolName, $schoolId){
-        return view('Features.Lms.Student.LmsStudent', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.student.lms-student', compact('role', 'schoolName', 'schoolId'));
     }
 
     // paginate lms student
@@ -80,7 +80,7 @@ class StudentLearningController extends Controller
 
     // function lms student learning view
     public function studentLearning($role, $schoolName, $schoolId, $curriculumId, $mapelId){
-        return view('Features.Lms.Student.Learning.StudentLearning', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId'));
+        return view('features.lms.student.learning.student-learning', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId'));
     }
 
     // function paginate student learning
@@ -107,7 +107,7 @@ class StudentLearningController extends Controller
     public function studentReviewMeeting($role, $schoolName, $schoolId, $curriculumId, $mapelId, $serviceId){
         $getService = Service::where('id', $serviceId)->first();
 
-        return view('Features.Lms.Student.Learning.StudentReviewMeeting', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId', 
+        return view('features.lms.student.learning.student-review-meeting', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId', 
             'serviceId', 'getService'));
     }
 

@@ -14,7 +14,7 @@ class AccountController extends Controller
     // function lms management account view
     public function lmsManagementAccountView($role, $schoolName, $schoolId, $managedRole)
     {
-        return view('Features.Lms.Administrator.LmsSchoolSubscriptionManagementAccount', compact('schoolName', 'schoolId', 'role', 'managedRole'));
+        return view('features.lms.administrator.lms-school-subscription-management-account', compact('schoolName', 'schoolId', 'role', 'managedRole'));
     }
 
    // function paginate lms management account
@@ -169,7 +169,7 @@ class AccountController extends Controller
 
     public function lmsParentChildrenListView($role, $schoolName, $schoolId, $managedRole, $parentId)
     {
-        return view('Features.Lms.Administrator.LmsSchoolSubscriptionParentChildrenList', compact('role', 'schoolName', 'schoolId', 'managedRole', 'parentId'));
+        return view('features.lms.administrator.lms-school-subscription-parent-children-list', compact('role', 'schoolName', 'schoolId', 'managedRole', 'parentId'));
     }
 
     public function paginateLmsParentChildrenList(Request $request, $role, $schoolName, $schoolId, $managedRole, $parentId)

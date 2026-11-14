@@ -21,14 +21,14 @@ class TkaTryoutPeriodSessionController extends Controller
     {
         $getPeriod = TkaTryoutPeriod::find($periodId);
 
-        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriodSession.TkaTryoutPeriodSessionForm', compact('role', 'periodId', 'getPeriod'));
+        return view('features.lms.administrator.tka-tryout.tka-tryout-period-session.tka-tryout-period-session-form', compact('role', 'periodId', 'getPeriod'));
     }
 
     public function indexOverride($role, $periodOverrideId)
     {
         $getPeriodOverride = TkaTryoutPeriodSchOverride::with(['TkaTryoutPeriod', 'SchoolPartner'])->find($periodOverrideId);
 
-        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriodSession.TkaTryoutPeriodSessionForm', compact('role', 'periodOverrideId', 'getPeriodOverride'));
+        return view('features.lms.administrator.tka-tryout.tka-tryout-period-session.tka-tryout-period-session-form', compact('role', 'periodOverrideId', 'getPeriodOverride'));
     }
 
     public function paginateTkaTryoutPeriodSession($role, $periodId)
@@ -336,7 +336,7 @@ class TkaTryoutPeriodSessionController extends Controller
             $schoolId = SchoolPartner::find($session->TkaTryoutPeriodSchOverride->school_partner_id)->id;
         }
 
-        return view('Features.Lms.Administrator.TkaTryout.TkaTryoutPeriodSession.TkaTryoutPeriodSessionManageStudent', compact('role', 'periodId', 'sessionId', 'session', 
+        return view('features.lms.administrator.tka-tryout.tka-tryout-period-session.tka-tryout-period-session-manage-student', compact('role', 'periodId', 'sessionId', 'session', 
         'schools', 'schoolId'));
     }
     

@@ -43,7 +43,7 @@ class TeacherAssessmentGradingController extends Controller
 
     public function assessmentGradingManagement($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Teacher.AssessmentGrading.TeacherAssessmentGradingManagement',compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.teacher.assessment-grading.teacher-assessment-grading-management',compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateAssessmentGrading(Request $request, $role, $schoolName, $schoolId)
@@ -175,7 +175,7 @@ class TeacherAssessmentGradingController extends Controller
 
         $isProject = $assessment->SchoolAssessmentType->AssessmentMode->code === 'project';
 
-        return view('Features.Lms.Teacher.AssessmentGrading.TeacherAssessmentGradingStudentList', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'mode', 'isProject'));
+        return view('features.lms.teacher.assessment-grading.teacher-assessment-grading-student-list', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'mode', 'isProject'));
     }
 
     public function paginateAssessmentGradingStudentList(Request $request, $role, $schoolName, $schoolId, $assessmentId, $mode) 
@@ -367,9 +367,9 @@ class TeacherAssessmentGradingController extends Controller
         $rootAssessmentId = $assessment->parent_assessment_id ?? $assessment->id;
 
         if ($assessment->SchoolAssessmentType->AssessmentMode->code === 'project') {
-            return view('Features.Lms.Teacher.AssessmentGrading.TeacherAssessmentGradingStudentProjectDetail', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'studentId'));
+            return view('features.lms.teacher.assessment-grading.teacher-assessment-grading-student-project-detail', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'studentId'));
         } else {
-            return view('Features.Lms.Teacher.AssessmentGrading.TeacherAssessmentGradingStudentAnswerDetail', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'mode', 'studentId',
+            return view('features.lms.teacher.assessment-grading.teacher-assessment-grading-student-answer-detail', compact('role', 'schoolName', 'schoolId', 'assessmentId', 'mode', 'studentId',
             'rootAssessmentId'));
         }
     }

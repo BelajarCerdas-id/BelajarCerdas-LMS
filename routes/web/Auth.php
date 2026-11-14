@@ -20,7 +20,7 @@ Route::fallback(function () {
                 'role' => $role,
             ]);
         } else {
-            return redirect()->route('Beranda', [
+            return redirect()->route('beranda', [
                 'role' => $role,
             ]);
         }

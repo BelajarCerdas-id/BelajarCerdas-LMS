@@ -33,7 +33,7 @@ class LmsController extends Controller
     // function lms school subscription view
     public function lmsSchoolSubscriptionView($role)
     {
-        return view('Features.Lms.Administrator.LmsSchoolSubscription', compact('role'));
+        return view('features.lms.administrator.lms-school-subscription', compact('role'));
     }
 
     // function pagiante lms school subscription
@@ -497,7 +497,7 @@ class LmsController extends Controller
             return $poll;
         });
 
-        return view('Features.Lms.Teacher.Dashboard', compact(
+        return view('features.lms.teacher.dashboard', compact(
             'role',
             'schoolName', 
             'schoolId', 
@@ -654,7 +654,7 @@ class LmsController extends Controller
             'alpa'            => $attendances->where('status', 'alpa')->count(),
         ];
 
-        return view('Features.Lms.Teacher.ClassDetail', compact(
+        return view('features.lms.teacher.class_detail', compact(
             'role',
             'schoolName', 
             'schoolId', 
@@ -736,7 +736,7 @@ class LmsController extends Controller
         ];
         $hariIni = $mapHari[$hariInggris] ?? 'Senin';
         
-        return view('Features.Lms.Students.Dashboard', compact(
+        return view('features.lms.students.dashboard', compact(
             'schoolName', 
             'schoolId', 
             'user',

@@ -48,7 +48,7 @@ class TeacherContentReleaseController extends Controller
     {
         $getCurriculum = Kurikulum::all();
         
-        return view('Features.Lms.Teacher.ContentForRelease.TeacherContentForRelease', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.teacher.content-for-release.teacher-content-for-release', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate teacher content for release
@@ -418,7 +418,7 @@ class TeacherContentReleaseController extends Controller
     // function teacher content for release review meetings view
     public function teacherContentForReleaseReviewMeeting($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId)
     {
-        return view('Features.Lms.Teacher.ContentForRelease.TeacherContentForReleaseReviewMeetings', compact('role', 'schoolName', 
+        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-meetings', compact('role', 'schoolName', 
             'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId'));
     }
 
@@ -492,7 +492,7 @@ class TeacherContentReleaseController extends Controller
 
         });
 
-        return view('Features.Lms.Teacher.ContentForRelease.TeacherContentForReleaseReviewContent', compact('role', 'schoolName', 
+        return view('features.lms.teacher.content-for-release.teacher-content-for-release-review-content', compact('role', 'schoolName', 
             'schoolId', 'schoolClassId', 'mapelId', 'semester', 'serviceId', 'meetingContentId', 'data'));
     }
 }

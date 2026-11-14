@@ -148,7 +148,7 @@ class AcademicDocumentDriveController extends Controller
         }
 
         return view(
-            'Features.Lms.SchoolAdmin.RegistrasiGuru.AcademicDrive',
+            'features.lms.school-admin.registrasi-guru.academic-drive',
             [
                 'role' => $role,
                 'schoolName' => $schoolName,
