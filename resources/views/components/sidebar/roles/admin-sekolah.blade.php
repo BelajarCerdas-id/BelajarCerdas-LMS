@@ -229,7 +229,7 @@
 
                             <div class="border-t border-[#EFEDE7] my-1"></div>
 
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('Logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center px-4 py-2.5 gap-2.5 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] transition font-medium cursor-pointer">
                                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -285,7 +285,7 @@
                         Profil Akun
                     </a>
 
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center px-3 py-2 gap-2 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] cursor-pointer">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -406,7 +406,7 @@
 
                 {{-- DRAWER LOGOUT BUTTON --}}
                 <div class="p-4 border-t border-[#EFEDE7]">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 bg-[#FBEAE7] text-[#DE3B2B] rounded-xl font-bold text-sm gap-2 cursor-pointer transition active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>

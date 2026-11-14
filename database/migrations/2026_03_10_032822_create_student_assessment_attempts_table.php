@@ -20,9 +20,6 @@ return new class extends Migration
             $table->integer('tab_switch_count')->default(0);
             $table->enum('status', ['in_progress', 'submitted', 'cheating', 'timeout'])->default('in_progress');
             $table->timestamps();
-
-            $table->unique(['student_id']);
-            $table->unique(['school_assessment_id']);
         });
     }
 

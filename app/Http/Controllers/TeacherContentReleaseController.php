@@ -485,7 +485,7 @@ class TeacherContentReleaseController extends Controller
                 'rule_id'   => $item->service_rule_id,
                 'rule_name' => $item->ServiceRule?->name,
                 'file_name'=> $item->LmsContent->LmsContentItem[0]->original_filename,
-                'file_url' => asset('lms-contents/' . $item->LmsContent->LmsContentItem[0]->value_file),
+                'file_url' => asset('storage/lms-contents/' . $item->LmsContent->LmsContentItem[0]->value_file),
                 'mime'     => $this->guessMime($extension),
                 'type'     => 'file'
             ];

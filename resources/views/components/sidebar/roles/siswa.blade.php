@@ -95,7 +95,7 @@
                                 request()->routeIs('student.tka-subject-list.view');
                         @endphp
 
-                        <a href="{{ route('teacher.library') }}"
+                        <a href="{{ route('Teacher.Library') }}"
                            class="flex items-center justify-between px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition cursor-pointer {{ $isLibraryActive ? 'bg-[#F1EFEA] text-dpai-accent' : 'text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA]' }}">
                             <div class="flex items-center gap-3">
                                 <span class="w-7 h-7 rounded-lg {{ $isLibraryActive ? 'bg-dpai-accent-soft text-dpai-accent' : 'bg-[#F1EFEA] text-[#5D5A52]' }} flex items-center justify-center shrink-0 text-[13px]">
@@ -107,17 +107,17 @@
                         </a>
 
                         <div class="{{ $isLibraryActive ? 'flex flex-col pl-10 pr-2 py-1 space-y-0.5 border-l-2 border-[#EFEDE7] ml-6 my-1' : 'hidden pl-10 pr-2 py-1 space-y-0.5 border-l-2 border-[#EFEDE7] ml-6 my-1' }}">
-                            <a href="{{ route('teacher.library.ppt') }}"
+                            <a href="{{ route('Teacher.Library.Ppt') }}"
                                class="block py-1.5 px-2 text-[12.5px] rounded-lg transition {{ request()->routeIs('teacher.library.ppt') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA]' }}">
                                 Power Point
                             </a>
 
-                            <a href="{{ route('teacher.library.lks') }}"
+                            <a href="{{ route('Teacher.Library.Lks') }}"
                                class="block py-1.5 px-2 text-[12.5px] rounded-lg transition {{ request()->routeIs('teacher.library.lks') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA]' }}">
                                 LKPD
                             </a>
 
-                            <a href="{{ route('teacher.library.video') }}"
+                            <a href="{{ route('Teacher.Library.Video') }}"
                                class="block py-1.5 px-2 text-[12.5px] rounded-lg transition {{ request()->routeIs('teacher.library.video') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA]' }}">
                                 Video
                             </a>
@@ -222,7 +222,7 @@
 
                             <div class="border-t border-[#EFEDE7] my-1"></div>
 
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('Logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center px-4 py-2.5 gap-2.5 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] transition font-medium cursor-pointer">
                                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -278,7 +278,7 @@
                         Profil Akun
                     </a>
 
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center px-3 py-2 gap-2 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] cursor-pointer">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -365,7 +365,7 @@
                         {{-- MOBILE LIBRARY --}}
                         <li class="list-menu-sidebar-mobile-student">
                             <div class="flex flex-col">
-                                <a href="{{ route('student.library') }}"
+                                <a href="{{ route('Student.Library') }}"
                                    class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[#5D5A52] hover:bg-[#F1EFEA]">
                                     <div class="flex items-center gap-3">
                                         <i class="fa-solid fa-book text-[14px] w-5 text-center"></i>
@@ -375,17 +375,17 @@
                                 </a>
 
                                 <div class="{{ $isLibraryActive ? 'flex flex-col pl-8 pr-2 py-1 space-y-0.5 border-l-2 border-[#EFEDE7] ml-4 my-1' : 'hidden pl-8 pr-2 py-1 space-y-0.5 border-l-2 border-[#EFEDE7] ml-4 my-1' }}">
-                                    <a href="{{ route('teacher.library.ppt') }}"
+                                    <a href="{{ route('Teacher.Library.Ppt') }}"
                                        class="block py-1.5 px-2 text-[12.5px] rounded-lg {{ request()->routeIs('teacher.library.ppt') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:bg-[#F1EFEA]' }}">
                                         Power Point
                                     </a>
 
-                                    <a href="{{ route('teacher.library.lks') }}"
+                                    <a href="{{ route('Teacher.Library.Lks') }}"
                                        class="block py-1.5 px-2 text-[12.5px] rounded-lg {{ request()->routeIs('teacher.library.lks') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:bg-[#F1EFEA]' }}">
                                         LKPD
                                     </a>
 
-                                    <a href="{{ route('teacher.library.video') }}"
+                                    <a href="{{ route('Teacher.Library.Video') }}"
                                        class="block py-1.5 px-2 text-[12.5px] rounded-lg {{ request()->routeIs('teacher.library.video') ? 'bg-[#F1EFEA] text-dpai-accent font-semibold' : 'text-[#5D5A52] hover:bg-[#F1EFEA]' }}">
                                         Video
                                     </a>
@@ -402,7 +402,7 @@
 
                 {{-- DRAWER LOGOUT BUTTON --}}
                 <div class="p-4 border-t border-[#EFEDE7]">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 bg-[#FBEAE7] text-[#DE3B2B] rounded-xl font-bold text-sm gap-2 cursor-pointer transition active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>

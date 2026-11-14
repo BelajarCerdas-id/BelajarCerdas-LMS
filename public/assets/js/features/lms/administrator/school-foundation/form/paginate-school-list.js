@@ -45,7 +45,7 @@ function paginateSchoolList(search_school = '') {
                                     <!-- Logo -->
                                     ${item.logo ? `
                                         <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden">
-                                            <img src="/${item.logo}" alt="Logo Sekolah" class="h-full w-full object-contain">
+                                            <img src="/storage/${item.logo}" alt="Logo Sekolah" class="h-full w-full object-contain">
                                         </div>
                                     ` : `
                                         <div class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-base-300 bg-white shadow-sm">
@@ -207,7 +207,7 @@ function updateSchoolSummary() {
                 <div class="flex h-6 w-6 shrink-0 items-center justify-center">
 
                     ${school.logo ? `
-                        <img src="/${school.logo}" class="h-full w-full rounded-full object-contain">
+                        <img src="/storage/${school.logo}" class="h-full w-full rounded-full object-contain">
                     ` : `
                         <i class="fa-solid fa-school text-primary"></i>
                     `}

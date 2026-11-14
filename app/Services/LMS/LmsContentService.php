@@ -86,7 +86,7 @@ class LmsContentService {
                 $file = request()->file("files.{$rule->id}");
 
                 $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('lms-contents'), $filename);
+                $file->storeAs('lms-contents', $filename, 'public');
 
                 LmsContentItem::updateOrCreate(
                     [

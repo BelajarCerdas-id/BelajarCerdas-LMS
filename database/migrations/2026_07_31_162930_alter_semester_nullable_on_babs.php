@@ -14,8 +14,8 @@ return new class extends Migration
         // Ubah kolom
         Schema::table('babs', function (Blueprint $table) {
 
-            // semester jadi nullable
-            $table->unsignedBigInteger('semester')->nullable()->change();
+            // semester jadi nullable (tetap integer seperti dibuat 2026_01_19)
+            $table->integer('semester')->nullable()->change();
         });
     }
 
@@ -28,7 +28,7 @@ return new class extends Migration
         Schema::table('babs', function (Blueprint $table) {
 
             // balikin nullable
-            $table->unsignedBigInteger('semester')->nullable(false)->change();
+            $table->integer('semester')->nullable(false)->change();
         });
     }
 };

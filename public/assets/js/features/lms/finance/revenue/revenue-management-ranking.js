@@ -39,7 +39,7 @@ function paginateRevenueManagementRanking(search_school = '', page = 1) {
                     if (item.logo) {
 
                         schoolLogo = `
-                            <img src="/${item.logo}" alt="${item.nama_sekolah}" class="w-10 h-10 md:w-14 md:h-14 rounded-full object-contain shrink-0">
+                            <img src="/storage/${item.logo}" alt="${item.nama_sekolah}" class="w-10 h-10 md:w-14 md:h-14 rounded-full object-contain shrink-0">
                         `;
 
                     } else {

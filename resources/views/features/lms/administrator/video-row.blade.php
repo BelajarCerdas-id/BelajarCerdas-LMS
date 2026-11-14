@@ -10,7 +10,7 @@
             @if(Str::startsWith($cover,'http'))
                 <img src="{{ $cover }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
             @else
-                <img src="{{ asset('library/sampul/'.$cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                <img src="{{ asset('storage/library/sampul/'.$cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
             @endif
         @else
             <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>

@@ -244,13 +244,7 @@ class FoundationManagementController extends Controller
 
                 $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
 
-                $destinationPath = public_path('school-foundation-logo');
-
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-
-                $file->move($destinationPath, $filename);
+                $file->storeAs('school-foundation-logo', $filename, 'public');
 
                 $logo = 'school-foundation-logo/' . $filename;
             }
@@ -432,13 +426,12 @@ class FoundationManagementController extends Controller
 
             $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
 
-            $destinationPath = public_path('school-foundation-logo');
-
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
+            // hapus logo lama agar tidak menumpuk
+            if (!empty($schoolFoundation->logo)) {
+                Storage::disk('public')->delete($schoolFoundation->logo);
             }
 
-            $file->move($destinationPath, $filename);
+            $file->storeAs('school-foundation-logo', $filename, 'public');
 
             $logo = 'school-foundation-logo/' . $filename;
         } else {

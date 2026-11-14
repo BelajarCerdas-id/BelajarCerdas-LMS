@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class TeacherAssessmentController extends Controller
@@ -372,7 +373,7 @@ class TeacherAssessmentController extends Controller
             $file = $request->file("assessment_value_file");
 
             $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('assessment/assessment-file'), $filename);
+            $file->storeAs('assessment/assessment-file', $filename, 'local');
         }
 
         $mode = $request->mode; // main | remedial | susulan | dll
@@ -586,7 +587,7 @@ class TeacherAssessmentController extends Controller
 
             if ($file) {
                 $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assessment/assessment-file'), $filename);
+                $file->storeAs('assessment/assessment-file', $filename, 'local');
             }
         }
 

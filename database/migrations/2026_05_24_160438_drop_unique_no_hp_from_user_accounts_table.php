@@ -21,6 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        // irreversible: restoring unique(no_hp) would fail once duplicate
+        // phone numbers exist; the drop is intentional.
     }
 };

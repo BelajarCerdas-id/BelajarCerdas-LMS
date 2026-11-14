@@ -209,7 +209,7 @@ class StudentDashboardController extends Controller
                         $deskripsi = substr($rawText, 0, 100) . '...';
                     }
                     if (!empty($item->value_file)) {
-                        $fileUrl = asset('lms-contents/' . $item->value_file);
+                        $fileUrl = asset('storage/lms-contents/' . $item->value_file);
                     }
                 }
 
@@ -451,7 +451,7 @@ class StudentDashboardController extends Controller
 
         $mime = $this->guessMime($extension);
 
-        $fileUrl = asset('lms-contents/' . $contentItem->value_file);
+        $fileUrl = asset('storage/lms-contents/' . $contentItem->value_file);
 
         return response()->json([
             'type'         => 'file',

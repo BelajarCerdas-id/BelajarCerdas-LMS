@@ -69,7 +69,7 @@
 
                                 <div class="modal-box bg-white max-w-3xl rounded-2xl p-6 shadow-xl">
 
-                                    <form action="{{ route('library.topik.store') }}" method="POST">
+                                    <form action="{{ route('Library.Topik.Store') }}" method="POST">
 
                                         @csrf
 

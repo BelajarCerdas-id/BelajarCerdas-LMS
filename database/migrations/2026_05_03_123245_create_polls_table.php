@@ -8,15 +8,20 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * Reconciled with the live schema: polls are authored by any staff role
+     * (author_id/author_role), can target a class, and have a visibility target.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('polls', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_partner_id')->constrained()->cascadeOnDelete(); // Penting agar data tidak bercampur antar sekolah
-            $table->unsignedBigInteger('teacher_id'); // ID Guru yang membuat
-            $table->string('question'); // Pertanyaan polling
-            $table->enum('status', ['draft', 'active', 'closed'])->default('draft');
+            $table->foreignId('school_partner_id')->constrained('school_partners')->cascadeOnDelete();
+            $table->foreignId('class_id')->nullable()->constrained('school_classes')->cascadeOnDelete();
+            $table->text('question');
+            $table->string('target')->default('Semua Warga Sekolah');
+            $table->foreignId('author_id')->constrained('user_accounts')->cascadeOnDelete();
+            $table->string('author_role');
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

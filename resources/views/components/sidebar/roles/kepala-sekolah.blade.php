@@ -185,7 +185,7 @@
                                         Jadwal Pelajaran
                                     </a>
 
-                                    <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-1.5 px-2 rounded-lg text-[12.5px] text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA] transition">
+                                    <a href="{{ route('Kepsek.Polling.Index') }}" class="link-href block py-1.5 px-2 rounded-lg text-[12.5px] text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA] transition">
                                         Manajemen Polling
                                     </a>
                                 </div>
@@ -286,7 +286,7 @@
 
                             <div class="border-t border-[#EFEDE7] my-1"></div>
 
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('Logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center px-4 py-2.5 gap-2.5 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] transition font-medium cursor-pointer">
                                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -342,7 +342,7 @@
                         Profil Akun
                     </a>
 
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center px-3 py-2 gap-2 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] cursor-pointer">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -488,7 +488,7 @@
                                             <a href="{{ route('lms.headmaster.schedule.view', ['role' => Auth::user()->role, 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? 1]) }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">
                                                 Jadwal Pelajaran
                                             </a>
-                                            <a href="{{ route('kepsek.polling.index') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">
+                                            <a href="{{ route('Kepsek.Polling.Index') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">
                                                 Manajemen Polling
                                             </a>
                                         </div>
@@ -501,7 +501,7 @@
 
                 {{-- DRAWER LOGOUT BUTTON --}}
                 <div class="p-4 border-t border-[#EFEDE7]">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 bg-[#FBEAE7] text-[#DE3B2B] rounded-xl font-bold text-sm gap-2 cursor-pointer transition active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>

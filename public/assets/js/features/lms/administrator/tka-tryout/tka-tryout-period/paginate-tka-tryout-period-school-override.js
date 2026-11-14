@@ -45,7 +45,7 @@ function paginateTkaTryoutOverride(periodId) {
                                 <div class="flex min-w-0 items-center gap-3">
                                     <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
                                         ${item.school_partner?.logo
-                                            ? `<img src="/${item.school_partner.logo}" alt="Logo Sekolah" class="h-full w-full object-cover">`
+                                            ? `<img src="/storage/${item.school_partner.logo}" alt="Logo Sekolah" class="h-full w-full object-cover">`
                                             : `<i class="fa-solid fa-school text-slate-400"></i>`}
                                     </div>
 

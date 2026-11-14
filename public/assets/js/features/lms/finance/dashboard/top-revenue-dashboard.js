@@ -36,7 +36,7 @@ function paginateTopRevenue() {
 
                     if (item.logo) {
                         schoolLogo = `
-                            <img src="/${item.logo}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-contain shrink-0">
+                            <img src="/storage/${item.logo}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-contain shrink-0">
                         `;
                     } else {
                         schoolLogo = `

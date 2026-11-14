@@ -16,8 +16,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('library_books', function (Blueprint $table) {
+            // restore the original definitions (2026_04_02_232828)
             $table->string('category')->nullable();
-            $table->string('type')->nullable();
+            $table->enum('type', ['read', 'task'])->default('read');
         });
     }
 };

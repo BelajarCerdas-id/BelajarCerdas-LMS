@@ -656,7 +656,7 @@
             <h1 class="text-2xl font-bold text-slate-800 mb-2">Akses Terbatas</h1>
             <p class="text-sm text-slate-500 mb-8 leading-relaxed">Halaman ini khusus diperuntukkan bagi Orang Tua siswa.</p>
             
-            <form action="{{ route('logout') }}" method="POST" class="w-full">
+            <form action="{{ route('Logout') }}" method="POST" class="w-full">
                 @csrf
                 <button type="submit" class="w-full flex items-center justify-center py-3.5 bg-[#0071BC] text-white font-bold rounded-xl gap-2 cursor-pointer transition-all duration-300 hover:bg-blue-800 hover:shadow-lg hover:shadow-blue-200">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>

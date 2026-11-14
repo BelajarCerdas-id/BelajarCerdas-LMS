@@ -15,6 +15,7 @@ use App\Models\SubjectPassingGradeCriteria;
 use App\Models\UserAccount;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -1445,11 +1446,6 @@ class StudentAssessmentExamController extends Controller
             ], 422);
         }
 
-        $targetDir = public_path('lms-assessment-submission/assessment-test');
-        if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
         $originName = $file->getClientOriginalName();
         $rawFileName = pathinfo($originName, PATHINFO_FILENAME);
         $safeName = Str::slug(substr($rawFileName, 0, 50));
@@ -1459,7 +1455,7 @@ class StudentAssessmentExamController extends Controller
         $extension = $file->getClientOriginalExtension() ?: 'jpg';
         $finalName = $safeName . '_' . time() . '_' . Str::random(6) . '.' . $extension;
 
-        $file->move($targetDir, $finalName);
+        $file->storeAs('lms-assessment-submission/assessment-test', $finalName, 'local');
 
         $url = "/lms-assessment-submission/assessment-test/$finalName";
         return response()->json([
@@ -1486,10 +1482,8 @@ class StudentAssessmentExamController extends Controller
             return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
-        $fullImagePath = public_path($relativePath);
-
-        if (file_exists($fullImagePath) && is_file($fullImagePath)) {
-            unlink($fullImagePath);
+        if (Storage::disk('local')->exists($relativePath) && Storage::disk('local')->path($relativePath) !== '..') {
+            Storage::disk('local')->delete($relativePath);
             return response()->json(['message' => 'Gambar berhasil dihapus']);
         }
 
@@ -1566,7 +1560,7 @@ class StudentAssessmentExamController extends Controller
             $file = $request->file("project_file");
 
             $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('assessment/assessment-file-submission'), $filename);
+            $file->storeAs('assessment/assessment-file-submission', $filename, 'local');
 
             $data['file_path'] = $filename;
             $data['original_filename'] = $file->getClientOriginalName();

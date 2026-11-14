@@ -6,30 +6,30 @@ use Illuminate\Support\Facades\Route;
 
 // STUDENT VICE PRINCIPAL ROUTES
 // dashboard
-Route::get('lms/{role}/{schoolName}/{schoolId}/dashboard', [StudentVicePrincipalController::class, 'index'])->name('lms.student-vice-principal.dashboard.view');
+Route::get('lms/{role}/{schoolName}/{schoolId}/dashboard', [StudentVicePrincipalController::class, 'index'])->name('Lms.StudentVicePrincipal.Dashboard.View');
 
 // REFLECTION MANAGEMENT
 // view
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management', [StudentVicePrincipalController::class, 'reflectionMaangement'])->name('lms.student-vice-principal.reflection-management.view');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/create', [StudentVicePrincipalController::class, 'createReflectionView'])->name('lms.student-vice-principal.create.reflection.view');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history', [StudentVicePrincipalController::class, 'reflectionManagementHistoryView'])->name('lms.student-vice-principal.reflection-management-history.view');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}', [StudentVicePrincipalController::class, 'reflectionManagementHistoryDetailView'])->name('lms.student-vice-principal.reflection-management-history-detail.view');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management', [StudentVicePrincipalController::class, 'reflectionMaangement'])->name('Lms.StudentVicePrincipal.ReflectionManagement.View');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/create', [StudentVicePrincipalController::class, 'createReflectionView'])->name('Lms.StudentVicePrincipal.Create.Reflection.View');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history', [StudentVicePrincipalController::class, 'reflectionManagementHistoryView'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistory.View');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}', [StudentVicePrincipalController::class, 'reflectionManagementHistoryDetailView'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistoryDetail.View');
 
 // form submit
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/form-submit', [StudentVicePrincipalController::class, 'reflectionManagementForm'])->name('lms.student-vice-principal.reflection.form');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/form-submit', [StudentVicePrincipalController::class, 'reflectionManagementForm'])->name('Lms.StudentVicePrincipal.Reflection.Form');
 
 // crud
-Route::post('/lms/{role}/{schoolName}/{schoolId}/reflection-management/store', [StudentVicePrincipalController::class, 'reflectionManagementStore'])->name('lms.student-vice-principal.reflection.store');
+Route::post('/lms/{role}/{schoolName}/{schoolId}/reflection-management/store', [StudentVicePrincipalController::class, 'reflectionManagementStore'])->name('Lms.StudentVicePrincipal.Reflection.Store');
 
 // paginate
-Route::get('/lms/{role}/{schoolName}/{schoolId}/dashboard/load-student-reflection-chart', [StudentVicePrincipalController::class, 'loadStudentReflectionChart'])->name('lms.student-vice-principal.dashboard.load-student-reflection-chart');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-recent', [StudentVicePrincipalController::class, 'paginateReflectionHistoryRecent'])->name('lms.student-vice-principal.reflection-management.history-recent');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/daily-reflection-live-preview', [StudentVicePrincipalController::class, 'paginateDailyReflectionLivePreview'])->name('lms.student-vice-principal.reflection-management.daily-reflection-live-preview');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history/paginate', [StudentVicePrincipalController::class, 'paginateReflectionHistory'])->name('lms.student-vice-principal.reflection-management.history');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-header', [StudentVicePrincipalController::class, 'loadReflectionDetailHeader'])->name('lms.student-vice-principal.reflection-management-history-detail.load-header');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-summary', [StudentVicePrincipalController::class, 'loadReflectionDetailSummary'])->name('lms.student-vice-principal.reflection-management-history-detail.load-summary');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-chart', [StudentVicePrincipalController::class, 'loadReflectionDetailChart'])->name('lms.student-vice-principal.reflection-management-history-detail.load-chart');
-Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/student-answer/paginate', [StudentVicePrincipalController::class, 'paginateReflectionStudentAnswer'])->name('lms.student-vice-principal.reflection-management-history-detail.student-answer.paginate');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/dashboard/load-student-reflection-chart', [StudentVicePrincipalController::class, 'loadStudentReflectionChart'])->name('Lms.StudentVicePrincipal.Dashboard.LoadStudentReflectionChart');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-recent', [StudentVicePrincipalController::class, 'paginateReflectionHistoryRecent'])->name('Lms.StudentVicePrincipal.ReflectionManagement.HistoryRecent');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/daily-reflection-live-preview', [StudentVicePrincipalController::class, 'paginateDailyReflectionLivePreview'])->name('Lms.StudentVicePrincipal.ReflectionManagement.DailyReflectionLivePreview');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history/paginate', [StudentVicePrincipalController::class, 'paginateReflectionHistory'])->name('Lms.StudentVicePrincipal.ReflectionManagement.History');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-header', [StudentVicePrincipalController::class, 'loadReflectionDetailHeader'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistoryDetail.LoadHeader');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-summary', [StudentVicePrincipalController::class, 'loadReflectionDetailSummary'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistoryDetail.LoadSummary');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/load-chart', [StudentVicePrincipalController::class, 'loadReflectionDetailChart'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistoryDetail.LoadChart');
+Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-detail/{reflectionQuestionId}/student-answer/paginate', [StudentVicePrincipalController::class, 'paginateReflectionStudentAnswer'])->name('Lms.StudentVicePrincipal.ReflectionManagementHistoryDetail.StudentAnswer.Paginate');
 
 // =========================================
 // EXTRACURRICULAR MANAGEMENT
@@ -39,70 +39,70 @@ Route::get('/lms/{role}/{schoolName}/{schoolId}/reflection-management/history-de
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management',
     [ExtracurricularController::class, 'index']
-)->name('lms.student-vice-principal.extracurricular-management.view');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.View');
 
 // DOWNLOAD TEMPLATE
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/download-template',
     [ExtracurricularController::class, 'downloadTemplate']
-)->name('lms.student-vice-principal.extracurricular-management.download-template');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.DownloadTemplate');
 
 // PAGINATION
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/paginate',
     [ExtracurricularController::class, 'paginate']
-)->name('lms.student-vice-principal.extracurricular-management.paginate');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Paginate');
 
 // KELENGKAPAN
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan',
     [ExtracurricularController::class, 'kelengkapanView']
-)->name('lms.student-vice-principal.extracurricular-management.kelengkapan');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Kelengkapan');
 
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/kelengkapan/{extracurricularId}',
     [ExtracurricularController::class, 'kelengkapanDetail']
-)->name('lms.student-vice-principal.extracurricular-management.kelengkapan.detail');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Kelengkapan.Detail');
 
 // CRUD
 Route::post(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/store',
     [ExtracurricularController::class, 'store']
-)->name('lms.student-vice-principal.extracurricular-management.store');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Store');
 
 Route::post(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/update/{id}',
     [ExtracurricularController::class, 'update']
-)->name('lms.student-vice-principal.extracurricular-management.update');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Update');
 
 Route::delete(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/delete/{id}',
     [ExtracurricularController::class, 'destroy']
-)->name('lms.student-vice-principal.extracurricular-management.delete');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Delete');
 
 // IMPORT
 Route::post(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/import',
     [ExtracurricularController::class, 'importExcel']
-)->name('lms.student-vice-principal.extracurricular-management.import');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Import');
 
 // BULK MEMBER
 Route::post(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/upload-member',
     [ExtracurricularController::class, 'importMember']
-)->name('lms.student-vice-principal.extracurricular-management.upload-member');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.UploadMember');
 
 // BULK ATTENDANCE
 Route::post(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}/upload-attendance',
     [ExtracurricularController::class, 'uploadAttendance']
-)->name('lms.student-vice-principal.extracurricular-management.upload-attendance');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.UploadAttendance');
 
 // DETAIL (HARUS PALING BAWAH)
 Route::get(
     '/lms/{role}/{schoolName}/{schoolId}/extracurricular-management/{extracurricularId}',
     [ExtracurricularController::class, 'detail']
-)->name('lms.student-vice-principal.extracurricular-management.detail');
+)->name('Lms.StudentVicePrincipal.ExtracurricularManagement.Detail');
 
 // / =========================================
 // MEMBER

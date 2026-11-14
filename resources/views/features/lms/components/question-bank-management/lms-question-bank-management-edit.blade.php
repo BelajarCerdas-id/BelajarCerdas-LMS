@@ -4,7 +4,7 @@
             data-sub-bab-id="{{ $subBabId }}"
             data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
             data-upload-url="{{ route('lms.editImage', ['_token' => csrf_token()]) }}"
-            data-delete-url="{{ route('lms.deleteImage') }}">
+            data-delete-url="{{ route('Lms.DeleteImage') }}">
             <!---- form in ajax ---->
         </div>
     </section>

@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('library_books', function (Blueprint $table) {
-
-    $table->unsignedBigInteger('chapter_id')->nullable();
-
-});
+        if (!Schema::hasColumn('library_books', 'chapter_id')) {
+            Schema::table('library_books', function (Blueprint $table) {
+                $table->unsignedBigInteger('chapter_id')->nullable();
+            });
+        }
     }
 
     /**
@@ -23,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('library_books', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('library_books', 'chapter_id')) {
+            Schema::table('library_books', function (Blueprint $table) {
+                $table->dropColumn('chapter_id');
+            });
+        }
     }
 };

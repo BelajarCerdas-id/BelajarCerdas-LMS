@@ -45,7 +45,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'protaProsem',
         ]
-    )->name('prota-prosem');
+    )->name('ProtaProsem');
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +59,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'tampilanProtaProsem',
         ]
-    )->name('prota-prosem.tampilan');
+    )->name('ProtaProsem.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +73,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'protaProsemUpload',
         ]
-    )->name('prota-prosem.upload');
+    )->name('ProtaProsem.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -89,7 +89,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('prota-prosem.cells.update');
+        ->name('ProtaProsem.Cells.Update');
 
     /*
     |--------------------------------------------------------------------------
@@ -105,7 +105,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('prota-prosem.cells.autosave');
+        ->name('ProtaProsem.Cells.Autosave');
 
     /*
     |--------------------------------------------------------------------------
@@ -121,7 +121,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('prota-prosem.comments.store');
+        ->name('ProtaProsem.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -137,7 +137,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('prota-prosem.comments');
+        ->name('ProtaProsem.Comments');
 
     /*
     |--------------------------------------------------------------------------
@@ -153,7 +153,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('comment')
-        ->name('prota-prosem.comments.resolve');
+        ->name('ProtaProsem.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +169,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('prota-prosem.download');
+        ->name('ProtaProsem.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -185,7 +185,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('prota-prosem.delete');
+        ->name('ProtaProsem.Delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -201,7 +201,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('prota-prosem.show');
+        ->name('ProtaProsem.Show');
 
     /*
     |--------------------------------------------------------------------------
@@ -223,7 +223,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'baganAnalisis',
         ]
-    )->name('baganAnalisis');
+    )->name('BaganAnalisis');
 
     /*
     |--------------------------------------------------------------------------
@@ -237,7 +237,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'tampilanBaganAnalisis',
         ]
-    )->name('baganAnalisis.tampilan');
+    )->name('BaganAnalisis.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -251,7 +251,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'baganAnalisisUpload',
         ]
-    )->name('baganAnalisis.upload');
+    )->name('BaganAnalisis.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -267,7 +267,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('baganAnalisis.download');
+        ->name('BaganAnalisis.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -283,7 +283,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('baganAnalisis.cells.autosave');
+        ->name('BaganAnalisis.Cells.Autosave');
 
     /*
     |--------------------------------------------------------------------------
@@ -299,7 +299,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('baganAnalisis.cells.update');
+        ->name('BaganAnalisis.Cells.Update');
 
     /*
     |--------------------------------------------------------------------------
@@ -315,7 +315,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('baganAnalisis.comments.store');
+        ->name('BaganAnalisis.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -331,7 +331,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('baganAnalisis.comments');
+        ->name('BaganAnalisis.Comments');
 
     /*
     |--------------------------------------------------------------------------
@@ -347,7 +347,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('comment')
-        ->name('baganAnalisis.comments.resolve');
+        ->name('BaganAnalisis.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -363,7 +363,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('baganAnalisis.delete');
+        ->name('BaganAnalisis.Delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -379,7 +379,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('baganAnalisis.show');
+        ->name('BaganAnalisis.Show');
 
     /*
     |--------------------------------------------------------------------------
@@ -401,7 +401,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'analisis',
         ]
-    )->name('analisis');
+    )->name('Analisis');
 
     /*
     |--------------------------------------------------------------------------
@@ -415,7 +415,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'tampilanAnalisis',
         ]
-    )->name('analisis.tampilan');
+    )->name('Analisis.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -429,7 +429,7 @@ Route::prefix(
             AcademicDocumentController::class,
             'analisisUpload',
         ]
-    )->name('analisis.upload');
+    )->name('Analisis.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -445,7 +445,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('analisis.download');
+        ->name('Analisis.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -461,7 +461,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('analisis.cells.update');
+        ->name('Analisis.Cells.Update');
 
     /*
     |--------------------------------------------------------------------------
@@ -477,7 +477,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('analisis.comments.store');
+        ->name('Analisis.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -493,7 +493,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('cell')
-        ->name('analisis.comments');
+        ->name('Analisis.Comments');
 
     /*
     |--------------------------------------------------------------------------
@@ -509,7 +509,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('comment')
-        ->name('analisis.comments.resolve');
+        ->name('Analisis.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -525,7 +525,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('analisis.delete');
+        ->name('Analisis.Delete');
 
     /*
     |--------------------------------------------------------------------------
@@ -541,7 +541,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('document')
-        ->name('analisis.show');
+        ->name('Analisis.Show');
 
     /*
     |--------------------------------------------------------------------------
@@ -573,7 +573,7 @@ Route::prefix(
                 ]
             );
         }
-    )->name('rppm');
+    )->name('Rppm');
 
     /*
     |--------------------------------------------------------------------------
@@ -587,7 +587,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'rppm',
         ]
-    )->name('rppm.tampilan');
+    )->name('Rppm.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -601,7 +601,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'upload',
         ]
-    )->name('rppm.word.upload');
+    )->name('Rppm.Word.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -617,7 +617,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.file');
+        ->name('Rppm.Word.File');
 
     /*
     |--------------------------------------------------------------------------
@@ -633,7 +633,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.save');
+        ->name('Rppm.Word.Save');
 
     /*
     |--------------------------------------------------------------------------
@@ -649,7 +649,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.download');
+        ->name('Rppm.Word.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -665,7 +665,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.comments.store');
+        ->name('Rppm.Word.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -681,7 +681,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('rppm.word.comments.reply');
+        ->name('Rppm.Word.Comments.Reply');
 
     /*
     |--------------------------------------------------------------------------
@@ -697,7 +697,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('rppm.word.comments.resolve');
+        ->name('Rppm.Word.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -713,7 +713,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('rppm.word.comments.destroy');
+        ->name('Rppm.Word.Comments.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -729,7 +729,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.destroy');
+        ->name('Rppm.Word.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -745,7 +745,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('rppm.word.edit');
+        ->name('Rppm.Word.Edit');
 
     /*
     |--------------------------------------------------------------------------
@@ -777,7 +777,7 @@ Route::prefix(
                 ]
             );
         }
-    )->name('analisis-rppm');
+    )->name('AnalisisRppm');
 
     /*
     |--------------------------------------------------------------------------
@@ -791,7 +791,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'analisisRppm',
         ]
-    )->name('analisis-rppm.tampilan');
+    )->name('AnalisisRppm.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -805,7 +805,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'uploadAnalisisRppm',
         ]
-    )->name('analisis-rppm.word.upload');
+    )->name('AnalisisRppm.Word.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -821,7 +821,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.file');
+        ->name('AnalisisRppm.Word.File');
 
     /*
     |--------------------------------------------------------------------------
@@ -837,7 +837,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.save');
+        ->name('AnalisisRppm.Word.Save');
 
     /*
     |--------------------------------------------------------------------------
@@ -853,7 +853,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.download');
+        ->name('AnalisisRppm.Word.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -869,7 +869,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.comments.store');
+        ->name('AnalisisRppm.Word.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -885,7 +885,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('analisis-rppm.word.comments.reply');
+        ->name('AnalisisRppm.Word.Comments.Reply');
 
     /*
     |--------------------------------------------------------------------------
@@ -901,7 +901,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('analisis-rppm.word.comments.resolve');
+        ->name('AnalisisRppm.Word.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -917,7 +917,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('analisis-rppm.word.comments.destroy');
+        ->name('AnalisisRppm.Word.Comments.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -933,7 +933,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.destroy');
+        ->name('AnalisisRppm.Word.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -949,7 +949,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('analisis-rppm.word.edit');
+        ->name('AnalisisRppm.Word.Edit');
 
     /*
     |--------------------------------------------------------------------------
@@ -981,7 +981,7 @@ Route::prefix(
                 ]
             );
         }
-    )->name('refleksiGuru');
+    )->name('RefleksiGuru');
 
     /*
     |--------------------------------------------------------------------------
@@ -995,7 +995,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'refleksiGuru',
         ]
-    )->name('refleksi-guru.tampilan');
+    )->name('RefleksiGuru.Tampilan');
 
     /*
     |--------------------------------------------------------------------------
@@ -1009,7 +1009,7 @@ Route::prefix(
             AcademicDocumentWordController::class,
             'uploadRefleksi',
         ]
-    )->name('refleksi-guru.upload');
+    )->name('RefleksiGuru.Upload');
 
     /*
     |--------------------------------------------------------------------------
@@ -1025,7 +1025,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.file');
+        ->name('RefleksiGuru.File');
 
     /*
     |--------------------------------------------------------------------------
@@ -1041,7 +1041,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.save');
+        ->name('RefleksiGuru.Save');
 
     /*
     |--------------------------------------------------------------------------
@@ -1057,7 +1057,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.download');
+        ->name('RefleksiGuru.Download');
 
     /*
     |--------------------------------------------------------------------------
@@ -1073,7 +1073,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.comments.store');
+        ->name('RefleksiGuru.Comments.Store');
 
     /*
     |--------------------------------------------------------------------------
@@ -1089,7 +1089,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('refleksi-guru.comments.reply');
+        ->name('RefleksiGuru.Comments.Reply');
 
     /*
     |--------------------------------------------------------------------------
@@ -1105,7 +1105,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('refleksi-guru.comments.resolve');
+        ->name('RefleksiGuru.Comments.Resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -1121,7 +1121,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('commentId')
-        ->name('refleksi-guru.comments.destroy');
+        ->name('RefleksiGuru.Comments.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -1137,7 +1137,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.destroy');
+        ->name('RefleksiGuru.Destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -1153,7 +1153,7 @@ Route::prefix(
         ]
     )
         ->whereNumber('documentId')
-        ->name('refleksi-guru.edit');
+        ->name('RefleksiGuru.Edit');
 
     /*
     |--------------------------------------------------------------------------
@@ -1182,7 +1182,7 @@ Route::prefix(
             'prota-prosem',
         ])
         ->whereNumber('document')
-        ->name('academicDocument.saveArchive');
+        ->name('AcademicDocument.SaveArchive');
 
     /*
     |--------------------------------------------------------------------------
@@ -1202,7 +1202,7 @@ Route::prefix(
             'prota',
             'prota-prosem',
         ])
-        ->name('academicDrive.browse');
+        ->name('AcademicDrive.Browse');
 
     /*
     |--------------------------------------------------------------------------
@@ -1223,7 +1223,7 @@ Route::prefix(
             'prota-prosem',
         ])
         ->whereNumber('document')
-        ->name('academicDocument.sharedView');
+        ->name('AcademicDocument.SharedView');
 
     /*
     |--------------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ Route::prefix(
             'refleksi-guru',
         ])
         ->whereNumber('documentId')
-        ->name('academicWord.saveArchive');
+        ->name('AcademicWord.SaveArchive');
 
     /*
     |--------------------------------------------------------------------------
@@ -1264,7 +1264,7 @@ Route::prefix(
             'rppm',
             'refleksi-guru',
         ])
-        ->name('academicWord.browse');
+        ->name('AcademicWord.Browse');
 
     /*
     |--------------------------------------------------------------------------
@@ -1284,7 +1284,7 @@ Route::prefix(
             'refleksi-guru',
         ])
         ->whereNumber('documentId')
-        ->name('academicWord.sharedView');
+        ->name('AcademicWord.SharedView');
 
 });
 
@@ -1305,7 +1305,7 @@ Route::prefix(
     'lms/{role}/{schoolName}/{schoolId}/registrasi-guru/academic-drive'
 )
     ->middleware('auth')
-    ->name('lms.schoolAdmin.registrasiGuru.academic-drive.')
+    ->name('Lms.SchoolAdmin.RegistrasiGuru.AcademicDrive.')
     ->group(function () {
 
         /*
@@ -1320,7 +1320,7 @@ Route::prefix(
                 AcademicDocumentDriveController::class,
                 'index',
             ]
-        )->name('index');
+        )->name('Index');
 
         /*
         |--------------------------------------------------------------------------
@@ -1337,7 +1337,7 @@ Route::prefix(
         )
             ->whereNumber('subjectId')
             ->whereNumber('teacherId')
-            ->name('files');
+            ->name('Files');
 
         /*
         |--------------------------------------------------------------------------
@@ -1353,7 +1353,7 @@ Route::prefix(
             ]
         )
             ->whereNumber('documentId')
-            ->name('download');
+            ->name('Download');
 
         /*
         |--------------------------------------------------------------------------
@@ -1367,7 +1367,7 @@ Route::prefix(
                 AcademicDocumentDriveController::class,
                 'downloadSelected',
             ]
-        )->name('download-selected');
+        )->name('DownloadSelected');
 
         /*
         |--------------------------------------------------------------------------
@@ -1381,5 +1381,5 @@ Route::prefix(
                 AcademicDocumentDriveController::class,
                 'destroySelected',
             ]
-        )->name('delete-selected');
+        )->name('DeleteSelected');
     });

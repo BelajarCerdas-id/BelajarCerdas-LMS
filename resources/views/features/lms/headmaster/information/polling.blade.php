@@ -29,7 +29,7 @@
                 <div class="flex items-center gap-2 text-slate-600 font-bold text-sm shrink-0">
                     <i class="fas fa-filter text-[#0071BC]"></i> Filter Riwayat:
                 </div>
-                <form action="{{ route('kepsek.polling.index') }}" method="GET" class="flex flex-1 flex-col sm:flex-row gap-3 w-full">
+                <form action="{{ route('Kepsek.Polling.Index') }}" method="GET" class="flex flex-1 flex-col sm:flex-row gap-3 w-full">
                     
                     {{-- Filter Pembuat --}}
                     <select name="pembuat" class="h-11 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-xl px-4 pr-10 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 outline-none flex-1 cursor-pointer transition-all hover:border-gray-400">
@@ -54,7 +54,7 @@
                     
                     {{-- Tombol Reset hanya muncul jika ada filter yang aktif --}}
                     @if(request()->has('pembuat') && request('pembuat') != '' || request()->has('target') && request('target') != '')
-                        <a href="{{ route('kepsek.polling.index') }}" class="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold text-xs transition-colors shrink-0 flex items-center justify-center">
+                        <a href="{{ route('Kepsek.Polling.Index') }}" class="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold text-xs transition-colors shrink-0 flex items-center justify-center">
                             Reset
                         </a>
                     @endif
@@ -242,7 +242,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('kepsek.polling.store') }}" method="POST" class="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <form action="{{ route('Kepsek.Polling.Store') }}" method="POST" class="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 @csrf
                 
                 {{-- Pertanyaan --}}

@@ -26,19 +26,19 @@ Route::fallback(function () {
         }
     }
 
-    return redirect()->route('login');
+    return redirect()->route('Login');
 });
 
 Route::get('/', fn () => redirect('/login'));
 
 // middleware redirect if authenticated
 Route::middleware([RedirectIfAuthenticated::class])->group(function () {
-    Route::get('/login', [AuthController::class, 'loginView'])->name('login');
+    Route::get('/login', [AuthController::class, 'loginView'])->name('Login');
 });
 
 // routes auth login & logout
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('Logout');
 
 // ROUTES DROPDOWN KURIKULUM, KELAS, MAPEL, BAB, SUB BAB
 Route::get('/kelas/{id}', [MasterAcademicController::class, 'getKelas']);

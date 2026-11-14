@@ -9,7 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // FK checks off is only meaningful (and only valid SQL) on MySQL/MariaDB
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
 
         // 1. Get all table indices using Laravel's native Schema methods
         $rawIndexes = Schema::getIndexes('lms_meeting_contents');
@@ -38,12 +41,17 @@ return new class extends Migration
             );
         });
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'])) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        $driver = DB::getDriverName();
+        if (in_array($driver, ['mysql', 'mariadb'])) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
 
         Schema::table('lms_meeting_contents', function (Blueprint $table) {
             $table->dropUnique('lms_meeting_contents_comprehensive_unique');
@@ -51,6 +59,8 @@ return new class extends Migration
             $table->unique(['service_id', 'school_partner_id'], 'lms_meeting_contents_service_id_school_partner_id_unique');
         });
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (in_array($driver, ['mysql', 'mariadb'])) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 };

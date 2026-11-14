@@ -380,7 +380,7 @@ class UserAnalyticsController extends Controller
                 'user_email'      => $user?->email ?? '-',
                 'role'            => $item->role,
                 'school_name'     => $school ? $school->nama_sekolah : 'Belajar Cerdas Office',
-                'school_logo'     => $school?->logo ? asset($school->logo) : null,
+                'school_logo'     => $school?->logo ? asset('storage/'.$school->logo) : null,
                 'module'          => $item->module,
                 'sub_module'      => $item->sub_module ?? '-',
                 'action'          => $item->action,
@@ -443,7 +443,7 @@ class UserAnalyticsController extends Controller
                 'school_name'        => $school ? $school->nama_sekolah : 'Sekolah #' . $row->school_partner_id,
                 'npsn'               => $school?->npsn ?? '-',
                 'jenjang'            => $school?->jenjang_sekolah ?? '-',
-                'logo'               => $school?->logo ? asset($school->logo) : null,
+                'logo'               => $school?->logo ? asset('storage/'.$school->logo) : null,
                 'total_activities'   => (int) $row->total_activities,
                 'active_users_count' => (int) $row->active_users_count,
             ];

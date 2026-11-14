@@ -54,7 +54,7 @@ function paginateSchoolFoundation(search_school_foundation = null, loadSummary =
                                 <div class="flex items-center gap-4">
                                     <div class="h-14 w-14 rounded-xl border border-gray-300 bg-slate-50 flex items-center justify-center shrink-0">
                                         ${item.logo ? `
-                                            <img src="/${item.logo}" class="w-full h-full object-contain rounded-xl">
+                                            <img src="/storage/${item.logo}" class="w-full h-full object-contain rounded-xl">
                                         ` : `
                                             <div class="flex flex-col items-center justify-center text-slate-400">
 
@@ -174,7 +174,7 @@ function paginateSchoolFoundation(search_school_foundation = null, loadSummary =
                                                     <!-- Logo -->
                                                     <div class="w-14 h-14 shrink-0 rounded-xl border border-gray-300 overflow-hidden bg-base-100">
                                                         ${school.logo
-                                                            ? `<img src="/${school.logo}" class="w-full h-full object-contain">`
+                                                            ? `<img src="/storage/${school.logo}" class="w-full h-full object-contain">`
                                                             : `<div class="flex h-full items-center justify-center">
                                                                     <i class="fa-solid fa-school text-slate-500"></i>
                                                                 </div>`
@@ -388,7 +388,7 @@ function loadAvailableSchool(foundationId, search = '') {
                                     <div class="w-14 h-14 rounded-xl border border-gray-300 overflow-hidden bg-white shrink-0">
                                         ${item.logo
                                         ?
-                                            `<img src="/${item.logo}" class="w-full h-full object-contain">`
+                                            `<img src="/storage/${item.logo}" class="w-full h-full object-contain">`
                                         :
                                             `<div class="flex h-full items-center justify-center">
                                                 <i class="fa-solid fa-school text-slate-400"></i>

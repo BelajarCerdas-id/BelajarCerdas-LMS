@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\{
     FromCollection, WithHeadings, WithEvents, ShouldAutoSize, WithTitle
 };
@@ -161,11 +162,11 @@ class AcademicTranscriptExport implements FromCollection, WithHeadings, WithEven
 
                 $sheet->insertNewRowBefore(1, 4);
 
-                if ($this->schoolLogo && file_exists(public_path($this->schoolLogo))) {
+                if ($this->schoolLogo && Storage::disk('public')->exists($this->schoolLogo)) {
                     $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
                     $drawing->setName('School Logo');
                     $drawing->setDescription('School Logo');
-                    $drawing->setPath(public_path($this->schoolLogo));
+                    $drawing->setPath(Storage::disk('public')->path($this->schoolLogo));
                     $drawing->setHeight(60);
                     $drawing->setCoordinates('A1');
                     $drawing->setWorksheet($sheet->getDelegate());

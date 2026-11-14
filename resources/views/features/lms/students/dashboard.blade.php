@@ -1327,7 +1327,7 @@
         }
 
         // KIRIM STATUS SUDAH DIBACA KE SERVER
-        fetch("{{ route('lms.studentAnnouncement.markRead') }}", {
+        fetch("{{ route('Lms.StudentAnnouncement.MarkRead') }}", {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json', 
@@ -1531,7 +1531,7 @@
         btn.disabled = true;
 
         try {
-            const response = await fetch(`{{ route('lms.studentPolling.vote') }}`, {
+            const response = await fetch(`{{ route('Lms.StudentPolling.Vote') }}`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 

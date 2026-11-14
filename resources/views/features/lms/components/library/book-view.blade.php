@@ -361,7 +361,7 @@ transform:translateX(-60px) scale(.96);
 <div class="book-image cursor-pointer" onclick="openFile()">
 
 @if($book->cover)
-<img src="{{ asset('library/sampul/'.$book->cover) }}">
+<img src="{{ asset('storage/library/sampul/'.$book->cover) }}">
 @endif
 
 </div>
@@ -419,7 +419,7 @@ Related Book
 <div class="book-cover-related">
 
 @if($item->cover)
-<img src="{{ asset('library/sampul/'.$item->cover) }}">
+<img src="{{ asset('storage/library/sampul/'.$item->cover) }}">
 @endif
 
 </div>
@@ -470,7 +470,7 @@ Semua Buku Lainnya
 <div class="book-cover-related">
 
 @if($item->cover)
-<img src="{{ asset('library/sampul/'.$item->cover) }}">
+<img src="{{ asset('storage/library/sampul/'.$item->cover) }}">
 @endif
 
 </div>
@@ -507,7 +507,7 @@ Related PowerPoint
 <div class="ppt-cover">
 
 @if($item->cover)
-<img src="{{ asset('library/sampul/'.$item->cover) }}">
+<img src="{{ asset('storage/library/sampul/'.$item->cover) }}">
 @endif
 
 </div>
@@ -558,7 +558,7 @@ Semua PPT Lainnya
 <div class="ppt-cover">
 
 @if($item->cover)
-<img src="{{ asset('library/sampul/'.$item->cover) }}">
+<img src="{{ asset('storage/library/sampul/'.$item->cover) }}">
 @endif
 
 </div>
@@ -594,7 +594,7 @@ Semua PPT Lainnya
 
 <div class="pdf-body">
 
-<iframe src="{{ asset('library/file/'.$book->file) }}"></iframe>
+<iframe src="{{ asset('storage/library/file/'.$book->file) }}"></iframe>
 
 </div>
 
@@ -648,7 +648,7 @@ Semua PPT Lainnya
 <script>
 
 const fileType = "{{ in_array($book->tipe, ['ppt']) ? 'ppt' : 'pdf' }}";
-const url = "{{ asset('library/file/'.$book->file) }}";
+const url = "{{ asset('storage/library/file/'.$book->file) }}";
 
 let pdfDoc = null;
 let pageNum = 1;

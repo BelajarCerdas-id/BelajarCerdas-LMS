@@ -12,6 +12,7 @@ use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -107,20 +108,13 @@ class LmsController extends Controller
             // nama file unik
             $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
 
-            $destinationPath = public_path('school-logo');
-
-            // buat folder kalau belum ada
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0777, true);
-            }
-
             // HAPUS FILE LAMA
-            if (!empty($school->logo) && file_exists(public_path($school->logo))) {
-                unlink(public_path($school->logo));
+            if (!empty($school->logo)) {
+                Storage::disk('public')->delete($school->logo);
             }
 
             // SIMPAN FILE
-            $file->move($destinationPath, $filename);
+            $file->storeAs('school-logo', $filename, 'public');
 
             // simpan ke db
             $school->logo = 'school-logo/' . $filename;
@@ -130,7 +124,7 @@ class LmsController extends Controller
         // RESPONSE SUCCESS
         return response()->json([
             'message'  => 'Logo berhasil diperbarui',
-            'logo_url' => asset($school->logo)
+            'logo_url' => asset('storage/' . $school->logo)
         ], 200);
     }
 
@@ -573,7 +567,7 @@ class LmsController extends Controller
                 $judul = $item->original_filename ?? substr(strip_tags($item->value_text), 0, 50) ?? 'Materi Pembelajaran';
                 
                 if (!empty($item->value_file)) {
-                    $fileUrl = asset('lms-contents/' . $item->value_file);
+                    $fileUrl = asset('storage/lms-contents/' . $item->value_file);
                 }
             }
 
@@ -610,12 +604,12 @@ class LmsController extends Controller
                 ->count(); 
             
             $fileName = $tugas->assessment_value_file;
-            $filePath = public_path('assessment/assessment-file/' . $fileName);
-            
+            $filePath = Storage::disk('local')->path('assessment/assessment-file/' . $fileName);
+
             if (!empty($fileName) && file_exists($filePath)) {
                 $fileUrl = asset('assessment/assessment-file/' . $fileName);
             } else {
-                $fileUrl = null; 
+                $fileUrl = null;
             }
 
             $tugasKelas->push((object)[

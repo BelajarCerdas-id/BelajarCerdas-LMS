@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Drop existing custom foreign key
+        // 1. Drop existing foreign key (default name from ->constrained)
         Schema::table('lms_question_banks', function (Blueprint $table) {
-            $table->dropForeign('lms_question_banks_FK_6_0');
+            $table->dropForeign(['bab_id']);
         });
 
         // 2. Modify column and create new foreign key
@@ -28,15 +28,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // 1. Drop the new default-named foreign key
+        // 1. Drop the new foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->dropForeign(['bab_id']);
         });
 
-        // 2. Revert column to NOT NULL and restore the ORIGINAL custom foreign key
+        // 2. Revert column to NOT NULL and restore the default-named foreign key
         Schema::table('lms_question_banks', function (Blueprint $table) {
             $table->unsignedBigInteger('bab_id')->nullable(false)->change();
-            $table->foreign('bab_id', 'lms_question_banks_FK_6_0')->references('id')->on('babs');
+            $table->foreign('bab_id')->references('id')->on('babs');
         });
     }
 };

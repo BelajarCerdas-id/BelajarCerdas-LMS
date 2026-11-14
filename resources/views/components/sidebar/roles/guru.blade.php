@@ -400,7 +400,7 @@
                                 <i class="fa-solid fa-user-circle w-4"></i> Profil Saya
                             </a>
                             <div class="my-1 border-t border-dpai" style="border-color: var(--color-divider);"></div>
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('Logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-xs text-left" style="color: var(--color-danger);">
                                     <i class="fa-solid fa-arrow-right-from-bracket w-4"></i> Keluar
@@ -525,7 +525,7 @@
 
                 {{-- Drawer Logout Button --}}
                 <div class="p-4 border-t border-dpai" style="border-color: var(--color-border);">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 font-bold text-sm gap-2 cursor-pointer transition active:scale-95" style="border-radius: var(--radius-btn); background: var(--color-danger-soft); color: var(--color-danger);">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>

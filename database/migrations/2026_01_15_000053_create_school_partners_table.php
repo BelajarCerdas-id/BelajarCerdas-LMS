@@ -30,6 +30,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('school_partners');
+        // mirror the up() guard: only drop if the table actually exists
+        if (Schema::hasTable('school_partners')) {
+            Schema::dropIfExists('school_partners');
+        }
     }
 };

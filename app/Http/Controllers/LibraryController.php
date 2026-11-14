@@ -432,15 +432,6 @@ if ($validator->fails()) {
         ->withInput();
 }
 
-    /* ================= FOLDER SAFETY ================= */
-    $videoPath = public_path('library/video');
-    $filePath  = public_path('library/file');
-    $coverPath = public_path('library/sampul');
-
-    if (!file_exists($videoPath)) mkdir($videoPath, 0777, true);
-    if (!file_exists($filePath)) mkdir($filePath, 0777, true);
-    if (!file_exists($coverPath)) mkdir($coverPath, 0777, true);
-
     /* ================= INIT ================= */
     $fileName  = null;
     $coverName = null;
@@ -453,7 +444,7 @@ if ($validator->fails()) {
 
         $cover = $request->file('cover');
         $coverName = time().'_cover.'.$cover->getClientOriginalExtension();
-        $cover->move($coverPath, $coverName);
+        $cover->storeAs('library/sampul', $coverName, 'public');
 
     } elseif ($request->auto_cover) {
 
@@ -462,8 +453,8 @@ if ($validator->fails()) {
 
         $coverName = time().'_cover.jpg';
 
-        file_put_contents(
-            $coverPath.'/'.$coverName,
+        Storage::disk('public')->put(
+            'library/sampul/'.$coverName,
             $image
         );
     }
@@ -477,7 +468,7 @@ if ($validator->fails()) {
 
         $fileName = time().'_'.$file->getClientOriginalName();
 
-        $file->move($filePath, $fileName);
+        $file->storeAs('library/file', $fileName, 'public');
     }
 
     /* =====================================================
@@ -517,7 +508,7 @@ if ($validator->fails()) {
 
         $fileName = time().'_'.$video->getClientOriginalName();
 
-        $video->move($videoPath,$fileName);
+        $video->storeAs('library/video', $fileName, 'public');
 
         if (!$coverName) {
             $coverName = 'images/default-video.jpg';
@@ -712,8 +703,8 @@ return response()->json([
 
             $coverName = time().'_cover.jpg';
 
-            file_put_contents(
-                public_path('library/sampul/'.$coverName),
+            Storage::disk('public')->put(
+                'library/sampul/'.$coverName,
                 $image
             );
 
@@ -726,10 +717,7 @@ return response()->json([
 
             $fileName = time().'_'.$file->getClientOriginalName();
 
-            $file->move(
-                public_path('library/file'),
-                $fileName
-            );
+            $file->storeAs('library/file', $fileName, 'public');
 
             $data['file'] = $fileName;
         }
@@ -761,6 +749,15 @@ return response()->json([
         
         $topikId = $book->topik_materi_id;
         $tipe = $book->tipe;
+
+        // hapus file fisik agar tidak menumpuk orphan; cover default ikut dipakai buku lain
+        if ($book->file) {
+            $zone = $book->tipe === 'video' ? 'library/video' : 'library/file';
+            Storage::disk('public')->delete($zone.'/'.$book->file);
+        }
+        if ($book->cover && $book->cover !== 'images/default-video.jpg') {
+            Storage::disk('public')->delete('library/sampul/'.$book->cover);
+        }
         
         $book->delete();
 
@@ -1008,17 +1005,17 @@ public function deleteTopik($id)
 
     }
 
-    public function completeVideoUpload(Request $request)
+    public function finishVideoUpload(Request $request)
     {
     $session = UploadSession::where('upload_id', $request->upload_id)->firstOrFail();
 
     $dir = storage_path("app/video_chunks/{$session->upload_id}");
 
     $fileName = time() . "_" . $session->file_name;
-    $finalPath = public_path("library/video/" . $fileName);
+    $finalPath = Storage::disk('public')->path("library/video/" . $fileName);
 
-    if (!file_exists(public_path("library/video"))) {
-        mkdir(public_path("library/video"), 0777, true);
+    if (!file_exists(dirname($finalPath))) {
+        mkdir(dirname($finalPath), 0775, true);
     }
 
     $out = fopen($finalPath, "ab");
@@ -1239,7 +1236,7 @@ private function mergeChunks(UploadSession $upload)
         time().'_'.$upload->file_name;
 
     $output =
-        public_path('library/video/'.$finalName);
+        Storage::disk('public')->path('library/video/'.$finalName);
 
     $dest = fopen($output,'ab');
 

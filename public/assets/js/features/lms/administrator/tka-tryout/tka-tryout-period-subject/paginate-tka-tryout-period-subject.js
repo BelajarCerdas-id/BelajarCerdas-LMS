@@ -176,7 +176,7 @@ function renderTkaTryoutPeriodInformation(period) {
         const schoolLogo = $('#tka-tryout-period-school-logo');
 
         if (school.logo) {
-            schoolLogo.html(`<img src="/${school.logo}" alt="${escapeHtml(school.nama_sekolah ?? 'Logo Sekolah')}" class="h-full w-full object-cover">`);
+            schoolLogo.html(`<img src="/storage/${school.logo}" alt="${escapeHtml(school.nama_sekolah ?? 'Logo Sekolah')}" class="h-full w-full object-cover">`);
         } else {
             schoolLogo.html('<i class="fa-solid fa-school text-sm text-violet-600"></i>');
         }

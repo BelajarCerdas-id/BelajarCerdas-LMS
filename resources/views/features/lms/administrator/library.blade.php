@@ -18,7 +18,7 @@
 
     <!-- ================= HEADER & CONTROLS ================= -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <form method="GET" action="{{ route('library.administrator') }}" class="relative w-full sm:w-80">
+        <form method="GET" action="{{ route('Library.Administrator') }}" class="relative w-full sm:w-80">
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                 <input
@@ -94,7 +94,7 @@
                             <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
                             <td class="px-4 py-3">
                                 @if($book->cover)
-                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                    <img src="{{ asset('storage/library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                 @else
                                     <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
                                 @endif
@@ -105,7 +105,7 @@
                             <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">{{ Str::limit($book->topik->deskripsi ?? '-', 50) }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($book->file)
-                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                    <a href="{{ asset('storage/library/file/'.$book->file) }}" target="_blank"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
                                         <i class="fa-solid fa-eye text-[11px]"></i>
                                         <span>Lihat</span>
@@ -170,7 +170,7 @@
                             <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
                             <td class="px-4 py-3">
                                 @if($book->cover)
-                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                    <img src="{{ asset('storage/library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                 @else
                                     <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
                                 @endif
@@ -181,7 +181,7 @@
                             <td class="px-4 py-3 text-gray-500 text-xs max-w-xs">{{ Str::limit($book->topik->deskripsi ?? '-', 50) }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($book->file)
-                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                    <a href="{{ asset('storage/library/file/'.$book->file) }}" target="_blank"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
                                         <i class="fa-solid fa-eye text-[11px]"></i>
                                         <span>Lihat</span>
@@ -246,7 +246,7 @@
                             <td class="px-4 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
                             <td class="px-4 py-3">
                                 @if($book->cover)
-                                    <img src="{{ asset('library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                    <img src="{{ asset('storage/library/sampul/'.$book->cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                 @else
                                     <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
                                 @endif
@@ -257,7 +257,7 @@
                             <td class="px-4 py-3 text-gray-700 font-medium">{{ $book->bab->nama_bab ?? '-' }}</td>
                             <td class="px-4 py-3 text-center">
                                 @if($book->file)
-                                    <a href="{{ asset('library/file/'.$book->file) }}" target="_blank"
+                                    <a href="{{ asset('storage/library/file/'.$book->file) }}" target="_blank"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#0071BC] bg-blue-50 hover:bg-blue-100 border border-blue-200/60 transition-colors">
                                         <i class="fa-solid fa-file-pdf text-[11px]"></i>
                                         <span>Lihat LKPD</span>
@@ -367,7 +367,7 @@
                                     @if(Str::startsWith($cover, 'http'))
                                         <img src="{{ $cover }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                     @else
-                                        <img src="{{ asset('library/sampul/'.$cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
+                                        <img src="{{ asset('storage/library/sampul/'.$cover) }}" class="w-14 h-18 object-cover rounded-xl shadow-xs border border-gray-200">
                                     @endif
                                 @else
                                     <div class="w-14 h-18 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 text-xs">No Cover</div>
@@ -499,7 +499,7 @@
         </div>
         <form
             id="libraryForm"
-            action="{{ route('library.store') }}"
+            action="{{ route('Library.Store') }}"
             method="POST"
             enctype="multipart/form-data"
             class="p-6">
@@ -649,7 +649,7 @@
 
 <dialog id="modal_add_topik" class="modal">
     <div class="modal-box max-w-3xl rounded-2xl border border-gray-100 shadow-2xl p-6">
-        <form action="{{ route('library.topik.store') }}" method="POST">
+        <form action="{{ route('Library.Topik.Store') }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
                 <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">

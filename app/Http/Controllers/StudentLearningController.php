@@ -9,6 +9,7 @@ use App\Models\SchoolAssessmentType;
 use App\Models\Service;
 use App\Models\StudentSchoolClass;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request; // Added for Request injection
 
 class StudentLearningController extends Controller
@@ -228,7 +229,7 @@ class StudentLearningController extends Controller
         }
 
         $safeFilename = basename($contentItem->value_file);
-        $filePath = public_path('lms-contents/' . $safeFilename);
+        $filePath = Storage::disk('public')->path('lms-contents/' . $safeFilename);
 
         if (!is_file($filePath) || !is_readable($filePath)) {
             abort(404, 'File tidak ditemukan di server');

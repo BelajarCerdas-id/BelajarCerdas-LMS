@@ -394,7 +394,7 @@ background:linear-gradient(90deg,#1d4ed8,#4338ca);
                                     </span>
 
                                     @if($book->cover)
-                                        <img src="{{ asset('library/sampul/'.$book->cover) }}">
+                                        <img src="{{ asset('storage/library/sampul/'.$book->cover) }}">
                                     @else
                                         <div class="flex items-center justify-center h-full text-gray-400 text-sm">
                                             No Cover

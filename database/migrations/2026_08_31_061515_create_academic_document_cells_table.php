@@ -117,8 +117,6 @@ $table->index(
     'coordinate',
     'doc_cells_coordinate_index'
 );
-
-            $table->index('coordinate');
         });
     }
 

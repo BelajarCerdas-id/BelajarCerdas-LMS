@@ -151,7 +151,7 @@
                         @if(Str::startsWith($v->cover, 'http'))
                             <img src="{{ $v->cover }}" class="w-full h-full object-cover">
                         @else
-                            <img src="{{ asset('library/sampul/'.$v->cover) }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/library/sampul/'.$v->cover) }}" class="w-full h-full object-cover">
                         @endif
                     @endif
 
@@ -196,7 +196,7 @@
                     @if(Str::startsWith($video->cover, 'http'))
                         <img src="{{ $video->cover }}">
                     @else
-                        <img src="{{ asset('library/sampul/'.$video->cover) }}">
+                        <img src="{{ asset('storage/library/sampul/'.$video->cover) }}">
                     @endif
                 @endif
 
@@ -288,7 +288,7 @@ function playVideo(id, source, title) {
 
         // kalau hanya nama file (dari DB)
         if (source && !source.startsWith("http")) {
-            fileUrl = `/library/video/${source}`;
+            fileUrl = `/storage/library/video/${source}`;
         }
 
         html = `

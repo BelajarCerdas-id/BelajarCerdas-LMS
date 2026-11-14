@@ -1,5 +1,5 @@
 @include('components/sidebar-beranda', [
-    'linkBackButton' => route('kurikulum.view'),
+    'linkBackButton' => route('Kurikulum.View'),
     'backButton' => "<i class='fa-solid fa-chevron-left'></i>",
     'headerSideNav' => 'Fase',
 ]);

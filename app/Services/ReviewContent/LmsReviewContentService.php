@@ -43,7 +43,7 @@ class LmsReviewContentService
                 'rule_id'   => $item->service_rule_id,
                 'rule_name' => $item->ServiceRule?->name,
                 'file_name'=> $item->original_filename,
-                'file_url' => asset('lms-contents/' . $item->value_file),
+                'file_url' => asset('storage/lms-contents/' . $item->value_file),
                 'mime'     => $this->guessMime($extension),
                 'type'     => 'file'
             ];

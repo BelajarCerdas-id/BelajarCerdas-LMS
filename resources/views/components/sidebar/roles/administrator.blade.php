@@ -45,7 +45,7 @@
                         <span class="w-7 h-7 flex items-center justify-center shrink-0 text-[13px] {{ request()->routeIs('kurikulum.*') ? 'bg-white text-dpai-accent shadow-xs' : 'text-[#5D5A52]' }}" style="border-radius: var(--radius-tile); {{ !request()->routeIs('kurikulum.*') ? 'background: var(--color-surface-muted);' : '' }}">
                             <i class="fa-solid fa-layer-group"></i>
                         </span>
-                        <a href="{{ route('kurikulum.view') }}" class="link-href flex-1 text-[13.5px] {{ request()->routeIs('kurikulum.*') ? 'active' : '' }}">
+                        <a href="{{ route('Kurikulum.View') }}" class="link-href flex-1 text-[13.5px] {{ request()->routeIs('kurikulum.*') ? 'active' : '' }}">
                             Manajemen Kurikulum
                         </a>
                     </div>
@@ -101,11 +101,11 @@
 
                         <div class="content-dropdown pl-10 pr-2 w-full">
                             <div class="flex flex-col py-1 space-y-0.5 border-l-2 pl-3 my-1" style="border-color: var(--color-border);">
-                                <a href="{{ route('library.administrator') }}"
+                                <a href="{{ route('Library.Administrator') }}"
                                    class="link-href block py-1.5 px-2 rounded-lg text-[12.5px] text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA] transition">
                                     Library
                                 </a>
-                                <a href="{{ route('topik.management') }}"
+                                <a href="{{ route('Topik.Management') }}"
                                    class="link-href block py-1.5 px-2 rounded-lg text-[12.5px] text-[#5D5A52] hover:text-[#1B1913] hover:bg-[#F1EFEA] transition">
                                     Topik Management
                                 </a>
@@ -304,7 +304,7 @@
 
                             <div class="border-t border-[#EFEDE7] my-1"></div>
 
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('Logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center px-4 py-2.5 gap-2.5 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] transition font-medium cursor-pointer">
                                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -348,7 +348,7 @@
                         Profil Akun
                     </a>
 
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center px-3 py-2 gap-2 text-[13px] text-[#DE3B2B] hover:bg-[#FBEAE7] cursor-pointer">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -406,7 +406,7 @@
                         <li class="list-item">
                             <div class="content-menu flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#5D5A52] hover:bg-[#F1EFEA]">
                                 <i class="fa-solid fa-layer-group text-[14px] w-5 text-center"></i>
-                                <a href="{{ route('kurikulum.view') }}" class="link-href text-[13.5px] font-medium">Manajemen Kurikulum</a>
+                                <a href="{{ route('Kurikulum.View') }}" class="link-href text-[13.5px] font-medium">Manajemen Kurikulum</a>
                             </div>
                         </li>
 
@@ -441,8 +441,8 @@
 
                                 <div class="content-dropdown pl-6 pr-2 w-full">
                                     <div class="flex flex-col py-1 space-y-0.5 border-l-2 border-[#EFEDE7] pl-3 my-1">
-                                        <a href="{{ route('library.administrator') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">Library</a>
-                                        <a href="{{ route('topik.management') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">Topik Management</a>
+                                        <a href="{{ route('Library.Administrator') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">Library</a>
+                                        <a href="{{ route('Topik.Management') }}" class="link-href block py-1.5 text-[12.5px] text-[#5D5A52]">Topik Management</a>
                                     </div>
                                 </div>
                             </div>
@@ -517,7 +517,7 @@
 
                 {{-- DRAWER LOGOUT BUTTON --}}
                 <div class="p-4 border-t border-[#EFEDE7]">
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('Logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full flex items-center justify-center py-2.5 px-4 bg-[#FBEAE7] text-[#DE3B2B] rounded-xl font-bold text-sm gap-2 cursor-pointer transition active:scale-95">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>

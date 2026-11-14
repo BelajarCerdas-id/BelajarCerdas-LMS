@@ -459,7 +459,7 @@ Filter
                 <div class="book-cover">
 
                     @if($book->cover)
-                        <img src="{{ asset('library/sampul/'.$book->cover) }}">
+                        <img src="{{ asset('storage/library/sampul/'.$book->cover) }}">
                     @else
                         <div class="flex items-center justify-center h-full text-gray-400">
                             No Cover
@@ -552,7 +552,7 @@ Filter
                         <div class="book-cover">
 
                             @if($book->cover)
-                                <img src="{{ asset('library/sampul/'.$book->cover) }}">
+                                <img src="{{ asset('storage/library/sampul/'.$book->cover) }}">
                             @else
                                 <div class="flex items-center justify-center h-full text-gray-400">
                                     No Cover

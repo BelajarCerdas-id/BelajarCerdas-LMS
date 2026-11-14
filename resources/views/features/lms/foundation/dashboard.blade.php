@@ -353,8 +353,8 @@
                                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition 
                                                 group-hover:bg-emerald-100 group-hover:text-emerald-600">
 
-                                                @if ($item->SchoolPartner?->logo && file_exists(public_path($item->SchoolPartner->logo)))
-                                                    <img src="{{ asset($item->SchoolPartner->logo) }}"
+                                                @if ($item->SchoolPartner?->logo && Storage::disk('public')->exists($item->SchoolPartner->logo))
+                                                    <img src="{{ asset('storage/'.$item->SchoolPartner->logo) }}"
                                                         alt="{{ $item->SchoolPartner->nama_sekolah ?? 'Logo sekolah' }}" class="h-full w-full object-cover">
                                                 @else
                                                     <i class="fa-solid fa-school"></i>
