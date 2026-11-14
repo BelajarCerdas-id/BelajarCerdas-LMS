@@ -42,6 +42,16 @@ class SchoolAssessment extends Model
         return $this->hasMany(SchoolAssessmentQuestion::class, 'school_assessment_id');
     }
 
+    public function SchoolAssessmentComposition()
+    {
+        return $this->hasMany(SchoolAssessmentComposition::class, 'school_assessment_id');
+    }
+
+    public function StudentAssessmentComposition()
+    {
+        return $this->hasMany(StudentAssessmentComposition::class, 'school_assessment_id');
+    }
+
     public function StudentAssessmentAnswer()
     {
         return $this->hasMany(StudentAssessmentAnswer::class, 'school_assessment_id');

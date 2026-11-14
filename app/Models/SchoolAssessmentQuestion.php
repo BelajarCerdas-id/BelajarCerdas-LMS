@@ -11,6 +11,7 @@ class SchoolAssessmentQuestion extends Model
 
     protected $fillable = [
         'school_assessment_id',
+        'sac_id',
         'question_bank_id',
         'question_weight',
     ];
@@ -18,6 +19,11 @@ class SchoolAssessmentQuestion extends Model
     public function SchoolAssessment()
     {
         return $this->belongsTo(SchoolAssessment::class, 'school_assessment_id');
+    }
+
+    public function SchoolAssessmentComposition()
+    {
+        return $this->belongsTo(SchoolAssessmentComposition::class, 'sac_id');
     }
 
     public function LmsQuestionBank()

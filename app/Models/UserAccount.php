@@ -212,6 +212,11 @@ class UserAccount extends Authenticatable
         return $this->hasMany(UserActivity::class, 'user_id');
     }
 
+    public function StudentAssessmentComposition()
+    {
+        return $this->hasMany(StudentAssessmentComposition::class, 'user_id');
+    }
+
     /**
      * Dapatkan model SchoolPartner yang berasosiasi dengan user
      */

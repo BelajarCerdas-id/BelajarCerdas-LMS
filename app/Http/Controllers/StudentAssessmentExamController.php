@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
+use App\Models\SchoolAssessmentComposition;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentAssessmentAttempt;
+use App\Models\StudentAssessmentComposition;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentSchoolClass;
@@ -65,6 +67,15 @@ class StudentAssessmentExamController extends Controller
 
         $wrongBankIds = [];
 
+        // KOMPOSISI SOAL SISWA
+        $studentComposition = null;
+
+        $hasCompositions = SchoolAssessmentComposition::where('school_assessment_id', $sourceAssessmentId)->exists();
+
+        if ($hasCompositions) {
+            $studentComposition = StudentAssessmentComposition::where('school_assessment_id', $sourceAssessmentId)->where('user_id', $user->id)->first();
+        }
+
         if ($assessmentCategory === 'remedial' && $parentAssessmentId) {
 
             $previousAssessment = null;
@@ -120,7 +131,7 @@ class StudentAssessmentExamController extends Controller
             Cache::forget($poolCacheKey);
         }
 
-        // 1. Ambil master pool soal langsung dari RAM Cache (atau load & cache jika belum ada)
+        // Ambil master pool seluruh soal assessment dari cache.
         $questionPool = Cache::remember($poolCacheKey, now()->addHours(6), function () use ($sourceAssessmentId) {
             return SchoolAssessmentQuestion::with([
                 'LmsQuestionBank',
@@ -135,6 +146,23 @@ class StudentAssessmentExamController extends Controller
             ->get();
         });
 
+        // FILTER BERDASARKAN KOMPOSISI SISWA.
+        if ($hasCompositions) {
+
+            if ($studentComposition) {
+                // Siswa hanya mendapatkan soal dari komposisinya sendiri.
+                $questionPool = $questionPool->where('sac_id', $studentComposition->sac_id)->values();
+            } else {
+                // Assessment sudah menggunakan komposisi, tetapi siswa tidak terdaftar pada komposisi mana pun.
+                $questionPool = collect();
+            }
+
+        } else {
+            // Assessment lama: gunakan soal tanpa komposisi.
+            $questionPool = $questionPool->whereNull('sac_id')->values();
+        }
+
+        // ID soal dihitung setelah filter komposisi.
         $publishedQuestionIds = $questionPool->pluck('id')->implode(',');
 
         $shuffleQuestions = $schoolAssessment->shuffle_questions;

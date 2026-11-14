@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kelas;
 use App\Models\Kurikulum;
 use App\Models\LmsQuestionBank;
 use App\Models\SchoolAssessment;
+use App\Models\SchoolAssessmentComposition;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentAssessmentComposition;
+use App\Models\StudentSchoolClass;
 use App\Models\TeacherMapel;
 use App\Services\ClassName\ClassNameService;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -54,8 +56,8 @@ class TeacherQuestionBankReleaseController extends Controller
             $query->where('school_partner_id', $schoolId);
         })->with(['SchoolClass', 'Mapel'])->get();
 
-        $allSchoolAssessments = SchoolAssessment::with(['Mapel', 'SchoolClass', 'SchoolAssessmentType'])->whereNotIn('assessment_category', ['remedial', 'susulan'])
-        ->whereHas('SchoolAssessmentType.AssessmentMode', function ($query) {
+        $allSchoolAssessments = SchoolAssessment::with(['Mapel', 'SchoolClass', 'SchoolAssessmentType', 'SchoolAssessmentComposition'])
+        ->whereNotIn('assessment_category', ['remedial', 'susulan'])->whereHas('SchoolAssessmentType.AssessmentMode', function ($query) {
             $query->whereNot('code', 'project');
         })->where('user_id', $user->id)->where('school_partner_id', $schoolId)->orderByDesc('created_at')->get();
 
@@ -96,7 +98,8 @@ class TeacherQuestionBankReleaseController extends Controller
         $assessmentAnswerStatus = StudentAssessmentAnswer::whereIn('school_assessment_id', $allAssessmentIds)->select('school_assessment_id')
         ->distinct()->pluck('school_assessment_id')->map(fn($id) => (int) $id)->flip();
 
-        $allAssignments = SchoolAssessmentQuestion::whereIn('school_assessment_id', $allAssessmentIds)->get(['school_assessment_id', 'question_bank_id', 'question_weight'])
+        $allAssignments = SchoolAssessmentQuestion::whereIn('school_assessment_id', $allAssessmentIds)->get(['school_assessment_id', 'sac_id', 
+            'question_bank_id', 'question_weight'])
         ->groupBy('school_assessment_id');
 
         $assignedQuestionIds = $allAssignments->flatten()->pluck('question_bank_id')->filter()->map(fn($id) => (int) $id)->unique()->values();
@@ -118,6 +121,77 @@ class TeacherQuestionBankReleaseController extends Controller
             })
             ->keyBy(fn($question) => (string) $question->id);
         }
+
+        $buildAssessmentAssignmentData = function ($assessment) use ($allAssignments, $assignedQuestionDetails, $assessmentAnswerStatus) {
+            $assignments = $allAssignments->get($assessment->id, collect());
+
+            $formatAssignedQuestions = function ($items) use ($assignedQuestionDetails) {
+                return $items->map(function ($item) use ($assignedQuestionDetails) {
+                    $questionId = (string) $item->question_bank_id;
+
+                    return [
+                        'question_id' => (int) $item->question_bank_id,
+                        'weight' => (float) $item->question_weight,
+                        'question' => $assignedQuestionDetails->get($questionId),
+                    ];
+                })->values()->all();
+            };
+
+            // Soal lama yang belum memiliki komposisi.
+            $legacyAssignments = $assignments->filter(function ($item) {
+                return is_null($item->sac_id);
+            })->values();
+
+            // Data setiap komposisi.
+            $compositions = $assessment->SchoolAssessmentComposition
+                ->map(function ($composition) use ($assignments, $formatAssignedQuestions) {
+                    $compositionAssignments = $assignments
+                        ->where('sac_id', $composition->id)
+                        ->values();
+
+                    return [
+                        'id' => (int) $composition->id,
+                        'composition_name' => $composition->composition_name,
+                        'assigned_question_count' => $compositionAssignments->count(),
+                        'assigned_total_weight' => round(
+                            $compositionAssignments->sum(
+                                fn($item) => (float) $item->question_weight
+                            ),
+                            2
+                        ),
+                        'assigned_questions' => $formatAssignedQuestions($compositionAssignments),
+                    ];
+                })->values();
+
+            $assessment->has_student_answers = $assessmentAnswerStatus->has(
+                (int) $assessment->id
+            );
+
+            // Total seluruh soal, termasuk soal lama dan seluruh komposisi.
+            $assessment->assigned_question_count = $assignments->count();
+
+            $assessment->assigned_total_weight = round(
+                $assignments->sum(fn($item) => (float) $item->question_weight),
+                2
+            );
+
+            $assessment->assigned_questions = $formatAssignedQuestions($assignments);
+
+            // Komposisi baru.
+            $assessment->compositions = $compositions;
+
+            // Soal lama yang belum dikelompokkan ke komposisi.
+            $assessment->legacy_assigned_question_count = $legacyAssignments->count();
+
+            $assessment->legacy_assigned_total_weight = round(
+                $legacyAssignments->sum(fn($item) => (float) $item->question_weight),
+                2
+            );
+
+            $assessment->legacy_assigned_questions = $formatAssignedQuestions($legacyAssignments);
+
+            return $assessment;
+        };
 
         $schoolAssessment = $allSchoolAssessments->filter(function ($assessment) use ($searchYear, $selectedClass) {
             $schoolClass = $assessment->SchoolClass;
@@ -192,50 +266,45 @@ class TeacherQuestionBankReleaseController extends Controller
 
         $schoolAssessmentType = SchoolAssessmentType::where('school_partner_id', $schoolId)->get();
 
-        $schoolAssessment = $schoolAssessment->map(function ($assessment) use ($allAssignments, $assignedQuestionDetails, $assessmentAnswerStatus) {
-            $assessment->has_student_answers = $assessmentAnswerStatus->has(
-                (int) $assessment->id
-            );
-    
-            $assignments = $allAssignments->get($assessment->id, collect());
-    
-            $assessment->assigned_question_count = $assignments->count();
-    
-            $assessment->assigned_total_weight = round($assignments->sum(
-                fn($item) => (float) $item->question_weight
-            ), 2);
-    
-            $assessment->assigned_questions = $assignments->map(function ($item) use ($assignedQuestionDetails) {
-                $questionId = (string) $item->question_bank_id;
-    
-                return [
-                    'question_id' => (int) $item->question_bank_id,
-                    'weight' => (float) $item->question_weight,
-                    'question' => $assignedQuestionDetails->get($questionId),
-                ];
-            })->values()->all();
-    
-            return $assessment;
-        })->values();
+        $schoolAssessment = $schoolAssessment->map($buildAssessmentAssignmentData)->values();
 
         if ($selectedAssessment) {
-            $selectedAssessment->has_student_answers = $assessmentAnswerStatus->has((int) $selectedAssessment->id);
+            $selectedAssessment = $buildAssessmentAssignmentData($selectedAssessment);
+        }
 
-            $assignments = $allAssignments->get($selectedAssessment->id, collect());
+        $students = collect();
 
-            $selectedAssessment->assigned_question_count = $assignments->count();
+        if ($selectedAssessment) {
+            $students = StudentSchoolClass::with(['UserAccount.StudentProfile', 'SchoolClass'])->where('school_class_id', $selectedAssessment->school_class_id)
+            ->whereHas('SchoolClass', function ($query) use ($schoolId) {
+                $query->where('school_partner_id', $schoolId);
 
-            $selectedAssessment->assigned_total_weight = round($assignments->sum(fn($item) => (float) $item->question_weight), 2);
+            })->get()->filter(function ($studentSchoolClass) {
+                return $studentSchoolClass->UserAccount !== null;
 
-            $selectedAssessment->assigned_questions = $assignments->map(function ($item) use ($assignedQuestionDetails) {
-                $questionId = (string) $item->question_bank_id;
+            })->map(function ($studentSchoolClass) {
+                $user = $studentSchoolClass->UserAccount;
+                $profile = $user->StudentProfile;
 
                 return [
-                    'question_id' => (int) $item->question_bank_id,
-                    'weight' => (float) $item->question_weight,
-                    'question' => $assignedQuestionDetails->get($questionId),
+                    'id' => (int) $user->id, 
+                    'name' => $profile->nama_lengkap ?? 'Nama tidak tersedia',
+                    'class_name' => optional($studentSchoolClass->SchoolClass)->class_name ?? '-',
+                    'student_class_status' => $studentSchoolClass->student_class_status,
                 ];
-            })->values()->all();
+            })->where('student_class_status', 'active')->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->values();
+        }
+
+        $studentCompositionAssignments = collect();
+
+        if ($selectedAssessment) {
+
+            $studentCompositionAssignments = StudentAssessmentComposition::where(
+                'school_assessment_id',
+                $selectedAssessment->id
+            )->get(['sac_id', 'user_id'])->groupBy('sac_id')->map(function ($items) {
+                return $items->pluck('user_id')->map(fn($id) => (int) $id)->values();
+            });
         }
 
         $selectedAssessmentMapelId = $selectedAssessment ? $selectedAssessment->mapel_id: null;
@@ -313,6 +382,8 @@ class TeacherQuestionBankReleaseController extends Controller
             'questionBank' => $getQuestions,
             'selectedAssessment' => $selectedAssessment,
             'selectedAssessmentHasAnswers' => $selectedAssessmentHasAnswers,
+            'students' => $students,
+            'studentCompositionAssignments' => $studentCompositionAssignments,
         ]);
     }
 
@@ -351,23 +422,63 @@ class TeacherQuestionBankReleaseController extends Controller
                 'min:1',
                 'max:100',
             ],
+            'composition_id' => [
+                'nullable',
+                'integer',
+                'required_if:is_legacy,0',
+                'exists:school_assessment_compositions,id',
+            ],
+            'is_legacy' => [
+                'required',
+                'boolean',
+            ],
+            'student_ids' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+            'student_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                'exists:user_accounts,id',
+            ],
         ], [
             'school_assessment_id.required' => 'Harap pilih assessment.',
             'school_assessment_id.integer' => 'Assessment tidak valid.',
             'school_assessment_id.exists' => 'Assessment tidak ditemukan.',
+
             'question_id.required' => 'Harap pilih setidaknya 1 soal.',
             'question_id.min' => 'Harap pilih setidaknya 1 soal.',
             'question_id.*.required' => 'Soal tidak valid.',
             'question_id.*.integer' => 'ID soal tidak valid.',
             'question_id.*.distinct' => 'Terdapat soal yang dipilih lebih dari satu kali.',
             'question_id.*.exists' => 'Salah satu soal tidak ditemukan.',
+
             'question_weight.required' => 'Bobot soal wajib diisi.',
             'question_weight.*.required' => 'Bobot soal wajib diisi.',
             'question_weight.*.numeric' => 'Bobot soal harus berupa angka.',
-            'question_weight.*.min' => 'Bobot soal tidak boleh kurang dari 0.',
+            'question_weight.*.min' => 'Bobot soal tidak boleh kurang dari 1.',
             'question_weight.*.max' => 'Bobot soal tidak boleh lebih dari 100.',
+
             'total_weight.required' => 'Total bobot wajib diisi.',
             'total_weight.numeric' => 'Total bobot harus berupa angka.',
+            'total_weight.min' => 'Total bobot minimal adalah 1.',
+            'total_weight.max' => 'Total bobot tidak boleh lebih dari 100.',
+
+            'composition_id.required_if' => 'Komposisi soal wajib dipilih.',
+            'composition_id.integer' => 'ID komposisi tidak valid.',
+            'composition_id.exists' => 'Komposisi soal tidak ditemukan.',
+
+            'is_legacy.required' => 'Jenis komposisi wajib ditentukan.',
+            'is_legacy.boolean' => 'Jenis komposisi tidak valid.',
+
+            'student_ids.required' => 'Harap pilih setidaknya satu siswa.',
+            'student_ids.min' => 'Harap pilih setidaknya satu siswa.',
+            'student_ids.*.required' => 'Data siswa tidak valid.',
+            'student_ids.*.integer' => 'ID siswa tidak valid.',
+            'student_ids.*.distinct' => 'Terdapat siswa yang dipilih lebih dari satu kali.',
+            'student_ids.*.exists' => 'Salah satu siswa tidak ditemukan.',
         ]);
 
         if ($validator->fails()) {
@@ -378,6 +489,7 @@ class TeacherQuestionBankReleaseController extends Controller
             ], 422);
         }
 
+        // Cari assessment dan pastikan dimiliki guru serta sekolah terkait.
         $assessment = SchoolAssessment::with(['SchoolClass', 'Mapel'])->where('id', $request->school_assessment_id)->where('user_id', Auth::id())
         ->where('school_partner_id', $schoolId)->first();
 
@@ -388,12 +500,43 @@ class TeacherQuestionBankReleaseController extends Controller
             ], 403);
         }
 
-        $questionIds = array_values(array_unique(array_map('intval', $request->question_id)));
+        // Data komposisi.
+        $isLegacy = $request->boolean('is_legacy');
+        $compositionId = null;
 
-        $weights = collect($request->question_weight)->mapWithKeys(function ($weight, $questionId) {
-            return [(int) $questionId => round((float) $weight, 2)];
-        });
+        if (!$isLegacy) {
+            $composition = SchoolAssessmentComposition::where('id', $request->composition_id)->where('school_assessment_id', $assessment->id)->first();
 
+            if (!$composition) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Komposisi soal tidak ditemukan atau tidak sesuai dengan assessment.',
+                    'errors' => [
+                        'is_legacy' => [
+                            'Pilihan komposisi soal tidak valid. Silakan pilih ulang komposisi soal.',
+                        ],
+                    ],
+                ], 422);
+            }
+
+            $compositionId = $composition->id;
+        }
+
+        // Ambil ID soal.
+        $questionIds = array_values(array_unique(
+            array_map('intval', $request->question_id)
+        ));
+
+        // Ambil bobot soal.
+        $weights = collect($request->question_weight)->mapWithKeys(
+            function ($weight, $questionId) {
+                return [
+                    (int) $questionId => round((float) $weight, 2),
+                ];
+            }
+        );
+
+        // Pastikan setiap soal memiliki bobot.
         foreach ($questionIds as $questionId) {
             if (!$weights->has($questionId)) {
                 return response()->json([
@@ -401,14 +544,16 @@ class TeacherQuestionBankReleaseController extends Controller
                     'message' => 'Bobot untuk salah satu soal belum tersedia.',
                     'errors' => [
                         'question_weight' => [
-                            "Bobot soal dengan ID {$questionId} belum tersedia."
+                            "Bobot soal dengan ID {$questionId} belum tersedia.",
                         ],
                     ],
                 ], 422);
             }
         }
 
-        $totalWeight = round(collect($questionIds)->sum(fn($questionId) => $weights->get($questionId)), 2);
+        // Hitung total bobot.
+        $totalWeight = round(collect($questionIds)->sum(fn($questionId) => $weights->get($questionId)), 2
+        );
 
         if ($totalWeight > 100) {
             return response()->json([
@@ -416,12 +561,40 @@ class TeacherQuestionBankReleaseController extends Controller
                 'message' => 'Total bobot soal tidak boleh melebihi 100%.',
                 'errors' => [
                     'total_weight' => [
-                        "Total bobot saat ini {$totalWeight}%. Maksimal total bobot adalah 100%."
+                        "Total bobot saat ini {$totalWeight}%. Maksimal total bobot adalah 100%.",
                     ],
                 ],
             ], 422);
         }
 
+        // Ambil ID siswa.
+        $studentIds = array_values(array_unique(
+            array_map('intval', $request->student_ids)
+        ));
+
+        // Validasi siswa berasal dari kelas dan sekolah assessment.
+        $validStudentIds = StudentSchoolClass::where('school_class_id', $assessment->school_class_id)->whereHas('SchoolClass', function ($query) use ($schoolId) {
+            $query->where('school_partner_id', $schoolId);
+        })->whereIn('student_id', $studentIds)->pluck('student_id')->map(fn($id) => (int) $id)->all();
+
+        $invalidStudentIds = array_diff(
+            $studentIds,
+            $validStudentIds
+        );
+
+        if (!empty($invalidStudentIds)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terdapat siswa yang tidak terdaftar di kelas assessment ini.',
+                'errors' => [
+                    'student_ids' => [
+                        'Pastikan siswa yang dipilih berasal dari kelas assessment.',
+                    ],
+                ],
+            ], 422);
+        }
+
+        // Ambil soal dari bank soal.
         $questions = LmsQuestionBank::with(['Kelas', 'Mapel'])->whereIn('id', $questionIds)->get();
 
         if ($questions->count() !== count($questionIds)) {
@@ -458,8 +631,28 @@ class TeacherQuestionBankReleaseController extends Controller
         DB::beginTransaction();
 
         try {
-            SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->whereNotIn('question_bank_id', $questionIds)->delete();
 
+            // Jika memilih kelompok legacy, konversikan menjadi komposisi biasa.
+            if ($isLegacy) {
+                $composition = SchoolAssessmentComposition::create([
+                    'school_assessment_id' => $assessment->id,
+                    'composition_name' => 'Tanpa Nama',
+                ]);
+
+                $compositionId = $composition->id;
+
+                // Pindahkan seluruh soal legacy ke komposisi baru.
+                SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->whereNull('sac_id')->update([
+                    'sac_id' => $compositionId,
+                ]);
+            }
+
+            // SIMPAN SOAL KE KOMPOSISI
+            SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->where('sac_id', $compositionId)->whereNotIn('question_bank_id', $questionIds)->update([
+                'sac_id' => null,
+            ]);
+
+            // Simpan soal beserta komposisinya.
             foreach ($questionIds as $questionId) {
                 SchoolAssessmentQuestion::updateOrCreate(
                     [
@@ -467,14 +660,33 @@ class TeacherQuestionBankReleaseController extends Controller
                         'question_bank_id' => $questionId,
                     ],
                     [
+                        'sac_id' => $compositionId,
                         'question_weight' => $weights->get($questionId),
+                    ]
+                );
+            }
+
+            // hapus siswa yang tidak lagi dipilih dari komposisi tujuan.
+            StudentAssessmentComposition::where('school_assessment_id', $assessment->id)->where('sac_id', $compositionId)->whereNotIn('user_id', $studentIds)->delete();
+
+            // Masukkan siswa ke komposisi yang dipilih.
+            foreach ($studentIds as $studentId) {
+                StudentAssessmentComposition::updateOrCreate(
+                    [
+                        'school_assessment_id' => $assessment->id,
+                        'user_id' => $studentId,
+                    ],
+                    [
+                        'sac_id' => $compositionId,
                     ]
                 );
             }
 
             DB::commit();
 
-            $savedQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->get(['question_bank_id', 'question_weight'])->map(function ($item) {
+            // Ambil soal yang berhasil disimpan.
+            $savedQuestions = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->where('sac_id', $compositionId)
+            ->get(['question_bank_id', 'question_weight', 'sac_id'])->map(function ($item) {
                 return [
                     'question_id' => (int) $item->question_bank_id,
                     'weight' => (float) $item->question_weight,
@@ -483,20 +695,212 @@ class TeacherQuestionBankReleaseController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Soal berhasil dirilis ke assessment.',
+                'message' => 'Soal dan siswa berhasil dimasukkan ke komposisi assessment.',
                 'data' => [
                     'school_assessment_id' => (int) $assessment->id,
+                    'composition_id' => (int) $compositionId,
+                    'is_legacy' => false,
                     'question_count' => $savedQuestions->count(),
                     'total_weight' => round($savedQuestions->sum('weight'), 2),
                     'assigned_questions' => $savedQuestions,
+                    'student_count' => count($studentIds),
+                    'assigned_students' => $studentIds,
                 ],
             ]);
+
         } catch (\Throwable $e) {
             DB::rollBack();
 
+            report($e);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan saat menyimpan soal.',
+                'message' => 'Terjadi kesalahan saat menyimpan soal dan siswa ke komposisi assessment.',
+            ], 500);
+        }
+    }
+
+    public function storeTeacherQuestionReleaseComposition(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'school_assessment_id' => [
+                'required',
+            ],
+            'composition_name' => [
+                'required',
+            ],
+        ], [
+            'school_assessment_id.required' => 'Assessment wajib dipilih.',
+            'composition_name.required' => 'Nama komposisi wajib diisi.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terdapat kesalahan pada input.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $composition = DB::transaction(function () use ($request) {
+                $schoolAssessment = SchoolAssessment::findOrFail(
+                    $request->school_assessment_id
+                );
+
+                return SchoolAssessmentComposition::create([
+                    'school_assessment_id' => $schoolAssessment->id,
+                    'composition_name' => trim($request->composition_name),
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Komposisi soal berhasil ditambahkan.',
+                'composition' => $composition,
+            ], 201);
+
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan komposisi soal.',
+            ], 500);
+        }
+    }
+
+    public function updateTeacherQuestionReleaseComposition(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'school_assessment_id' => [
+                'required',
+            ],
+            'composition_id' => [
+                'nullable',
+                'integer',
+                'required_if:is_legacy,0',
+            ],
+            'is_legacy' => [
+                'required',
+                'boolean',
+            ],
+            'composition_name' => [
+                'required',
+            ],
+        ], [
+            'school_assessment_id.required' => 'Assessment wajib dipilih.',
+            'composition_id.required_if' => 'Komposisi soal wajib dipilih.',
+            'composition_id.integer' => 'ID komposisi tidak valid.',
+            'is_legacy.required' => 'Jenis komposisi wajib ditentukan.',
+            'is_legacy.boolean' => 'Jenis komposisi tidak valid.',
+            'composition_name.required' => 'Nama komposisi wajib diisi.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terdapat kesalahan pada input.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $result = DB::transaction(function () use ($request) {
+                $schoolAssessment = SchoolAssessment::findOrFail(
+                    $request->school_assessment_id
+                );
+
+                $compositionName = trim($request->composition_name);
+                $isLegacy = $request->boolean('is_legacy');
+
+                // KONDISI 1: EDIT KOMPOSISI LEGACY
+                if ($isLegacy) {
+                    $legacyQuestions = SchoolAssessmentQuestion::where(
+                        'school_assessment_id',
+                        $schoolAssessment->id
+                    )
+                        ->whereNull('sac_id');
+
+                    $legacyQuestionCount = $legacyQuestions->count();
+
+                    if ($legacyQuestionCount === 0) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'composition_name' => [
+                                'Kelompok soal tanpa nama sudah tidak memiliki pertanyaan.',
+                            ],
+                        ]);
+                    }
+
+                    // Buat komposisi baru
+                    $composition = SchoolAssessmentComposition::create([
+                        'school_assessment_id' => $schoolAssessment->id,
+                        'composition_name' => $compositionName,
+                    ]);
+
+                    // Pindahkan seluruh pertanyaan legacy ke komposisi baru
+                    SchoolAssessmentQuestion::where(
+                        'school_assessment_id',
+                        $schoolAssessment->id
+                    )
+                        ->whereNull('sac_id')
+                        ->update([
+                            'sac_id' => $composition->id,
+                        ]);
+
+                } else {
+                    // KONDISI 2: EDIT KOMPOSISI YANG SUDAH ADA
+                    $composition = SchoolAssessmentComposition::where(
+                        'id',
+                        $request->composition_id
+                    )
+                        ->where('school_assessment_id', $schoolAssessment->id)
+                        ->firstOrFail();
+
+                    $composition->update([
+                        'composition_name' => $compositionName,
+                    ]);
+                }
+
+                // Ambil informasi komposisi terbaru
+                $assignedQuestions = SchoolAssessmentQuestion::where(
+                    'school_assessment_id',
+                    $schoolAssessment->id
+                )
+                    ->where('sac_id', $composition->id);
+
+                return [
+                    'composition' => [
+                        'id' => $composition->id,
+                        'school_assessment_id' => $composition->school_assessment_id,
+                        'composition_name' => $composition->composition_name,
+                        'assigned_question_count' => $assignedQuestions->count(),
+                        'assigned_total_weight' => (float) $assignedQuestions->sum('question_weight'),
+                    ],
+                    'is_legacy_converted' => $isLegacy,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nama komposisi soal berhasil diperbarui.',
+                'composition' => $result['composition'],
+                'is_legacy_converted' => $result['is_legacy_converted'],
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terdapat kesalahan pada data komposisi.',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memperbarui nama komposisi soal.',
             ], 500);
         }
     }
