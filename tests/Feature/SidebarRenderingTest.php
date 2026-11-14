@@ -13,7 +13,7 @@ class SidebarRenderingTest extends TestCase
      */
     public function test_sidebar_renders_access_denied_for_unknown_role(): void
     {
-        $rendered = View::make('Components.SidebarBeranda', [
+        $rendered = View::make('components.sidebar-beranda', [
             'headerSideNav' => 'Test Dashboard',
         ])->render();
 
@@ -47,7 +47,7 @@ class SidebarRenderingTest extends TestCase
         }
 
         $this->assertTrue(
-            View::exists('Components.Sidebar.AccessDenied'),
+            View::exists('components.sidebar.access-denied'),
             "View partial [components.sidebar.access-denied] must exist."
         );
     }
@@ -76,7 +76,7 @@ class SidebarRenderingTest extends TestCase
             $user->role = $role;
             $this->actingAs($user);
 
-            $rendered = View::make('Components.SidebarBeranda', [
+            $rendered = View::make('components.sidebar-beranda', [
                 'headerSideNav' => "Dashboard {$role}",
                 'backButton' => '<i class="fa fa-arrow-left"></i>',
                 'linkBackButton' => '/home',
@@ -102,7 +102,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $view = View::make('Features.Lms.Teacher.Dashboard', [
+        $view = View::make('features.lms.teacher.dashboard', [
             'role' => 'Guru',
             'schoolName' => 'Sekolah Masa',
             'schoolId' => 1,
@@ -150,7 +150,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Super Admin';
         $this->actingAs($user);
 
-        $rendered = View::make('Components.Sidebar.Roles.Administrator')->render();
+        $rendered = View::make('components.sidebar.roles.administrator')->render();
 
         $this->assertStringContainsString('sidebar-beranda-administrator', $rendered);
         $this->assertStringContainsString('var(--color-surface)', $rendered);
@@ -174,7 +174,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $rendered = View::make('Components.Sidebar.Roles.Guru', [
+        $rendered = View::make('components.sidebar.roles.guru', [
             'schoolName' => 'SMA Belajar Cerdas',
             'schoolId' => 1,
         ])->render();
@@ -194,7 +194,7 @@ class SidebarRenderingTest extends TestCase
         $user->name = 'Bu Ratna Puspita';
         $this->actingAs($user);
 
-        $view = View::make('Features.Lms.Teacher.Information.ScheduleCalendar', [
+        $view = View::make('features.lms.teacher.information.schedule_calendar', [
             'role' => 'Guru',
             'schoolName' => 'SMA Belajar Cerdas',
             'schoolId' => 1,

@@ -14,7 +14,7 @@ class AuthController extends Controller
     // function login view
     public function loginView()
     {
-        return view('Auth.Login');
+        return view('auth.login');
     }
 
     // function login
@@ -92,7 +92,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'redirect' => route('Beranda', [
+            'redirect' => route('beranda', [
                 'role' => $user->role,
             ]),
         ]);

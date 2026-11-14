@@ -20,7 +20,7 @@ class StudentVicePrincipalController extends Controller
 {
     public function index($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.StudentVicePrincipal.Dashboard', compact('role', 'schoolName', 'schoolId'));     
+        return view('features.lms.student-vice-principal.dashboard', compact('role', 'schoolName', 'schoolId'));     
     }
 
     public function loadStudentReflectionChart(Request $request, $role, $schoolName, $schoolId)
@@ -174,7 +174,7 @@ class StudentVicePrincipalController extends Controller
         }
 
         return view(
-            'Features.Lms.StudentVicePrincipal.ReflectionManagement.ReflectionManagement', compact('role', 'schoolName', 'schoolId', 'kelas')
+            'features.lms.student-vice-principal.reflection-management.reflection-management', compact('role', 'schoolName', 'schoolId', 'kelas')
         );
     }
 
@@ -273,7 +273,7 @@ class StudentVicePrincipalController extends Controller
 
     public function createReflectionView($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.StudentVicePrincipal.ReflectionManagement.CreateReflection', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.student-vice-principal.reflection-management.create-reflection', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function reflectionManagementForm(Request $request, $role, $schoolName, $schoolId)
@@ -363,7 +363,7 @@ class StudentVicePrincipalController extends Controller
     }
 
     public function reflectionManagementHistoryView($role, $schoolName, $schoolId) {
-        return view('Features.Lms.StudentVicePrincipal.ReflectionManagement.ReflectionManagementHistory', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.student-vice-principal.reflection-management.reflection-management-history', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateReflectionHistory($role, $schoolName, $schoolId)
@@ -395,7 +395,7 @@ class StudentVicePrincipalController extends Controller
             return 'Gabungan status emosi ' . $items->pluck('label')->implode(' dan ');
         });
 
-        return view('Features.Lms.StudentVicePrincipal.ReflectionManagement.ReflectionManagementHistoryDetail', compact('role', 'schoolName', 'schoolId', 
+        return view('features.lms.student-vice-principal.reflection-management.reflection-management-history-detail', compact('role', 'schoolName', 'schoolId', 
         'reflectionQuestionId', 'emotionTitles'));
     }
 

@@ -102,7 +102,7 @@ class TeacherInformationController extends Controller
                 return $poll;
             });
 
-        return view('Features.Lms.Teacher.Information.Polling', compact(
+        return view('features.lms.teacher.information.polling', compact(
             'role', 'schoolName', 'schoolId', 'polls', 'pollingDariSekolah', 
             'classes', 'tahunAjaranList', 'filterTahun'
         ));
@@ -355,7 +355,7 @@ class TeacherInformationController extends Controller
             }
         }
 
-        return view('Features.Lms.Teacher.Information.ScheduleCalendar', compact(
+        return view('features.lms.teacher.information.schedule_calendar', compact(
             'role',
             'schoolName',
             'schoolId',

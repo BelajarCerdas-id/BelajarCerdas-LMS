@@ -95,7 +95,7 @@ class LibraryController extends Controller
             ->get();
 
         return view(
-            'Features.Lms.Administrator.Library',
+            'features.lms.administrator.library',
             compact(
                 'books',
                 'uploadingVideos',
@@ -191,7 +191,7 @@ class LibraryController extends Controller
         ->get();
 
         return view(
-            'Features.Lms.Components.Library.LibrarySiswa',
+            'features.lms.components.library.library-siswa',
             compact('mapels')
         );
     }
@@ -205,7 +205,7 @@ class LibraryController extends Controller
         ->get();
 
         return view(
-            'Features.Lms.Components.Library.LibrarySiswa',
+            'features.lms.components.library.library-siswa',
             compact('mapels')
         );
     }
@@ -229,7 +229,7 @@ class LibraryController extends Controller
 
         $kelas = Kelas::all();
 
-        return view('Features.Lms.Components.Library.LibraryLks', compact(
+        return view('features.lms.components.library.library-lks', compact(
             'mapels',
             'kelas',
             'kelasId'
@@ -260,7 +260,7 @@ class LibraryController extends Controller
         });
 
         return view(
-            'Features.Lms.Components.Library.Lks',
+            'features.lms.components.library.lks',
             [
                 'chapters' => $chapters,
                 'mapel' => $mapel,
@@ -302,7 +302,7 @@ class LibraryController extends Controller
         $chapters = $books->groupBy('topik_materi_id');
 
         return view(
-            'Features.Lms.Components.Library.Mapel',
+            'features.lms.components.library.mapel',
             [
                 'chapters' => $chapters,
                 'mapel' => $mapel,
@@ -372,7 +372,7 @@ class LibraryController extends Controller
         }
 
         return view(
-            'Features.Lms.Components.Library.BookView',
+            'features.lms.components.library.book-view',
             compact(
                 'book',
                 'relatedBooks',
@@ -625,7 +625,7 @@ if ($validator->fails()) {
     ]);
 
     $row = view(
-    'Features.Lms.Administrator.VideoRow',
+    'features.lms.administrator.video-row',
     compact('book')
 )->render();
 
@@ -823,7 +823,7 @@ return response()->json([
         $books = $query->get();
 
         return view(
-            'Features.Lms.Components.Library.LibraryPpt',
+            'features.lms.components.library.library-ppt',
             [
                 'books'  => $books,
                 'kelas'  => Kelas::all(),
@@ -862,7 +862,7 @@ return response()->json([
         ->get();
 
         return view(
-            'Features.Lms.Components.Library.LibraryVideo',
+            'features.lms.components.library.library-video',
             compact('videos', 'mapels')
         );
     }
@@ -914,7 +914,7 @@ return response()->json([
             ->where('school_partner_id', null)
             ->get();
 
-        return view('Features.Lms.Administrator.TopikManagement', compact('topiks', 'mapels'));
+        return view('features.lms.administrator.topik-management', compact('topiks', 'mapels'));
     }
 
     public function updateTopik(Request $request, $id)
@@ -1269,7 +1269,7 @@ private function mergeChunks(UploadSession $upload)
     {
         $subjects = Mapel::whereNull('school_partner_id')->count();
 
-        return view('Features.Lms.Components.Library.Tka.Student.StudentTkaSubjectList', compact('role', 'subjects'));
+        return view('features.lms.components.library.tka.student.student-tka-subject-list', compact('role', 'subjects'));
     }
 
     public function paginateTKASubject($role)
@@ -1308,7 +1308,7 @@ private function mergeChunks(UploadSession $upload)
 
     public function studentTKAPracticeTest($role, $kelasId, $mapelId)
     {
-        return view('Features.Lms.Components.Library.Tka.Student.StudentTkaPracticeTest', compact('role', 'kelasId', 'mapelId'));
+        return view('features.lms.components.library.tka.student.student-tka-practice-test', compact('role', 'kelasId', 'mapelId'));
     }
 
     public function studentTKAPracticeTestForm(Request $request, $role, $kelasId, $mapelId)

@@ -13,7 +13,7 @@ class GradebookAssessmentController extends Controller
 {
     public function teacherGradebookAssessmentPreview($role, $schoolName, $schoolId, $subjectTeacherId, $assessmentTypeId, $studentId, $semester)
     {
-        return view('Features.Lms.Teacher.Gradebook.TeacherGradebookAssessmentPreview', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId', 
+        return view('features.lms.teacher.gradebook.teacher-gradebook-assessment-preview', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId', 
         'assessmentTypeId', 'studentId', 'semester'));
     }
 

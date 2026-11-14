@@ -348,7 +348,7 @@ if ($studentUserId) {
             $query->whereNull('target_class_id')->orWhere('target_class_id', $studentClassId);
         })->latest()->take(8)->get();
 
-        return view('Features.Lms.Parents.Dashboard', compact(
+        return view('features.lms.parents.dashboard', compact(
             'role', 'schoolName', 'schoolId', 'studentId', 'childrens',
             'profilOrangTua', 'dataAnak', 'agendaSekolah', 
             'statistikMapel', 'polls', 'statsAnak', 'jadwalHariIni', 'tugasAnak', 'cheatingHistory', 'announcements'
@@ -473,7 +473,7 @@ if ($studentUserId) {
         });
 
         return view(
-            'Features.Lms.Parents.LaporanNilai',
+            'features.lms.parents.laporan-nilai',
             compact('nilaiTugas')
         );
     }
@@ -491,7 +491,7 @@ if ($studentUserId) {
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('Features.Lms.Parents.Kehadiran', compact('absensi'));
+        return view('features.lms.parents.kehadiran', compact('absensi'));
     }
 
     // ========================================================
@@ -514,7 +514,7 @@ if ($studentUserId) {
         // Mengelompokkan jadwal berdasarkan Hari
         $jadwalPerHari = $jadwalRaw->groupBy('day_of_week');
 
-        return view('Features.Lms.Parents.Jadwal', compact('jadwalPerHari'));
+        return view('features.lms.parents.jadwal', compact('jadwalPerHari'));
     }
 
     // ========================================================
@@ -530,7 +530,7 @@ if ($studentUserId) {
             ->orderBy('date', 'asc')
             ->get();
 
-        return view('Features.Lms.Parents.Kalender', compact('kalender'));
+        return view('features.lms.parents.kalender', compact('kalender'));
     }
 
     

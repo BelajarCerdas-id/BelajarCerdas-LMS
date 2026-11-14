@@ -52,7 +52,7 @@ Exemptions (lowercase, on purpose):
 - `/lms-assessment-submission/*`, `/assessment/assessment-file*`, `/lms-docx-image/*` — URL casing is embedded in exported data (answer JSON / question HTML)
 - `/storage/*` and the `storage/app` directory tree — filesystem layout
 - `up` (Laravel health route), `storage.local*` (framework route names)
-- known pre-existing dead refs (see git history): `errors.404` views, `teachers.dashboard`, topik JS files, `route('register')`
+- former dead refs were fixed on dev-optimize: errors/404 view created, video_row partial created, tampilan/* recovered, analisis-rppm + nama-guru views created, topik dead script tags removed, unrouted TeacherDashboardController + its placeholder view removed, `route('register')` is guarded by Route::has (not a bug)
 
 ## File storage map (dev-optimize)
 

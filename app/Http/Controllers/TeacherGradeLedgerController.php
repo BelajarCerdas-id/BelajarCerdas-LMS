@@ -30,7 +30,7 @@ class TeacherGradeLedgerController extends Controller
     
     public function teacherClassList($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Teacher.GradeLedger.TeacherClassList', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.teacher.grade-ledger.teacher-class-list', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherClassList(Request $request, $role, $schoolName, $schoolId)
@@ -114,7 +114,7 @@ class TeacherGradeLedgerController extends Controller
 
     public function teacherGradeLedger($role, $schoolName, $schoolId, $subjectTeacherId)
     {
-        return view('Features.Lms.Teacher.GradeLedger.TeacherGradeLedgerManagement', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
+        return view('features.lms.teacher.grade-ledger.teacher-grade-ledger-management', compact('role', 'schoolName', 'schoolId', 'subjectTeacherId'));
     }
 
     public function paginateTeacherGradeLedger(Request $request, $role, $schoolName, $schoolId, $subjectTeacherId)

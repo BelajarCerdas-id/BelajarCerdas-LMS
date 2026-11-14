@@ -101,7 +101,7 @@ class HeadmasterController extends Controller
             } catch (\Exception $e) {
                 $pengumuman = [];
             }
-            return view('Features.Lms.Headmaster.Dashboard', compact('stats', 'pengumuman', 'schoolName', 'schoolId', 'role'));            
+            return view('features.lms.headmaster.dashboard', compact('stats', 'pengumuman', 'schoolName', 'schoolId', 'role'));            
         } else {
             abort(403, 'Profil Kepala Sekolah Anda belum terdaftar.');
         }
@@ -371,7 +371,7 @@ class HeadmasterController extends Controller
             }
         }
 
-        return view('Features.Lms.Headmaster.Monitoring.AktivitasGuru', compact(
+        return view('features.lms.headmaster.monitoring.aktivitas_guru', compact(
             'stats', 'recentAssessments', 'recentContents', 'recentQuestions', 
             'daftarGuru', 'filterGuruId', 'guruTerpilih', 'targetUploadGuru'
         ));
@@ -509,7 +509,7 @@ class HeadmasterController extends Controller
             $stats = (object) ['total_materi' => 0, 'total_tugas' => 0, 'avg_keaktifan' => 0, 'siswa_pasif' => 0];
         }
 
-        return view('Features.Lms.Headmaster.Monitoring.LaporanAkademik', compact(
+        return view('features.lms.headmaster.monitoring.laporan_akademik', compact(
             'stats', 'tahunAjaranList', 'filterTahun', 'chartLabelKelas', 
             'chartDataContent', 'chartDataAssessment', 'listSiswaPasif'
         ));
@@ -608,7 +608,7 @@ class HeadmasterController extends Controller
             ];
         });
 
-        return view('Features.Lms.Headmaster.Information.Calender', compact(
+        return view('features.lms.headmaster.information.calender', compact(
             'role', 'schoolName', 'schoolId', 'savedEvents', 'agendaSekolah', 'kegiatanPerHari'
         ));
     }
@@ -680,7 +680,7 @@ class HeadmasterController extends Controller
             ->get();
 
         // Variabel $timeSlots SUDAH DIHAPUS karena digenerate otomatis oleh Javascript
-        return view('Features.Lms.Headmaster.Information.Schedule', compact(
+        return view('features.lms.headmaster.information.schedule', compact(
             'role', 'schoolName', 'schoolId', 'classes', 'allSchedules'
         ));
     }
@@ -943,7 +943,7 @@ class HeadmasterController extends Controller
                 return $poll;
             });
 
-        return view('Features.Lms.Headmaster.Information.Polling', compact('polls', 'daftarKelas'));
+        return view('features.lms.headmaster.information.polling', compact('polls', 'daftarKelas'));
     }
 
     public function pollingStore(Request $request)
@@ -1155,7 +1155,7 @@ class HeadmasterController extends Controller
     // MONITORING TEACHER DAILY AGENDA
     public function teacherDailyAgendaManagement($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Headmaster.Monitoring.TeacherDailyAgenda.TeacherDailyAgendaManagement', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.headmaster.monitoring.teacher-daily-agenda.teacher-daily-agenda-management', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherDailyAgendaManagement(Request $request, $role, $schoolName, $schoolId)
@@ -1310,7 +1310,7 @@ class HeadmasterController extends Controller
 
     public function teacherDailyAgendaHistory($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Headmaster.Monitoring.TeacherDailyAgenda.TeacherDailyAgendaHistory', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.headmaster.monitoring.teacher-daily-agenda.teacher-daily-agenda-history', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherDailyAgendaHistory(Request $request, $role, $schoolName, $schoolId)

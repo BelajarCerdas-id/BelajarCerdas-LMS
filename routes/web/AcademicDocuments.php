@@ -563,7 +563,7 @@ Route::prefix(
             int $schoolId
         ) {
             return view(
-                'Features.Lms.SchoolAdmin.RegistrasiGuru.RPPM',
+                'features.lms.school-admin.registrasi-guru.RPPM',
                 [
                     'role' => $role,
                     'schoolName' => $schoolName,
@@ -971,7 +971,7 @@ Route::prefix(
             int $schoolId
         ) {
             return view(
-                'Features.Lms.SchoolAdmin.RegistrasiGuru.RefleksiGuru',
+                'features.lms.school-admin.registrasi-guru.refleksi-guru',
                 [
                     'role' => $role,
                     'schoolName' => $schoolName,

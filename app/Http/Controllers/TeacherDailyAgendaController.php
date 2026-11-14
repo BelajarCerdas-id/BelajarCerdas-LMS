@@ -19,7 +19,7 @@ class TeacherDailyAgendaController extends Controller
 {
     public function index($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Teacher.DailyAgenda.TeacherDailyAgenda', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.teacher.daily-agenda.teacher-daily-agenda', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherDailyAgenda(Request $request, $role, $schoolName, $schoolId)
@@ -97,7 +97,7 @@ class TeacherDailyAgendaController extends Controller
             'agenda_date' => today(),
         ])->first();
 
-        return view('Features.Lms.Teacher.DailyAgenda.TeacherDailyAgendaForm', compact('role', 'schoolName', 'schoolId', 'dayOfWeek', 'classId', 'subjectId',
+        return view('features.lms.teacher.daily-agenda.teacher-daily-agenda-form', compact('role', 'schoolName', 'schoolId', 'dayOfWeek', 'classId', 'subjectId',
         'teacherDailyAgenda'));
     }
 
@@ -232,7 +232,7 @@ class TeacherDailyAgendaController extends Controller
 
     public function teacherDailyAgendaHistory($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Teacher.DailyAgenda.TeacherDailyAgendaHistory', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.teacher.daily-agenda.teacher-daily-agenda-history', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginateTeacherDailyAgendaHistory(Request $request, $role, $schoolName, $schoolId)

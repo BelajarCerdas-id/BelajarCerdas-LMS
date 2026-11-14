@@ -23,7 +23,7 @@ class AssessmentWeightController extends Controller
 
         $tahunAjaran = SchoolClass::where('school_partner_id', $schoolId)->pluck('tahun_ajaran')->unique()->sortDesc()->values();
 
-        return view('Features.Lms.Administrator.AssessmentWeightManagement.LmsAssessmentWeightManagement', compact('role', 'schoolName', 'schoolId', 'assessmentType', 'tahunAjaran'));
+        return view('features.lms.administrator.assessment-weight-management.lms-assessment-weight-management', compact('role', 'schoolName', 'schoolId', 'assessmentType', 'tahunAjaran'));
     }
 
     // function paginate assessment weight

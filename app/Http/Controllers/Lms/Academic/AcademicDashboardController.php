@@ -10,7 +10,7 @@ class AcademicDashboardController extends Controller
     // function lms academic management
     public function lmsAcademicManagementView($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Administrator.AcademicManagement.LmsAcademicManagement', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.administrator.academic-management.lms-academic-management', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate lms academic management

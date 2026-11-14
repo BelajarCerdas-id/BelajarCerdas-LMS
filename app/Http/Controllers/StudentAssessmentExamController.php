@@ -34,7 +34,7 @@ class StudentAssessmentExamController extends Controller
     
     public function studentAssessmentExam($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
-        return view('Features.Lms.Student.Assessment.StudentAssessmentTest', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-assessment-test', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
             'mapelId', 'assessmentTypeId', 'semester', 'assessmentId'));
     }
 
@@ -1827,7 +1827,7 @@ class StudentAssessmentExamController extends Controller
 
         $hasAttempt = $answers->count() > 0;
 
-        return view('Features.Lms.Student.Assessment.StudentAssessmentResultTest', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId', 'assessmentTypeId', 'semester',
+        return view('features.lms.student.assessment.student-assessment-result-test', compact('role', 'schoolName', 'schoolId', 'curriculumId', 'mapelId', 'assessmentTypeId', 'semester',
             'assessmentId', 'user', 'totalQuestions', 'totalCorrect', 'totalWrong', 'totalUnanswered', 'totalPendingEssay', 'finalScore', 'percentage', 'isFullyGraded', 'schoolAssessment',
             'fastest', 'slowest', 'totalDuration', 'confidence', 'percentileDuration', 'percentileFastest', 'percentileSlowest', 'percentileConfidence', 'participants','totalStudents','kkm',
             'hasAttempt', 'finalScoreGlobal', 'category'
@@ -1849,7 +1849,7 @@ class StudentAssessmentExamController extends Controller
 
         $schoolAssessment = SchoolAssessment::find($assessmentId);
 
-        return view('Features.Lms.Student.Assessment.StudentProjectAssessmentResult', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
+        return view('features.lms.student.assessment.student-project-assessment-result', compact('role', 'schoolName', 'schoolId', 'curriculumId', 
             'mapelId', 'assessmentTypeId', 'semester', 'assessmentId', 'submission', 'score', 'isFullyGraded', 'schoolAssessment'));
     }
 }

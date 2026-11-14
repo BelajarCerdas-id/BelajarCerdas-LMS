@@ -58,7 +58,7 @@ class StudentSchoolClassController extends Controller
     // function lms management students view
     public function lmsManagementStudentsView($role, $schoolName, $schoolId, $managedRole, $classId, $majorId = null)
     {
-        return view('Features.Lms.Administrator.LmsSchoolSubscriptionManagementStudents', compact('role', 'schoolName', 'schoolId', 'managedRole', 'classId', 'majorId'));
+        return view('features.lms.administrator.lms-school-subscription-management-students', compact('role', 'schoolName', 'schoolId', 'managedRole', 'classId', 'majorId'));
     }
 
     // function paginate lms management users

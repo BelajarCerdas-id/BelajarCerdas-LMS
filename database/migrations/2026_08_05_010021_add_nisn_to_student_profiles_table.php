@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('student_profiles', function (Blueprint $table) {
-            $table->string('nisn')->nullable()->unique()->after('personal_email');
-        });
+        if (Schema::hasTable('student_profiles') && !Schema::hasColumn('student_profiles', 'nisn')) {
+            Schema::table('student_profiles', function (Blueprint $table) {
+                $table->string('nisn')->nullable()->unique()->after('personal_email');
+            });
+        }
     }
 
     /**
@@ -21,9 +23,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('student_profiles', function (Blueprint $table) {
-            $table->dropUnique(['nisn']);
-            $table->dropColumn('nisn');
-        });
+        if (Schema::hasTable('student_profiles') && Schema::hasColumn('student_profiles', 'nisn')) {
+            Schema::table('student_profiles', function (Blueprint $table) {
+                $table->dropUnique(['nisn']);
+                $table->dropColumn('nisn');
+            });
+        }
     }
 };

@@ -35,7 +35,7 @@ class TeacherContentController extends Controller
     {
         $getCurriculum = Kurikulum::all();
         
-        return view('Features.Lms.Teacher.ContentManagement.TeacherContentManagement', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
+        return view('features.lms.teacher.content-management.teacher-content-management', compact('role', 'schoolName', 'schoolId', 'getCurriculum'));
     }
 
     // function paginate teacher content management
@@ -165,7 +165,7 @@ class TeacherContentController extends Controller
     {
         $data = $this->reviewContentService->getByContentId($contentId);
 
-        return view('Features.Lms.Teacher.ContentManagement.TeacherReviewContent', compact('role', 'schoolName', 'schoolId', 'contentId', 'data'));
+        return view('features.lms.teacher.content-management.teacher-review-content', compact('role', 'schoolName', 'schoolId', 'contentId', 'data'));
     }
 
     // function teacher edit content
@@ -179,6 +179,6 @@ class TeacherContentController extends Controller
 
         $getCurriculum = Kurikulum::all();
 
-        return view('Features.Lms.Teacher.ContentManagement.TeacherEditContent', compact('role', 'schoolName', 'schoolId', 'contentId', 'content', 'getCurriculum'));
+        return view('features.lms.teacher.content-management.teacher-edit-content', compact('role', 'schoolName', 'schoolId', 'contentId', 'content', 'getCurriculum'));
     }
 }

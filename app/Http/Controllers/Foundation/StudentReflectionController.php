@@ -17,7 +17,7 @@ class StudentReflectionController extends Controller
 {
     public function studentReflectionView($role, $foundationId = null)
     {
-        return view('Features.Lms.Foundation.StudentReflection.MonitoringStudentReflection', compact('role', 'foundationId'));
+        return view('features.lms.foundation.student-reflection.monitoring-student-reflection', compact('role', 'foundationId'));
     }
 
     public function loadReflectionYears($role, $foundationId = null)

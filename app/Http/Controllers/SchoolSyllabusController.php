@@ -28,7 +28,7 @@ class SchoolSyllabusController extends Controller
     // function kurikulum view
     public function curriculumView($role, $schoolName, $schoolId)
     {
-        return view('SyllabusServices.School.ListKurikulum', compact('role', 'schoolName', 'schoolId'));
+        return view('syllabus-services.school.list-kurikulum', compact('role', 'schoolName', 'schoolId'));
     }
 
     // function paginate kurikulum
@@ -46,7 +46,7 @@ class SchoolSyllabusController extends Controller
     // function fase view
     public function faseView($role, $schoolName, $schoolId, $curriculumName, $curriculumId)
     {
-        return view('SyllabusServices.School.ListFase', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId'));
+        return view('syllabus-services.school.list-fase', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId'));
     }
 
     // function paginate fase
@@ -93,7 +93,7 @@ class SchoolSyllabusController extends Controller
     // function kelas view
     public function kelasView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId)
     {
-        return view('SyllabusServices.School.ListKelas', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId'));
+        return view('syllabus-services.school.list-kelas', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId'));
     }
 
     // function paginate kelas
@@ -127,7 +127,7 @@ class SchoolSyllabusController extends Controller
     // function mapel view
     public function mapelView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId)
     {
-        return view('SyllabusServices.School.ListMapel', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId'));
+        return view('syllabus-services.school.list-mapel', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId'));
     }
 
     // function paginate mapel
@@ -327,7 +327,7 @@ class SchoolSyllabusController extends Controller
     // function bab view
     public function babView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId)
     {
-        return view('SyllabusServices.School.ListBab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId'));
+        return view('syllabus-services.school.list-bab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 'kelasId', 'mapelId'));
     }
 
     // function paginate bab
@@ -521,7 +521,7 @@ class SchoolSyllabusController extends Controller
     // function sub bab view
     public function subBabView($role, $schoolName, $schoolId, $curriculumName, $curriculumId, $faseId, $kelasId, $mapelId, $babId)
     {
-        return view('SyllabusServices.School.ListSubBab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 
+        return view('syllabus-services.school.list-sub-bab', compact('role', 'schoolName', 'schoolId', 'curriculumName', 'curriculumId', 'faseId', 
         'kelasId', 'mapelId', 'babId'));
     }
 

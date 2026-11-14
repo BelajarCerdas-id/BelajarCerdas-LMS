@@ -13,7 +13,7 @@ class StudentTkaTryoutPeriodController extends Controller
 {
     public function index($role, $schoolName, $schoolId)
     {
-        return view('Features.Lms.Student.TkaTryout.TkaTryoutPeriodList', compact('role', 'schoolName', 'schoolId'));
+        return view('features.lms.student.tka-tryout.tka-tryout-period-list', compact('role', 'schoolName', 'schoolId'));
     }
 
     public function paginatePeriodList($role, $schoolName, $schoolId)

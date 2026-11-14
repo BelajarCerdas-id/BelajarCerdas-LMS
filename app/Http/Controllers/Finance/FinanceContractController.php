@@ -20,7 +20,7 @@ class FinanceContractController extends Controller
 {
     public function index($role)
     {
-        return view('Features.Lms.Finance.Contract.ManageContract', compact('role'));
+        return view('features.lms.finance.contract.manage-contract', compact('role'));
     }
 
     public function paginateManageContract(Request $request, $role)
@@ -188,7 +188,7 @@ class FinanceContractController extends Controller
 
         $schoolPartner = SchoolPartner::where('id', $schoolId)->first();
 
-        return view('Features.Lms.Finance.Contract.ManageContractDetail', compact('role', 'schoolId', 'schoolPartner'));
+        return view('features.lms.finance.contract.manage-contract-detail', compact('role', 'schoolId', 'schoolPartner'));
     }
 
     public function paginateManageContractDetail($role, $schoolId)
@@ -352,7 +352,7 @@ class FinanceContractController extends Controller
     {
         $contract = SchContract::with(['SchoolPartner'])->findOrFail($contractId);
 
-        return view('Features.Lms.Finance.Contract.ContractPaymentDetail', compact('role', 'schoolId', 'contractId', 'contract'));
+        return view('features.lms.finance.contract.contract-payment-detail', compact('role', 'schoolId', 'contractId', 'contract'));
     }
 
     public function paginateContractPaymentDetail($role, $schoolId, $contractId)
@@ -429,7 +429,7 @@ class FinanceContractController extends Controller
     {
         $schContractTerm = SchContractTerm::with(['SchContract', 'SchContract.SchoolPartner'])->findOrFail($termId);
         
-        return view('Features.Lms.Finance.Contract.ManageContractTerm.StudentList', compact('role', 'schoolId', 'contractId', 'termId', 'schContractTerm'));
+        return view('features.lms.finance.contract.manage-contract-term.student-list', compact('role', 'schoolId', 'contractId', 'termId', 'schContractTerm'));
     }
 
     public function paginateStudentList(Request $request, $role, $schoolId, $contractId, $termId) 

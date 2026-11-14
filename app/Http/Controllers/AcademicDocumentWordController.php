@@ -66,10 +66,10 @@ class AcademicDocumentWordController extends Controller
     */
 
     private const RPPM_VIEW =
-        'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampRPPM';
+        'features.lms.school-admin.registrasi-guru.tampilan.tamp-RPPM';
 
     private const REFLEKSI_VIEW =
-        'Features.Lms.SchoolAdmin.RegistrasiGuru.Tampilan.TampRefleksiGuru';
+        'features.lms.school-admin.registrasi-guru.tampilan.tamp-refleksi-guru';
 
 
     /*
