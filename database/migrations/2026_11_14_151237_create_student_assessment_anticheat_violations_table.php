@@ -17,7 +17,8 @@ return new class extends Migration
 
         Schema::create('student_assessment_anticheat_violations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_assessment_attempt_id')->constrained()->cascadeOnDelete();
+            // shortcut: auto constraint name exceeds MySQL 64-char identifier limit
+            $table->foreignId('student_assessment_attempt_id')->constrained('student_assessment_attempts', 'id', 'sacv_attempt_fk')->cascadeOnDelete();
             $table->unsignedBigInteger('student_id')->index();
             $table->unsignedBigInteger('school_assessment_id')->index();
             $table->string('reason', 50);
