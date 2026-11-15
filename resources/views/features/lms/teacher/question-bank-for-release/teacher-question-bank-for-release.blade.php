@@ -5,97 +5,79 @@
         <div class="mt-4 sm:mt-6 mb-10 mx-7.5">
 
             <div id="alert-success-create-question-for-release"></div>
+            <div id="alert-success-add-assessment-composition"></div>
+            <div id="alert-success-edit-assessment-composition"></div>
 
             <main id="container-form-teacher-question-bank-for-release" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
                 class="mb-10 space-y-6">
                 <section id="question-for-release-wizard" class="mb-10 space-y-5">
 
-                    <!-- STEPPER -->
-                    <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-                        <div class="mx-auto w-full max-w-5xl">
-
-                            <div class="flex w-full items-start">
-
-                                <!-- STEP 1 -->
-                                <button type="button" id="question-release-step-1" data-step="1" class="question-release-step group flex min-w-0 flex-1 flex-col 
-                                    items-center text-center">
-                                    
-                                    <!-- NUMBER -->
-                                    <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full 
-                                        bg-[#0071BC] text-sm font-bold text-white ring-4 ring-[#EAF6FF] transition-all duration-200 sm:h-11 sm:w-11">
-                                        1
-                                    </div>
-
-                                    <!-- LABEL -->
-                                    <div class="mt-2.5 min-w-0">
-                                        <div class="question-release-step-label text-[9px] font-bold uppercase tracking-[0.08em] text-[#0071BC] sm:text-[10px]">
-                                            Langkah 1
-                                        </div>
-
-                                        <div class="mt-0.5 text-[11px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">
-                                            Pilih Ujian / Kelas
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <!-- CONNECTOR 1 -->
-                                <div class="flex w-full max-w-30 flex-1 items-center pt-5 sm:max-w-45 md:pt-5.5">
-                                    <div id="question-release-connector-1" class="question-release-connector h-0.5 w-full rounded-full bg-gray-200 
-                                        transition-all duration-300"></div>
+                <!-- STEPPER -->
+                <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+                    <div class="mx-auto w-full max-w-5xl">
+                        <div class="flex w-full items-start">
+                            <!-- STEP 1 -->
+                            <button type="button" id="question-release-step-1" data-step="1"
+                                class="question-release-step group flex min-w-0 flex-1 flex-col items-center text-center">
+                                <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0071BC] text-sm font-bold text-white ring-4 ring-[#EAF6FF] sm:h-11 sm:w-11">
+                                    1
                                 </div>
-
-                                <!-- STEP 2 -->
-                                <button type="button" id="question-release-step-2" data-step="2" disabled class="question-release-step group flex min-w-0 flex-1 
-                                    flex-col items-center text-center opacity-60 cursor-not-allowed">
-
-                                    <!-- NUMBER -->
-                                    <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full 
-                                        bg-gray-100 text-sm font-bold text-gray-400 transition-all duration-200 sm:h-11 sm:w-11">
-                                        2
-                                    </div>
-
-                                    <!-- LABEL -->
-                                    <div class="mt-2.5 min-w-0">
-                                        <div class="question-release-step-label text-[9px] font-bold uppercase tracking-[0.08em] text-gray-400 sm:text-[10px]">
-                                            Langkah 2
-                                        </div>
-
-                                        <div class="mt-0.5 text-[11px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">
-                                            Pilih Soal
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <!-- CONNECTOR 2 -->
-                                <div class="flex w-full max-w-30 flex-1 items-center pt-5 sm:max-w-45 md:pt-5.5">
-                                    <div id="question-release-connector-2" class="question-release-connector h-0.5 w-full rounded-full bg-gray-200 
-                                        transition-all duration-300"></div>
+                                <div class="mt-2.5 min-w-0">
+                                    <div class="question-release-step-label text-[9px] font-bold uppercase tracking-wider text-[#0071BC] sm:text-[10px]">Langkah 1</div>
+                                    <div class="mt-0.5 text-[10px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">Pilih Assessment</div>
                                 </div>
+                            </button>
 
-                                <!-- STEP 3 -->
-                                <button type="button" id="question-release-step-3" data-step="3" disabled class="question-release-step group flex min-w-0 flex-1 
-                                    flex-col items-center text-center opacity-60 cursor-not-allowed">
-
-                                    <!-- NUMBER -->
-                                    <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full 
-                                        bg-gray-100 text-sm font-bold text-gray-400 transition-all duration-200 sm:h-11 sm:w-11">
-                                        3
-                                    </div>
-
-                                    <!-- LABEL -->
-                                    <div class="mt-2.5 min-w-0">
-                                        <div class="question-release-step-label text-[9px] font-bold uppercase tracking-[0.08em] text-gray-400 sm:text-[10px]">
-                                            Langkah 3
-                                        </div>
-
-                                        <div class="mt-0.5 text-[11px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">
-                                            Review & Terbitkan
-                                        </div>
-                                    </div>
-                                </button>
+                            <div class="flex w-full max-w-20 flex-1 items-center pt-5 sm:max-w-32">
+                                <div id="question-release-connector-1" class="question-release-connector h-0.5 w-full rounded-full bg-gray-200"></div>
                             </div>
+
+                            <!-- STEP 2 -->
+                            <button type="button" id="question-release-step-2" data-step="2" disabled
+                                class="question-release-step group flex min-w-0 flex-1 flex-col items-center text-center cursor-not-allowed opacity-60">
+                                <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-400 sm:h-11 sm:w-11">
+                                    2
+                                </div>
+                                <div class="mt-2.5 min-w-0">
+                                    <div class="question-release-step-label text-[9px] font-bold uppercase tracking-wider text-gray-400 sm:text-[10px]">Langkah 2</div>
+                                    <div class="mt-0.5 text-[10px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">Pilih Siswa</div>
+                                </div>
+                            </button>
+
+                            <div class="flex w-full max-w-20 flex-1 items-center pt-5 sm:max-w-32">
+                                <div id="question-release-connector-2" class="question-release-connector h-0.5 w-full rounded-full bg-gray-200"></div>
+                            </div>
+
+                            <!-- STEP 3 -->
+                            <button type="button" id="question-release-step-3" data-step="3" disabled
+                                class="question-release-step group flex min-w-0 flex-1 flex-col items-center text-center cursor-not-allowed opacity-60">
+                                <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-400 sm:h-11 sm:w-11">
+                                    3
+                                </div>
+                                <div class="mt-2.5 min-w-0">
+                                    <div class="question-release-step-label text-[9px] font-bold uppercase tracking-wider text-gray-400 sm:text-[10px]">Langkah 3</div>
+                                    <div class="mt-0.5 text-[10px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">Atur Kelompok & Soal</div>
+                                </div>
+                            </button>
+
+                            <div class="flex w-full max-w-20 flex-1 items-center pt-5 sm:max-w-32">
+                                <div id="question-release-connector-3" class="question-release-connector h-0.5 w-full rounded-full bg-gray-200"></div>
+                            </div>
+
+                            <!-- STEP 4 -->
+                            <button type="button" id="question-release-step-4" data-step="4" disabled
+                                class="question-release-step group flex min-w-0 flex-1 flex-col items-center text-center cursor-not-allowed opacity-60">
+                                <div class="question-release-step-number relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-400 sm:h-11 sm:w-11">
+                                    4
+                                </div>
+                                <div class="mt-2.5 min-w-0">
+                                    <div class="question-release-step-label text-[9px] font-bold uppercase tracking-wider text-gray-400 sm:text-[10px]">Langkah 4</div>
+                                    <div class="mt-0.5 text-[10px] font-semibold leading-tight text-gray-800 sm:text-xs md:text-sm">Review & Terbitkan</div>
+                                </div>
+                            </button>
                         </div>
                     </div>
+                </div>
 
                     <form id="teacher-create-question-bank-for-release-form">
                         <!-- STEP 1 (ASSESSMENT LIST) -->
@@ -258,7 +240,7 @@
     
                                 <!-- DATA -->
                                 <div id="question-release-assessment-list" class="hidden max-h-[min(520px,55vh)] overflow-y-auto pr-1">
-                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                                    <div class="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
                                 </div>
     
                                 <!-- EMPTY -->
@@ -292,17 +274,229 @@
                                 </div>
     
                                 <button type="button" id="question-release-next-step-1" disabled class="ml-auto inline-flex items-center justify-center gap-2 
-                                    rounded-xl bg-[#0071BC] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#005F9E] 
-                                    disabled:cursor-not-allowed disabled:opacity-40">
+                                    rounded-xl bg-[#0071BC] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#005F9E]
+                                    cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
     
-                                    <span>Lanjut ke Pilih Soal</span>
+                                    <span>Lanjut Pilih Siswa</span>
                                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                 </button>
                             </div>
                         </div>
-    
-                        <!-- STEP 2 -->
+
+                        
+                        <!-- STEP 2: PILIH SISWA -->
                         <div id="question-release-panel-2" class="question-release-panel hidden">
+                            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+
+                                <!-- HEADER -->
+                                <div class="border-b border-gray-100 px-5 py-5 sm:px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF6FF] text-[#0071BC]">
+                                            <i class="fa-solid fa-users text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071BC]">Langkah 2</span>
+                                            <h2 class="text-base font-bold text-gray-800 sm:text-lg">Pilih Siswa Peserta Assessment</h2>
+                                            <p class="mt-0.5 text-xs text-gray-500">
+                                                Tentukan siswa yang akan mengikuti Assessment ini.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-5 p-5 sm:p-6">
+
+                                    <!-- SELECTED ASSESSMENT -->
+                                    <div id="question-release-selected-assessment-student"
+                                        class="rounded-xl border border-[#CFEAFF] bg-[#F4FAFF] p-4">
+
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <div class="flex items-center gap-2 text-xs font-semibold text-[#0071BC]">
+                                                <i class="fa-solid fa-clipboard-check"></i>
+                                                Assessment Terpilih
+                                            </div>
+
+                                            <span class="rounded-full border border-[#CFEAFF] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#0071BC]"
+                                                id="question-release-selected-composition-name">
+                                                Komposisi Soal
+                                            </span>
+                                        </div>
+
+                                        <h3 id="question-release-student-assessment-title"
+                                            class="mt-2 text-sm font-bold text-gray-800">
+                                            Penilaian Harian - Matematika
+                                        </h3>
+
+                                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-gray-500">
+                                            <span>
+                                                <i class="fa-solid fa-school mr-1 text-gray-400"></i>
+                                                <span id="question-release-student-class-name">Kelas VII A</span>
+                                            </span>
+                                            <span>
+                                                <i class="fa-solid fa-book mr-1 text-gray-400"></i>
+                                                <span id="question-release-student-subject-name">Matematika</span>
+                                            </span>
+                                            <span>
+                                                <i class="fa-solid fa-calendar mr-1 text-gray-400"></i>
+                                                <span id="question-release-student-semester">Semester Ganjil</span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- SELECTION SUMMARY -->
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+                                        <div class="rounded-xl border border-gray-200 bg-white p-3.5">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-medium text-gray-500">Total Siswa</span>
+                                                <i class="fa-solid fa-users text-xs text-gray-300"></i>
+                                            </div>
+                                            <div id="question-release-student-total-count"
+                                                class="mt-2 text-2xl font-black text-gray-800">0</div>
+                                            <div class="mt-1 text-[10px] text-gray-400">Siswa dalam kelas</div>
+                                        </div>
+
+                                        <div class="rounded-xl border border-[#CFEAFF] bg-[#F4FAFF] p-3.5">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-medium text-[#0071BC]">Siswa Dipilih</span>
+                                                <i class="fa-solid fa-user-check text-xs text-[#0071BC]/50"></i>
+                                            </div>
+                                            <div id="question-release-student-selected-count"
+                                                class="mt-2 text-2xl font-black text-[#0071BC]">0</div>
+                                            <div class="mt-1 text-[10px] text-gray-400">Mengikuti Assessment</div>
+                                        </div>
+
+                                        <div class="rounded-xl border border-gray-200 bg-white p-3.5">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-[10px] font-medium text-gray-500">Tidak Dipilih</span>
+                                                <i class="fa-solid fa-user-minus text-xs text-gray-300"></i>
+                                            </div>
+                                            <div id="question-release-student-unselected-count"
+                                                class="mt-2 text-2xl font-black text-gray-800">0</div>
+                                            <div class="mt-1 text-[10px] text-gray-400">Tidak mengikuti ujian</div>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- STUDENT LIST -->
+                                    <div class="overflow-hidden rounded-2xl border border-gray-200">
+
+                                        <!-- LIST HEADER -->
+                                        <div class="border-b border-gray-100 bg-gray-50/70 p-4 sm:p-5">
+
+                                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <h3 class="text-sm font-bold text-gray-800">Daftar Siswa</h3>
+                                                    <p class="mt-0.5 text-[11px] text-gray-500">
+                                                        Semua siswa otomatis dipilih. Kamu dapat mengubah pilihan sesuai kebutuhan.
+                                                    </p>
+                                                </div>
+
+                                                <span id="question-release-student-list-info"
+                                                    class="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                                                    <i class="fa-solid fa-check-circle"></i>
+                                                    Semua siswa dipilih
+                                                </span>
+                                            </div>
+
+                                            <!-- SEARCH -->
+                                            <div class="relative mt-4">
+                                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-gray-400"></i>
+                                                <input type="text"
+                                                    id="question-release-student-search"
+                                                    placeholder="Cari nama siswa..."
+                                                    autocomplete="off"
+                                                    class="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/10">
+
+                                                <button type="button"
+                                                    id="question-release-student-clear-search"
+                                                    class="absolute right-3 top-1/2 hidden -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                                                    <i class="fa-solid fa-circle-xmark"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- BULK ACTION -->
+                                            <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <button type="button"
+                                                        id="question-release-student-select-all"
+                                                        class="inline-flex items-center gap-1.5 rounded-lg border border-[#0071BC]/20 bg-[#EAF6FF] px-3 py-2 text-[10px] font-semibold text-[#0071BC] transition hover:bg-[#DDF0FF]">
+                                                        <i class="fa-solid fa-check-double"></i>
+                                                        Pilih Semua
+                                                    </button>
+
+                                                    <button type="button"
+                                                        id="question-release-student-unselect-all"
+                                                        class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-[10px] font-semibold text-gray-500 transition hover:bg-gray-100">
+                                                        <i class="fa-solid fa-xmark"></i>
+                                                        Batalkan Semua
+                                                    </button>
+                                                </div>
+
+                                                <span id="question-release-student-visible-count"
+                                                    class="text-[10px] text-gray-400">
+                                                    Menampilkan 0 siswa
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- STUDENT LIST CONTAINER -->
+                                        <div class="max-h-115 overflow-y-auto p-3 sm:p-4">
+
+                                            <div id="question-release-student-list"
+                                                class="grid grid-cols-1">
+                                            </div>
+
+                                            <!-- EMPTY STATE -->
+                                            <div id="question-release-student-empty"
+                                                class="hidden py-12 text-center">
+                                                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
+                                                    <i class="fa-solid fa-user-slash text-lg"></i>
+                                                </div>
+                                                <h4 class="mt-3 text-xs font-bold text-gray-700">Siswa Tidak Ditemukan</h4>
+                                                <p class="mt-1 text-[11px] text-gray-400">
+                                                    Coba gunakan kata kunci pencarian yang berbeda.
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+                                        <!-- LIST FOOTER -->
+                                        <div class="border-t border-gray-100 bg-gray-50/70 px-4 py-3">
+                                            <div class="flex items-start gap-2 text-[10px] leading-relaxed text-gray-500">
+                                                <i class="fa-solid fa-circle-info mt-0.5 text-[#0071BC]"></i>
+                                                <span>
+                                                    Siswa yang tidak dipilih tidak akan diikutsertakan dalam Assessment ini.
+                                                    Pilihan siswa dapat diubah sebelum Assessment dirilis.
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- FOOTER -->
+                                <div class="flex items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/70 px-5 py-4 sm:px-6">
+
+                                    <button type="button"
+                                        id="question-release-prev-step-2"
+                                        class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50">
+                                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                                        Kembali
+                                    </button>
+
+                                    <button type="button" id="question-release-next-step-2" class="inline-flex items-center gap-2 rounded-xl bg-[#0071BC] px-5 py-2.5 text-xs 
+                                        font-semibold text-white shadow-sm transition hover:bg-[#005F9E] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                                        <span>Lanjut Atur Kelompok & Soal</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- STEP 3 -->
+                        <div id="question-release-panel-3" class="question-release-panel hidden">
                             <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                                 <div class="px-5 py-5 sm:px-6 border-b border-gray-100">
                                     <div class="flex items-center gap-3">
@@ -310,7 +504,7 @@
                                             <i class="fa-solid fa-list-check text-sm"></i>
                                         </div>
                                         <div>
-                                            <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071BC]">Langkah 2</span>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-[#0071BC]">Langkah 3</span>
                                             <h2 class="text-base sm:text-lg font-bold text-gray-800">Pilih Soal dari Bank Soal</h2>
                                             <p class="text-xs text-gray-500 mt-0.5">Pilih kelas, buka bank soal, lalu tentukan soal yang ingin dimasukkan ke dalam Assessment.</p>
                                         </div>
@@ -347,9 +541,9 @@
                                                     <p class="mt-0.5 text-xs text-gray-400">Klik baris topik untuk membuka atau menutup butir soal.</p>
                                                 </div>
                                                 <div class="hidden sm:flex items-center gap-2 text-[10px] text-gray-400">
-                                                    <button type="button" id="question-release-expand-all" class="font-semibold text-[#0071BC] hover:underline">Buka Semua</button>
+                                                    <button type="button" id="question-release-open-all-banks" class="font-semibold text-[#0071BC] hover:underline">Buka Semua</button>
                                                     <span>•</span>
-                                                    <button type="button" id="question-release-collapse-all" class="font-semibold text-gray-500 hover:underline">Tutup Semua</button>
+                                                    <button type="button" id="question-release-close-all-banks" class="font-semibold text-gray-500 hover:underline">Tutup Semua</button>
                                                 </div>
                                             </div>
     
@@ -461,7 +655,7 @@
                                 <!-- FOOTER -->
                                 <div class="border-t border-gray-100 bg-gray-50/70 px-5 py-4 sm:px-6">
                                     <div class="flex items-center justify-between gap-3">
-                                        <button type="button" id="question-release-prev-step-2" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-800">
+                                        <button type="button" id="question-release-prev-step-3" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-800">
                                             <i class="fa-solid fa-arrow-left text-[10px]"></i>
                                             <span>Kembali</span>
                                         </button>
@@ -472,8 +666,10 @@
                                                 <span>Pastikan total bobot soal tidak melebihi 100.</span>
                                             </div>
     
-                                            <button type="button" id="question-release-next-step-2" disabled class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0071BC] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#005F9E] disabled:cursor-not-allowed disabled:opacity-40">
-                                                <span>Lanjut ke Review</span>
+                                            <button type="button" id="question-release-next-step-3" disabled class="inline-flex items-center justify-center gap-2 rounded-xl 
+                                                bg-[#0071BC] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#005F9E] 
+                                                cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                                                <span>Lanjut Review</span>
                                                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
                                             </button>
                                         </div>
@@ -482,11 +678,8 @@
                             </div>
                         </div>
     
-                        <!-- STEP 3 -->
-                        <div
-                            id="question-release-panel-3"
-                            class="question-release-panel hidden">
-    
+                        <!-- STEP 4 -->
+                        <div id="question-release-panel-4" class="question-release-panel hidden">
                             <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
     
                                 <div class="px-5 py-5 sm:px-6 border-b border-gray-100">
@@ -497,7 +690,7 @@
     
                                         <div class="min-w-0">
                                             <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                                                Langkah 3
+                                                Langkah 4
                                             </span>
     
                                             <h2 class="text-base sm:text-lg font-bold text-gray-800">
@@ -594,17 +787,16 @@
     
                                         <button
                                             type="button"
-                                            id="question-release-prev-step-3"
+                                            id="question-release-prev-step-4"
                                             class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-800">
                                             <i class="fa-solid fa-arrow-left text-[10px]"></i>
                                             <span>Kembali</span>
                                         </button>
     
-                                        <button
-                                            type="button"
-                                            id="question-release-publish"
-                                            disabled
-                                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">
+                                        <button type="button" id="question-release-publish" disabled class="inline-flex items-center justify-center gap-2 rounded-xl 
+                                            bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 
+                                            cursor-pointer disabled:cursor-not-allowed disabled:opacity-40">
+                                            
                                             <i class="fa-solid fa-paper-plane text-[10px]"></i>
                                             <span>Terbitkan Paket Soal</span>
                                         </button>
@@ -750,6 +942,165 @@
                     </form>
                 </dialog>
 
+                <!-- ADD COMPOSITION MODAL -->
+                <dialog id="teacher-question-release-add-composition-modal" class="modal modal-bottom sm:modal-middle">
+                    <div class="modal-box w-full max-w-md rounded-2xl bg-white p-0 shadow-2xl">
+
+                        <!-- HEADER -->
+                        <div class="flex items-start justify-between border-b border-gray-100 px-5 py-4">
+                            <div class="flex items-start gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF6FF] text-[#0071BC]">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-800">
+                                        Tambah Komposisi Soal
+                                    </h3>
+                                    <p class="mt-1 text-xs leading-relaxed text-gray-400">
+                                        Buat kelompok komposisi soal baru untuk Assessment ini.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BODY -->
+                        <form id="teacher-question-release-add-composition-form">
+                            <div class="space-y-4 p-5">
+
+                                <!-- ASSESSMENT INFORMATION -->
+                                <div class="rounded-xl border border-[#D6EAF8] bg-[#F4FAFF] p-3">
+                                    <p class="text-[10px] font-semibold uppercase tracking-wide text-[#0071BC]">
+                                        Assessment yang dipilih
+                                    </p>
+
+                                    <p id="teacher-question-release-add-composition-assessment-title" class="mt-1 text-sm font-bold text-gray-800">
+                                        -
+                                    </p>
+
+                                    <p id="teacher-question-release-add-composition-assessment-info" class="mt-1 text-[11px] text-gray-500">
+                                        -
+                                    </p>
+                                </div>
+
+                                <!-- COMPOSITION NAME -->
+                                <div>
+                                    <label for="teacher-question-release-composition-name" class="mb-1.5 block text-xs font-semibold text-gray-700">
+                                        Nama Komposisi
+                                        <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <input type="text" id="teacher-question-release-composition-name" name="composition_name" 
+                                        autocomplete="off" placeholder="Contoh: Komposisi Soal Siswa Reguler" class="w-full rounded-xl border border-gray-200 bg-white 
+                                        px-3.5 py-3 text-xs text-gray-700 outline-none transition placeholder:text-gray-400">
+
+                                    <span id="error-composition_name" class="text-red-500 text-xs mt-1 font-bold block"></span>
+
+                                    <p class="mt-1.5 text-[10px] leading-relaxed text-gray-400">
+                                        Gunakan nama yang mudah dikenali untuk membedakan komposisi soal.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- FOOTER -->
+                            <div class="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50/70 px-5 py-4">
+                                <button type="button" id="teacher-question-release-save-composition" class="inline-flex items-center justify-center gap-2 
+                                    rounded-xl bg-[#0071BC] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#005F9E]
+                                    cursor-pointer disabled:cursor-default">
+
+                                    <i class="fa-solid fa-floppy-disk text-[10px]"></i>
+                                    <span>Simpan Komposisi</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <form method="dialog" class="modal-backdrop">
+                        <button aria-label="Tutup modal">close</button>
+                    </form>
+                </dialog>
+
+                <!-- MODAL EDIT COMPOSITION -->
+                <dialog id="teacher-question-release-edit-composition-modal" class="modal">
+                    <div class="modal-box w-11/12 max-w-md rounded-2xl bg-white p-0 shadow-xl">
+
+                        <!-- HEADER -->
+                        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                            <div>
+                                <h3 class="text-base font-bold text-gray-800">
+                                    Edit Nama Komposisi
+                                </h3>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Ubah nama komposisi soal assessment.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- FORM -->
+                        <form id="teacher-question-release-edit-composition-form">
+                            <div class="space-y-4 p-5">
+
+                                <!-- ASSESSMENT INFORMATION -->
+                                <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-[#0071BC]">
+                                            <i class="fa-solid fa-clipboard-list text-sm"></i>
+                                        </div>
+
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                                Assessment
+                                            </p>
+                                            <p id="teacher-question-release-edit-composition-assessment-title" class="truncate text-sm font-bold text-gray-800">
+                                                -
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 border-t border-blue-100 pt-2 text-xs text-gray-500">
+                                        <i class="fa-solid fa-graduation-cap text-blue-400"></i>
+                                        <p id="teacher-question-release-edit-composition-assessment-info" class="truncate">
+                                            -
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- COMPOSITION NAME -->
+                                <div>
+                                    <label for="teacher-question-release-edit-composition-name" class="mb-1.5 block text-xs font-semibold text-gray-700">
+                                        Nama Komposisi
+                                        <span class="text-red-500">*</span>
+                                    </label>
+
+                                    <input type="text" id="teacher-question-release-edit-composition-name" name="composition_name" 
+                                        autocomplete="off" placeholder="Contoh: Komposisi Siswa Reguler" class="w-full rounded-xl border border-gray-200 bg-white 
+                                        px-3.5 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400">
+
+                                    <span id="error-edit-composition_name" class="mt-1 block text-xs font-bold text-red-500"></span>
+
+                                    <p class="mt-1.5 text-[10px] leading-relaxed text-gray-400">
+                                        Gunakan nama yang mudah dikenali untuk membedakan komposisi soal.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- FOOTER -->
+                            <div class="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-4">
+                                <button type="submit" id="teacher-question-release-update-composition" class="rounded-xl bg-[#0071BC] px-4 py-2.5 text-xs 
+                                    font-semibold text-white transition hover:bg-[#005B98] cursor-pointer disabled:cursor-default">
+                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i>
+                                    Simpan Perubahan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- MODAL BACKDROP -->
+                    <form method="dialog" class="modal-backdrop">
+                        <button>close</button>
+                    </form>
+                </dialog>
+
                 <section id="container-paginate-teacher-question-bank-for-release-list" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" 
                     class="mt-10 bg-white shadow-sm border border-gray-300 rounded-2xl p-6">
 
@@ -829,6 +1180,9 @@
 <script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-weight-calculator.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-weight-calculator.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-weight-calculator.js')) : time() }}"></script> <!--- question bank for reelase weight calculator ---->
 <script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-selection.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-selection.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-selection.js')) : time() }}"></script> <!--- question bank for reelase selection ---->
 <script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-matching-renderer.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-matching-renderer.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/teacher-question-bank-for-release-matching-renderer.js')) : time() }}"></script> <!--- question bank for reelase matching renderer ---->
+<script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-add-composition.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-add-composition.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-add-composition.js')) : time() }}"></script> <!--- submit form add composition ---->
+<script src="{{ asset('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-edit-composition.js') }}?v={{ file_exists(public_path('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-edit-composition.js')) ? filemtime(public_path('assets/js/features/lms/teacher/question-bank-for-release/submit-form-modal-edit-composition.js')) : time() }}"></script> <!--- submit form edit composition ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-kelas-mapel-bab-sub_bab-dropdown.js') }}"></script> <!--- dependent dropdown curriculum core ---->
+<script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->

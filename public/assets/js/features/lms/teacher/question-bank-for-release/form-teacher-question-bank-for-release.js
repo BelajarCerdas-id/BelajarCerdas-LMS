@@ -13,6 +13,12 @@ let teacherQuestionReleaseLoading = false;
 let teacherQuestionReleaseSelectedAssessmentHasAnswers = false;
 // mode bobot modal: 'ratio' (persen per tipe) atau 'points' (poin per jawaban benar)
 let teacherQuestionReleaseWeightMode = 'ratio';
+let teacherQuestionReleaseSelectedComposition = null;
+let teacherQuestionReleaseAddingCompositionAssessmentId = null;
+let teacherQuestionReleaseStudents = [];
+let teacherQuestionReleaseSelectedStudentIds = new Set();
+let isLoadingTeacherQuestionReleaseStep2 = false;
+let teacherQuestionReleaseLoadedCompositionKey = null;
 
 function formQuestionForRelease(search_year = null, search_class = null, search_assessment_type = null, search_subject = null, search_semester = null, search_question = null, kurikulum_id = null, kelas_id = null, mapel_id = null, bab_id = null, sub_bab_id = null, preserveSelection = false) {
     const container = document.getElementById('container-form-teacher-question-bank-for-release');
@@ -104,7 +110,7 @@ function formQuestionForRelease(search_year = null, search_class = null, search_
                     renderTeacherQuestionReleaseSelectedQuestions();
                     updateTeacherQuestionReleaseQuestionSummary();
                 } else if (teacherQuestionReleaseStep === 3) {
-                    loadTeacherQuestionReleaseStep3();
+                    loadTeacherQuestionReleaseStep4();
                 }
             }
 
@@ -572,7 +578,7 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
     if (containerAssessmentType && Array.isArray(response.schoolAssessmentType)) {
         containerAssessmentType.innerHTML = `
             <select id="dropdown-assessment-type" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                <option value="">Pilih Jenis Assessment</option>
+                <option value="">Pilih Jenis Asesmen</option>
                 ${response.schoolAssessmentType.map(item => `
                     <option value="${escapeTeacherQuestionReleaseHtml(item.id)}" ${String(searchAssessmentType ?? '') === String(item.id) ? 'selected' : ''}>
                         ${escapeTeacherQuestionReleaseHtml(item.name)}
@@ -587,8 +593,8 @@ function renderTeacherQuestionReleaseFilters(response, searchYear = null, search
     if (containerDropdownSubject && Array.isArray(response.subject)) {
         containerDropdownSubject.innerHTML = `
             <select id="dropdown-filter-mapel" class="w-full h-11 bg-white border border-gray-300 rounded-xl px-4 pr-10 text-sm font-medium text-gray-700 outline-none transition-all duration-200 hover:border-gray-400 focus:border-[#0071BC] focus:ring-2 focus:ring-[#0071BC]/20 cursor-pointer">
-                <option value="">Pilih Mata Pelajaran</option>
                 ${response.subject.map(item => `
+                    <option value="">Pilih Mata Pelajaran</option>
                     <option value="${escapeTeacherQuestionReleaseHtml(item.id)}" ${String(searchSubject ?? '') === String(item.id) ? 'selected' : ''}>
                         ${escapeTeacherQuestionReleaseHtml(item.name)}
                     </option>
@@ -706,14 +712,31 @@ function renderTeacherQuestionReleaseAssessments() {
         </div>
     `);
 
-    $('#question-release-next-step-1').prop('disabled', !teacherQuestionReleaseSelectedAssessment);
+    const hasSelectedComposition = Boolean(
+        teacherQuestionReleaseSelectedComposition &&
+        teacherQuestionReleaseSelectedComposition.assessment_id &&
+        (
+            teacherQuestionReleaseSelectedComposition.is_legacy === true ||
+            teacherQuestionReleaseSelectedComposition.composition_id
+        )
+    );
+
+    $('#question-release-next-step-1').prop('disabled', !hasSelectedComposition);
 }
 
 function renderTeacherQuestionReleaseAssessmentCard(assessment) {
-    const isSelected = teacherQuestionReleaseSelectedAssessment && Number(teacherQuestionReleaseSelectedAssessment.id) === Number(assessment.id);
+    const isSelected = teacherQuestionReleaseSelectedComposition && Number(teacherQuestionReleaseSelectedComposition.assessment_id) === Number(assessment.id);
+
+    const selectedComposition = typeof teacherQuestionReleaseSelectedComposition !== 'undefined'
+        ? teacherQuestionReleaseSelectedComposition
+        : null;
+
     const status = assessment.status || 'Belum Dirilis';
 
-    const statusClass = status === 'Sudah Dirilis' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+    const statusClass = status === 'Sudah Dirilis'
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : 'bg-amber-50 text-amber-700 border-amber-200';
+
     const mapelName = assessment.mapel?.mata_pelajaran || '-';
     const className = assessment.school_class?.class_name || '-';
     const assessmentType = assessment.school_assessment_type?.name || '-';
@@ -722,8 +745,20 @@ function renderTeacherQuestionReleaseAssessmentCard(assessment) {
     const startDate = formatTeacherQuestionReleaseDateTime(assessment.start_date);
     const endDate = formatTeacherQuestionReleaseDateTime(assessment.end_date);
 
-    const assignedQuestionCount = getTeacherQuestionReleaseAssignedQuestionCount(assessment);
-    const assignedTotalWeight = getTeacherQuestionReleaseAssignedTotalWeight(assessment);
+    const compositions = Array.isArray(assessment.compositions)
+        ? assessment.compositions
+        : [];
+
+    const legacyQuestionCount = Number(assessment.legacy_assigned_question_count || 0);
+    const legacyTotalWeight = Number(assessment.legacy_assigned_total_weight || 0);
+
+    const assignedQuestionCount = Number(
+        assessment.assigned_question_count ?? getTeacherQuestionReleaseAssignedQuestionCount(assessment)
+    );
+
+    const assignedTotalWeight = Number(
+        assessment.assigned_total_weight ?? getTeacherQuestionReleaseAssignedTotalWeight(assessment)
+    );
 
     let schedule = '-';
 
@@ -733,19 +768,186 @@ function renderTeacherQuestionReleaseAssessmentCard(assessment) {
         schedule = startDate;
     }
 
-    return `
-        <button type="button" data-question-release-assessment="${escapeTeacherQuestionReleaseHtml(assessment.id)}"
-            class="w-full text-left rounded-2xl border-2 p-4 sm:p-5 transition-all duration-200 ${isSelected ? 'border-[#0071BC] bg-[#EAF6FF]/60 ring-2 ring-[#0071BC]/10' : 'border-gray-200 bg-white hover:border-[#B9DDF5] hover:bg-gray-50'}">
-            <div class="flex items-start justify-between gap-3">
-                <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                    <span class="rounded-lg bg-[#EAF6FF] px-2 py-1 text-[10px] font-bold text-[#0071BC]">${escapeTeacherQuestionReleaseHtml(className)}</span>
-                    <span class="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-medium text-gray-600">${escapeTeacherQuestionReleaseHtml(assessmentType)}</span>
+    const formatWeightClass = (weight) => {
+        return weight > 100
+            ? 'text-red-600'
+            : weight > 0
+                ? 'text-emerald-600'
+                : 'text-gray-400';
+    };
+
+    // Render radio button setiap komposisi.
+    const renderCompositionRadio = (composition) => {
+        const compositionId = Number(composition.id);
+        const questionCount = Number(composition.assigned_question_count || 0);
+        const totalWeight = Number(composition.assigned_total_weight || 0);
+
+        const isCompositionSelected = selectedComposition &&
+            Number(selectedComposition.assessment_id) === Number(assessment.id) &&
+            !selectedComposition.is_legacy &&
+            Number(selectedComposition.composition_id) === compositionId;
+
+        return `
+            <div class="rounded-xl border ${isCompositionSelected
+                ? 'border-[#0071BC] bg-[#EAF6FF]/50 ring-1 ring-[#0071BC]/10'
+                : 'border-gray-200 bg-white'
+            } p-3 transition-all">
+
+                <div class="flex items-start justify-between gap-3">
+                    <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5">
+                        <input
+                            type="radio"
+                            name="teacher-question-release-composition"
+                            value="${compositionId}"
+                            data-question-release-composition
+                            data-assessment-id="${assessment.id}"
+                            data-composition-id="${compositionId}"
+                            data-is-legacy="false"
+                            ${isCompositionSelected ? 'checked' : ''}
+                            class="mt-1 h-4 w-4 shrink-0 accent-[#0071BC]"
+                        >
+
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF6FF] text-[#0071BC]">
+                            <i class="fa-solid fa-layer-group text-xs"></i>
+                        </span>
+
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-xs font-bold text-gray-700">
+                                ${escapeTeacherQuestionReleaseHtml(composition.composition_name || 'Tanpa Nama')}
+                            </span>
+                            <span class="mt-0.5 block text-[10px] text-gray-400">
+                                Komposisi soal
+                            </span>
+                        </span>
+                    </label>
+
+                    <span class="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
+                        ${questionCount} soal
+                    </span>
                 </div>
-                <span class="shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold ${statusClass}">${escapeTeacherQuestionReleaseHtml(status)}</span>
+
+                <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-2.5">
+                    <span class="text-[10px] text-gray-400">Total bobot soal</span>
+                    <span class="text-xs font-bold ${formatWeightClass(totalWeight)}">
+                        ${formatTeacherQuestionReleaseWeight(totalWeight)}
+                    </span>
+                </div>
+
+                <button type="button" data-action="edit-assessment-composition" data-assessment-id="${assessment.id}" data-composition-id="${compositionId}"
+                    class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-[11px] 
+                    font-semibold text-gray-600 transition hover:border-[#B9DDF5] hover:bg-[#EAF6FF] hover:text-[#0071BC] cursor-pointer">
+
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Edit Nama Komposisi
+                </button>
+            </div>
+        `;
+    };
+
+    // Komposisi yang sudah tersimpan.
+    const compositionContent = compositions.map(renderCompositionRadio).join('');
+
+    // Soal lama yang belum memiliki komposisi.
+    const isLegacySelected = selectedComposition &&
+        Number(selectedComposition.assessment_id) === Number(assessment.id) &&
+        selectedComposition.is_legacy === true;
+
+    const legacyContent = legacyQuestionCount > 0
+        ? `
+            <div class="rounded-xl border ${isLegacySelected
+            ? 'border-[#0071BC] bg-[#EAF6FF]/50 ring-1 ring-[#0071BC]/10'
+            : 'border-amber-200 bg-amber-50/60'
+        } p-3 transition-all">
+
+                <div class="flex items-start justify-between gap-3">
+                    <label class="flex min-w-0 flex-1 cursor-pointer items-start gap-2.5">
+                        <input type="radio" name="teacher-question-release-composition" value="legacy-${assessment.id}" 
+                            data-question-release-composition data-assessment-id="${assessment.id}" data-composition-id="" data-is-legacy="true"
+                            ${isLegacySelected ? 'checked' : ''} class="mt-1 h-4 w-4 shrink-0 accent-[#0071BC]">
+
+                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-amber-600">
+                            <i class="fa-solid fa-layer-group text-xs"></i>
+                        </span>
+
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-xs font-bold text-gray-700">
+                                Tanpa Nama
+                            </span>
+                            <span class="mt-0.5 block text-[10px] text-gray-500">
+                                Komposisi soal lama
+                            </span>
+                        </span>
+                    </label>
+
+                    <span class="shrink-0 rounded-lg bg-white px-2 py-1 text-[10px] font-semibold text-amber-700">
+                        ${legacyQuestionCount} soal
+                    </span>
+                </div>
+
+                <div class="mt-3 flex items-center justify-between border-t border-amber-200/70 pt-2.5">
+                    <span class="text-[10px] text-gray-500">Total bobot soal</span>
+                    <span class="text-xs font-bold ${formatWeightClass(legacyTotalWeight)}">
+                        ${formatTeacherQuestionReleaseWeight(legacyTotalWeight)}
+                    </span>
+                </div>
+
+                <button type="button" data-action="edit-legacy-assessment-composition" data-assessment-id="${assessment.id}"
+                    class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-[11px] 
+                    font-semibold text-amber-700 transition hover:bg-amber-100 cursor-pointer">
+
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Edit Nama Komposisi
+                </button>
+            </div>
+        `
+        : '';
+
+    const compositionCount = compositions.length + (legacyQuestionCount > 0 ? 1 : 0);
+
+    const emptyCompositionContent = compositionCount === 0
+        ? `
+            <div class="rounded-xl border border-dashed border-gray-200 bg-white px-3 py-4 text-center">
+                <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
+                    <i class="fa-solid fa-layer-group text-sm"></i>
+                </div>
+                <p class="mt-2 text-[11px] font-semibold text-gray-500">
+                    Belum ada komposisi soal
+                </p>
+                <p class="mt-1 text-[10px] text-gray-400">
+                    Tambahkan komposisi untuk assessment ini.
+                </p>
+            </div>
+        `
+        : '';
+
+    return `
+        <div data-question-release-assessment="${escapeTeacherQuestionReleaseHtml(assessment.id)}" class="flex h-full w-full flex-col rounded-2xl border-2 
+            p-4 text-left transition-all duration-200 sm:p-5 ${isSelected ? 'border-[#0071BC] bg-[#EAF6FF]/60 ring-2 ring-[#0071BC]/10'
+                : 'border-gray-200 bg-white hover:border-[#B9DDF5] hover:bg-gray-50'
+            }">
+
+            <!-- HEADER -->
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <span class="rounded-lg bg-[#EAF6FF] px-2 py-1 text-[10px] font-bold text-[#0071BC]">
+                        ${escapeTeacherQuestionReleaseHtml(className)}
+                    </span>
+
+                    <span class="rounded-lg bg-gray-100 px-2 py-1 text-[10px] font-medium text-gray-600">
+                        ${escapeTeacherQuestionReleaseHtml(assessmentType)}
+                    </span>
+                </div>
+
+                <span class="shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold ${statusClass}">
+                    ${escapeTeacherQuestionReleaseHtml(status)}
+                </span>
             </div>
 
+            <!-- ASSESSMENT INFORMATION -->
             <div class="mt-4">
-                <h3 class="text-sm font-bold text-gray-800">${escapeTeacherQuestionReleaseHtml(title)}</h3>
+                <h3 class="text-sm font-bold text-gray-800">
+                    ${escapeTeacherQuestionReleaseHtml(title)}
+                </h3>
 
                 <div class="mt-3 space-y-2">
                     <div class="flex items-center gap-2 text-xs text-gray-500">
@@ -765,35 +967,268 @@ function renderTeacherQuestionReleaseAssessmentCard(assessment) {
                 </div>
             </div>
 
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
-                    <div class="flex items-center gap-1.5 text-[9px] text-gray-400">
-                        <i class="fa-solid fa-list-check"></i>
-                        <span>Soal Terpasang</span>
+            <!-- COMPOSITION LIST -->
+            <div class="mt-4 flex flex-1 flex-col border-t border-gray-100 pt-4">
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-xs text-[#0071BC]"></i>
+                        <h4 class="text-xs font-bold text-gray-700">
+                            Komposisi Soal
+                        </h4>
                     </div>
-                    <div class="mt-1 text-xs font-black text-gray-700">
-                        ${assignedQuestionCount} <span class="font-medium text-gray-400">butir</span>
-                    </div>
+
+                    <span class="rounded-lg bg-[#EAF6FF] px-2 py-1 text-[10px] font-semibold text-[#0071BC]">
+                        ${compositionCount} komposisi
+                    </span>
                 </div>
 
-                <div class="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
-                    <div class="flex items-center gap-1.5 text-[9px] text-gray-400">
-                        <i class="fa-solid fa-percent"></i>
-                        <span>Total Bobot</span>
-                    </div>
-                    <div class="mt-1 text-xs font-black ${assignedTotalWeight > 100 ? 'text-red-600' : assignedTotalWeight > 0 ? 'text-emerald-600' : 'text-gray-400'}">
-                        ${formatTeacherQuestionReleaseWeight(assignedTotalWeight)}
-                    </div>
+                <div class="space-y-2">
+                    ${compositionContent}
+                    ${legacyContent}
+                    ${emptyCompositionContent}
                 </div>
-            </div>
 
-            <div class="mt-4 flex items-center justify-end border-t border-gray-100 pt-3">
-                <div class="flex items-center gap-1.5 text-xs font-semibold ${isSelected ? 'text-[#0071BC]' : 'text-gray-400'}">
-                    ${isSelected ? '<i class="fa-solid fa-circle-check"></i><span>Terpilih</span>' : '<span>Pilih</span><i class="fa-solid fa-arrow-right text-[10px]"></i>'}
-                </div>
+                <!-- ADD NEW COMPOSITION -->
+                <button type="button" data-action="add-assessment-composition" data-assessment-id="${assessment.id}" class="mt-3 flex w-full items-center justify-center 
+                    gap-2 rounded-xl border border-dashed border-[#9CCDEB] bg-[#EAF6FF]/50 px-3 py-3 text-xs font-semibold text-[#0071BC] 
+                    transition hover:border-[#0071BC] hover:bg-[#EAF6FF] cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    Tambah Komposisi Baru
+                </button>
             </div>
-        </button>
+        </div>
     `;
+}
+
+function loadTeacherQuestionReleaseStep2() {
+    const assessment = teacherQuestionReleaseSelectedAssessment;
+    const composition = teacherQuestionReleaseSelectedComposition;
+
+    if (!assessment || !composition) {
+        return;
+    }
+
+    if (isLoadingTeacherQuestionReleaseStep2) {
+        return;
+    }
+
+    isLoadingTeacherQuestionReleaseStep2 = true;
+
+    // Reset data siswa sebelumnya
+    teacherQuestionReleaseStudents = [];
+    teacherQuestionReleaseSelectedStudentIds.clear();
+
+    // Tampilkan skeleton/loading Step 2
+    $('#question-release-student-list').addClass('hidden').empty();
+    $('#question-release-student-empty').addClass('hidden');
+    $('#question-release-student-loading').removeClass('hidden');
+
+    const container = document.getElementById('container-form-teacher-question-bank-for-release');
+
+    const role = container.dataset.role;
+    const schoolName = container.dataset.schoolName;
+    const schoolId = container.dataset.schoolId;
+
+    $.ajax({
+        url: `/lms/${role}/${schoolName}/${schoolId}/teacher-question-bank-for-release/form`,
+        type: 'GET',
+        data: {
+            school_assessment_id: assessment.id
+        },
+        success: function (response) {
+            teacherQuestionReleaseStudents = Array.isArray(response.students) ? response.students : [];
+
+            // Ambil penetapan siswa berdasarkan komposisi yang sedang dipilih.
+            const compositionId = String(composition.composition_id);
+            const studentAssignments = response.studentCompositionAssignments || {};
+
+            if (Object.prototype.hasOwnProperty.call(studentAssignments, compositionId)) {
+                // Komposisi sudah memiliki penetapan siswa.
+                teacherQuestionReleaseSelectedStudentIds = new Set(
+                    studentAssignments[compositionId].map(id => String(id))
+                );
+            } else {
+                // Komposisi belum memiliki penetapan siswa, Pilih seluruh siswa secara default.
+                teacherQuestionReleaseSelectedStudentIds = new Set(
+                    teacherQuestionReleaseStudents.map(student => String(student.id))
+                );
+            }
+
+            // Informasi assessment
+            $('#question-release-student-assessment-title').text(
+                assessment.title || assessment.name || '-'
+            );
+
+            $('#question-release-student-class-name').text(
+                assessment.school_class?.class_name || '-'
+            );
+
+            $('#question-release-student-subject-name').text(
+                assessment.mapel?.mata_pelajaran || '-'
+            );
+
+            $('#question-release-student-semester').text(
+                assessment.semester || '-'
+            );
+
+            // Informasi komposisi
+            let compositionName = 'Tanpa Nama';
+
+            if (!composition.is_legacy) {
+                const selected = (assessment.compositions || []).find(item =>
+                    Number(item.id) === Number(composition.composition_id)
+                );
+
+                compositionName = selected?.composition_name || 'Tanpa Nama';
+            }
+
+            $('#question-release-selected-composition-name').text(
+                compositionName
+            );
+
+            // Bersihkan pencarian sebelumnya
+            $('#question-release-student-search').val('');
+
+            $('#question-release-student-loading').addClass('hidden');
+
+            renderTeacherQuestionReleaseStudents();
+            updateTeacherQuestionReleaseStepper();
+            updateTeacherQuestionReleasePublishButton();
+        },
+        error: function (xhr) {
+            console.error(
+                'Gagal memuat siswa Step 2:',
+                xhr.responseJSON || xhr.responseText
+            );
+
+            $('#question-release-student-loading').addClass('hidden');
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memuat Data Siswa',
+                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat mengambil data siswa.',
+                    confirmButtonColor: '#0071BC'
+                });
+            }
+        },
+        complete: function () {
+            isLoadingTeacherQuestionReleaseStep2 = false;
+        }
+    });
+}
+
+function renderTeacherQuestionReleaseStudents() {
+    const search = ($('#question-release-student-search').val() || '')
+        .toLowerCase()
+        .trim();
+
+    const filteredStudents = teacherQuestionReleaseStudents.filter(student => {
+        const name = String(student.name || '').toLowerCase();
+        const nisn = String(student.nisn || '').toLowerCase();
+
+        return name.includes(search) || nisn.includes(search);
+    });
+
+    const totalStudents = teacherQuestionReleaseStudents.length;
+    const selectedCount = teacherQuestionReleaseSelectedStudentIds.size;
+    const unselectedCount = totalStudents - selectedCount;
+
+    $('#question-release-student-total-count').text(totalStudents);
+    $('#question-release-student-selected-count').text(selectedCount);
+    $('#question-release-student-unselected-count').text(unselectedCount);
+    $('#question-release-student-visible-count').text(filteredStudents.length);
+
+    $('#question-release-student-list-info').text(
+        selectedCount === totalStudents && totalStudents > 0
+            ? 'Semua siswa telah dipilih'
+            : `${selectedCount} dari ${totalStudents} siswa dipilih`
+    );
+
+    if (filteredStudents.length === 0) {
+        $('#question-release-student-list')
+            .addClass('hidden')
+            .empty();
+
+        $('#question-release-student-empty').removeClass('hidden');
+        return;
+    }
+
+    $('#question-release-student-empty').addClass('hidden');
+
+    const studentRows = filteredStudents.map(student => {
+        const studentId = String(student.id);
+        const isChecked = teacherQuestionReleaseSelectedStudentIds.has(studentId);
+
+        const name = $('<div>').text(student.name || 'Nama tidak tersedia').html();
+        const className = $('<div>').text(student.class_name || '-').html();
+
+        return `
+            <label class="
+                flex items-center gap-3 sm:gap-4
+                px-3.5 py-3
+                rounded-xl border
+                cursor-pointer
+                transition-all duration-200
+                ${isChecked
+                ? 'bg-[#0071BC]/5 border-[#0071BC]/30'
+                : 'bg-white border-gray-200 hover:border-[#0071BC]/40 hover:bg-[#0071BC]/3'
+            }
+            ">
+                <input
+                    type="checkbox"
+                    class="checkbox checkbox-sm rounded-md shrink-0
+                        border-gray-300
+                        [--chkbg:#0071BC]
+                        [--chkfg:#ffffff]
+                        checked:border-[#0071BC]
+                        teacher-question-release-student-checkbox"
+                    value="${studentId}"
+                    ${isChecked ? 'checked' : ''}
+                >
+
+                <div class="
+                    w-10 h-10 shrink-0
+                    rounded-full
+                    flex items-center justify-center
+                    ${isChecked
+                ? 'bg-[#0071BC] text-white'
+                : 'bg-[#0071BC]/10 text-[#0071BC]'
+            }
+                ">
+                    <i class="fa-solid fa-user-graduate text-base"></i>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 truncate">
+                        ${name}
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                        <span class="inline-flex items-center gap-1.5 text-xs text-gray-500">
+                            <i class="fa-solid fa-school text-[#0071BC]/70"></i>
+                            ${className}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="shrink-0">
+                    ${isChecked
+                ? '<i class="fa-solid fa-circle-check text-[#0071BC] text-lg"></i>'
+                : '<i class="fa-regular fa-circle text-gray-300 text-lg"></i>'
+            }
+                </div>
+            </label>
+        `;
+    }).join('');
+
+    $('#question-release-student-list')
+        .removeClass('hidden')
+        .html(`
+            <div class="flex flex-col gap-2">
+                ${studentRows}
+            </div>
+        `);
 }
 
 function selectTeacherQuestionReleaseAssessment(assessmentId) {
@@ -1275,7 +1710,7 @@ function selectAllTeacherQuestionReleaseBank(bankId) {
     updateTeacherQuestionReleasePublishButton();
 
     if (teacherQuestionReleaseStep === 3) {
-        loadTeacherQuestionReleaseStep3();
+        loadTeacherQuestionReleaseStep4();
     }
 }
 
@@ -1382,7 +1817,7 @@ function toggleTeacherQuestionReleaseQuestion(questionId, checked) {
     updateTeacherQuestionReleasePublishButton();
 
     if (teacherQuestionReleaseStep === 3) {
-        loadTeacherQuestionReleaseStep3();
+        loadTeacherQuestionReleaseStep4();
     }
 }
 
@@ -1395,7 +1830,7 @@ function renderTeacherQuestionReleaseSelectedQuestions() {
     const selectedIds = Array.from(teacherQuestionReleaseSelectedQuestions);
 
     if (!selectedIds.length) {
-        list.addClass('hidden').empty();
+        list.addClass('hidden');
         empty.removeClass('hidden');
         return;
     }
@@ -1635,7 +2070,7 @@ function resetTeacherQuestionReleaseWeights() {
     updateTeacherQuestionReleasePublishButton();
 
     if (teacherQuestionReleaseStep === 3) {
-        loadTeacherQuestionReleaseStep3();
+        loadTeacherQuestionReleaseStep4();
     }
 }
 
@@ -2098,7 +2533,7 @@ function applyTeacherQuestionReleaseWeightsByRatio() {
     updateTeacherQuestionReleasePublishButton();
 
     if (teacherQuestionReleaseStep === 3) {
-        loadTeacherQuestionReleaseStep3();
+        loadTeacherQuestionReleaseStep4();
     }
 
     if (typeof Swal !== 'undefined') {
@@ -2288,13 +2723,17 @@ function resetTeacherQuestionReleaseQuestionBankState(clearSelection = true) {
     }
 }
 
-function loadTeacherQuestionReleaseStep2() {
+
+function loadTeacherQuestionReleaseStep3() {
     const loading = $('#question-release-question-bank-loading');
     const list = $('#question-release-question-bank-list');
     const empty = $('#question-release-question-bank-empty');
     const error = $('#question-release-question-bank-error');
 
-    if (!teacherQuestionReleaseSelectedAssessment) {
+    const assessment = teacherQuestionReleaseSelectedAssessment;
+    const selectedComposition = teacherQuestionReleaseSelectedComposition;
+
+    if (!assessment) {
         loading.addClass('hidden');
         list.addClass('hidden').empty();
         empty.removeClass('hidden');
@@ -2306,7 +2745,64 @@ function loadTeacherQuestionReleaseStep2() {
         updateTeacherQuestionReleaseQuestionSummary();
         updateTeacherQuestionReleaseStepper();
         updateTeacherQuestionReleasePublishButton();
+
         return;
+    }
+
+    // Identifikasi komposisi yang sedang dipilih
+    const isLegacy = selectedComposition?.is_legacy === true;
+
+    // Ambil daftar soal berdasarkan jenis komposisi
+    let assignedQuestions = [];
+
+    if (isLegacy) {
+        assignedQuestions = assessment.legacy_assigned_questions || [];
+    } else {
+        const composition = assessment.compositions?.find(item =>
+            Number(item.id) === Number(selectedComposition?.composition_id)
+        );
+
+        if (!composition) {
+            console.error('Komposisi tidak ditemukan:', {
+                assessmentId: assessment.id,
+                selectedComposition: selectedComposition,
+                compositions: assessment.compositions
+            });
+
+            return;
+        }
+
+        assignedQuestions = composition.assigned_questions || [];
+    }
+
+    // Identifikasi komposisi yang sedang dimuat
+    const compositionKey = isLegacy ? `${assessment.id}:legacy` : `${assessment.id}:${selectedComposition.composition_id}`;
+
+    // Pulihkan data hanya ketika komposisi berubah
+    if (teacherQuestionReleaseLoadedCompositionKey !== compositionKey) {
+        teacherQuestionReleaseSelectedQuestions.clear();
+        teacherQuestionReleaseSelectedQuestionWeights = {};
+        teacherQuestionReleaseSelectedQuestionData.clear();
+
+        assignedQuestions.forEach(item => {
+            const questionId = String(item.question_id);
+
+            // Simpan ID soal
+            teacherQuestionReleaseSelectedQuestions.add(questionId);
+
+            // Simpan bobot soal
+            teacherQuestionReleaseSelectedQuestionWeights[questionId] = Number(item.weight || 0);
+
+            // Simpan detail soal
+            if (item.question) {
+                teacherQuestionReleaseSelectedQuestionData.set(questionId, {
+                    ...item.question,
+                    id: item.question.id ?? item.question_id
+                });
+            }
+        });
+
+        teacherQuestionReleaseLoadedCompositionKey = compositionKey;
     }
 
     loading.removeClass('hidden');
@@ -2338,14 +2834,19 @@ function loadTeacherQuestionReleaseStep2() {
                 return;
             }
 
+            // Tampilkan bank soal beserta status pilihan
             renderTeacherQuestionReleaseQuestionBanks();
+
+            // Tampilkan kembali paket soal beserta bobotnya
             renderTeacherQuestionReleaseSelectedQuestions();
+
             updateTeacherQuestionReleaseQuestionSummary();
             updateTeacherQuestionReleaseStepper();
             updateTeacherQuestionReleasePublishButton();
+
         } catch (exception) {
             console.error(
-                'Error loadTeacherQuestionReleaseStep2:',
+                'Error loadTeacherQuestionReleaseStep3:',
                 exception
             );
 
@@ -2354,7 +2855,10 @@ function loadTeacherQuestionReleaseStep2() {
             empty.addClass('hidden');
             error.removeClass('hidden');
 
-            $('#question-release-question-bank-count').removeClass('bg-gray-100 text-gray-500').addClass('bg-red-50 text-red-600').text('Gagal memuat bank soal');
+            $('#question-release-question-bank-count')
+                .removeClass('bg-gray-100 text-gray-500')
+                .addClass('bg-red-50 text-red-600')
+                .text('Gagal memuat bank soal');
         }
     });
 }
@@ -2421,7 +2925,7 @@ function renderTeacherQuestionReleaseSelectedAssessment() {
     `);
 }
 
-function loadTeacherQuestionReleaseStep3() {
+function loadTeacherQuestionReleaseStep4() {
     const loading = $('#question-release-review-loading');
     const empty = $('#question-release-review-empty');
     const content = $('#question-release-review-content');
@@ -2600,7 +3104,7 @@ function renderTeacherQuestionReleaseReview() {
                             <div class="flex items-start gap-2">
                                 <i class="fa-solid fa-circle-check mt-0.5 text-xs text-emerald-500"></i>
                                 <p class="text-[10px] leading-relaxed text-emerald-600">
-                                    Seluruh bobot soal sudah valid dan berjumlah 100.
+                                    Seluruh bobot soal sudah valid dan siap untuk dirilis.
                                 </p>
                             </div>
                         </div>
@@ -2818,7 +3322,7 @@ function updateTeacherQuestionReleasePublishButton() {
     button.prop('disabled', !canPublish);
 
     button.removeClass(
-        'bg-gray-300 text-gray-500 cursor-not-allowed bg-emerald-600 text-white hover:bg-emerald-700'
+        'bg-gray-300 text-gray-500 bg-emerald-600 text-white hover:bg-emerald-700'
     );
 
     if (canPublish) {
@@ -2827,54 +3331,101 @@ function updateTeacherQuestionReleasePublishButton() {
         );
     } else {
         button.addClass(
-            'bg-gray-300 text-gray-500 cursor-not-allowed'
+            'bg-gray-300 text-gray-500'
         );
     }
 }
 
+// VALIDASI ASSESSMENT DAN KOMPOSISI
+function isTeacherQuestionReleaseCompositionValid() {
+
+    const selectedComposition =
+        teacherQuestionReleaseSelectedComposition;
+
+    if (!selectedComposition) {
+        return false;
+    }
+
+    const assessmentId = Number(
+        selectedComposition.assessment_id
+    );
+
+    if (!Number.isFinite(assessmentId) || assessmentId <= 0) {
+        return false;
+    }
+
+    // Pastikan assessment benar-benar tersedia
+    const assessmentExists =
+        teacherQuestionReleaseAssessments.some(
+            assessment =>
+                Number(assessment.id) === assessmentId
+        );
+
+    if (!assessmentExists) {
+        return false;
+    }
+
+    // Komposisi legacy tetap dianggap valid
+    if (selectedComposition.is_legacy === true) {
+        return true;
+    }
+
+    const compositionId = Number(
+        selectedComposition.composition_id
+    );
+
+    return (
+        Number.isFinite(compositionId) &&
+        compositionId > 0
+    );
+}
+
 function goToTeacherQuestionReleaseStep(step) {
-    if (step < 1 || step > 3) return;
+    if (step < 1 || step > 4) return;
 
-    const hasAssessment =
-        Boolean(teacherQuestionReleaseSelectedAssessment);
+    const hasAssessment = isTeacherQuestionReleaseCompositionValid();
 
-    const hasQuestions =
-        teacherQuestionReleaseSelectedQuestions.size > 0;
+    const hasStudents = teacherQuestionReleaseSelectedStudentIds.size > 0;
 
-    const validWeight =
-        isTeacherQuestionReleaseWeightValid();
+    const hasQuestions = teacherQuestionReleaseSelectedQuestions.size > 0;
+
+    const validWeight = isTeacherQuestionReleaseWeightValid();
 
     if (step >= 2 && !hasAssessment) return;
 
-    if (
-        step === 3 &&
-        (!hasQuestions || !validWeight)
-    ) {
-        return;
-    }
+    // Step 3 membutuhkan minimal satu siswa terpilih
+    if (step >= 3 && !hasStudents) return;
+
+    // Step 4 membutuhkan soal dan bobot yang valid
+    if (step >= 4 && (!hasQuestions || !validWeight)) return;
 
     teacherQuestionReleaseStep = step;
 
-    $('.question-release-panel, #question-release-panel-1, #question-release-panel-2, #question-release-panel-3')
+    $('.question-release-panel, #question-release-panel-1, #question-release-panel-2, #question-release-panel-3, #question-release-panel-4')
         .addClass('hidden');
 
-    $(`#question-release-panel-${step}`)
-        .removeClass('hidden');
+    $(`#question-release-panel-${step}`).removeClass('hidden');
 
     if (step === 1) {
         renderTeacherQuestionReleaseAssessments();
+        
     } else if (step === 2) {
         renderTeacherQuestionReleaseSelectedAssessment();
         loadTeacherQuestionReleaseStep2();
+
     } else if (step === 3) {
+        renderTeacherQuestionReleaseSelectedAssessment();
         loadTeacherQuestionReleaseStep3();
+
+    } else if (step === 4) {
+        renderTeacherQuestionReleaseSelectedAssessment();
+        loadTeacherQuestionReleaseStep4();
     }
 
     updateTeacherQuestionReleaseStepper();
     updateTeacherQuestionReleasePublishButton();
 
-    const wizard =
-        $('#question-for-release-wizard');
+    const wizard = $('#question-for-release-wizard');
 
     if (wizard.length) {
         window.scrollTo({
@@ -2885,170 +3436,96 @@ function goToTeacherQuestionReleaseStep(step) {
 }
 
 function updateTeacherQuestionReleaseStepper() {
-    const currentStep =
-        teacherQuestionReleaseStep;
+    const currentStep = teacherQuestionReleaseStep;
+    const hasAssessment = isTeacherQuestionReleaseCompositionValid();
+    const hasStudents = teacherQuestionReleaseSelectedStudentIds.size > 0;
+    const hasQuestions = teacherQuestionReleaseSelectedQuestions.size > 0;
+    const validWeight = isTeacherQuestionReleaseWeightValid();
 
-    const hasAssessment =
-        Boolean(teacherQuestionReleaseSelectedAssessment);
+    // Atur status setiap stepper
+    for (let step = 1; step <= 4; step++) {
+        const stepButton = $(`#question-release-step-${step}`);
+        const number = stepButton.find('.question-release-step-number');
+        const label = stepButton.find('.question-release-step-label');
 
-    const hasQuestions =
-        teacherQuestionReleaseSelectedQuestions.size > 0;
-
-    const validWeight =
-        isTeacherQuestionReleaseWeightValid();
-
-    for (let step = 1; step <= 3; step++) {
-        const stepButton =
-            $(`#question-release-step-${step}`);
-
-        const number =
-            stepButton.find(
-                '.question-release-step-number'
-            );
-
-        const label =
-            stepButton.find(
-                '.question-release-step-label'
-            );
-
+        // Tentukan apakah step dapat diakses
         const canAccess =
             step === 1 ||
             (step === 2 && hasAssessment) ||
-            (
-                step === 3 &&
-                hasAssessment &&
-                hasQuestions &&
-                validWeight
-            );
+            (step === 3 && hasAssessment && hasStudents) ||
+            (step === 4 && hasAssessment && hasStudents && hasQuestions && validWeight);
 
+        // STEP SEBELUMNYA: SELESAI
         if (step < currentStep) {
-            stepButton
-                .prop('disabled', false)
-                .removeClass(
-                    'cursor-not-allowed opacity-60'
-                )
+            stepButton.prop('disabled', false)
+                .removeClass('cursor-not-allowed opacity-60')
                 .addClass('cursor-pointer');
 
-            number
-                .removeClass(
-                    'bg-gray-100 text-gray-400 bg-[#0071BC] text-white ring-4 ring-[#EAF6FF]'
-                )
-                .addClass(
-                    'bg-emerald-500 text-white'
-                )
-                .html(
-                    '<i class="fa-solid fa-check text-xs"></i>'
-                );
+            number.removeClass('bg-gray-100 text-gray-400 bg-[#0071BC] text-white ring-4 ring-[#EAF6FF]')
+                .addClass('bg-emerald-500 text-white')
+                .html('<i class="fa-solid fa-check text-xs"></i>');
 
-            label
-                .removeClass(
-                    'text-gray-400 text-[#0071BC]'
-                )
-                .addClass(
-                    'text-emerald-600'
-                );
+            label.removeClass('text-gray-400 text-[#0071BC]')
+                .addClass('text-emerald-600');
 
             continue;
         }
 
+        // STEP AKTIF
         if (step === currentStep) {
-            stepButton
-                .prop('disabled', false)
-                .removeClass(
-                    'cursor-not-allowed opacity-60'
-                )
-                .addClass(
-                    'cursor-pointer'
-                );
+            stepButton.prop('disabled', false)
+                .removeClass('cursor-not-allowed opacity-60')
+                .addClass('cursor-pointer');
 
-            number
-                .removeClass(
-                    'bg-gray-100 text-gray-400 bg-emerald-500'
-                )
-                .addClass(
-                    'bg-[#0071BC] text-white ring-4 ring-[#EAF6FF]'
-                )
+            number.removeClass('bg-gray-100 text-gray-400 bg-emerald-500')
+                .addClass('bg-[#0071BC] text-white ring-4 ring-[#EAF6FF]')
                 .text(step);
 
-            label
-                .removeClass(
-                    'text-gray-400 text-emerald-600'
-                )
-                .addClass(
-                    'text-[#0071BC]'
-                );
+            label.removeClass('text-gray-400 text-emerald-600')
+                .addClass('text-[#0071BC]');
 
             continue;
         }
 
-        stepButton
-            .prop(
-                'disabled',
-                !canAccess
-            )
-            .toggleClass(
-                'cursor-pointer',
-                canAccess
-            )
-            .toggleClass(
-                'cursor-not-allowed opacity-60',
-                !canAccess
-            );
+        // STEP BERIKUTNYA: AKTIF ATAU TERKUNCI
+        stepButton.prop('disabled', !canAccess)
+            .toggleClass('cursor-pointer', canAccess)
+            .toggleClass('cursor-not-allowed opacity-60', !canAccess);
 
-        number
-            .removeClass(
-                'bg-[#0071BC] text-white ring-4 ring-[#EAF6FF] bg-emerald-500'
-            )
-            .addClass(
-                'bg-gray-100 text-gray-400'
-            )
+        number.removeClass('bg-[#0071BC] text-white ring-4 ring-[#EAF6FF] bg-emerald-500')
+            .addClass('bg-gray-100 text-gray-400')
             .text(step);
 
-        label
-            .removeClass(
-                'text-[#0071BC] text-emerald-600'
-            )
-            .addClass(
-                'text-gray-400'
-            );
+        label.removeClass('text-[#0071BC] text-emerald-600')
+            .addClass('text-gray-400');
     }
 
+    // CONNECTOR 1: ASSESSMENT KE SISWA
     $('#question-release-connector-1')
-        .toggleClass(
-            'bg-[#0071BC]',
-            hasAssessment && currentStep >= 2
-        )
-        .toggleClass(
-            'bg-gray-200',
-            !hasAssessment || currentStep < 2
-        );
+        .toggleClass('bg-[#0071BC]', hasAssessment && currentStep >= 2)
+        .toggleClass('bg-gray-200', !hasAssessment || currentStep < 2);
 
+    // CONNECTOR 2: SISWA KE SOAL
     $('#question-release-connector-2')
-        .toggleClass(
-            'bg-[#0071BC]',
-            hasQuestions &&
-            validWeight &&
-            currentStep >= 3
-        )
-        .toggleClass(
-            'bg-gray-200',
-            !hasQuestions ||
-            !validWeight ||
-            currentStep < 3
-        );
+        .toggleClass('bg-[#0071BC]', hasStudents && currentStep >= 3)
+        .toggleClass('bg-gray-200', !hasStudents || currentStep < 3);
 
-    $('#question-release-next-step-1')
-        .prop(
-            'disabled',
-            !hasAssessment
-        );
+    // CONNECTOR 3: SOAL KE REVIEW
+    $('#question-release-connector-3')
+        .toggleClass('bg-[#0071BC]', hasQuestions && validWeight && currentStep >= 4)
+        .toggleClass('bg-gray-200', !hasQuestions || !validWeight || currentStep < 4);
 
-    $('#question-release-next-step-2')
-        .prop(
-            'disabled',
-            !hasQuestions ||
-            !validWeight
-        );
+    // TOMBOL LANJUT STEP 1: MEMBUTUHKAN ASSESSMENT
+    $('#question-release-next-step-1').prop('disabled', !hasAssessment);
+
+    // TOMBOL LANJUT STEP 2: MEMBUTUHKAN MINIMAL SATU SISWA
+    $('#question-release-next-step-2').prop('disabled', !hasStudents);
+
+    // TOMBOL LANJUT STEP 3: MEMBUTUHKAN SOAL DAN BOBOT VALID
+    $('#question-release-next-step-3').prop('disabled', !hasQuestions || !validWeight);
+
+    // TOMBOL TERBITKAN: IKUTI VALIDASI STEP 4
+    updateTeacherQuestionReleasePublishButton();
 }
 
 function formatTeacherQuestionReleaseWeight(value) {
@@ -3147,216 +3624,269 @@ function escapeTeacherQuestionReleaseHtml(value) {
 }
 
 function bindTeacherQuestionReleaseEvents() {
-    $(document).off(
-        '.teacherQuestionRelease'
-    );
+    $(document).off('.teacherQuestionRelease');
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '[data-question-release-assessment]',
-        function () {
-            selectTeacherQuestionReleaseAssessment(
-                $(this).attr(
-                    'data-question-release-assessment'
-                )
-            );
-        }
-    );
+    // RADIO: PILIH KOMPOSISI ASSESSMENT
+    $(document).on('change.teacherQuestionRelease', '[data-question-release-composition]', function () {
+        const assessmentId = Number($(this).attr('data-assessment-id'));
+        const isLegacy = $(this).attr('data-is-legacy') === 'true';
+        const rawCompositionId = $(this).attr('data-composition-id');
+        const compositionId = isLegacy ? null : Number(rawCompositionId);
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '[data-question-release-bank-toggle]',
-        function () {
-            toggleTeacherQuestionReleaseBank(
-                $(this).attr(
-                    'data-question-release-bank-toggle'
-                )
-            );
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '[data-question-release-bank-select-all]',
-        function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            selectAllTeacherQuestionReleaseBank(
-                $(this).attr(
-                    'data-question-release-bank-select-all'
-                )
-            );
-        }
-    );
-
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '.question-release-question-checkbox',
-        function (e) {
-            e.stopPropagation();
-
-            toggleTeacherQuestionReleaseQuestion(
-                $(this).attr('data-question-id'),
-                $(this).is(':checked')
-            );
-        }
-    );
-
-    $(document)
-        .off(
-            'change.teacherQuestionRelease',
-            '.question-release-class-level-radio'
-        )
-        .on(
-            'change.teacherQuestionRelease',
-            '.question-release-class-level-radio',
-            function () {
-                const newClassLevel =
-                    Number($(this).val());
-
-                teacherQuestionReleaseSelectedClassLevel =
-                    newClassLevel;
-
-                teacherQuestionReleaseSelectedBank = null;
-                teacherQuestionReleaseQuestions = [];
-                teacherQuestionReleaseExpandedBanks.clear();
-
-                renderTeacherQuestionReleaseQuestionBanks();
-                renderTeacherQuestionReleaseSelectedQuestions();
-                updateTeacherQuestionReleaseQuestionSummary();
-                updateTeacherQuestionReleaseStepper();
-                updateTeacherQuestionReleasePublishButton();
-
-                if (teacherQuestionReleaseStep === 3) {
-                    loadTeacherQuestionReleaseStep3();
-                }
-            }
+        // Cari assessment berdasarkan ID
+        const selectedAssessment = teacherQuestionReleaseAssessments.find(
+            assessment => Number(assessment.id) === assessmentId
         );
 
-    $(document).on(
-        'input.teacherQuestionRelease',
-        '[data-question-release-weight]',
-        function () {
-            updateTeacherQuestionReleaseQuestionWeight(
-                $(this).attr(
-                    'data-question-release-weight'
-                ),
-                $(this).val()
-            );
+        if (!selectedAssessment) {
+            console.error('Assessment tidak ditemukan:', assessmentId);
+            return;
         }
-    );
 
-    $(document).on(
-        'blur.teacherQuestionRelease',
-        '[data-question-release-weight]',
-        function () {
-            const id =
-                $(this).attr(
-                    'data-question-release-weight'
-                );
+        // Validasi komposisi
+        if (!isLegacy && (!rawCompositionId || !Number.isFinite(compositionId) || compositionId <= 0)) {
+            console.error('Komposisi tidak valid:', rawCompositionId);
+            return;
+        }
 
-            $(this).val(
-                formatTeacherQuestionReleaseWeight(
-                    getTeacherQuestionReleaseQuestionWeight(id)
-                )
-            );
+        // Simpan assessment dan komposisi terpilih
+        teacherQuestionReleaseSelectedAssessment = selectedAssessment;
+        teacherQuestionReleaseSelectedComposition = {
+            assessment_id: assessmentId,
+            composition_id: compositionId,
+            is_legacy: isLegacy
+        };
+
+        // Reset pilihan soal ketika komposisi berubah
+        teacherQuestionReleaseSelectedQuestions.clear();
+        teacherQuestionReleaseSelectedQuestionWeights = {};
+        teacherQuestionReleaseSelectedQuestionData.clear();
+
+        // Perbarui tampilan
+        renderTeacherQuestionReleaseAssessments();
+        updateTeacherQuestionReleaseStepper();
+        updateTeacherQuestionReleasePublishButton();
+    });
+
+    // CLICK: PILIH CARD ASSESSMENT
+    $(document).on('click.teacherQuestionRelease', '[data-question-release-assessment]', function (e) {
+        if ($(e.target).closest('input, button, label, a, select, textarea').length) {
+            return;
+        }
+
+        selectTeacherQuestionReleaseAssessment(
+            $(this).attr('data-question-release-assessment')
+        );
+    });
+
+    // CHECKBOX: PILIH SISWA
+    $(document)
+        .off('change.teacherQuestionReleaseStudent', '.teacher-question-release-student-checkbox')
+        .on('change.teacherQuestionReleaseStudent', '.teacher-question-release-student-checkbox', function () {
+            const studentId = String($(this).val());
+
+            if (this.checked) {
+                teacherQuestionReleaseSelectedStudentIds.add(studentId);
+            } else {
+                teacherQuestionReleaseSelectedStudentIds.delete(studentId);
+            }
+
+            renderTeacherQuestionReleaseStudents();
+            updateTeacherQuestionReleaseStepper();
+            updateTeacherQuestionReleasePublishButton();
+        });
+
+    // SEARCH SISWA
+    $(document)
+        .off('input.teacherQuestionReleaseStudent', '#question-release-student-search')
+        .on('input.teacherQuestionReleaseStudent', '#question-release-student-search', function () {
+            renderTeacherQuestionReleaseStudents();
+        });
+
+    // CLEAR SEARCH SISWA
+    $(document)
+        .off('click.teacherQuestionReleaseStudent', '#question-release-student-clear-search')
+        .on('click.teacherQuestionReleaseStudent', '#question-release-student-clear-search', function () {
+            $('#question-release-student-search').val('');
+            renderTeacherQuestionReleaseStudents();
+        });
+
+    // PILIH SEMUA SISWA
+    $(document)
+        .off('click.teacherQuestionReleaseStudent', '#question-release-student-select-all')
+        .on('click.teacherQuestionReleaseStudent', '#question-release-student-select-all', function () {
+            teacherQuestionReleaseStudents.forEach(student => {
+                teacherQuestionReleaseSelectedStudentIds.add(String(student.id));
+            });
+
+            renderTeacherQuestionReleaseStudents();
+            updateTeacherQuestionReleaseStepper();
+            updateTeacherQuestionReleasePublishButton();
+        });
+
+    // BATALKAN SEMUA PILIHAN SISWA
+    $(document)
+        .off('click.teacherQuestionReleaseStudent', '#question-release-student-unselect-all')
+        .on('click.teacherQuestionReleaseStudent', '#question-release-student-unselect-all', function () {
+            teacherQuestionReleaseSelectedStudentIds.clear();
+
+            renderTeacherQuestionReleaseStudents();
+            updateTeacherQuestionReleaseStepper();
+            updateTeacherQuestionReleasePublishButton();
+        });
+
+    // TOGGLE QUESTION BANK
+    $(document).on('click.teacherQuestionRelease', '[data-question-release-bank-toggle]', function () {
+        toggleTeacherQuestionReleaseBank(
+            $(this).attr('data-question-release-bank-toggle')
+        );
+    });
+
+    // PILIH SEMUA SOAL DALAM BANK
+    $(document).on('click.teacherQuestionRelease', '[data-question-release-bank-select-all]', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        selectAllTeacherQuestionReleaseBank(
+            $(this).attr('data-question-release-bank-select-all')
+        );
+    });
+
+    // CHECKBOX: PILIH SOAL
+    $(document).on('change.teacherQuestionRelease', '.question-release-question-checkbox', function (e) {
+        e.stopPropagation();
+
+        toggleTeacherQuestionReleaseQuestion(
+            $(this).attr('data-question-id'),
+            $(this).is(':checked')
+        );
+    });
+
+    // RADIO: GANTI JENJANG KELAS
+    $(document)
+        .off('change.teacherQuestionRelease', '.question-release-class-level-radio')
+        .on('change.teacherQuestionRelease', '.question-release-class-level-radio', function () {
+            teacherQuestionReleaseSelectedClassLevel = Number($(this).val());
+
+            // Reset bank dan soal ketika jenjang berubah
+            teacherQuestionReleaseSelectedBank = null;
+            teacherQuestionReleaseQuestions = [];
+            teacherQuestionReleaseExpandedBanks.clear();
+
+            // Perbarui daftar bank dan ringkasan soal
+            renderTeacherQuestionReleaseQuestionBanks();
+            renderTeacherQuestionReleaseSelectedQuestions();
+            updateTeacherQuestionReleaseQuestionSummary();
+            updateTeacherQuestionReleaseStepper();
+            updateTeacherQuestionReleasePublishButton();
+        });
+
+    // INPUT: UBAH BOBOT SOAL
+    $(document).on('input.teacherQuestionRelease', '[data-question-release-weight]', function () {
+        updateTeacherQuestionReleaseQuestionWeight(
+            $(this).attr('data-question-release-weight'),
+            $(this).val()
+        );
+    });
+
+    // BLUR: FORMAT ULANG BOBOT SOAL
+    $(document).on('blur.teacherQuestionRelease', '[data-question-release-weight]', function () {
+        const id = $(this).attr('data-question-release-weight');
+
+        $(this).val(
+            formatTeacherQuestionReleaseWeight(
+                getTeacherQuestionReleaseQuestionWeight(id)
+            )
+        );
 
             updateTeacherQuestionReleasePctLabels();
             updateTeacherQuestionReleaseQuestionSummary();
             updateTeacherQuestionReleaseStepper();
             updateTeacherQuestionReleasePublishButton();
 
-            if (teacherQuestionReleaseStep === 3) {
-                renderTeacherQuestionReleaseReview();
-            }
+        // Perbarui review hanya ketika berada di Step 4
+        if (teacherQuestionReleaseStep === 4) {
+            renderTeacherQuestionReleaseReview();
         }
-    );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '[data-question-release-remove]',
-        function () {
-            if (teacherQuestionReleaseSelectedAssessmentHasAnswers) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Assessment Sudah Dikerjakan',
-                    text: 'Soal tidak dapat dihapus karena sudah ada siswa yang menjawab assessment ini.',
-                    confirmButtonText: 'Mengerti',
-                    confirmButtonColor: '#0071BC'
-                });
-
-                return;
-            }
-
-            const id = String(
-                $(this).attr(
-                    'data-question-release-remove'
-                )
-            );
-
-            teacherQuestionReleaseSelectedQuestions.delete(id);
-            delete teacherQuestionReleaseSelectedQuestionWeights[id];
-            teacherQuestionReleaseSelectedQuestionData.delete(id);
-
-            normalizeTeacherQuestionReleaseWeights();
-            renderTeacherQuestionReleaseQuestionBanks();
-            renderTeacherQuestionReleaseSelectedQuestions();
-            updateTeacherQuestionReleaseQuestionSummary();
-            updateTeacherQuestionReleaseStepper();
-            updateTeacherQuestionReleasePublishButton();
-
-            if (teacherQuestionReleaseStep === 3) {
-                loadTeacherQuestionReleaseStep3();
-            }
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-ratio-weight',
-        function () {
-            openTeacherQuestionReleaseRatioModal();
-        }
-    );
-
-    $(document).on(
-        'input.teacherQuestionRelease',
-        '.ratio-type-input',
-        function () {
-            updateTeacherQuestionReleaseRatioCalculations();
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#btn-quick-equalize-ratio',
-        function () {
-            const inputs = $('.ratio-type-input');
-            const n = inputs.length;
-            if (!n) return;
-            const base = Math.floor(100 / n);
-            const rem = 100 - base * n;
-            inputs.each(function (idx) {
-                $(this).val(base + (idx === n - 1 ? rem : 0));
+    // CLICK: HAPUS SOAL TERPILIH
+    $(document).on('click.teacherQuestionRelease', '[data-question-release-remove]', function () {
+        if (teacherQuestionReleaseSelectedAssessmentHasAnswers) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Assessment Sudah Dikerjakan',
+                text: 'Soal tidak dapat dihapus karena sudah ada siswa yang menjawab assessment ini.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0071BC'
             });
-            updateTeacherQuestionReleaseRatioCalculations();
+            return;
         }
-    );
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#btn-apply-ratio-weight',
-        function () {
+        const id = String($(this).attr('data-question-release-remove'));
+
+        // Hapus soal dari seluruh state
+        teacherQuestionReleaseSelectedQuestions.delete(id);
+        delete teacherQuestionReleaseSelectedQuestionWeights[id];
+        teacherQuestionReleaseSelectedQuestionData.delete(id);
+
+        // Normalisasi dan perbarui tampilan
+        normalizeTeacherQuestionReleaseWeights();
+        renderTeacherQuestionReleaseQuestionBanks();
+        renderTeacherQuestionReleaseSelectedQuestions();
+        updateTeacherQuestionReleaseQuestionSummary();
+        updateTeacherQuestionReleaseStepper();
+        updateTeacherQuestionReleasePublishButton();
+
+        // Perbarui review jika sedang berada di Step 4
+        if (teacherQuestionReleaseStep === 4) {
+            renderTeacherQuestionReleaseReview();
+        }
+    });
+
+    // RESET / NORMALISASI BOBOT
+    $(document).on('click.teacherQuestionRelease', '#question-release-normalize-weight, #question-release-reset-weight', function () {
+        resetTeacherQuestionReleaseWeights();
+    });
+
+    // BUKA MODAL PEMBAGIAN BOBOT
+    $(document).on('click.teacherQuestionRelease', '#question-release-ratio-weight', function () {
+        openTeacherQuestionReleaseRatioModal();
+    });
+
+    // INPUT: HITUNG SIMULASI PEMBAGIAN BOBOT
+    $(document).on('input.teacherQuestionRelease', '.ratio-type-input', function () {
+        updateTeacherQuestionReleaseRatioCalculations();
+    });
+
+    // BAGI RATA BOBOT
+    $(document).on('click.teacherQuestionRelease', '#btn-quick-equalize-ratio', function () {
+        const inputs = $('.ratio-type-input');
+        const n = inputs.length;
+
+        if (!n) return;
+
+        const base = Math.floor(100 / n);
+        const rem = 100 - base * n;
+
+        inputs.each(function (idx) {
+            $(this).val(base + (idx === n - 1 ? rem : 0));
+        });
+
+        updateTeacherQuestionReleaseRatioCalculations();
+    });
+
+    // TERAPKAN PEMBAGIAN BOBOT
+    $(document).on('click.teacherQuestionRelease', '#btn-apply-ratio-weight', function () {
             if (teacherQuestionReleaseWeightMode === 'points') {
                 applyTeacherQuestionReleaseWeightsByPoints();
                 return;
             }
 
-            applyTeacherQuestionReleaseWeightsByRatio();
-        }
-    );
+        applyTeacherQuestionReleaseWeightsByRatio();
+    });
 
+    // STEP 1: LANJUT KE PILIH SISWA
     $(document).on(
         'click.teacherQuestionRelease',
         '.weight-mode-btn',
@@ -3373,251 +3903,239 @@ function bindTeacherQuestionReleaseEvents() {
         }
     );
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-next-step-1',
-        function () {
-            if (!teacherQuestionReleaseSelectedAssessment) {
-                return;
-            }
+    $(document).on('click.teacherQuestionRelease', '#question-release-next-step-1', function () {
+        if (!isTeacherQuestionReleaseCompositionValid()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Komposisi Terlebih Dahulu',
+                text: 'Silakan pilih salah satu komposisi soal sebelum melanjutkan.',
+                confirmButtonColor: '#0071BC'
+            });
+            return;
+        }
 
+        goToTeacherQuestionReleaseStep(2);
+    });
+
+    // STEP 2: KEMBALI KE PILIH ASSESSMENT
+    $(document).on('click.teacherQuestionRelease', '#question-release-prev-step-2', function () {
+        goToTeacherQuestionReleaseStep(1);
+    });
+
+    // STEP 2: LANJUT KE PILIH SOAL
+    $(document).on('click.teacherQuestionRelease', '#question-release-next-step-2', function () {
+        // Minimal satu siswa harus dipilih
+        if (teacherQuestionReleaseSelectedStudentIds.size === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Siswa Terlebih Dahulu',
+                text: 'Minimal pilih satu siswa untuk melanjutkan ke tahap berikutnya.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0071BC'
+            });
+            return;
+        }
+
+        goToTeacherQuestionReleaseStep(3);
+    });
+
+    // STEP 3: KEMBALI KE PILIH SISWA
+    $(document).on('click.teacherQuestionRelease', '#question-release-prev-step-3', function () {
+        goToTeacherQuestionReleaseStep(2);
+    });
+
+    // STEP 3: LANJUT KE REVIEW
+    $(document).on('click.teacherQuestionRelease', '#question-release-next-step-3', function () {
+        // Minimal satu soal harus dipilih
+        if (teacherQuestionReleaseSelectedQuestions.size === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Soal Terlebih Dahulu',
+                text: 'Minimal pilih satu soal sebelum melanjutkan.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0071BC'
+            });
+            return;
+        }
+
+        // Bobot soal harus valid
+        if (!isTeacherQuestionReleaseWeightValid()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Bobot Soal Belum Valid',
+                text: 'Pastikan total bobot soal sudah sesuai sebelum melanjutkan.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0071BC'
+            });
+            return;
+        }
+
+        goToTeacherQuestionReleaseStep(4);
+    });
+
+    // STEP 4: KEMBALI KE PILIH SOAL
+    $(document).on('click.teacherQuestionRelease', '#question-release-prev-step-4', function () {
+        goToTeacherQuestionReleaseStep(3);
+    });
+
+    // REVIEW KOSONG: KEMBALI KE PILIH SOAL
+    $(document).on('click.teacherQuestionRelease', '#question-release-review-empty-back', function () {
+        goToTeacherQuestionReleaseStep(3);
+    });
+
+    // STEPPER: BUKA STEP 1
+    $(document).on('click.teacherQuestionRelease', '.question-release-step[data-step="1"]', function () {
+        goToTeacherQuestionReleaseStep(1);
+    });
+
+    // STEPPER: BUKA STEP 2
+    $(document).on('click.teacherQuestionRelease', '.question-release-step[data-step="2"]', function () {
+        if (isTeacherQuestionReleaseCompositionValid()) {
             goToTeacherQuestionReleaseStep(2);
         }
-    );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-prev-step-2',
-        function () {
-            goToTeacherQuestionReleaseStep(1);
-        }
-    );
-
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-next-step-2',
-        function () {
-            if (
-                !teacherQuestionReleaseSelectedQuestions.size
-            ) {
-                return;
-            }
-
-            if (
-                !isTeacherQuestionReleaseWeightValid()
-            ) {
-                return;
-            }
-
+    // STEPPER: BUKA STEP 3
+    $(document).on('click.teacherQuestionRelease', '.question-release-step[data-step="3"]', function () {
+        if (
+            isTeacherQuestionReleaseCompositionValid() &&
+            teacherQuestionReleaseSelectedStudentIds.size > 0
+        ) {
             goToTeacherQuestionReleaseStep(3);
         }
-    );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-prev-step-3',
-        function () {
-            goToTeacherQuestionReleaseStep(2);
+    // STEPPER: BUKA STEP 4
+    $(document).on('click.teacherQuestionRelease', '.question-release-step[data-step="4"]', function () {
+        if (
+            isTeacherQuestionReleaseCompositionValid() &&
+            teacherQuestionReleaseSelectedStudentIds.size > 0 &&
+            teacherQuestionReleaseSelectedQuestions.size > 0 &&
+            isTeacherQuestionReleaseWeightValid()
+        ) {
+            goToTeacherQuestionReleaseStep(4);
         }
-    );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-review-empty-back',
-        function () {
-            goToTeacherQuestionReleaseStep(2);
-        }
-    );
+    // RETRY: LOAD ASSESSMENT
+    $(document).on('click.teacherQuestionRelease', '#question-release-assessment-retry', function () {
+        formQuestionForRelease();
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '.question-release-step[data-step="1"]',
-        function () {
-            goToTeacherQuestionReleaseStep(1);
-        }
-    );
+    // RETRY: LOAD QUESTION BANK
+    $(document).on('click.teacherQuestionRelease', '#question-release-question-bank-retry', function () {
+        loadTeacherQuestionReleaseStep3();
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '.question-release-step[data-step="2"]',
-        function () {
-            if (
-                teacherQuestionReleaseSelectedAssessment
-            ) {
-                goToTeacherQuestionReleaseStep(2);
-            }
-        }
-    );
+    // EXPAND ALL QUESTION BANK
+    $(document).on('click.teacherQuestionRelease', '#question-release-expand-all, #question-release-open-all-banks', function () {
+        getTeacherQuestionReleaseBankGroups().forEach(bank => {
+            teacherQuestionReleaseExpandedBanks.add(String(bank.id));
+        });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '.question-release-step[data-step="3"]',
-        function () {
-            if (
-                teacherQuestionReleaseSelectedAssessment &&
-                teacherQuestionReleaseSelectedQuestions.size > 0 &&
-                isTeacherQuestionReleaseWeightValid()
-            ) {
-                goToTeacherQuestionReleaseStep(3);
-            }
-        }
-    );
+        renderTeacherQuestionReleaseQuestionBanks();
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-assessment-retry',
-        function () {
-            formQuestionForRelease();
-        }
-    );
+    // COLLAPSE ALL QUESTION BANK
+    $(document).on('click.teacherQuestionRelease', '#question-release-collapse-all, #question-release-close-all-banks', function () {
+        teacherQuestionReleaseExpandedBanks.clear();
+        renderTeacherQuestionReleaseQuestionBanks();
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-question-bank-retry',
-        function () {
-            loadTeacherQuestionReleaseStep2();
-        }
-    );
+    // FILTER: TAHUN AJARAN
+    $(document).on('change.teacherQuestionRelease', '#dropdown-filter-tahun-ajaran', function () {
+        formQuestionForRelease(
+            $(this).val(),
+            $('#dropdown-filter-class').val(),
+            $('#dropdown-assessment-type').val(),
+            $('#dropdown-filter-mapel').val(),
+            $('#dropdown-filter-semester').val(),
+            $('#search_question').val()
+        );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-open-all-banks',
-        function () {
-            getTeacherQuestionReleaseBankGroups()
-                .forEach(bank => {
-                    teacherQuestionReleaseExpandedBanks.add(
-                        String(bank.id)
-                    );
-                });
+    // FILTER: KELAS
+    $(document).on('change.teacherQuestionRelease', '#dropdown-filter-class', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $(this).val(),
+            $('#dropdown-assessment-type').val(),
+            $('#dropdown-filter-mapel').val(),
+            $('#dropdown-filter-semester').val(),
+            $('#search_question').val(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            true
+        );
+    });
 
-            renderTeacherQuestionReleaseQuestionBanks();
-        }
-    );
+    // FILTER: JENIS ASSESSMENT
+    $(document).on('change.teacherQuestionRelease', '#dropdown-assessment-type', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $('#dropdown-filter-class').val(),
+            $(this).val(),
+            $('#dropdown-filter-mapel').val(),
+            $('#dropdown-filter-semester').val(),
+            $('#search_question').val()
+        );
+    });
 
-    $(document).on(
-        'click.teacherQuestionRelease',
-        '#question-release-close-all-banks',
-        function () {
-            teacherQuestionReleaseExpandedBanks.clear();
-            renderTeacherQuestionReleaseQuestionBanks();
-        }
-    );
+    // FILTER: MATA PELAJARAN
+    $(document).on('change.teacherQuestionRelease', '#dropdown-filter-mapel', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $('#dropdown-filter-class').val(),
+            $('#dropdown-assessment-type').val(),
+            $(this).val(),
+            $('#dropdown-filter-semester').val(),
+            $('#search_question').val()
+        );
+    });
 
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#dropdown-filter-tahun-ajaran',
-        function () {
-            formQuestionForRelease(
-                $(this).val(),
-                $('#dropdown-filter-class').val(),
-                $('#dropdown-assessment-type').val(),
-                $('#dropdown-filter-mapel').val(),
-                $('#dropdown-filter-semester').val(),
-                $('#search_question').val()
-            );
-        }
-    );
+    // FILTER: SEMESTER
+    $(document).on('change.teacherQuestionRelease', '#dropdown-filter-semester', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $('#dropdown-filter-class').val(),
+            $('#dropdown-assessment-type').val(),
+            $('#dropdown-filter-mapel').val(),
+            $(this).val(),
+            $('#search_question').val()
+        );
+    });
 
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#dropdown-filter-class',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $(this).val(),
-                $('#dropdown-assessment-type').val(),
-                $('#dropdown-filter-mapel').val(),
-                $('#dropdown-filter-semester').val(),
-                $('#search_question').val(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                true
-            );
-        }
-    );
+    // SEARCH QUESTION BANK
+    $(document).on('input.teacherQuestionRelease', '#search_question', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $('#dropdown-filter-class').val(),
+            $('#dropdown-assessment-type').val(),
+            $('#dropdown-filter-mapel').val(),
+            $('#dropdown-filter-semester').val(),
+            $(this).val()
+        );
+    });
 
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#dropdown-assessment-type',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $('#dropdown-filter-class').val(),
-                $(this).val(),
-                $('#dropdown-filter-mapel').val(),
-                $('#dropdown-filter-semester').val(),
-                $('#search_question').val()
-            );
-        }
-    );
-
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#dropdown-filter-mapel',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $('#dropdown-filter-class').val(),
-                $('#dropdown-assessment-type').val(),
-                $(this).val(),
-                $('#dropdown-filter-semester').val(),
-                $('#search_question').val()
-            );
-        }
-    );
-
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#dropdown-filter-semester',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $('#dropdown-filter-class').val(),
-                $('#dropdown-assessment-type').val(),
-                $('#dropdown-filter-mapel').val(),
-                $(this).val(),
-                $('#search_question').val()
-            );
-        }
-    );
-
-    $(document).on(
-        'input.teacherQuestionRelease',
-        '#search_question',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $('#dropdown-filter-class').val(),
-                $('#dropdown-assessment-type').val(),
-                $('#dropdown-filter-mapel').val(),
-                $('#dropdown-filter-semester').val(),
-                $(this).val()
-            );
-        }
-    );
-
-    $(document).on(
-        'change.teacherQuestionRelease',
-        '#id_kurikulum, #id_kelas, #id_mapel, #id_bab, #id_sub_bab',
-        function () {
-            formQuestionForRelease(
-                $('#dropdown-filter-tahun-ajaran').val(),
-                $('#dropdown-filter-class').val(),
-                $('#dropdown-assessment-type').val(),
-                $('#dropdown-filter-mapel').val(),
-                $('#dropdown-filter-semester').val(),
-                $('#search_question').val(),
-                $('#id_kurikulum').val(),
-                $('#id_kelas').val(),
-                $('#id_mapel').val(),
-                $('#id_bab').val(),
-                $('#id_sub_bab').val()
-            );
-        }
-    );
+    // FILTER: KURIKULUM, KELAS, MAPEL, BAB, DAN SUB BAB
+    $(document).on('change.teacherQuestionRelease', '#id_kurikulum, #id_kelas, #id_mapel, #id_bab, #id_sub_bab', function () {
+        formQuestionForRelease(
+            $('#dropdown-filter-tahun-ajaran').val(),
+            $('#dropdown-filter-class').val(),
+            $('#dropdown-assessment-type').val(),
+            $('#dropdown-filter-mapel').val(),
+            $('#dropdown-filter-semester').val(),
+            $('#search_question').val(),
+            $('#id_kurikulum').val(),
+            $('#id_kelas').val(),
+            $('#id_mapel').val(),
+            $('#id_bab').val(),
+            $('#id_sub_bab').val()
+        );
+    });
 }
 
 $(document).ready(function () {
@@ -3717,6 +4235,31 @@ $('#question-release-publish').on('click', function (e) {
         teacherQuestionReleaseSelectedAssessment.id
     );
 
+    // Komposisi soal yang dipilih
+    const selectedComposition = teacherQuestionReleaseSelectedComposition;
+
+    if (!selectedComposition) {
+        alert('Silakan pilih komposisi soal terlebih dahulu.');
+        isProcessing = false;
+        btn.prop('disabled', false);
+        return;
+    }
+
+    formData.set(
+        'composition_id',
+        selectedComposition.composition_id ?? ''
+    );
+
+    formData.set(
+        'is_legacy',
+        selectedComposition.is_legacy ? '1' : '0'
+    );
+
+    // Siswa yang dipilih untuk komposisi
+    Array.from(teacherQuestionReleaseSelectedStudentIds).forEach(studentId => {
+        formData.append('student_ids[]', studentId);
+    });
+
     // Questions + weights
     Array.from(teacherQuestionReleaseSelectedQuestions).forEach(questionId => {
         const id = String(questionId);
@@ -3739,10 +4282,6 @@ $('#question-release-publish').on('click', function (e) {
     // Status
     const status = $(this).data('status');
     formData.set('status', status);
-
-    for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
 
     $.ajax({
         url: `/lms/${role}/${schoolName}/${schoolId}/teacher-question-bank-for-release/store`,
@@ -3785,12 +4324,16 @@ $('#question-release-publish').on('click', function (e) {
 
             // Reset wizard state
             teacherQuestionReleaseSelectedAssessment = null;
+            teacherQuestionReleaseSelectedComposition = null;
             teacherQuestionReleaseSelectedBank = null;
             teacherQuestionReleaseQuestions = [];
             teacherQuestionReleaseSelectedQuestions.clear();
             teacherQuestionReleaseSelectedQuestionWeights = {};
+            teacherQuestionReleaseSelectedQuestionData.clear();
+            teacherQuestionReleaseSelectedStudentIds.clear();
             teacherQuestionReleaseExpandedBanks.clear();
             teacherQuestionReleaseSelectedClassLevel = null;
+            teacherQuestionReleaseLoadedCompositionKey = null;
 
             isProcessing = false;
             btn.prop('disabled', false);
@@ -3804,8 +4347,6 @@ $('#question-release-publish').on('click', function (e) {
             if (xhr.status === 422) {
 
                 const errors = xhr.responseJSON?.errors || {};
-
-                console.error('Validation errors:', errors);
 
                 $.each(errors, function (field, messages) {
 

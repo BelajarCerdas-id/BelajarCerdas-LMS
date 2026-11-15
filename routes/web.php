@@ -962,6 +962,8 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/store', [TeacherQuestionBankReleaseController::class, 'teacherQuestionBankForReleaseStore'])->name('lms.teacherQuestionBankForRelease.store');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/paginate', [TeacherQuestionBankReleaseController::class, 'paginateTeacherQuestionBankForRelease'])->name('lms.teacherQuestionBankForRelease.paginate');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/review/{assessmentQuestionId}/paginate', [TeacherQuestionBankReleaseController::class, 'paginateTeacherReviewQuestionBankForRelease'])->name('lms.teacherReviewQuestionBankForRelease.paginate');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/composition/store', [TeacherQuestionBankReleaseController::class, 'storeTeacherQuestionReleaseComposition'])->name('teacher.question-release.composition.store');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/teacher-question-bank-for-release/composition/update', [TeacherQuestionBankReleaseController::class, 'updateTeacherQuestionReleaseComposition'])->name('teacher.question.bank.release.composition.update');
         
         // teacher assessment grading
         Route::get('/lms/{role}/{schoolName}/{schoolId}/assessment-grading', [TeacherAssessmentGradingController::class, 'assessmentGradingManagement'])->name('lms.assessmentGradingManagement.view');
