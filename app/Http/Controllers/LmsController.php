@@ -229,7 +229,7 @@ class LmsController extends Controller
         $teacherAssignments = $dataByClass;
 
         // QUERY CHEATING
-        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
+        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType', 'AnticheatViolations'])
             ->where('status', 'cheating')->whereHas('SchoolAssessment', function ($q) use ($teacherAssignments, $schoolId, $user, $searchYear, $subjectId, $assessmentTypeId) {
                 $q->where('school_partner_id', $schoolId);
 

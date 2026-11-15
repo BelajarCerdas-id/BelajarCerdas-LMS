@@ -62,8 +62,8 @@
     {{-- ============================================================= --}}
 
     <div
-        class="relative left-0 md:left-62.5
-               w-full md:w-[calc(100%-250px)]
+        class="relative left-0 md:left-72.5
+               w-full md:w-[calc(100%-290px)]
                transition-all duration-500 ease-in-out
                z-20"
     >
@@ -88,7 +88,7 @@
                            transition-all duration-300
                            hover:shadow-lg
                            hover:border-blue-300
-                           hover:-translate-y-0.5"
+                           hover:-translate-y-0.5 snap-card"
                     onclick="openDashboardPerangkatGuru()"
                 >
 

@@ -47,7 +47,7 @@
                 <section class="mb-6">
 
                     <!-- Skeleton -->
-                    <div id="kpi-loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                    <div id="kpi-loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 snap-card">
 
                         @for ($i = 0; $i < 4; $i++)
                             <div class="card bg-base-100 border border-base-300 shadow-sm">
@@ -72,7 +72,7 @@
 
                     <!-- Content -->
                     <div id="kpi-content" class="hidden">
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 snap-card">
 
                             <!-- TOTAL SEKOLAH -->
                             <div class="rounded-2xl border border-cyan-100 bg-cyan-50 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
@@ -159,7 +159,7 @@
 
                 <!-- QUICK ACCESS -->
                 <section class="mb-10">
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 snap-card">
 
                         <!-- KINERJA GURU -->
                         <a href="{{ route('lms.foundation.teacher-performance.view', [

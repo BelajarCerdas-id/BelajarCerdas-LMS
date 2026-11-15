@@ -1216,7 +1216,7 @@ function autoSubmitUnSavedQuestions(onFinish = null) {
             const questions = response.data;
             const questionsAnswer = response.questionsAnswer;
 
-            const requests = [];
+            const pendingIds = [];
 
             questions.forEach((question) => {
 
@@ -1227,7 +1227,31 @@ function autoSubmitUnSavedQuestions(onFinish = null) {
                     return;
                 }
 
-                const request = $.ajax({
+                pendingIds.push(question.id);
+            });
+
+            // Submit sequentially in small batches instead of one parallel
+            // fan-out, so an auto-submit doesn't hammer the server.
+            const batchSize = 5;
+            let sent = 0;
+
+            const sendNextBatch = function () {
+
+                if (sent >= pendingIds.length) {
+
+                    studentFormAssessment(currentQuestionIndex, false);
+
+                    if (typeof onFinish === "function") {
+                        onFinish();
+                    }
+
+                    return;
+                }
+
+                const batch = pendingIds.slice(sent, sent + batchSize);
+                sent += batchSize;
+
+                $.when.apply($, batch.map((questionId) => $.ajax({
 
                     url: `/lms/${role}/tka-simulation/class/${kelasId}/subject/${mapelId}/practice-test/answer/${attemptId}`,
                     method: "POST",
@@ -1237,25 +1261,14 @@ function autoSubmitUnSavedQuestions(onFinish = null) {
                     },
 
                     data: {
-                        question_id: question.id,
+                        question_id: questionId,
                         status_answer: "submitted",
                         auto_submit: true
                     }
-                });
+                }))).always(sendNextBatch);
+            };
 
-                requests.push(request);
-
-            });
-
-            $.when.apply($, requests).always(function () {
-
-                studentFormAssessment(currentQuestionIndex, false);
-
-                if (typeof onFinish === "function") {
-                    onFinish();
-                }
-
-            });
+            sendNextBatch();
 
         }
 

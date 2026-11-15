@@ -1,7 +1,7 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Tryout TKA']);
 
 @if (Auth::user()->role === 'Administrator')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] transition-all duration-500 ease-in-out z-20">
         <div class="my-15 mx-7.5">
             <main id="container" data-role="{{ $role }}">
 
@@ -13,42 +13,25 @@
                 
                 <!-- HEADER -->
                 <section class="mb-6">
-                    <div class="relative overflow-hidden rounded-3xl bg-[linear-gradient(to_left,#0071BC_45%,#003456_100%)] p-5 lg:p-8 shadow-xl">
-                        <i class="fa-solid fa-calendar-days absolute -top-8 -right-6 text-[120px] lg:text-[180px] text-white/5 rotate-12 pointer-events-none"></i>
-                        <i class="fa-solid fa-clipboard-check absolute -bottom-10 -left-6 text-[90px] lg:text-[140px] text-white/5 -rotate-12 pointer-events-none"></i>
+                    <div class="rounded-3xl p-4 sm:p-5 text-white shadow-xl overflow-hidden relative border border-white/10" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 60%, #002b49 100%) !important;">
+                        <i class="fa-solid fa-calendar-days absolute right-0 top-0 text-[180px] translate-x-12 -translate-y-8 opacity-10 pointer-events-none select-none"></i>
 
-                        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
-
-                            <!-- LEFT -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 lg:gap-4">
-                                    <!-- Icon -->
-                                    <div class="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-lg shrink-0">
-                                        <i class="fa-solid fa-clipboard-check text-white text-xl lg:text-3xl"></i>
-                                    </div>
-
-                                    <!-- Title -->
-                                    <div class="inline-block">
-                                        <h1 class="text-xl font-bold text-white leading-tight">
-                                            Manajemen Tryout TKA
-                                        </h1>
-
-                                        <div class="mt-2 h-1 w-full rounded-full bg-cyan-300"></div>
-                                    </div>
-                                </div>
-
-                                <p class="mt-5 max-w-2xl text-sm sm:text-base text-white/80 leading-relaxed">
+                        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div>
+                                <h1 class="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap">
+                                    Manajemen Tryout TKA
+                                </h1>
+                                <p class="mt-1 text-sky-100/90 text-xs sm:text-sm max-w-2xl leading-snug">
                                     Atur periode, sesi, dan mata pelajaran Tryout TKA untuk setiap tahun ajaran.
                                 </p>
                             </div>
 
-                            <!-- RIGHT -->
-                            <div class="w-full lg:w-auto">
+                            <div class="w-full lg:w-auto shrink-0">
                                 <a href="{{ route('lms.office.tka-tryout-period-form.view', [
                                     'role' => $role,
                                 ]) }}">
-                                    <button class="btn w-full lg:w-auto bg-white border-white text-[#005A9C] hover:bg-slate-100 hover:border-slate-100 shadow-lg">
-                                        <i class="fa-solid fa-plus"></i>
+                                    <button class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 active:scale-[0.98] text-[#005A9C] font-semibold text-xs transition-all shadow-md border border-white/20">
+                                        <i class="fa-solid fa-plus text-xs"></i>
                                         Tambah Periode TKA
                                     </button>
                                 </a>

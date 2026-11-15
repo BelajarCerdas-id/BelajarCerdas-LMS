@@ -1,7 +1,7 @@
 @include('components/sidebar-beranda', ['headerSideNav' => 'Beranda'])
 
 @if (Auth::user()->role == 'Finance')
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-white transition-all duration-500 ease-in-out z-20">
         <div class="mt-4 sm:mt-6 mb-10 mx-4 sm:mx-6 space-y-6">
 
             <main id="container" data-role="{{ $role }}">
@@ -62,7 +62,7 @@
     
                     <!-- KPI CONTENT -->
                     <div id="kpi-content" class="hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-5">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-5 snap-card">
                             
                             <!-- Lifetime Revenue -->
                             <div class="bg-white rounded-3xl border border-gray-300 p-6 shadow-sm">
@@ -253,7 +253,7 @@
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
                 <!-- CONTRACT EXPIRING -->
-                <div class="border border-gray-300 bg-white rounded-3xl shadow-sm p-6 flex flex-col">
+                <div class="border border-gray-300 bg-white rounded-3xl shadow-sm p-6 flex flex-col snap-card">
 
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-lg">
@@ -322,7 +322,7 @@
 
                     <!-- LIST -->
                     <div id="contract-expiring-list"
-                        class="space-y-3 max-h-80 overflow-y-auto pr-1 hidden">
+                        class="space-y-3 max-h-80 overflow-y-auto bc-snap-list pr-1 hidden">
                     </div>
 
                     <!-- EMPTY -->
@@ -346,7 +346,7 @@
 
                 <!-- TOP REVENUE -->
                 <section>
-                    <div class="border border-gray-300 bg-white rounded-3xl shadow-sm p-6">
+                    <div class="border border-gray-300 bg-white rounded-3xl shadow-sm p-6 snap-card">
 
                         <!-- HEADER -->
                         <div class="flex justify-between items-center mb-6">
@@ -383,7 +383,7 @@
                         </div>
 
                         <!-- LIST -->
-                        <div id="grid-list-top-revenue" class="space-y-4 hidden max-h-70 overflow-y-auto"></div>
+                        <div id="grid-list-top-revenue" class="space-y-4 hidden max-h-70 overflow-y-auto bc-snap-list"></div>
 
                         <!-- EMPTY -->
                         <div id="empty-message-top-revenue"

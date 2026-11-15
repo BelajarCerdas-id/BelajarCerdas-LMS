@@ -67,7 +67,7 @@
                     <div class="2xl:col-span-12 space-y-8 min-w-0">
     
                         {{-- CHART SECTION --}}
-                        <div class="bg-white rounded-4xl md:rounded-[2.5rem] p-5 md:p-8 shadow-sm border border-gray-300">
+                        <div class="bg-white rounded-4xl md:rounded-[2.5rem] p-5 md:p-8 shadow-sm border border-gray-300 snap-card">
     
                             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
     
@@ -198,7 +198,7 @@
     
                         {{-- REFLEKSI CTA --}}
                         <div class="relative overflow-hidden bg-white rounded-4xl md:rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-gray-300 group hover:shadow-2xl hover:shadow-blue-100 
-                            transition-all duration-500">
+                            transition-all duration-500 snap-card">
     
                             <div class="absolute top-0 right-0 w-52 h-52 bg-blue-100 rounded-full blur-3xl opacity-40 group-hover:scale-125 transition-all duration-700"></div>
     
@@ -238,7 +238,7 @@
                         </div>
     
                         {{-- QUICK ACCESS --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-6 items-stretch">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-6 items-stretch snap-card">
     
                             {{-- REFLEKSI --}}
                             <a href="{{ route('lms.student-vice-principal.reflection-management-history.view', [

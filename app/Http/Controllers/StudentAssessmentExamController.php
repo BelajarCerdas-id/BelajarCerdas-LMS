@@ -654,151 +654,6 @@ class StudentAssessmentExamController extends Controller
         ]);
     }
 
-    public function reportTabSwitch($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
-    {
-        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())
-            ->where('school_assessment_id', $assessmentId)
-            ->first();
-
-        if (!$attempt || $attempt->status !== 'in_progress') {
-            return response()->json(['status' => 'ignored']);
-        }
-
-        $now = now();
-
-        if ($attempt->expire_time && $now->gt($attempt->expire_time)) {
-            return response()->json(['status' => 'ignored']);
-        }
-
-        // Server-side cooldown: avoid cascading duplicate triggers within 10 seconds
-        $cooldownKey = "tab_switch_cooldown_{$attempt->id}";
-        if (Cache::has($cooldownKey)) {
-            return response()->json([
-                'status' => 'warning',
-                'count' => $attempt->tab_switch_count,
-                'max_count' => 5
-            ]);
-        }
-
-        Cache::put($cooldownKey, true, 10);
-
-        $attempt->increment('tab_switch_count');
-        $attempt->update(['last_heartbeat_at' => $now]);
-
-        if ($attempt->tab_switch_count >= 5) {
-            $attempt->update([
-                'status' => 'cheating',
-            ]);
-
-            $assessment = SchoolAssessment::findOrFail($assessmentId);
-            $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
-
-            return response()->json([
-                'status' => 'blocked'
-            ]);
-        }
-
-        return response()->json([
-            'status' => 'warning',
-            'count' => $attempt->tab_switch_count,
-            'max_count' => 5
-        ]);
-    }
-
-    public function checkAttemptStatus($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
-    {
-        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())
-            ->where('school_assessment_id', $assessmentId)
-            ->first();
-
-        if (!$attempt) {
-            return response()->json([
-                'status' => 'error'
-            ]);
-        }
-
-        if ($attempt->status === 'cheating' || $attempt->tab_switch_count >= 5) {
-            return response()->json([
-                'status' => 'blocked',
-                'count' => $attempt->tab_switch_count,
-                'max_count' => 5
-            ]);
-        }
-
-        return response()->json([
-            'status' => 'ok',
-            'count' => $attempt->tab_switch_count,
-            'max_count' => 5
-        ]);
-    }
-
-    /**
-     * Receive heartbeat pings from the client-side anti-cheat system.
-     * Detects gaps in heartbeat (e.g., mobile backgrounding where JS is suspended).
-     * Includes cooldown and sensible gap thresholds to avoid false alarms from network jitter.
-     */
-    public function heartbeat(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
-    {
-        $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())
-            ->where('school_assessment_id', $assessmentId)
-            ->first();
-
-        if (!$attempt || $attempt->status !== 'in_progress') {
-            return response()->json(['status' => 'ignored']);
-        }
-
-        $now = now();
-
-        if ($attempt->expire_time && $now->gt($attempt->expire_time)) {
-            return response()->json(['status' => 'ignored']);
-        }
-
-        $lastHeartbeat = $attempt->last_heartbeat_at;
-
-        // Allow grace period when student is actively taking a photo or selecting an image
-        $isSelectingFile = $request->boolean('is_selecting_file');
-        $maxGap = $isSelectingFile ? 180 : 35;
-
-        // Startup grace period: ignore gap within first 60 seconds of exam start or initial load
-        $hasStartupGrace = $attempt->start_time && $now->diffInSeconds($attempt->start_time) < 60;
-
-        // Check if a tab switch was already recorded very recently (dedup with reportTabSwitch)
-        $cooldownKey = "tab_switch_cooldown_{$attempt->id}";
-        $isRecentTabSwitch = Cache::has($cooldownKey);
-
-        // Detect heartbeat gap: if last ping was more than $maxGap seconds ago and not in cooldown/grace
-        if ($lastHeartbeat && !$hasStartupGrace && !$isRecentTabSwitch && $now->diffInSeconds($lastHeartbeat) > $maxGap) {
-            Cache::put($cooldownKey, true, 10);
-            $attempt->increment('tab_switch_count');
-
-            if ($attempt->tab_switch_count >= 5) {
-                $attempt->update([
-                    'status' => 'cheating',
-                    'last_heartbeat_at' => $now
-                ]);
-
-                $assessment = SchoolAssessment::findOrFail($assessmentId);
-                $this->summaryService->updateStudentAssessmentSummary(Auth::id(), $assessment);
-
-                return response()->json(['status' => 'blocked']);
-            }
-
-            $attempt->update(['last_heartbeat_at' => $now]);
-
-            return response()->json([
-                'status' => 'warning',
-                'count' => $attempt->tab_switch_count,
-                'max_count' => 5
-            ]);
-        }
-
-        // Normal heartbeat: throttle database updates to once every 15 seconds to reduce server load
-        if (!$lastHeartbeat || $now->diffInSeconds($lastHeartbeat) >= 15) {
-            $attempt->update(['last_heartbeat_at' => $now]);
-        }
-
-        return response()->json(['status' => 'ok']);
-    }
     
     public function studentAssessmentExamAnswer(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
     {
@@ -834,6 +689,24 @@ class StudentAssessmentExamController extends Controller
                 'status_attempt' => 'timeout'
             ]);
 
+        }
+
+        // Anti-cheat guards: answers require a started attempt, and a
+        // cheating-flagged attempt may only receive the final auto-submit
+        // (so the teacher still gets the answers for review, but the score
+        // is zeroed by the summary service).
+        if (!$attempt) {
+            return response()->json([
+                'status' => 'not_started',
+                'message' => 'Assessment belum dimulai. Silakan mulai timer terlebih dahulu.',
+            ], 422);
+        }
+
+        if ($attempt->status === 'cheating' && !$request->boolean('auto_submit')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ujian telah dihentikan karena pelanggaran.',
+            ], 422);
         }
 
         $validator = Validator::make($request->all(), [
@@ -1094,7 +967,11 @@ class StudentAssessmentExamController extends Controller
 
         $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())->where('school_assessment_id', $assessmentId)->first();
 
-        if ($attempt && $attempt->status === 'in_progress' && $request->filled('status_attempt')) {
+        // Only the explicit auto-submit flows (timer expiry, blocked, manual end)
+        // may change the attempt status. Per-question saves embed a hidden
+        // status_attempt=submitted field — honoring it here would end the exam
+        // on the first draft save and permanently disable the anti-cheat.
+        if ($attempt && $attempt->status === 'in_progress' && $request->boolean('auto_submit') && $request->filled('status_attempt')) {
 
             $attempt->update([
                 'status' => $request->status_attempt
@@ -1479,6 +1356,10 @@ class StudentAssessmentExamController extends Controller
         $finalName = $safeName . '_' . time() . '_' . Str::random(6) . '.' . $extension;
 
         $file->move($targetDir, $finalName);
+
+        // Give the anti-cheat heartbeat an extended gap window: the native
+        // camera/gallery picker suspends page JS for a while.
+        AssessmentAntiCheatController::grantFileGrace();
 
         $url = "/lms-assessment-submission/assessment-test/$finalName";
         return response()->json([

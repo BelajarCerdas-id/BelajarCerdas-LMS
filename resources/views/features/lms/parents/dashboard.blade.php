@@ -201,14 +201,14 @@
                     {{-- JADWAL & TUGAS TERBARU --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {{-- Jadwal Hari Ini --}}
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col snap-card">
                             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                                 <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
                                     <i class="far fa-calendar-alt text-[#0071BC]"></i> Jadwal Anak Hari Ini
                                 </h2>
                                 <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded">{{ \Carbon\Carbon::now()->translatedFormat('l') }}</span>
                             </div>
-                            <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 max-h-[300px]">
+                            <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 max-h-[300px] bc-snap-list">
                                 @forelse($jadwalHariIni ?? [] as $jadwal)
                                     <div class="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 bg-slate-50">
                                         <div class="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm text-xs font-bold text-slate-400">
@@ -229,13 +229,13 @@
                         </div>
 
                         {{-- Tugas Belum Selesai --}}
-                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col snap-card">
                             <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                                 <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
                                     <i class="fas fa-tasks text-amber-500"></i> Tugas & PR
                                 </h2>
                             </div>
-                            <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 max-h-[300px]">
+                            <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 max-h-[300px] bc-snap-list">
                                 @forelse($tugasAnak ?? [] as $tugas)
                                     <div class="p-3.5 rounded-xl border border-slate-100 bg-white shadow-sm">
                                         <div class="flex justify-between items-start mb-2">
@@ -258,7 +258,7 @@
                     </div>
 
                     {{-- STATISTIK BELAJAR --}}
-                    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
+                    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 snap-card">
                         <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                             <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2">
                                 <i class="fas fa-chart-line text-[#0071BC]"></i> Statistik Belajar Anak per Mapel
@@ -302,7 +302,7 @@
                     </div>
 
                     <!-- PENGUMUMAN SEKOLAH -->
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 h-[580px] flex flex-col">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 h-[580px] flex flex-col snap-card">
 
                         <!-- HEADER -->
                         <div class="flex items-center justify-between mb-6 shrink-0">
@@ -325,7 +325,7 @@
                         </div>
 
                         <!-- LIST -->
-                        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+                        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar bc-snap-list space-y-4">
 
                             @forelse ($announcements as $announcement)
 
@@ -428,14 +428,14 @@
                 <div class="xl:col-span-1 flex flex-col gap-8">
                     
                     {{-- 1. AGENDA SEKOLAH TIMELINE --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col max-h-[400px] md:max-h-[500px]">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col max-h-[400px] md:max-h-[500px] snap-card">
                         <div class="flex-shrink-0">
                             <h2 class="text-lg font-extrabold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-4">
                                 <i class="fas fa-calendar-alt text-[#0071BC]"></i> Agenda Sekolah
                             </h2>
                         </div>
                         
-                        <div class="relative border-l-[3px] border-slate-100 ml-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="relative border-l-[3px] border-slate-100 ml-3 flex-1 overflow-y-auto pr-2 custom-scrollbar bc-snap-list">
                             <div class="space-y-4 pt-2 pb-4">
                                 @forelse(collect($agendaSekolah ?? [])->reverse() as $agenda)
                                     <div class="relative pl-5 group">
@@ -460,7 +460,7 @@
                     </div>
 
                     {{-- STUDENT ASSESSMENT CHEATING HISTORY --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col snap-card">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-blue-950 text-white rounded-xl flex items-center justify-center shadow-md font-bold text-lg border border-blue-900">
@@ -473,7 +473,7 @@
                             </div>
                         </div>
 
-                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar bc-snap-list">
                             <div class="flex flex-col gap-4">
                                 @if ($cheatingHistory->isNotEmpty())
                                     @foreach ($cheatingHistory as $item)
@@ -560,7 +560,7 @@
                             </h2>
                         </div>
                         
-                        <div class="relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar-light pb-2">
+                        <div class="relative z-10 flex-1 overflow-y-auto pr-2 custom-scrollbar-light bc-snap-list pb-2">
                             @php
                                 // FILTER: Hanya tampilkan polling yang ditujukan untuk Orang Tua atau Semua
                                 $parentPolls = collect($polls ?? [])->filter(function($p) {

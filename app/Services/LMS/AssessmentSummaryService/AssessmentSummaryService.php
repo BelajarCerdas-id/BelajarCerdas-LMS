@@ -5,6 +5,7 @@ namespace App\Services\LMS\AssessmentSummaryService;
 use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\SubjectPassingGradeCriteria;
@@ -29,6 +30,12 @@ class AssessmentSummaryService
 
         // ambil semua jawaban siswa dari semua attempt
         $answers = StudentAssessmentAnswer::where('student_id', $studentId)->whereIn('school_assessment_id', $assessments->pluck('id'))->get()->groupBy('school_assessment_id');
+
+        // attempt yang ditandai 'cheating' selalu bernilai 0
+        $cheatingAssessmentIds = StudentAssessmentAttempt::where('student_id', $studentId)
+            ->whereIn('school_assessment_id', $assessments->pluck('id'))
+            ->where('status', 'cheating')
+            ->pluck('school_assessment_id');
 
         $mainScore = null;
         $susulanScore = null;
@@ -66,6 +73,11 @@ class AssessmentSummaryService
             // override kalau project
             if ($a->SchoolAssessmentType->AssessmentMode->code === 'project') {
                 $totalScore = $project->score !== null ? $this->truncateScore($project->score) : 0;
+            }
+
+            // attempt 'cheating' tidak dapat nilai (guru bisa mengatasi via remedial)
+            if ($cheatingAssessmentIds->contains($a->id)) {
+                $totalScore = 0;
             }
 
             // simpan score berdasarkan assessment ID

@@ -27,7 +27,7 @@ class FinanceDashboardController extends Controller
 
     private function sumPaidRevenue(?int $year = null)
     {
-        $query = SchContractTerm::query()->where('status', 'paid')
+        $query = SchContractTerm::query()->where('sch_contract_terms.status', 'paid')
             ->join('sch_contracts', 'sch_contracts.id', '=', 'sch_contract_terms.contract_id');
 
         if ($year) {
@@ -77,10 +77,16 @@ class FinanceDashboardController extends Controller
         $period = $request->period ?? 'monthly';
         $year   = $request->year ?? now()->year;
 
-        $query = SchContractTerm::query()->where('status', 'paid')
+        $activeCounts = \Illuminate\Support\Facades\DB::table('sch_term_students')
+            ->selectRaw('term_id, COUNT(*) as active_count')
+            ->where('status', 'active')
+            ->groupBy('term_id');
+
+        $query = SchContractTerm::query()->where('sch_contract_terms.status', 'paid')
             ->join('sch_contracts', 'sch_contracts.id', '=', 'sch_contract_terms.contract_id')
+            ->joinSub($activeCounts, 'ts_active', 'ts_active.term_id', '=', 'sch_contract_terms.id')
             ->when($period === 'monthly', fn ($q) => $q->whereYear('paid_at', $year))
-            ->selectRaw('YEAR(paid_at) as y, MONTH(paid_at) as m, COALESCE(SUM(' . $this->revenueExpression() . '), 0) as revenue')
+            ->selectRaw('YEAR(paid_at) as y, MONTH(paid_at) as m, COALESCE(SUM(ts_active.active_count * sch_contracts.price_per_student * TIMESTAMPDIFF(MONTH, sch_contracts.start_contract, sch_contracts.end_contract) / NULLIF(sch_contracts.total_term, 0)), 0) as revenue')
             ->groupByRaw('YEAR(paid_at), MONTH(paid_at)');
 
         if ($period === 'yearly') {

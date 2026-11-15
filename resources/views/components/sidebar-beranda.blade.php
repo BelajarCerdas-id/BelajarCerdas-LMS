@@ -1,66 +1,71 @@
 <x-script></x-script>
 
+<link rel="stylesheet" href="{{ asset('assets/css/sidebar.css') }}?v={{ file_exists(public_path('assets/css/sidebar.css')) ? filemtime(public_path('assets/css/sidebar.css')) : time() }}">
 @if (Auth::user()->role === 'Siswa')
-    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
+    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72 bg-linear-to-b from-[#0B7FCB] to-[#004f84] text-white">
 
-        <!-- HEADER PUTIH (MAIN LOGO) -->
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
-
-            <!-- LOGO WRAPPER -->
+        <!-- HEADER (SCHOOL LOGO) -->
+        <div class="h-28 bg-white flex flex-col items-center justify-center border-b border-slate-100 px-6 shrink-0">
             <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
-
                 @if(!empty(Auth::user()->StudentProfile->SchoolPartner->logo))
-                    <img id="school-logo-preview" src="{{ asset(Auth::user()->StudentProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->StudentProfile->SchoolPartner->logo) }}" class="h-16 w-auto object-contain">
                 @else
-                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                    <div class="w-14 h-14 rounded-2xl bg-[#0071BC] text-white flex items-center justify-center text-xl shadow-sm">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
                 @endif
             </div>
-
-            <!-- TEXT -->
             @if(empty(Auth::user()->StudentProfile->SchoolPartner->logo))
-                <span class="text-center text-sm">
+                <span class="text-center text-[11px] text-slate-400 mt-2">
                     Logo sekolah tidak tersedia.
                 </span>
             @endif
         </div>
 
-        <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
-            <ul class="mt-14 space-y-4 px-2">
+        <div class="flex-1 flex flex-col px-3 py-4 overflow-y-auto">
+            <span class="px-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-white/60">Menu Utama</span>
+            <ul class="space-y-1">
                 <li class="list-menu-sidebar-dekstop-student">
+                    @php $isDashboardActive = request()->routeIs('lms.student.dashboard'); @endphp
                     <a href="{{ route('lms.student.dashboard', [
                         'role'       => Auth::user()->role,
                         'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                         'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
-                    ]) }}" class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-gauge"></i>
-                        <span> Beranda </span>
+                    ]) }}"
+                        class="flex items-center gap-3 px-3.5 py-2.5 text-[15px] font-medium rounded-xl transition
+                        {{ $isDashboardActive ? 'bg-white text-[#0071BC] font-semibold shadow-sm' : 'text-white/85 hover:bg-white/10 hover:text-white' }}">
+                        <i class="fa-solid fa-gauge {{ $isDashboardActive ? 'text-[#0071BC]' : 'text-white/60' }}"></i>
+                        <span>Beranda</span>
                     </a>
                 </li>
                 <li class="list-menu-sidebar-dekstop-student">
+                    @php $isLmsActive = request()->routeIs('lms.student.view'); @endphp
                     <a href="{{ route('lms.student.view', [
                             'role'       => Auth::user()->role,
                             'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                             'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
                         ]) }}"
-                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-school-flag"></i>
+                        class="flex items-center gap-3 px-3.5 py-2.5 text-[15px] font-medium rounded-xl transition
+                        {{ $isLmsActive ? 'bg-white text-[#0071BC] font-semibold shadow-sm' : 'text-white/85 hover:bg-white/10 hover:text-white' }}">
+                        <i class="fa-solid fa-school-flag {{ $isLmsActive ? 'text-[#0071BC]' : 'text-white/60' }}"></i>
                         <span>LMS</span>
                     </a>
                 </li>
 
                 <li class="list-menu-sidebar-dekstop-student">
+                    @php $isTryoutActive = request()->routeIs('lms.student.tka-tryout-period.view'); @endphp
                     <a href="{{ route('lms.student.tka-tryout-period.view', [
                             'role'       => Auth::user()->role,
                             'schoolName' => Auth::user()->StudentProfile->SchoolPartner->nama_sekolah,
                             'schoolId'   => Auth::user()->StudentProfile->SchoolPartner->id
                         ]) }}"
-                        class="flex items-center gap-3 px-4 py-3 text-md hover:bg-[#FFFFFF26] rounded-lg transition">
-                        <i class="fa-solid fa-stopwatch"></i>
-                        <span>Tryout Tka</span>
+                        class="flex items-center gap-3 px-3.5 py-2.5 text-[15px] font-medium rounded-xl transition
+                        {{ $isTryoutActive ? 'bg-white text-[#0071BC] font-semibold shadow-sm' : 'text-white/85 hover:bg-white/10 hover:text-white' }}">
+                        <i class="fa-solid fa-stopwatch {{ $isTryoutActive ? 'text-[#0071BC]' : 'text-white/60' }}"></i>
+                        <span>Tryout TKA</span>
                     </a>
                 </li>
-                
-                <!-- Menu Library -->
+
                 <!-- LIBRARY -->
                 <li class="list-item">
                     <div class="flex flex-col">
@@ -76,12 +81,13 @@
 
                         <!-- MAIN MENU -->
                         <a href="{{ route('student.library') }}"
-                        class="{{ $isLibraryActive
-                                ? 'cursor-pointer flex items-center justify-between px-4 py-3 bg-[#FFFFFF26] rounded-lg transition'
-                                : 'cursor-pointer flex items-center justify-between px-4 py-3 hover:bg-[#FFFFFF26] rounded-lg transition' }}">
+                        class="flex items-center justify-between px-3.5 py-2.5 text-[15px] font-medium rounded-xl transition cursor-pointer
+                        {{ $isLibraryActive
+                                ? 'bg-white text-[#0071BC] font-semibold shadow-sm'
+                                : 'text-white/85 hover:bg-white/10 hover:text-white' }}">
 
                             <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-book"></i>
+                                <i class="fa-solid fa-book {{ $isLibraryActive ? 'text-[#0071BC]' : 'text-white/60' }}"></i>
                                 <span>Library</span>
                             </div>
 
@@ -91,27 +97,27 @@
 
                         <!-- DROPDOWN -->
                         <div class="{{ $isLibraryActive
-                                ? 'ml-7 mt-1 flex flex-col gap-1'
-                                : 'hidden ml-7 mt-1 flex flex-col gap-1' }}">
+                                ? 'ml-4 mt-1 flex flex-col gap-0.5 border-l-2 border-white/25 pl-3'
+                                : 'hidden ml-4 mt-1 flex flex-col gap-0.5 border-l-2 border-white/25 pl-3' }}">
 
                             <a href="{{ route('student.library.ppt') }}"
                             class="{{ request()->routeIs('student.library.ppt')
-                                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    ? 'px-3 py-2 text-sm rounded-lg bg-white text-[#0071BC] font-semibold'
+                                    : 'px-3 py-2 text-sm rounded-lg text-white/80 hover:bg-white/10 hover:text-white' }}">
                                 Power Point
                             </a>
 
                             <a href="{{ route('student.library.lks') }}"
                             class="{{ request()->routeIs('student.library.lks')
-                                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    ? 'px-3 py-2 text-sm rounded-lg bg-white text-[#0071BC] font-semibold'
+                                    : 'px-3 py-2 text-sm rounded-lg text-white/80 hover:bg-white/10 hover:text-white' }}">
                                 LKPD
                             </a>
 
                             <a href="{{ route('student.library.video') }}"
                             class="{{ request()->routeIs('student.library.video')
-                                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    ? 'px-3 py-2 text-sm rounded-lg bg-white text-[#0071BC] font-semibold'
+                                    : 'px-3 py-2 text-sm rounded-lg text-white/80 hover:bg-white/10 hover:text-white' }}">
                                 Video
                             </a>
 
@@ -119,34 +125,30 @@
                                     'role' => Auth::user()->role,
                                 ]) }}"
                             class="{{ request()->routeIs('student.tka-subject-list.view')
-                                    ? 'px-3 py-2 text-sm rounded-md bg-[#FFFFFF26]'
-                                    : 'px-3 py-2 text-sm rounded-md hover:bg-[#FFFFFF26]' }}">
+                                    ? 'px-3 py-2 text-sm rounded-lg bg-white text-[#0071BC] font-semibold'
+                                    : 'px-3 py-2 text-sm rounded-lg text-white/80 hover:bg-white/10 hover:text-white' }}">
                                 Simulasi Soal TKA
                             </a>
                         </div>
                     </div>
                 </li>
             </ul>
+        </div>
 
-            <!-- FOOTER -->
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
-
-                <div class="pb-16 -ml-2 flex justify-center">
-                    <div class="flex flex-col w-max">
-                        <span class="text-[13px] mb-3">
-                            Powered By:
-                        </span>
-                        <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain">
-                    </div>
-                </div>
+        <!-- FOOTER -->
+        <div class="px-3 pb-5 shrink-0">
+            <div class="rounded-2xl bg-white/10 border border-white/15 py-4 flex flex-col items-center gap-2">
+                <span class="text-[10px] uppercase tracking-wider text-white/60 font-bold">
+                    Powered By
+                </span>
+                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-6 object-contain">
             </div>
         </div>
     </aside>
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -473,11 +475,12 @@
 @elseif(in_array(strtolower(Auth::user()->role), ['administrator', 'admin']))
     <aside class="sidebar-beranda-administrator hidden md:flex flex-col h-screen overflow-hidden">
         <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="block shrink-0">
-            <div class="logo_details h-16 sm:h-18 flex items-center justify-center px-4 border-b border-white/10">
-                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
+            <div class="logo_details h-20 flex items-center justify-center px-4 bg-white border-b border-slate-100">
+                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
             </div>
         </a>
-        <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
+        <ul class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll px-2 pt-3">
+            <li class="text-[11px] font-bold uppercase tracking-wider text-white/60 px-3 pb-2">Menu Utama</li>
             <li class="list-item pb-2 px-1">
                 <div class="content-menu flex items-center gap-2.5 px-3 py-2">
                     <i class="fa-solid fa-house text-[15px] w-5 text-center"></i>
@@ -662,9 +665,9 @@
         </ul>
     </aside>
 
-    <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
+    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-lg sm:text-[19px] font-bold text-white flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -1031,12 +1034,12 @@
 @elseif(Auth::user()->role === 'Finance')
     <aside class="sidebar-beranda-administrator hidden md:flex flex-col h-screen overflow-hidden">
         <a href="{{ route('lms.office.dashboard.view', Auth::user()->role) }}" class="block shrink-0">
-            <div class="logo_details h-16 sm:h-18 flex items-center justify-center px-4 border-b border-white/10">
-                <img src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
+            <div class="logo_details h-20 flex items-center justify-center px-4 bg-white border-b border-slate-100">
+                <img src="{{ asset('assets/images/logo-bc/main-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-9 sm:h-10 w-auto max-w-[190px] object-contain">
             </div>
         </a>
 
-        <ul class="flex-1 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll">
+        <ul class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll px-2 pt-3">
 
             <!-- BERANDA -->
             <li class="list-item pb-2">
@@ -1097,9 +1100,9 @@
         </ul>
     </aside>
 
-    <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
+    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-lg sm:text-[19px] font-bold text-white flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -1345,31 +1348,31 @@
         </div>
     </div>
 @elseif (Auth::user()->role === 'Guru')
-    <aside class="sidebar-beranda-student hidden md:flex flex-col w-72">
+    <aside class="sidebar-beranda-student sidebar-beranda-guru hidden md:flex flex-col w-72">
 
-        <div class="h-40 bg-white flex flex-col items-center justify-center border-b text-gray-500 relative group">
+        <div class="h-20 bg-white flex flex-col items-center justify-center border-b border-slate-100 text-gray-500 shrink-0">
 
             <!-- LOGO WRAPPER -->
             <div id="logo-wrapper" class="flex items-center justify-center overflow-hidden">
 
                 @if(!empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
-                    <img id="school-logo-preview" src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}" class="h-26 object-cover">
+                    <img id="school-logo-preview" src="{{ asset(Auth::user()->SchoolStaffProfile->SchoolPartner->logo) }}" class="h-16 object-contain">
                 @else
-                    <i class="fa-solid fa-school text-4xl mb-2"></i>
+                    <i class="fa-solid fa-school text-2xl mb-1"></i>
                 @endif
             </div>
 
             <!-- TEXT -->
             @if(empty(Auth::user()->SchoolStaffProfile->SchoolPartner->logo))
-                <span class="text-center">
+                <span class="text-center text-xs">
                     Logo sekolah tidak tersedia.
                 </span>
             @endif
         </div>
 
-        <div class="flex-1 bg-[#0071BC] text-white flex flex-col">
+        <div class="flex-1 min-h-0 text-white flex flex-col">
 
-            <ul class="max-h-112.5 overflow-y-auto pb-6 pt-6 space-y-3">
+            <ul class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-6 custom-sidebar-scroll px-2 pt-3">
 
                 <li class="list-item">
                     <div class="content-menu flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#FFFFFF26] transition">
@@ -1663,17 +1666,17 @@
                 </li>
             </ul>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
+            <div class="mt-auto shrink-0">
+                <hr class="border-white border opacity-60 mb-4 mx-6">
 
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
+                <div class="pb-5 -ml-2">
+                    <span class="text-xs mb-3 flex justify-center font-bold">
                         Partnership By:
                     </span>
 
                     <div class="flex justify-center w-full">
                         <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-10 object-contain"
                         >
                     </div>
                 </div>
@@ -1683,7 +1686,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -2355,10 +2358,10 @@
         </div>
     </aside>
 
-    <div class="relative left-62.5 w-[calc(100%-250px)] transition-all duration-500 ease-in-out hidden md:block">
+    <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
             <!-- Navbar for PC -->
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -2925,17 +2928,17 @@
                 @endif
             </ul>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
+            <div class="mt-auto shrink-0">
+                <hr class="border-white border opacity-60 mb-4 mx-6">
 
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
+                <div class="pb-5 -ml-2">
+                    <span class="text-xs mb-3 flex justify-center font-bold">
                         Partnership By:
                     </span>
 
                     <div class="flex justify-center w-full">
                         <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-10 object-contain"
                         >
                     </div>
                 </div>
@@ -2945,7 +2948,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -3365,17 +3368,17 @@
                 </li>
             </ul>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
+            <div class="mt-auto shrink-0">
+                <hr class="border-white border opacity-60 mb-4 mx-6">
 
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
+                <div class="pb-5 -ml-2">
+                    <span class="text-xs mb-3 flex justify-center font-bold">
                         Partnership By:
                     </span>
 
                     <div class="flex justify-center w-full">
                         <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-10 object-contain"
                         >
                     </div>
                 </div>
@@ -3385,7 +3388,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -3770,17 +3773,17 @@
                 </li>
             </ul>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
+            <div class="mt-auto shrink-0">
+                <hr class="border-white border opacity-60 mb-4 mx-6">
 
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
+                <div class="pb-5 -ml-2">
+                    <span class="text-xs mb-3 flex justify-center font-bold">
                         Partnership By:
                     </span>
 
                     <div class="flex justify-center w-full">
                         <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-10 object-contain"
                         >
                     </div>
                 </div>
@@ -3790,7 +3793,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">
@@ -4232,17 +4235,17 @@
                 @endif
             </ul>
 
-            <div class="mt-auto">
-                <hr class="border-white border opacity-60 mb-10 mx-6">
+            <div class="mt-auto shrink-0">
+                <hr class="border-white border opacity-60 mb-4 mx-6">
 
-                <div class="pb-16 -ml-2">
-                    <span class="text-sm mb-6 flex justify-center font-bold">
+                <div class="pb-5 -ml-2">
+                    <span class="text-xs mb-3 flex justify-center font-bold">
                         Partnership By:
                     </span>
 
                     <div class="flex justify-center w-full">
                         <img
-                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-12 object-contain"
+                            src="{{ asset('assets/images/logo-bc/white-logo-bc.svg') }}" alt="Belajar Cerdas" class="h-10 object-contain"
                         >
                     </div>
                 </div>
@@ -4252,7 +4255,7 @@
 
     <div class="relative left-72.5 w-[calc(100%-290px)] transition-all duration-500 ease-in-out hidden md:block">
         <div class="content">
-            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8">
+            <div class="w-full h-16 sm:h-18 bg-[#0071BC] shadow-sm flex items-center justify-between px-6 sm:px-8 snap-top">
                 <header class="text-[20px] font-bold flex items-center gap-3.5">
                     @if (isset($linkBackButton))
                         <a href="{{ $linkBackButton }}">

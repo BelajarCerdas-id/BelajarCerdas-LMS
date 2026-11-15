@@ -754,7 +754,7 @@ class StudentDashboardController extends Controller
         $user = Auth::user();
 
         // QUERY CHEATING
-        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType'])
+        $query = StudentAssessmentAttempt::with(['UserAccount.StudentProfile', 'SchoolAssessment.Mapel', 'SchoolAssessment.SchoolClass', 'SchoolAssessment.SchoolAssessmentType', 'AnticheatViolations'])
             ->where('status', 'cheating')->where('student_id', $user->id);
 
         $data = $query->latest()->get();

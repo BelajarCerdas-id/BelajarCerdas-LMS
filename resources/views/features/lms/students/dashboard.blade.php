@@ -31,7 +31,7 @@
                 <div class="xl:col-span-7 flex flex-col gap-6 md:gap-8">
                     
                     {{-- A. JADWAL PELAJARAN --}}
-                    <div class="bg-gradient-to-br from-white to-blue-50/50 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-8 flex flex-col max-h-[450px] md:max-h-[500px]">
+                    <div class="bg-gradient-to-br from-white to-blue-50/50 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-8 flex flex-col max-h-[450px] md:max-h-[500px] snap-card">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 pb-4 border-b border-blue-100/50 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-200">
@@ -57,7 +57,7 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 bc-snap-list">
                             @if(in_array($hariDipilih, ['Sabtu', 'Minggu']))
                                 <div class="flex flex-col items-center justify-center py-8 px-4 text-center bg-white/60 rounded-2xl border border-blue-100 h-full backdrop-blur-sm">
                                     <div class="w-14 h-14 md:w-16 md:h-16 mb-3 md:mb-4 flex items-center justify-center rounded-full bg-blue-50 shadow-inner border border-blue-100 text-[#0071BC]">
@@ -101,7 +101,7 @@
                     </div>
 
                     {{-- B. MODUL BELUM DIBACA --}}
-                    <div class="bg-gradient-to-br from-white to-sky-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-sky-100 p-5 md:p-8 flex flex-col">
+                    <div class="bg-gradient-to-br from-white to-sky-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-sky-100 p-5 md:p-8 flex flex-col snap-card">
                         <div class="flex items-center justify-between mb-5 pb-4 border-b border-sky-100/50 shrink-0">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-sky-200 font-bold text-lg">
@@ -185,7 +185,7 @@
                     </div>
 
                     {{-- C. PAPAN PENGUMUMAN --}}
-                    <div class="bg-gradient-to-br from-white to-cyan-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-cyan-100 p-5 md:p-8 flex flex-col">
+                    <div class="bg-gradient-to-br from-white to-cyan-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-cyan-100 p-5 md:p-8 flex flex-col snap-card">
                         <div class="flex items-center gap-3 mb-5 pb-4 border-b border-cyan-100/50 shrink-0">
                             <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-cyan-200 font-bold text-lg">
                                 <i class="fas fa-bullhorn"></i>
@@ -248,7 +248,7 @@
                     </div>
 
                     {{-- D. POLLING BERLANGSUNG (DENGAN LABEL PEMBUAT YANG JELAS) --}}
-                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-8">
+                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-8 snap-card">
                         <div class="flex items-center gap-3 mb-5 pb-4 border-b border-indigo-100/50 shrink-0">
                             <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 font-bold text-lg">
                                 <i class="fas fa-person-circle-question"></i>
@@ -320,7 +320,7 @@
                     </div>
 
                     {{-- E. STUDENT ASSESSMENT CHEATING HISTORY (PENGAWASAN) --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col snap-card">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-blue-950 text-white rounded-xl flex items-center justify-center shadow-md font-bold text-lg border border-blue-900">
@@ -333,7 +333,7 @@
                             </div>
                         </div>
 
-                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div id="container-student-assessment-cheating-history" class="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar bc-snap-list">
                             <div id="grid-list-student-assessment-cheating-history" class="flex flex-col gap-4">
                             </div>
 
@@ -357,7 +357,7 @@
                 <div class="xl:col-span-5 flex flex-col gap-6 md:gap-8">
 
                     <!-- DAILY REFLECTION -->
-                    <div class="bg-linear-to-br from-white to-indigo-50/40 rounded-3xl md:rounded-4xl shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col relative 
+                    <div class="bg-linear-to-br from-white to-indigo-50/40 rounded-3xl md:rounded-4xl shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col relative snap-card
                         overflow-hidden">
 
                         <!-- Decorative Background -->
@@ -393,7 +393,7 @@
                         </div>
 
                         <!-- Reflection Information -->
-                        <div id="container-student-daily-reflection" class="relative z-10 flex flex-col gap-4 overflow-y-auto max-h-185 pr-2 custom-scrollbar">
+                        <div id="container-student-daily-reflection" class="relative z-10 flex flex-col gap-4 overflow-y-auto max-h-185 pr-2 custom-scrollbar bc-snap-list">
 
                             <div id="daily-reflection-form">
                                 <!-- show form in ajax -->
@@ -434,7 +434,7 @@
                     </div>
                     
                     {{-- A. TUGAS & PR --}}
-                    <div class="bg-gradient-to-br from-white to-blue-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-6 flex flex-col max-h-[350px]">
+                    <div class="bg-gradient-to-br from-white to-blue-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-blue-100 p-5 md:p-6 flex flex-col max-h-[350px] snap-card">
                         <div class="flex items-center gap-3 mb-5 pb-4 border-b border-blue-100/50 shrink-0">
                             <div class="w-10 h-10 bg-gradient-to-br from-[#0071BC] to-blue-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-blue-200 font-bold text-lg">
                                 <i class="fas fa-tasks"></i>
@@ -442,7 +442,7 @@
                             <h3 class="font-bold text-blue-900 text-base md:text-lg leading-tight">Tugas & PR 📝</h3>
                         </div>
 
-                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 bc-snap-list">
                             @forelse($pendingTasks ?? [] as $task)
                                 <div
                                     onclick="openTugasSiswaModal('{{ addslashes($task->judul_tugas) }}', '{{ addslashes($task->mapel) }}', '{{ addslashes($task->deadline) }}', {{ $task->id }}, '{{ $role }}', '{{ $schoolName }}', {{ $schoolId }}, {{ $task->curriculumId }}, {{ $task->mapelId }}, {{ $task->assessmentTypeId }}, '{{ $task->semester }}', '{{ $task->assessmentMode }}')"
@@ -487,7 +487,7 @@
                     </div>
 
                     {{-- A.2. JADWAL UJIAN / QUESTION --}}
-                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col max-h-[350px]">
+                    <div class="bg-gradient-to-br from-white to-indigo-50/60 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-indigo-100 p-5 md:p-6 flex flex-col max-h-[350px] snap-card">
                         <div class="flex items-center gap-3 mb-5 pb-4 border-b border-indigo-100/50 shrink-0">
                             <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 font-bold text-lg">
                                 <i class="fas fa-stopwatch"></i>
@@ -495,7 +495,7 @@
                             <h3 class="font-bold text-indigo-900 text-base md:text-lg leading-tight">Jadwal Ulangan & Ujian ⏰</h3>
                         </div>
 
-                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 bc-snap-list">
                             @forelse($jadwalUjian ?? [] as $ujian)
                                 <div onclick="openUjianSiswaModal('{{ addslashes($ujian->tipe) }}', '{{ addslashes($ujian->mapel) }}', '{{ $ujian->tanggalMulai }}', '{{ $ujian->waktuMulai }}', '{{ $ujian->tanggalAkhir }}', '{{ $ujian->waktuAkhir }}', '{{ $ujian->h_min }}', {{ $ujian->id }}, '{{ $role }}', '{{ $schoolName }}', {{ $schoolId }}, {{ $ujian->curriculumId }}, {{ $ujian->mapelId }}, {{ $ujian->assessmentTypeId }}, '{{ $ujian->semester }}')" class="cursor-pointer flex items-start gap-3 p-3 md:p-4 rounded-xl border border-indigo-100 bg-white hover:border-indigo-300 hover:shadow-md hover:-translate-x-1 transition-all group">
                                     <div class="flex-1 w-full">
@@ -556,7 +556,7 @@
                     </div>
 
                     {{-- B. AGENDA MINGGUAN --}}
-                    <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200/60 p-5 md:p-6 flex flex-col max-h-[500px] md:max-h-[600px] h-full">
+                    <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-sm border border-slate-200/60 p-5 md:p-6 flex flex-col max-h-[500px] md:max-h-[600px] h-full snap-card">
                         <div class="flex items-center justify-between mb-4 md:mb-5 shrink-0">
                             <div class="flex items-center gap-2">
                                 <i class="far fa-calendar-alt text-[#0071BC] text-base md:text-lg"></i>
@@ -601,7 +601,7 @@
                         </div>
 
                         {{-- List Agenda --}}
-                        <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar pr-1">
+                        <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar bc-snap-list pr-1">
                             @forelse($weeklyEvents ?? $agendaSekolah ?? [] as $event)
                                 <div class="mb-2.5 p-3 border-l-[3px] md:border-l-[4px] hover:bg-blue-50/30 transition-colors rounded-r-xl bg-white shadow-sm flex flex-col gap-1 border-y border-r border-slate-100 group {{ $event->date == date('Y-m-d') ? 'border-l-[#0071BC] bg-blue-50/20' : '' }}" style="border-left-color: {{ $event->color ?? '#0071BC' }}">
                                     <div class="flex justify-between items-center mb-0.5 md:mb-1">
@@ -626,7 +626,7 @@
                     </div>
 
                     {{-- -ekskull --}}{{-- C. EKSTRAKURIKULER --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
+                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col snap-card">
 
                         {{-- Header --}}
                         <div class="flex items-center gap-3 mb-6 pb-4 border-b border-blue-100">
@@ -644,7 +644,7 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-6 max-h-[650px] overflow-y-auto custom-scrollbar pr-2">
+                        <div class="flex flex-col gap-6 max-h-[650px] overflow-y-auto custom-scrollbar bc-snap-list pr-2">
 
                             {{-- ===================== --}}
                             {{-- PRAMUKA --}}

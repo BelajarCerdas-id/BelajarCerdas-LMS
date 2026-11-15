@@ -523,6 +523,45 @@ class StudentTkaTryoutTestController extends Controller
             }
         }
 
+        // Bulk auto-finalize: auto_submit without question_id means "mark every
+        // still-unanswered question as submitted in one request" — used when the
+        // session ends so each client sends ONE call instead of one per question.
+        if ($request->boolean('auto_submit') && !$request->filled('question_id')) {
+
+            $questionIds = $attempt->question_order ?? [];
+
+            $answeredIds = TkaTryoutAnswer::where('attempt_id', $attemptId)
+                ->whereIn('question_id', $questionIds)
+                ->pluck('question_id')
+                ->all();
+
+            $missingIds = array_values(array_diff($questionIds, $answeredIds));
+
+            if (!empty($missingIds)) {
+
+                TkaTryoutAnswer::insert(array_map(function ($missingId) use ($attemptId) {
+                    return [
+                        'attempt_id' => $attemptId,
+                        'question_id' => $missingId,
+                        'answer_value' => null,
+                        'question_score' => 0,
+                        'status_answer' => 'submitted',
+                    ];
+                }, $missingIds));
+            }
+
+            // flip any leftover draft rows (saved-as-draft answers) to submitted
+            TkaTryoutAnswer::where('attempt_id', $attemptId)
+                ->where('status_answer', '!=', 'submitted')
+                ->update(['status_answer' => 'submitted']);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Semua jawaban telah dikirim',
+                'is_finished' => true,
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'question_id' => 'required|exists:lms_question_banks,id',
             'answer_value' => [

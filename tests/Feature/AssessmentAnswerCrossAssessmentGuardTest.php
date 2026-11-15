@@ -164,6 +164,15 @@ class AssessmentAnswerCrossAssessmentGuardTest extends TestCase
     {
         $this->actingAs($seed['student']);
 
+        // the answer endpoint requires a started attempt (anti-cheat guard)
+        \App\Models\StudentAssessmentAttempt::create([
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'start_time' => now()->subMinutes(5),
+            'expire_time' => now()->addMinutes(115),
+            'status' => 'in_progress',
+        ]);
+
         $request = Request::create('/answer', 'POST', [
             'school_assessment_question_id' => $questionId,
             'answer_value' => 'A',

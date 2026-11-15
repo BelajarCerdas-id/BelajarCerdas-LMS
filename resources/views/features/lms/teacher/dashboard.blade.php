@@ -27,7 +27,7 @@
             </div>
 
             {{-- KOTAK STATISTIK --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 snap-card">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-orange-50 flex items-center gap-5 hover:-translate-y-1 transition-transform duration-300">
                     <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-inner border border-orange-100">
                         <i class="fas fa-calendar-check"></i>
@@ -56,15 +56,15 @@
                 <div class="xl:col-span-2 flex flex-col gap-8">
                     
                     {{-- 1. JADWAL MENGAJAR DENGAN NAVIGASI NEXT/PREV --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-indigo-50 p-6 md:p-8 flex flex-col max-h-[600px]">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col max-h-[600px] snap-card">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shadow-inner shadow-indigo-100/50 font-bold text-lg">
+                                <div class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center border border-blue-100 font-bold text-lg">
                                     <i class="fas fa-calendar-day"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-indigo-900 text-lg leading-tight">Jadwal Mengajar</h3>
-                                    <p class="text-xs text-indigo-600/70 font-medium">Sesuai Kalender</p>
+                                    <h3 class="font-bold text-gray-800 text-lg leading-tight">Jadwal Mengajar</h3>
+                                    <p class="text-xs text-gray-400 font-medium">Sesuai Kalender</p>
                                 </div>
                             </div>
 
@@ -100,7 +100,7 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        <div class="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1 bc-snap-list">
                             @forelse($jadwalMengajar ?? [] as $group)
                                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 p-5 rounded-2xl border border-indigo-100 bg-white hover:border-indigo-300 hover:shadow-lg transition-all group mb-2">
                                     <div class="flex items-start gap-5">
@@ -152,25 +152,25 @@
                     </div>
                     
                     {{-- 2. RIWAYAT POLLING TERKINI --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-emerald-50 p-6 md:p-8 flex flex-col">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col max-h-[600px] snap-card">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4 shrink-0">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shadow-inner shadow-emerald-100/50 font-bold text-lg">
+                                <div class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center border border-blue-100 font-bold text-lg">
                                     <i class="fas fa-chart-pie"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-emerald-900 text-lg leading-tight">Riwayat Polling Terkini</h3>
-                                    <p class="text-xs text-emerald-600/70 font-medium">Tinjau hasil jajak pendapat kelas Anda</p>
+                                    <h3 class="font-bold text-gray-800 text-lg leading-tight">Riwayat Polling Terkini</h3>
+                                    <p class="text-xs text-gray-400 font-medium">Tinjau hasil jajak pendapat kelas Anda</p>
                                 </div>
                             </div>
-                            <a href="{{ route('lms.teacherPolling.view', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors shrink-0">
+                            <a href="{{ route('lms.teacherPolling.view', ['role' => $role ?? 'Guru', 'schoolName' => $schoolName ?? 'sekolah', 'schoolId' => $schoolId ?? '1']) }}" class="text-sm font-semibold text-[#0071BC] hover:text-[#005A9C] transition-colors shrink-0">
                                 Kelola Polling <i class="fas fa-arrow-right ml-1 text-xs"></i>
                             </a>
                         </div>
 
                         {{-- TABS NAVIGASI --}}
                         <div class="flex space-x-2 border-b border-slate-200 mb-5 shrink-0">
-                            <button onclick="switchDashboardPollTab('dibuat')" id="dash-tab-btn-dibuat" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-emerald-600 text-emerald-600 transition-colors">
+                            <button onclick="switchDashboardPollTab('dibuat')" id="dash-tab-btn-dibuat" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-[#0071BC] text-[#0071BC] transition-colors">
                                 Polling Kelas Saya
                             </button>
                             <button onclick="switchDashboardPollTab('masuk')" id="dash-tab-btn-masuk" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors relative">
@@ -182,7 +182,7 @@
                         </div>
 
                         {{-- KONTEN TAB 1: POLLING DIBUAT (Oleh Guru Ini) --}}
-                        <div id="dash-tab-content-dibuat" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div id="dash-tab-content-dibuat" class="grid grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto custom-scrollbar bc-snap-list flex-1">
                             @forelse($recentPolls ?? [] as $poll)
                                 @php
                                     $targetAudiens = $poll->target ?? 'Semua Warga Sekolah';
@@ -242,7 +242,7 @@
                         </div>
 
                         {{-- KONTEN TAB 2: POLLING DARI SEKOLAH --}}
-                        <div id="dash-tab-content-masuk" class="hidden grid-cols-1 md:grid-cols-2 gap-5">
+                        <div id="dash-tab-content-masuk" class="hidden grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto custom-scrollbar bc-snap-list flex-1">
                             @forelse($pollingDariSekolah ?? [] as $pollSekolah)
                                 @php
                                     $optionsSekolah = \App\Models\PollOption::where('poll_id', $pollSekolah->id)->get();
@@ -319,15 +319,15 @@
                     </div>
 
                     {{-- 3. PENGAWASAN ASSESSMENT --}}
-                    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8 flex flex-col">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-blue-100 gap-4">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col max-h-[600px] snap-card">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-blue-950 text-white rounded-xl flex items-center justify-center shadow-md font-bold text-lg border border-blue-900">
+                                <div class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center font-bold text-lg border border-blue-100">
                                     <i class="fas fa-user-shield"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-blue-950 text-lg leading-tight">Pengawasan Assessment</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Log aktivitas siswa selama pengerjaan assessment</p>
+                                    <h3 class="font-bold text-gray-800 text-lg leading-tight">Pengawasan Assessment</h3>
+                                    <p class="text-xs text-gray-400 font-medium">Log aktivitas siswa selama pengerjaan assessment</p>
                                 </div>
                             </div>
                         </div>
@@ -349,7 +349,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar bc-snap-list">
                                 <div id="grid-list-teacher-assessment-cheating-history" class="flex flex-col gap-4"></div>
                                 <div id="empty-message-teacher-assessment-cheating-history" class="py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-white hidden">
                                     <div class="flex flex-col items-center justify-center">
@@ -369,7 +369,7 @@
                 <div class="xl:col-span-1 flex flex-col gap-8">
                     
                     {{-- AGENDA KALENDER --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col max-h-[600px] h-full">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col max-h-[600px] h-full snap-card">
                         @php
                             $selectedDate = request('date', \Carbon\Carbon::today()->format('Y-m-d'));
                             $selectedCarbon = \Carbon\Carbon::parse($selectedDate);
@@ -377,10 +377,12 @@
                             $nextWeek = $selectedCarbon->copy()->addWeek()->format('Y-m-d');
                         @endphp
 
-                        <div class="flex items-center justify-between mb-5 shrink-0">
+                        <div class="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 shrink-0">
                             <div class="flex items-center gap-2">
-                                <i class="far fa-calendar-alt text-[#0071BC] text-lg"></i>
-                                <h3 class="font-bold text-[#0071BC] uppercase tracking-wider text-sm">Event & Agenda</h3>
+                                <div class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center border border-blue-100 font-bold text-lg">
+                                    <i class="far fa-calendar-alt"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg leading-tight">Event & Agenda</h3>
                             </div>
                             <div class="flex gap-4">
                                 <a href="{{ request()->fullUrlWithQuery(['date' => $prevWeek]) }}" class="text-gray-400 hover:text-[#0071BC] transition">
@@ -415,7 +417,7 @@
                             <span class="text-[10px] font-bold text-white uppercase tracking-widest">Detail Agenda 7 Hari</span>
                         </div>
 
-                        <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar mt-2 pr-1">
+                        <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar bc-snap-list mt-2 pr-1">
                             @php
                                 $endOfWeek = $startOfWeek->copy()->addDays(6);
                                 $weeklyEvents = \App\Models\AcademicCalendar::where('school_partner_id', $schoolId)
@@ -448,25 +450,25 @@
                     </div>
 
                     {{-- PAPAN PENGUMUMAN --}}
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col max-h-[600px]">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col max-h-[600px] snap-card">
                         <div class="flex items-center justify-between mb-5 border-b border-gray-100 pb-4 shrink-0">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shadow-inner font-bold text-lg border border-amber-100">
+                                <div class="w-10 h-10 bg-blue-50 text-[#0071BC] rounded-xl flex items-center justify-center font-bold text-lg border border-blue-100">
                                     <i class="fas fa-bullhorn"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-amber-900 text-lg leading-tight">Pengumuman</h3>
-                                    <p class="text-xs text-amber-600/70 font-medium">Informasi masuk & keluar</p>
+                                    <h3 class="font-bold text-gray-800 text-lg leading-tight">Pengumuman</h3>
+                                    <p class="text-xs text-gray-400 font-medium">Informasi masuk & keluar</p>
                                 </div>
                             </div>
-                            <button onclick="openPengumumanGlobalModal()" class="bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white px-3 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm flex items-center gap-2">
+                            <button onclick="openPengumumanGlobalModal()" class="bg-blue-50 border border-blue-100 text-[#0071BC] hover:bg-[#0071BC] hover:text-white px-3 py-2 rounded-xl font-bold text-xs transition-colors shadow-sm flex items-center gap-2">
                                 <i class="fas fa-plus"></i> Buat Info
                             </button>
                         </div>
 
                         {{-- TABS PENGUMUMAN --}}
                         <div class="flex space-x-2 border-b border-slate-200 mb-4 shrink-0">
-                            <button onclick="switchPengumumanTab('masuk')" id="tab-pengumuman-masuk" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-amber-500 text-amber-600 transition-colors relative">
+                            <button onclick="switchPengumumanTab('masuk')" id="tab-pengumuman-masuk" class="pb-3 px-2 flex-1 text-sm font-bold border-b-2 border-[#0071BC] text-[#0071BC] transition-colors relative">
                                 Kotak Masuk
                                 @if(count($pengumumanDariSekolah ?? []) > 0)
                                     <span class="absolute top-0 right-2 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
@@ -478,7 +480,7 @@
                         </div>
 
                         {{-- CONTENT TAB: KOTAK MASUK --}}
-                        <div id="content-pengumuman-masuk" class="flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                        <div id="content-pengumuman-masuk" class="flex flex-col gap-4 overflow-y-auto custom-scrollbar bc-snap-list flex-1 pr-2">
                             @forelse($pengumumanDariSekolah ?? [] as $info)
                                 <div class="p-5 bg-white border border-slate-200 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group cursor-pointer">
 
@@ -524,7 +526,7 @@
                         </div>
 
                         {{-- CONTENT TAB: TERKIRIM --}}
-                        <div id="content-pengumuman-keluar" class="hidden flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                        <div id="content-pengumuman-keluar" class="hidden flex-col gap-4 overflow-y-auto custom-scrollbar bc-snap-list flex-1 pr-2">
                             @forelse($pengumumanKeSiswa ?? [] as $info)
                                 @php
                                     $namaKelasTujuan = 'Semua Kelas (Global)';

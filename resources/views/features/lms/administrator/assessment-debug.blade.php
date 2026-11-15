@@ -13,50 +13,50 @@
             inset: 0 !important;
         }
     </style>
-    <div class="relative left-0 md:left-62.5 w-full md:w-[calc(100%-250px)] min-h-screen bg-[#F8FAFC] transition-all duration-500 ease-in-out z-20 pb-20">
+    <div class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen bg-[#F8FAFC] transition-all duration-500 ease-in-out z-20 pb-20">
         <div class="mt-4 sm:mt-6 mx-4 sm:mx-8 space-y-6">
 
             <!-- HERO HEADER -->
             <section>
-                <div class="rounded-3xl p-6 sm:p-8 text-white shadow-xl overflow-hidden relative border border-white/10 bg-[#0071BC]" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 60%, #002b49 100%) !important;">
+                <div class="rounded-3xl p-4 sm:p-5 text-white shadow-xl overflow-hidden relative border border-white/10 bg-[#0071BC]" style="background: linear-gradient(135deg, #0071BC 0%, #004f84 60%, #002b49 100%) !important;">
                     <div class="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
-                        <i class="fa-solid fa-wrench text-[260px] translate-x-12 -translate-y-8"></i>
+                        <i class="fa-solid fa-wrench text-[180px] translate-x-12 -translate-y-8"></i>
                     </div>
 
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold tracking-wider uppercase mb-2">
-                                <i class="fa-solid fa-shield-halved text-xs"></i>
+                            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-semibold tracking-wider uppercase mb-1.5">
+                                <i class="fa-solid fa-shield-halved text-[10px]"></i>
                                 Site Admin Tools
                             </div>
-                            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight whitespace-nowrap">
                                 Exam & Attempt Debugger
                             </h1>
-                            <p class="mt-2 text-sky-100/90 text-sm sm:text-base max-w-2xl leading-relaxed">
+                            <p class="mt-1 text-sky-100/90 text-xs sm:text-sm max-w-2xl leading-snug">
                                 Buka kunci ujian siswa yang terblokir (<span class="font-semibold text-white">Cheating / Timeout</span>), ubah status ujian secara langsung, dan atur ulang batas pelanggaran tab switch.
                             </p>
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-3 shrink-0">
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
                             <button id="btn-purge-global-cache-header" type="button"
-                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20"
+                                class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-semibold text-xs transition-all shadow-md backdrop-blur-md border border-white/20"
                                 title="Paksa bersihkan seluruh cache: Server RAM/Redis + Cloudflare CDN + Local Storage Klien">
                                 <i class="fa-solid fa-bolt-lightning text-sm text-yellow-300"></i>
                                 <span>Force Clear All Cache</span>
                             </button>
                             <button id="btn-clear-db-cache-header" type="button"
-                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20"
+                                class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-900 font-semibold text-xs transition-all shadow-md backdrop-blur-md border border-white/20"
                                 title="Kosongkan tabel cache & cache_locks di Database MySQL">
                                 <i class="fa-solid fa-database text-sm"></i>
                                 <span>Clear DB Cache</span>
                             </button>
                             <button id="btn-open-cache-manager" type="button"
-                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-sm transition-all shadow-md backdrop-blur-md border border-white/20">
+                                class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-xs transition-all shadow-md backdrop-blur-md border border-white/20">
                                 <i class="fa-solid fa-bolt text-sm"></i>
                                 <span>RAM Cache Manager</span>
                             </button>
                             <button id="btn-refresh-attempts" type="button"
-                                class="cursor-pointer inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 text-white font-medium text-sm transition-all shadow-md backdrop-blur-md border border-white/20">
+                                class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white font-medium text-xs transition-all shadow-md backdrop-blur-md border border-white/20">
                                 <i class="fa-solid fa-arrows-rotate text-sm" id="icon-refresh"></i>
                                 <span>Segarkan Data</span>
                             </button>
@@ -147,26 +147,26 @@
                 <section class="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <!-- Status Filter Tabs -->
-                        <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
+                        <div class="flex flex-wrap items-center bg-slate-100 rounded-xl border border-slate-200/80 gap-1">
                             <button type="button" data-status="all"
-                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
+                                class="status-filter-btn px-4 h-10 text-xs font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
                                 Semua Sesi
                             </button>
                             <button type="button" data-status="cheating"
-                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-red-600 flex items-center gap-1.5">
+                                class="status-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-red-600 flex items-center gap-1.5">
                                 <i class="fa-solid fa-lock text-xs"></i>
                                 Terblokir (Cheat)
                             </button>
                             <button type="button" data-status="in_progress"
-                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
+                                class="status-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
                                 Sedang Ujian
                             </button>
                             <button type="button" data-status="submitted"
-                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
+                                class="status-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
                                 Selesai
                             </button>
                             <button type="button" data-status="timeout"
-                                class="status-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
+                                class="status-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
                                 Timeout
                             </button>
                         </div>
@@ -176,12 +176,12 @@
                             <div class="relative w-full sm:w-64">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="filter-search" placeholder="Cari siswa, NIS, judul ujian..."
-                                    class="w-full h-11 pl-9 pr-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
+                                    class="w-full h-10 pl-9 pr-4 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
                             </div>
 
                             <div class="w-full sm:w-56">
                                 <select id="filter-school"
-                                    class="w-full h-11 px-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    class="w-full h-10 px-4 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
                                     <option value="all">Semua Sekolah Mitra</option>
                                     @foreach ($schools as $school)
                                         <option value="{{ $school->id }}">{{ $school->nama_sekolah }}</option>
@@ -192,28 +192,27 @@
                     </div>
 
                     <!-- SECONDARY FILTER BAR: DATE FILTER, PRESETS, SORT, CHEATING, ASSESSMENT, PER PAGE -->
-                    <div class="pt-4 border-t border-slate-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs">
+                    <div class="pt-4 border-t border-slate-100 flex flex-col xl:flex-row xl:flex-nowrap xl:items-center xl:overflow-x-auto justify-between gap-4 text-xs">
                         <!-- Date Filter & Quick Presets -->
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex flex-nowrap items-center gap-2 shrink-0">
                             <span class="font-bold text-slate-600 flex items-center gap-1.5 shrink-0">
                                 <i class="fa-regular fa-calendar text-[#0071BC]"></i>
-                                <span>Tanggal Sesi:</span>
                             </span>
-                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-                                <input type="date" id="filter-date-start" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
+                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 h-10 rounded-xl">
+                                <input type="date" id="filter-date-start" class="h-full bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
                                 <span class="text-slate-400 font-medium">s/d</span>
-                                <input type="date" id="filter-date-end" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
+                                <input type="date" id="filter-date-end" class="h-full bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
                             </div>
-                            <button type="button" id="btn-quick-today" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                            <button type="button" id="btn-quick-today" class="px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
                                 Hari Ini
                             </button>
-                            <button type="button" id="btn-quick-yesterday" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                            <button type="button" id="btn-quick-yesterday" class="px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
                                 Kemarin
                             </button>
-                            <button type="button" id="btn-quick-7days" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                            <button type="button" id="btn-quick-7days" class="px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
                                 7 Hari
                             </button>
-                            <button type="button" id="btn-clear-date" class="hidden px-2 py-1.5 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
+                            <button type="button" id="btn-clear-date" class="hidden px-2 h-10 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
                                 <i class="fa-solid fa-xmark mr-1"></i>Reset
                             </button>
                             <span id="date-filter-badge" class="hidden px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-300">
@@ -222,11 +221,11 @@
                         </div>
 
                         <!-- Secondary Controls: Assessment, Sort, Cheating, Paginate -->
-                        <div class="flex flex-wrap items-center gap-2.5">
+                        <div class="flex flex-nowrap items-center gap-2.5">
                             <!-- Filter Assessment -->
-                            <div class="w-full sm:w-48">
+                            <div class="w-full sm:w-36">
                                 <select id="filter-assessment"
-                                    class="w-full h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    class="w-full h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
                                     <option value="all">Semua Ujian</option>
                                     @if(isset($assessmentsList))
                                         @foreach($assessmentsList as $asm)
@@ -237,9 +236,9 @@
                             </div>
 
                             <!-- Cheating filter -->
-                            <div class="w-auto">
+                            <div class="w-auto shrink-0">
                                 <select id="filter-cheating-only"
-                                    class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    class="w-36 h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
                                     <option value="all">Semua Sesi</option>
                                     <option value="with_cheating">Ada Pelanggaran (>0x)</option>
                                     <option value="clean">Bersih (0x)</option>
@@ -247,10 +246,9 @@
                             </div>
 
                             <!-- Sort By -->
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-medium text-slate-500 shrink-0">Urut:</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
                                 <select id="filter-sort-by"
-                                    class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    class="w-32 h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] transition cursor-pointer">
                                     <option value="latest">Terbaru</option>
                                     <option value="oldest">Terlama</option>
                                     <option value="cheating">Pelanggaran Terbanyak</option>
@@ -260,10 +258,9 @@
                             </div>
 
                             <!-- Paginate Selector -->
-                            <div class="flex items-center gap-1.5">
-                                <span class="font-medium text-slate-500 shrink-0">Per Hal:</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
                                 <select id="filter-per-page"
-                                    class="h-9 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-[#0071BC] transition cursor-pointer">
+                                    class="w-20 h-10 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-[#0071BC] transition cursor-pointer">
                                     <option value="10">10</option>
                                     <option value="20" selected>20</option>
                                     <option value="50">50</option>
@@ -310,16 +307,16 @@
                         <table class="w-full text-left text-sm text-slate-600">
                             <thead class="bg-slate-50/80 text-xs uppercase font-bold text-slate-500 border-b border-slate-200">
                                 <tr>
-                                    <th class="px-4 py-4 w-12 text-center">
+                                    <th class="px-3 py-2.5 w-12 text-center">
                                         <input type="checkbox" id="check-all-attempts" class="w-4 h-4 rounded text-[#0071BC] focus:ring-sky-200 border-slate-300 cursor-pointer" title="Pilih Semua Sesi di Halaman Ini">
                                     </th>
-                                    <th class="px-6 py-4">Siswa & Kelas</th>
-                                    <th class="px-6 py-4">Assessment & Mapel</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
-                                    <th class="px-6 py-4 text-center">Pelanggaran</th>
-                                    <th class="px-6 py-4 text-center">Skor & Jawaban</th>
-                                    <th class="px-6 py-4">Waktu & Sisa Durasi</th>
-                                    <th class="px-6 py-4 text-center">Aksi Debugger</th>
+                                    <th class="px-3 py-2.5">Siswa & Kelas</th>
+                                    <th class="px-3 py-2.5">Assessment & Mapel</th>
+                                    <th class="px-3 py-2.5 text-center">Status</th>
+                                    <th class="px-3 py-2.5 text-center">Pelanggaran</th>
+                                    <th class="px-3 py-2.5 text-center">Skor & Jawaban</th>
+                                    <th class="px-3 py-2.5">Waktu & Sisa Durasi</th>
+                                    <th class="px-3 py-2.5 text-center">Aksi Debugger</th>
                                 </tr>
                             </thead>
                             <tbody id="attempts-table-body" class="divide-y divide-slate-100">
@@ -396,25 +393,25 @@
                 <section class="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 space-y-4">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <!-- Category Filter Tabs -->
-                        <div class="flex flex-wrap items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
+                        <div class="flex flex-wrap items-center bg-slate-100 rounded-xl border border-slate-200/80 gap-1">
                             <button type="button" data-category="all"
-                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
+                                class="asm-category-filter-btn px-4 h-10 text-xs font-bold rounded-xl transition-all cursor-pointer bg-white text-[#0071BC] shadow-xs">
                                 Semua Kategori
                             </button>
                             <button type="button" data-category="main"
-                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
+                                class="asm-category-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-blue-600">
                                 Utama (Main)
                             </button>
                             <button type="button" data-category="remedial"
-                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-purple-600">
+                                class="asm-category-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-purple-600">
                                 Remedial
                             </button>
                             <button type="button" data-category="susulan"
-                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
+                                class="asm-category-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-amber-600">
                                 Susulan
                             </button>
                             <button type="button" data-category="pengayaan"
-                                class="asm-category-filter-btn px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
+                                class="asm-category-filter-btn px-4 h-10 text-xs font-semibold rounded-xl transition-all cursor-pointer text-slate-600 hover:text-emerald-600">
                                 Pengayaan
                             </button>
                         </div>
@@ -424,7 +421,7 @@
                             <!-- Status Exam Selector -->
                             <div class="w-full sm:w-44">
                                 <select id="filter-asm-status"
-                                    class="w-full h-11 px-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    class="w-full h-10 px-4 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
                                     <option value="all">Semua Status</option>
                                     <option value="active">Aktif</option>
                                     <option value="upcoming">Mendatang</option>
@@ -435,12 +432,12 @@
                             <div class="relative w-full sm:w-56">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" id="filter-asm-search" placeholder="Cari judul, mapel..."
-                                    class="w-full h-11 pl-9 pr-4 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
+                                    class="w-full h-10 pl-9 pr-4 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition">
                             </div>
 
                             <div class="w-full sm:w-52">
                                 <select id="filter-asm-school"
-                                    class="w-full h-11 px-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
+                                    class="w-full h-10 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 outline-none focus:border-[#0071BC] focus:ring-2 focus:ring-sky-100 transition cursor-pointer">
                                     <option value="all">Semua Sekolah Mitra</option>
                                     @foreach ($schools as $school)
                                         <option value="{{ $school->id }}">{{ $school->nama_sekolah }}</option>
@@ -451,21 +448,20 @@
                     </div>
 
                     <!-- SECONDARY FILTER BAR FOR ASSESSMENTS: DATE & PER PAGE -->
-                    <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-                        <div class="flex flex-wrap items-center gap-2">
+                    <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:flex-nowrap sm:items-center sm:overflow-x-auto justify-between gap-4 text-xs">
+                        <div class="flex flex-nowrap items-center gap-2 shrink-0">
                             <span class="font-bold text-slate-600 flex items-center gap-1.5 shrink-0">
                                 <i class="fa-regular fa-calendar text-[#0071BC]"></i>
-                                <span>Tanggal Assessment:</span>
                             </span>
-                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-                                <input type="date" id="filter-asm-date-start" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
+                            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 h-10 rounded-xl">
+                                <input type="date" id="filter-asm-date-start" class="h-full bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Dari Tanggal">
                                 <span class="text-slate-400 font-medium">s/d</span>
-                                <input type="date" id="filter-asm-date-end" class="bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
+                                <input type="date" id="filter-asm-date-end" class="h-full bg-transparent text-xs text-slate-700 font-semibold outline-none cursor-pointer" title="Sampai Tanggal">
                             </div>
-                            <button type="button" id="btn-asm-quick-today" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
+                            <button type="button" id="btn-asm-quick-today" class="px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition active:scale-95 cursor-pointer">
                                 Hari Ini
                             </button>
-                            <button type="button" id="btn-asm-clear-date" class="hidden px-2 py-1.5 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
+                            <button type="button" id="btn-asm-clear-date" class="hidden px-2 h-10 rounded-xl text-red-500 hover:bg-red-50 font-semibold transition cursor-pointer" title="Reset Filter Tanggal">
                                 <i class="fa-solid fa-xmark mr-1"></i>Reset
                             </button>
                             <span id="asm-date-filter-badge" class="hidden px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-[11px] border border-amber-300">
@@ -473,7 +469,7 @@
                             </span>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-nowrap items-center gap-2 shrink-0">
                             <span class="font-medium text-slate-500 shrink-0">Per Hal:</span>
                             <select id="filter-asm-per-page"
                                 class="h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-[#0071BC] transition cursor-pointer">
@@ -1099,6 +1095,12 @@
                     </div>
                 </div>
 
+                <!-- Anticheat Violation Timeline -->
+                <div id="sed-violations" class="hidden px-4 py-3 bg-white border border-slate-200 rounded-2xl">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">Riwayat Pelanggaran</div>
+                    <div id="sed-violations-list" class="space-y-1.5 max-h-40 overflow-y-auto text-xs text-slate-600"></div>
+                </div>
+
                 <!-- Timing & Duration Info Bar -->
                 <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-slate-600">
                     <div class="flex items-center gap-2">
@@ -1645,23 +1647,23 @@
                 let statusBadge = '';
                 const st = String(item.status).toLowerCase();
                 if (st === 'cheating') {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-700 border border-red-200">
                         <i class="fa-solid fa-lock text-[10px]"></i> Cheating
                     </span>`;
                 } else if (st === 'in_progress') {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap">
                         <i class="fa-solid fa-spinner fa-spin text-[10px]"></i> In Progress
                     </span>`;
                 } else if (st === 'submitted') {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
                         <i class="fa-solid fa-check text-[10px]"></i> Submitted
                     </span>`;
                 } else if (st === 'timeout') {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
                         <i class="fa-solid fa-clock text-[10px]"></i> Timeout
                     </span>`;
                 } else {
-                    statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${escapeHtml(item.status)}</span>`;
+                    statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">${escapeHtml(item.status)}</span>`;
                 }
 
                 // Expiration & Time Remaining
@@ -1672,9 +1674,9 @@
                     const diffMin = Math.round(diffMs / 60000);
 
                     if (diffMs > 0) {
-                        timeInfo = `<div class="text-xs font-bold text-emerald-600"><i class="fa-regular fa-clock mr-1"></i>Sisa ${diffMin} menit</div>`;
+                        timeInfo = `<div class="text-xs font-bold text-emerald-600"><i class="fa-regular fa-clock mr-1"></i>Sisa ${diffMin} mnt</div>`;
                     } else {
-                        timeInfo = `<div class="text-xs font-bold text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Kadaluarsa (${Math.abs(diffMin)}m lalu)</div>`;
+                        timeInfo = `<div class="text-xs font-bold text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Kadaluarsa (${Math.abs(diffMin)}m)</div>`;
                     }
                 }
 
@@ -1694,70 +1696,64 @@
 
                 const row = `
                     <tr class="hover:bg-slate-50/80 transition-colors ${isChecked ? 'bg-amber-50/40' : ''}">
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-3 py-2 text-center">
                             <input type="checkbox" class="attempt-checkbox w-4 h-4 rounded text-[#0071BC] focus:ring-sky-200 border-slate-300 cursor-pointer" value="${item.id}" ${isChecked ? 'checked' : ''}>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-slate-800">${escapeHtml(studentName)}</div>
-                            <div class="text-xs text-slate-500 mt-0.5">NISN: ${escapeHtml(nis)} • Kelas: <span class="font-semibold text-slate-700">${escapeHtml(className)}</span></div>
-                            <div class="text-[11px] text-slate-400">${escapeHtml(schoolName)}</div>
+                        <td class="px-2 py-2">
+                            <div class="font-bold text-slate-800 whitespace-nowrap max-w-[150px] truncate" title="${escapeHtml(studentName)} — ${escapeHtml(schoolName)}">${escapeHtml(studentName)}</div>
+                            <div class="text-[11px] text-slate-500 whitespace-nowrap max-w-[150px] truncate">${nis !== '-' ? 'NISN: ' + escapeHtml(nis) + ' • ' : ''}<span class="font-semibold text-slate-700">${escapeHtml(className)}</span></div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="font-semibold text-slate-800">${escapeHtml(assessmentTitle)}</div>
-                            <div class="text-xs text-[#0071BC] font-medium">${escapeHtml(mapel)}</div>
-                            <div class="text-[11px] text-slate-400">Durasi: ${duration} Menit</div>
+                        <td class="px-3 py-2">
+                            <div class="font-semibold text-slate-800 whitespace-nowrap max-w-[150px] truncate" title="${escapeHtml(assessmentTitle)}">${escapeHtml(assessmentTitle)}</div>
+                            <div class="text-[11px] text-slate-500 whitespace-nowrap"><span class="text-[#0071BC] font-medium">${escapeHtml(mapel)}</span> • ${duration} mnt</div>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-3 py-2 text-center">
                             ${statusBadge}
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border ${switchBadgeClass}">
+                        <td class="px-3 py-2 text-center">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] border ${switchBadgeClass}">
                                 <i class="fa-solid fa-arrow-right-arrow-left text-[10px]"></i>
-                                ${switchCount} kali
+                                ${switchCount}x
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 font-extrabold text-slate-800 text-sm">
-                                <i class="fa-solid fa-star text-amber-500 text-xs"></i>
+                        <td class="px-3 py-2 text-center">
+                            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 font-extrabold text-slate-800 text-xs">
+                                <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
                                 <span>${scoreVal}</span>
                             </div>
-                            <div class="flex items-center justify-center gap-1 text-[11px] font-bold mt-1.5">
-                                <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="Benar">${item.correct_count ?? 0}B</span>
-                                <span class="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200" title="Salah">${item.wrong_count ?? 0}S</span>
-                                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200" title="Kosong">${item.empty_count ?? 0}K</span>
+                            <div class="flex items-center justify-center gap-1 text-[10px] font-bold mt-0.5">
+                                <span class="px-1 py-px rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title="Benar">${item.correct_count ?? 0}B</span>
+                                <span class="px-1 py-px rounded bg-red-50 text-red-600 border border-red-200" title="Salah">${item.wrong_count ?? 0}S</span>
+                                <span class="px-1 py-px rounded bg-slate-100 text-slate-600 border border-slate-200" title="Kosong">${item.empty_count ?? 0}K</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-2 py-2">
                             ${timeInfo}
-                            <div class="text-[11px] text-slate-400 mt-0.5">Mulai: ${formatDateTime(item.start_time)}</div>
-                            <div class="text-[11px] text-slate-400">Batas: ${formatDateTime(item.expire_time)}</div>
+                            <div class="text-[11px] text-slate-400 whitespace-nowrap max-w-[150px] truncate">${(function(){var s=formatDateTime(item.start_time), e=item.expire_time?formatDateTime(item.expire_time):null;var y=new Date(item.start_time).getFullYear();s=s.replace(' '+y,'');if(e){e=e.replace(' '+y,'');if(s.split(',')[0]===e.split(',')[0]){e=e.split(',')[1].trim();}s+=' - '+e;}return s;})()}</div>
                         </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
+                        <td class="px-3 py-2 text-center">
+                            <div class="flex items-center justify-center gap-1">
                                 <button type="button" onclick="openStudentExamDetail(${item.school_assessment_id}, ${item.student_id}, '${escapeHtml(studentName)}')"
-                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-sky-50 hover:bg-[#0071BC] text-[#0071BC] hover:text-white font-semibold text-xs transition active:scale-95 border border-sky-200" title="Lihat Lembar Jawaban Siswa">
+                                    class="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-sky-50 hover:bg-[#0071BC] text-[#0071BC] hover:text-white font-semibold text-xs transition active:scale-95 border border-sky-200" title="Lihat Lembar Jawaban Siswa">
                                     <i class="fa-solid fa-file-lines text-xs"></i>
                                     <span>Detail</span>
                                 </button>
 
                                 ${isLocked ? `
                                     <button type="button" onclick="quickUnlock(${item.id}, '${escapeHtml(studentName)}', ${duration})"
-                                        class="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs transition active:scale-95" title="Buka Kunci Ujian">
+                                        class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs shadow-xs transition active:scale-95" title="Buka Kunci Ujian">
                                         <i class="fa-solid fa-lock-open text-xs"></i>
-                                        <span>Buka Kunci</span>
                                     </button>
                                 ` : ''}
 
                                 <button type="button" onclick="recountSingleAttempt(${item.id}, '${escapeHtml(studentName)}', '${escapeHtml(assessmentTitle)}')"
-                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-900 font-semibold text-xs transition active:scale-95 border border-amber-200" title="Hitung Ulang Nilai Siswa">
+                                    class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white text-xs transition active:scale-95 border border-amber-200" title="Hitung Ulang Nilai Siswa">
                                     <i class="fa-solid fa-calculator text-xs"></i>
-                                    <span>Recount</span>
                                 </button>
 
                                 <button type="button" onclick='openEditModal(${JSON.stringify(item)})'
-                                    class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0071BC] hover:text-white text-slate-700 font-semibold text-xs transition active:scale-95" title="Edit Status & Pelanggaran">
+                                    class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 hover:bg-[#0071BC] hover:text-white text-slate-700 text-xs transition active:scale-95" title="Edit Status & Pelanggaran">
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                    <span>Edit</span>
                                 </button>
 
                                 <button type="button" onclick="deleteAttemptConfirm(${item.id}, '${escapeHtml(studentName)}')"
@@ -3584,6 +3580,24 @@
             $('#sed-stat-wrong').text(`${sum?.wrong_count ?? 0} Soal`);
             $('#sed-stat-empty').text(`${sum?.empty_count ?? 0} Soal`);
             $('#sed-stat-switch').text(`${att?.tab_switch_count ?? 0}x`);
+
+            // violation timeline (reason / ip / browser / device per strike)
+            const violations = att?.anticheat_violations || [];
+            const violWrap = $('#sed-violations');
+            const violList = $('#sed-violations-list');
+            if (violations.length) {
+                violList.html(violations.map(v => `
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 px-2.5 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span class="font-bold text-slate-700">${v.at || '-'}</span>
+                        <span class="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 font-semibold">${v.reason || '-'}</span>
+                        <span>IP: <strong>${v.ip || '-'}</strong></span>
+                        <span>${v.browser || '-'} · ${v.device_type || '-'} · ${v.platform || '-'}</span>
+                    </div>`).join(''));
+                violWrap.removeClass('hidden');
+            } else {
+                violList.empty();
+                violWrap.addClass('hidden');
+            }
 
             $('#sed-time-start').text(att?.start_time || '-');
             $('#sed-time-expire').text(att?.expire_time || '-');

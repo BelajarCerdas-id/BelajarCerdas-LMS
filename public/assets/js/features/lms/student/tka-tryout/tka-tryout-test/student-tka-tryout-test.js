@@ -1005,37 +1005,39 @@ function handleTkaSessionEnded(onFinish = null) {
         localStorage.removeItem(EXPIRE_KEY);
     }
 
-    autoSubmitUnSavedQuestions(function () {
-
-        isHandlingSessionEnd = false;
-
-        const reloadForm = function () {
-
-            if (typeof onFinish === 'function') {
-                onFinish();
-            }
-
-        };
-
-        if (sessionEndAlertShown) {
-            reloadForm();
-            return;
-        }
+    // Alert immediately — the network flush below is jittered to spread the
+    // burst of every client hitting the session end at the same second.
+    if (!sessionEndAlertShown) {
 
         sessionEndAlertShown = true;
 
         Swal.fire({
             icon: 'warning',
             title: 'Waktu Pengerjaan Berakhir',
-            text: 'Waktu pengerjaan tes ini telah berakhir. Jawaban yang belum disimpan telah dikirim secara otomatis.',
+            text: 'Waktu pengerjaan tes ini telah berakhir. Jawaban yang belum disimpan akan dikirim secara otomatis.',
             confirmButtonText: 'OK',
             confirmButtonColor: '#0071BC',
             allowOutsideClick: false,
             allowEscapeKey: false
         });
+    }
 
-        reloadForm();
-    });
+    // Stagger 0-30s: all browsers reach session end on the same wall-clock
+    // second; without this every client fires its flush simultaneously.
+    const submitJitter = Math.floor(Math.random() * 30000);
+
+    setTimeout(function () {
+
+        autoSubmitUnSavedQuestions(function () {
+
+            isHandlingSessionEnd = false;
+
+            if (typeof onFinish === 'function') {
+                onFinish();
+            }
+        });
+
+    }, submitJitter);
 }
 
 $(document).on('click', '#btn-review-test', function () {
@@ -1336,69 +1338,59 @@ function autoSubmitUnSavedQuestions(onFinish = null) {
         localStorage.removeItem(EXPIRE_KEY);
     }
 
-    $.ajax({
-        url: `/lms/${role}/${schoolName}/${schoolId}/tryout-tka/period-list/${periodId}/session-list/${sessionId}/subject/${subjectId}/test/form`,
-        method: "GET",
+    const submitUrl = `/lms/${role}/${schoolName}/${schoolId}/tryout-tka/period-list/${periodId}/session-list/${sessionId}/subject/${subjectId}/test/form/submit-answer/${attemptId}`;
+    const headers = {
+        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
+    };
 
-        success: function (response) {
+    // One bulk call: the server marks every still-unanswered question as submitted
+    const finalize = function () {
 
-            const responseQuestions = response.data ?? [];
-            const responseQuestionsAnswer = response.questionsAnswer ?? {};
-
-            const requests = [];
-
-            responseQuestions.forEach((question) => {
-
-                const isSubmitted =
-                    responseQuestionsAnswer[question.id]?.status_answer === "submitted";
-
-                if (isSubmitted) {
-                    return;
-                }
-
-                const request = $.ajax({
-                    url: `/lms/${role}/${schoolName}/${schoolId}/tryout-tka/period-list/${periodId}/session-list/${sessionId}/subject/${subjectId}/test/form/submit-answer/${attemptId}`,
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content")
-                    },
-                    data: {
-                        question_id: question.id,
-                        status_answer: "submitted",
-                        auto_submit: true
-                    }
-                });
-
-                requests.push(request);
-            });
-
-            if (requests.length === 0) {
+        $.ajax({
+            url: submitUrl,
+            method: "POST",
+            headers: headers,
+            data: {
+                status_answer: "submitted",
+                auto_submit: true
+            },
+            complete: function () {
 
                 if (typeof onFinish === 'function') {
                     onFinish();
                 }
-
-                return;
             }
+        });
+    };
 
-            $.when.apply($, requests)
-                .always(function () {
+    // Save the answer currently on screen first (if any) so it is not lost
+    const form = $('#tka-tryout-test-submit-form')[0];
 
-                    if (typeof onFinish === 'function') {
-                        onFinish();
-                    }
+    if (form) {
+        const formData = new FormData(form);
+        const questionId = formData.get('question_id');
+        const answerValue = formData.get('answer_value');
+        const hasAnswer = answerValue && answerValue.trim() !== '' && answerValue !== '[]' && answerValue !== '{}';
 
-                });
-        },
+        if (questionId && hasAnswer) {
+            formData.set('status_answer', 'submitted');
+            formData.set('auto_submit', 'true');
 
-        error: function () {
+            $.ajax({
+                url: submitUrl,
+                method: "POST",
+                headers: headers,
+                data: formData,
+                processData: false,
+                contentType: false,
+                complete: finalize
+            });
 
-            if (typeof onFinish === 'function') {
-                onFinish();
-            }
-
+            return;
         }
-    });
+    }
+
+    finalize();
 }
 
 $(document).on('click', '#btn-submit-end-tka-tryout-test', function (e) {

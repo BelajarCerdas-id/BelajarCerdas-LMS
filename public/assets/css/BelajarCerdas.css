@@ -1,6 +1,14 @@
 /* ==========================================================================
-   GLOBAL PURE WHITE MODE ENFORCEMENT (ALL BROWSERS & SYSTEM PREFERENCES)
+   BelajarCerdas LMS — CONTENT STYLESHEET
+   --------------------------------------------------------------------------
+   Page-level styling: white mode, form controls, tables, CKEditor, exam UI,
+   animations, login page. Sidebar styling lives in sidebar.css (loaded by the
+   sidebar component). Cache-busted via filemtime — bump nothing by hand.
    ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. GLOBAL PURE WHITE MODE ENFORCEMENT (ALL BROWSERS & SYSTEM PREFERENCES)
+   -------------------------------------------------------------------------- */
 :root,
 html,
 body {
@@ -33,11 +41,11 @@ body {
     }
 }
 
-/* ==========================================================================
-   GLOBAL SELECT / DROPDOWN CHEVRON STYLING
-   Replaces cramped native OS dropdown arrows (V) with a modern Material SVG chevron
-   with comfortable breathing room and proper right padding.
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   2. GLOBAL SELECT / DROPDOWN CHEVRON STYLING
+   Replaces cramped native OS dropdown arrows (V) with a modern Material SVG
+   chevron with comfortable breathing room and proper right padding.
+   -------------------------------------------------------------------------- */
 select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron),
 select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron) {
     -webkit-appearance: none !important;
@@ -67,133 +75,19 @@ select.no-custom-chevron,
     background-image: none !important;
 }
 
-/* Sidebar Width Variable (dynamically adjustable via sidebar-resize.js) */
-:root {
-    --sidebar-width: 250px;
+/* dropdown filter minimum widths */
+#dropdown-filter-tahun-ajaran:not(#form-content-for-release *),
+#dropdown-filter-class:not(#form-content-for-release *) {
+    min-width: 220px !important;
 }
 
-body:has(.sidebar-beranda-student) {
-    --sidebar-width: 290px;
+#form-content-for-release select {
+    min-width: 0 !important;
 }
 
-/* dropdown sidebar administrator */
-.sidebar-beranda-administrator {
-    width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
-    height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 30;
-}
-
-/* Custom sleek sidebar scrollbar */
-.custom-sidebar-scroll::-webkit-scrollbar {
-    width: 5px;
-}
-
-.custom-sidebar-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.custom-sidebar-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 9999px;
-}
-
-.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.45);
-}
-
-.custom-sidebar-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-}
-
-/* sembunyikan dropdown */
-.content-dropdown,
-.list-content-dropdown,
-.content-dropdown-button-profile {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 0.4s ease, opacity 0.4s ease;
-    font-size: 12px;
-}
-
-/* hover text */
-.list-item .content-menu:hover,
-.toggle-menu-sidebar:hover,
-.content-dropdown .link-href:hover {
-    color: orange;
-}
-
-/* ketika aktif, text orange */
-.list-item.active .toggle-menu-sidebar,
-.list-item.active .content-menu i,
-.toggle-sub-menu-sidebar.active,
-.link-href.active,
-.list-item.active>.dropdown-menu>.toggle-menu-sidebar i {
-    color: orange;
-}
-
-/* open untuk dropdown utama */
-.list-item.show .content-dropdown {
-    opacity: 1;
-}
-
-.list-content-dropdown.show {
-    opacity: 1;
-}
-
-/* hover */
-.toggle-sub-menu-sidebar:hover,
-.list-content-dropdown .link-href:hover {
-    color: orange;
-}
-
-.list-item-button-profile.show .content-dropdown-button-profile {
-    opacity: 1;
-    max-height: 400px;
-}
-
-/* rotate chevron with smooth Material motion */
-.toggle-sub-menu-sidebar i,
-.toggle-sub-menu-sidebar .fa-chevron-down,
-.toggle-menu-sidebar i.fa-chevron-down,
-#rotate-icon,
-#rotate-icon-2 {
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.list-item-button-profile.show #rotate-icon {
-    transform: rotate(-180deg);
-}
-
-.list-item.show #rotate-icon,
-.list-item.show>.dropdown-menu>.toggle-menu-sidebar i.fa-chevron-down {
-    transform: rotate(-180deg);
-}
-
-/* rotate untuk dropdown sub menu */
-.toggle-sub-menu-sidebar.show #rotate-icon-2,
-.toggle-sub-menu-sidebar.show i.fa-chevron-down {
-    transform: rotate(-180deg);
-}
-
-/* style for accordion question */
-#grid-list-soal ul {
-    list-style: disc !important;
-    padding-left: 15px;
-}
-
-#grid-list-soal ol {
-    list-style: decimal !important;
-    padding-left: 24px;
-}
-
+/* --------------------------------------------------------------------------
+   3. CKEDITOR & QUESTION CONTENT (lists, images, tables)
+   -------------------------------------------------------------------------- */
 /* buat nampilin ul dan ol yang ke hidden karena menggunakan daisy ui (CKEDITOR STYLING)*/
 .ck-content ul {
     list-style-type: disc;
@@ -226,7 +120,8 @@ body:has(.sidebar-beranda-student) {
     margin: 0 auto;
 }
 
-/* Table styling for Question Content, Question Bank & CKEditor (Ensures borders & lines are properly displayed) */
+/* table styling for Question Content, Question Bank & CKEditor
+   (ensures borders & lines are properly displayed) */
 .ck-content table,
 .question-content table,
 .list-style table,
@@ -306,64 +201,30 @@ figure.table {
     overflow-x: auto !important;
 }
 
-/* sidebar beranda siswa  */
-.sidebar-beranda-student {
-    width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
-    height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
-.list-menu-sidebar-dekstop-student a.active {
-    background-color: rgba(255, 255, 255, 0.15);
-    border-left: 6px solid #ffffff;
-    border-radius: 8px;
-    color: #ffffff;
-    font-weight: bold;
-}
-
-.list-menu-sidebar-mobile-student a.active {
-    background-color: #0071BC;
-    border-left: 6px solid #ffffff;
-    border-radius: 8px;
-    color: #ffffff;
-    font-weight: bold;
-}
-
-/* sidebar beranda school admin  */
-.sidebar-beranda-school-admin {
-    width: var(--sidebar-width);
-    background-color: #0071BC;
-    color: white;
-    height: 100vh;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
-.question-bank-preview ul {
-    list-style: disc !important;
-    padding-left: 15px;
-}
-
-.question-bank-preview ol {
-    list-style: decimal !important;
-    padding-left: 15px;
-}
-
+/* list styling inside question banks / content lists */
+.question-bank-preview ul,
 .list-style ul {
     list-style: disc !important;
     padding-left: 15px;
 }
 
+.question-bank-preview ol,
 .list-style ol {
     list-style: decimal !important;
     padding-left: 15px;
+}
+
+/* --------------------------------------------------------------------------
+   4. EXAM UI (accordion answer lists, option picking, timers)
+   -------------------------------------------------------------------------- */
+#grid-list-soal ul {
+    list-style: disc !important;
+    padding-left: 15px;
+}
+
+#grid-list-soal ol {
+    list-style: decimal !important;
+    padding-left: 24px;
 }
 
 input[type="radio"]:checked+label.nomor-soal {
@@ -399,17 +260,14 @@ input[type="checkbox"]:checked+label.checked-option {
 }
 
 .progress-shimmer {
-
     background: linear-gradient(90deg,
             transparent,
             rgba(255, 255, 255, .45),
             transparent);
-
     animation: shimmerMove 2s linear infinite;
 }
 
 @keyframes shimmerMove {
-
     from {
         transform: translateX(-100%);
     }
@@ -420,26 +278,19 @@ input[type="checkbox"]:checked+label.checked-option {
 }
 
 #payment-progress-bar::before {
-
     content: '';
-
     position: absolute;
     inset: 0;
-
-    background:
-        repeating-linear-gradient(-45deg,
+    background: repeating-linear-gradient(-45deg,
             rgba(255, 255, 255, .18) 0px,
             rgba(255, 255, 255, .18) 20px,
             transparent 20px,
             transparent 40px);
-
     background-size: 60px 60px;
-
     animation: stripeFlow 1.5s linear infinite;
 }
 
 @keyframes stripeFlow {
-
     from {
         background-position: 0 0;
     }
@@ -449,89 +300,9 @@ input[type="checkbox"]:checked+label.checked-option {
     }
 }
 
-/* ==========================================================================
-   SIDEBAR & CONTENT VIEWPORT EXACT ALIGNMENT (RESIZABLE)
-   Guarantees 0px overlap and 0px right gap on all screen resolutions and zooms
-   ========================================================================== */
-@media (min-width: 768px) {
-
-    .sidebar-beranda-administrator,
-    .sidebar-beranda-student,
-    .sidebar-beranda-school-admin {
-        width: var(--sidebar-width) !important;
-    }
-
-    .left-62\.5,
-    .md\:left-62\.5,
-    .left-72\.5,
-    .md\:left-72\.5 {
-        left: var(--sidebar-width) !important;
-    }
-
-    .w-\[calc\(100\%-250px\)\],
-    .md\:w-\[calc\(100\%-250px\)\],
-    .w-\[calc\(100\%-290px\)\],
-    .md\:w-\[calc\(100\%-290px\)\] {
-        width: calc(100% - var(--sidebar-width)) !important;
-    }
-}
-
-/* ==========================================================================
-   SIDEBAR RESIZE HANDLE & INTERACTIVE STATES
-   ========================================================================== */
-.sidebar-resizer {
-    position: absolute;
-    top: 0;
-    right: -6px;
-    width: 12px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 50;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.15s ease;
-}
-
-.sidebar-resizer::after {
-    content: '';
-    display: block;
-    width: 2px;
-    height: 100%;
-    background: transparent;
-    transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sidebar-resizer:hover {
-    background-color: rgba(96, 165, 250, 0.12);
-}
-
-.sidebar-resizer:hover::after,
-.sidebar-resizer.is-dragging::after {
-    background-color: #38bdf8;
-    width: 4px;
-    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-}
-
-/* When actively dragging, disable text selection and transitions everywhere */
-body.sidebar-is-resizing,
-body.sidebar-is-resizing * {
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    cursor: col-resize !important;
-    transition: none !important;
-}
-
-body.sidebar-is-resizing iframe {
-    pointer-events: none !important;
-}
-
-/* ==========================================================================
-   LOGIN PAGE STYLING (ALL SCREENS & RESPONSIVE CONSTRAINTS)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   5. LOGIN PAGE (ALL SCREENS & RESPONSIVE CONSTRAINTS)
+   -------------------------------------------------------------------------- */
 .login-box {
     width: 100% !important;
     max-width: 420px !important;
@@ -607,59 +378,9 @@ screen and (max-height: 768px) {
     }
 }
 
-/* ==========================================================================
-   DROPDOWN FILTER SIZING & SPACING
-   ========================================================================== */
-#dropdown-filter-tahun-ajaran:not(#form-content-for-release *),
-#dropdown-filter-class:not(#form-content-for-release *) {
-    min-width: 220px !important;
-}
-
-#form-content-for-release select {
-    min-width: 0 !important;
-}
-
-select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron),
-select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron),
-#dropdown-tahun-ajaran,
-#dropdown-semester,
-#dropdown-filter-class,
-#dropdown-school-class,
-#dropdown-filter-tahun-ajaran,
-#dropdown-filter-mapel,
-#semester,
-#dropdown-assessment-management-filter-tahun-ajaran,
-#dropdown-assessment-management-filter-class,
-#dropdown-assessment-type {
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.75' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
-    background-position: right 1rem center !important;
-    background-repeat: no-repeat !important;
-    background-size: 1.15rem 1.15rem !important;
-    padding-right: 2.75rem !important;
-}
-
-select:not([multiple]):not([size]):not(.appearance-none):not(.no-custom-chevron):focus,
-select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):focus,
-#dropdown-tahun-ajaran:focus,
-#dropdown-semester:focus,
-#dropdown-filter-class:focus,
-#dropdown-school-class:focus,
-#dropdown-filter-tahun-ajaran:focus,
-#dropdown-filter-mapel:focus,
-#semester:focus,
-#dropdown-assessment-management-filter-tahun-ajaran:focus,
-#dropdown-assessment-management-filter-class:focus,
-#dropdown-assessment-type:focus {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230071BC' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
-}
-
-
-/* ==========================================================================
-   TEACHER QUESTION RELEASE - SELECT ALL PER BANK
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   6. TEACHER QUESTION RELEASE — SELECT ALL PER BANK
+   -------------------------------------------------------------------------- */
 [data-question-release-bank-select-all] {
     display: inline-flex !important;
     align-items: center !important;
@@ -676,9 +397,34 @@ select:not([multiple])[size="1"]:not(.appearance-none):not(.no-custom-chevron):f
     transform: translateY(0);
 }
 
-/* ==========================================================================
-   MEETING & RELEASE DATE PICKER - INLINE ROW
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   7. DASHBOARD SNAP SCROLLING (page sections + entry lists)
+   Inert unless the page tags cards with .snap-card / lists with .bc-snap-list.
+   -------------------------------------------------------------------------- */
+html:has(.snap-card) {
+    scroll-snap-type: y proximity;
+}
+
+.snap-card {
+    scroll-snap-align: start;
+    scroll-margin-top: 12px;
+}
+
+.snap-top {
+    scroll-snap-align: start;
+}
+
+.bc-snap-list {
+    scroll-snap-type: y proximity;
+}
+
+.bc-snap-list > * {
+    scroll-snap-align: start;
+}
+
+/* --------------------------------------------------------------------------
+   8. MEETING & RELEASE DATE PICKER — INLINE ROW
+   -------------------------------------------------------------------------- */
 .meeting-row {
     display: flex !important;
     align-items: center !important;

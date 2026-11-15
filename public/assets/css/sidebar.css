@@ -1,0 +1,344 @@
+/* ==========================================================================
+   BelajarCerdas LMS — SIDEBAR STYLESHEET (single source of truth)
+   --------------------------------------------------------------------------
+   One uniform rule set for every role's sidebar (Siswa, Guru, Administrator,
+   Finance, Admin Sekolah, Kepala/Wakil Kepala Sekolah, Wakil Kesiswaan,
+   Orang Tua, Yayasan — they all share the same legacy menu classes, and the
+   rebuilt Siswa variant uses list-menu-sidebar-dekstop-student).
+
+   Loaded by resources/views/components/sidebar-beranda.blade.php
+   (cache-busted via filemtime — bump nothing by hand).
+   Page-level layout lives in BelajarCerdas.css (content stylesheet).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. WIDTH SYSTEM (drives sidebar-resize.js)
+   -------------------------------------------------------------------------- */
+:root {
+    --sidebar-width: 250px;
+}
+
+body:has(.sidebar-beranda-student),
+body:has(.sidebar-beranda-administrator),
+body:has(.sidebar-beranda-guru),
+body:has(.sidebar-beranda-school-admin) {
+    --sidebar-width: 290px;
+}
+
+/* --------------------------------------------------------------------------
+   2. BASE — identical shell for every role
+   -------------------------------------------------------------------------- */
+.sidebar-beranda-student,
+.sidebar-beranda-administrator,
+.sidebar-beranda-guru,
+.sidebar-beranda-school-admin {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, #0B7FCB 0%, #004f84 100%);
+    color: white;
+    height: 100vh;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 30;
+}
+
+/* compact white header on variants still carrying the tall h-40 header */
+.sidebar-beranda-administrator > div:first-child,
+.sidebar-beranda-school-admin > div:first-child {
+    height: 7rem !important;
+}
+
+.sidebar-beranda-administrator > div:first-child img,
+.sidebar-beranda-school-admin > div:first-child img {
+    height: 4rem !important;
+}
+
+/* sleek sidebar scrollbar */
+.custom-sidebar-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 9999px;
+}
+
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.custom-sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+/* --------------------------------------------------------------------------
+   3. MENU ROWS — uniform height, typography, hover, active pill (all roles)
+   -------------------------------------------------------------------------- */
+/* uniform row height: some content-menu rows lack vertical padding in the markup */
+.sidebar-beranda-student ul > li.list-item,
+.sidebar-beranda-administrator ul > li.list-item,
+.sidebar-beranda-guru ul > li.list-item,
+.sidebar-beranda-school-admin ul > li.list-item {
+    padding: 2px 0 !important;
+    margin-top: 0 !important;
+}
+
+.sidebar-beranda-student .content-menu,
+.sidebar-beranda-student .toggle-menu-sidebar,
+.sidebar-beranda-administrator .content-menu,
+.sidebar-beranda-administrator .toggle-menu-sidebar,
+.sidebar-beranda-guru .content-menu,
+.sidebar-beranda-guru .toggle-menu-sidebar,
+.sidebar-beranda-school-admin .content-menu,
+.sidebar-beranda-school-admin .toggle-menu-sidebar {
+    padding: 9px 12px !important;
+}
+
+/* main menu links: bigger & medium weight, dropdown links slightly smaller */
+.content-menu .link-href,
+.content-menu > a.link-href {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+.content-dropdown .link-href,
+.list-content-dropdown .link-href {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* hover: translucent white pill */
+.list-item .content-menu:hover,
+.toggle-menu-sidebar:hover,
+.content-dropdown .link-href:hover,
+.toggle-sub-menu-sidebar:hover,
+.list-content-dropdown .link-href:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: #ffffff;
+}
+
+/* active: solid white pill with blue text */
+.list-item.active .content-menu,
+.list-item.active .toggle-menu-sidebar,
+.toggle-sub-menu-sidebar.active,
+.content-menu[class*="text-[#0071BC]"],
+.content-menu:has(> .link-href.active),
+.content-menu:has(> div > .link-href.active),
+.link-href.active {
+    background-color: #ffffff;
+    border-radius: 12px;
+    color: #0071BC !important;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* the <a> itself must not double-pill or underline inside an active row */
+.content-menu > .link-href.active,
+.content-menu > div > .link-href.active,
+.list-item.active .content-menu .link-href {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+    color: #0071BC !important;
+}
+
+.list-item.active .content-menu i,
+.list-item.active .toggle-menu-sidebar i,
+.list-item.active > .dropdown-menu > .toggle-menu-sidebar i,
+.toggle-sub-menu-sidebar.active i {
+    color: #0071BC;
+}
+
+/* --------------------------------------------------------------------------
+   4. SUB-MENUS — indented under their parent, inset pills (all roles)
+   -------------------------------------------------------------------------- */
+.sidebar-beranda-student .content-dropdown .link-href,
+.sidebar-beranda-student .list-content-dropdown .link-href,
+.sidebar-beranda-administrator .content-dropdown .link-href,
+.sidebar-beranda-administrator .list-content-dropdown .link-href,
+.sidebar-beranda-guru .content-dropdown .link-href,
+.sidebar-beranda-guru .list-content-dropdown .link-href,
+.sidebar-beranda-school-admin .content-dropdown .link-href,
+.sidebar-beranda-school-admin .list-content-dropdown .link-href {
+    margin: 2px 0 2px 18px !important;
+    padding: 7px 12px !important;
+    border-radius: 10px !important;
+}
+
+/* sub-sub menu group headers get the same inset pill geometry as their links */
+.sidebar-beranda-student .toggle-sub-menu-sidebar,
+.sidebar-beranda-administrator .toggle-sub-menu-sidebar,
+.sidebar-beranda-guru .toggle-sub-menu-sidebar,
+.sidebar-beranda-school-admin .toggle-sub-menu-sidebar {
+    margin: 2px 0 2px 18px !important;
+    padding: 7px 12px !important;
+    border-radius: 10px !important;
+}
+
+/* dropdown wrapper divs must not add their own spacing (markup mixes py-2/mt-1
+   wrappers with bare link lists — item rhythm comes from the link margins) */
+.sidebar-beranda-student .content-dropdown > div,
+.sidebar-beranda-administrator .content-dropdown > div,
+.sidebar-beranda-guru .content-dropdown > div,
+.sidebar-beranda-school-admin .content-dropdown > div {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. DROPDOWNS — collapse animation, open states, chevron rotation
+   -------------------------------------------------------------------------- */
+.content-dropdown,
+.list-content-dropdown,
+.content-dropdown-button-profile {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+    font-size: 12px;
+}
+
+/* open untuk dropdown utama */
+.list-item.show .content-dropdown {
+    opacity: 1;
+}
+
+.list-content-dropdown.show {
+    opacity: 1;
+}
+
+/* profile dropdown open state */
+.list-item-button-profile.show .content-dropdown-button-profile {
+    opacity: 1;
+    max-height: 400px;
+}
+
+/* rotate chevron with smooth Material motion */
+.toggle-sub-menu-sidebar i,
+.toggle-sub-menu-sidebar .fa-chevron-down,
+.toggle-menu-sidebar i.fa-chevron-down,
+#rotate-icon,
+#rotate-icon-2 {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.list-item-button-profile.show #rotate-icon {
+    transform: rotate(-180deg);
+}
+
+.list-item.show #rotate-icon,
+.list-item.show > .dropdown-menu > .toggle-menu-sidebar i.fa-chevron-down {
+    transform: rotate(-180deg);
+}
+
+/* rotate untuk dropdown sub menu */
+.toggle-sub-menu-sidebar.show #rotate-icon-2,
+.toggle-sub-menu-sidebar.show i.fa-chevron-down {
+    transform: rotate(-180deg);
+}
+
+/* --------------------------------------------------------------------------
+   6. MOBILE STUDENT DRAWER (active state differs from desktop by design)
+   -------------------------------------------------------------------------- */
+.list-menu-sidebar-dekstop-student a.active {
+    background-color: #ffffff;
+    border-radius: 12px;
+    color: #0071BC;
+    font-weight: bold;
+}
+
+.list-menu-sidebar-mobile-student a.active {
+    background-color: #0071BC;
+    border-left: 6px solid #ffffff;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   7. SIDEBAR & CONTENT VIEWPORT EXACT ALIGNMENT (RESIZABLE)
+   Guarantees 0px overlap and 0px right gap on all screen resolutions and zooms
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+
+    .sidebar-beranda-administrator,
+    .sidebar-beranda-student,
+    .sidebar-beranda-guru,
+    .sidebar-beranda-school-admin {
+        width: var(--sidebar-width) !important;
+    }
+
+    .left-62\.5,
+    .md\:left-62\.5,
+    .left-72\.5,
+    .md\:left-72\.5 {
+        left: var(--sidebar-width) !important;
+    }
+
+    .w-\[calc\(100\%-250px\)\],
+    .md\:w-\[calc\(100\%-250px\)\],
+    .w-\[calc\(100\%-290px\)\],
+    .md\:w-\[calc\(100\%-290px\)\] {
+        width: calc(100% - var(--sidebar-width)) !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   8. RESIZE HANDLE & INTERACTIVE STATES
+   -------------------------------------------------------------------------- */
+.sidebar-resizer {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 12px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 50;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease;
+}
+
+.sidebar-resizer::after {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 100%;
+    background: transparent;
+    transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sidebar-resizer:hover {
+    background-color: rgba(96, 165, 250, 0.12);
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.is-dragging::after {
+    background-color: #38bdf8;
+    width: 4px;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+}
+
+/* when actively dragging, disable text selection and transitions everywhere */
+body.sidebar-is-resizing,
+body.sidebar-is-resizing * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: col-resize !important;
+    transition: none !important;
+}
+
+body.sidebar-is-resizing iframe {
+    pointer-events: none !important;
+}

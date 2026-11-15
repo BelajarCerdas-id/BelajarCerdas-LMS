@@ -6,7 +6,7 @@
 ])
 
 <div
-    class="relative left-0 md:left-[250px] w-full md:w-[calc(100%-250px)] min-h-screen transition-all duration-300 ease-in-out"
+    class="relative left-0 md:left-72.5 w-full md:w-[calc(100%-290px)] min-h-screen transition-all duration-300 ease-in-out"
 >
     <div
         id="academicDrive"

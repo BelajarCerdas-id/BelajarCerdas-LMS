@@ -73,7 +73,7 @@
             {{-- ========================================================= --}}
             {{-- KPI --}}
             {{-- ========================================================= --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 snap-card">
 
                 {{-- TOTAL MURID --}}
                 <div class="bg-white rounded-[2rem] p-7 border border-white shadow-sm hover:shadow-xl transition-all duration-500 group">
@@ -182,7 +182,7 @@
                     {{-- ================================================= --}}
                     {{-- MODUL MONITORING STRATEGIS --}}
                     {{-- ================================================= --}}
-                    <div class="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-slate-100">
+                    <div class="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-slate-100 snap-card">
 
                         <div class="flex items-center gap-4 mb-10">
                             <div class="h-10 w-1 bg-[#0071BC] rounded-full"></div>
@@ -266,7 +266,7 @@
                     {{-- ================================================= --}}
                     <section
                         id="dashboardPerangkatGuru"
-                        class="group cursor-pointer bg-white rounded-3xl shadow-sm border border-gray-200 p-7 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5"
+                        class="group cursor-pointer bg-white rounded-3xl shadow-sm border border-gray-200 p-7 transition-all duration-300 hover:shadow-lg hover:border-blue-300 hover:-translate-y-0.5 snap-card"
                         onclick="openDashboardPerangkatGuru()"
                     >
 
@@ -375,7 +375,7 @@
                 {{-- ===================================================== --}}
                 <div class="xl:col-span-4 space-y-8">
 
-                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full min-h-[500px]">
+                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full min-h-[500px] snap-card">
 
                         <div class="p-8 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
 
@@ -388,7 +388,7 @@
 
                         </div>
 
-                        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+                        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar bc-snap-list flex-1">
 
                             @forelse($pengumuman as $info)
 

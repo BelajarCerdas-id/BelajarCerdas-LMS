@@ -54,9 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Helper untuk modul badge
     function getModuleBadge(module, subModule) {
         let subText = subModule && subModule !== '-' ? ` <i class="fa-solid fa-angle-right text-[10px] text-slate-400 mx-1"></i> <span class="font-medium text-slate-700">${subModule}</span>` : '';
-        return `<div class="inline-flex items-center text-xs font-semibold text-[#0071BC] bg-sky-50 px-2.5 py-1 rounded-xl border border-sky-200/80">
-            <i class="fa-solid fa-cube text-[11px] mr-1.5 text-sky-600"></i>
-            <span>${module}</span>
+        return `<div class="inline-flex items-center text-xs font-semibold text-[#0071BC] bg-sky-50 px-2.5 py-1 rounded-xl border border-sky-200/80 max-w-[190px]">
+            <i class="fa-solid fa-cube text-[11px] mr-1.5 text-sky-600 shrink-0"></i>
+            <span class="truncate">${module}</span>
             ${subText}
         </div>`;
     }
@@ -528,33 +528,33 @@ document.addEventListener('DOMContentLoaded', function () {
                     logs.forEach(row => {
                         html += `
                             <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="py-3.5 px-4">
+                                <td class="py-2.5 px-3">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                                             ${row.user_name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <div class="font-semibold text-slate-900">${row.user_name}</div>
-                                            <div class="text-[11px] text-slate-400 font-mono">${row.user_email}</div>
+                                            <div class="font-semibold text-slate-900 whitespace-nowrap max-w-[150px] truncate" title="${row.user_name}">${row.user_name}</div>
+                                            <div class="text-[11px] text-slate-400 font-mono max-w-[120px] truncate" title="${row.user_email}">${row.user_email}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-3.5 px-4">
+                                <td class="py-2.5 px-3">
                                     ${getRoleBadge(row.role)}
                                 </td>
-                                <td class="py-3.5 px-4">
-                                    <div class="font-medium text-slate-800">${row.school_name}</div>
+                                <td class="py-2.5 px-3">
+                                    <div class="font-medium text-slate-800 whitespace-nowrap max-w-[120px] truncate" title="${row.school_name}">${row.school_name}</div>
                                 </td>
-                                <td class="py-3.5 px-4">
+                                <td class="py-2.5 px-3">
                                     ${getModuleBadge(row.module, row.sub_module)}
                                 </td>
-                                <td class="py-3.5 px-4">
-                                    <div class="text-xs text-slate-600 max-w-[200px] truncate" title="${row.url}">
+                                <td class="py-2.5 px-3">
+                                    <div class="text-xs text-slate-600 max-w-[170px] truncate" title="${row.url}">
                                         <span class="font-semibold text-slate-700">${row.action}</span>
                                         <span class="text-slate-400 block truncate font-mono text-[11px]">${row.url}</span>
                                     </div>
                                 </td>
-                                <td class="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                                <td class="py-2.5 px-2 text-slate-500 whitespace-nowrap">
                                     <span class="font-medium text-slate-700">${row.created_at_human}</span>
                                     <span class="text-[11px] text-slate-400 block">${row.created_at_full}</span>
                                 </td>

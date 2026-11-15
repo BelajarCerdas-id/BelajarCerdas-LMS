@@ -27,8 +27,9 @@
     function getSidebarConfig(sidebarEl) {
         const isStudent = sidebarEl && sidebarEl.classList.contains('sidebar-beranda-student');
         return {
-            defaultWidth: isStudent ? 290 : 250,
-            storageKey: isStudent ? 'bc_sidebar_width_student' : 'bc_sidebar_width_admin'
+            defaultWidth: 290,
+            // v2: unified width across roles — old per-role saved widths ignored
+            storageKey: isStudent ? 'bc_sidebar_width_student' : 'bc_sidebar_width_admin_v2'
         };
     }
 
@@ -91,7 +92,7 @@
 
         // 3. Direct inline styling on sidebar elements
         const sidebars = document.querySelectorAll(
-            'aside.sidebar-beranda-administrator, aside.sidebar-beranda-student, aside.sidebar-beranda-school-admin'
+            'aside.sidebar-beranda-administrator, aside.sidebar-beranda-student, aside.sidebar-beranda-school-admin, aside.sidebar-beranda-guru'
         );
         sidebars.forEach((s) => {
             s.style.width = `${width}px`;
@@ -107,7 +108,7 @@
         }
 
         const config = getSidebarConfig(sidebarEl);
-        const savedWidth = localStorage.getItem(config.storageKey) || localStorage.getItem(STORAGE_KEY_GLOBAL);
+        const savedWidth = localStorage.getItem(config.storageKey);
 
         let initialWidth = config.defaultWidth;
         if (savedWidth) {
@@ -258,7 +259,7 @@
 
     function init() {
         const sidebars = document.querySelectorAll(
-            'aside.sidebar-beranda-administrator, aside.sidebar-beranda-student, aside.sidebar-beranda-school-admin'
+            'aside.sidebar-beranda-administrator, aside.sidebar-beranda-student, aside.sidebar-beranda-school-admin, aside.sidebar-beranda-guru'
         );
 
         sidebars.forEach(setupSidebarResizer);

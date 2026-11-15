@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\StudentAssessmentAnticheatViolation;
 use Illuminate\Database\Eloquent\Model;
 
 class StudentAssessmentAttempt extends Model
@@ -21,6 +22,11 @@ class StudentAssessmentAttempt extends Model
         'last_heartbeat_at',
         'status',
     ];
+
+    public function AnticheatViolations()
+    {
+        return $this->hasMany(StudentAssessmentAnticheatViolation::class, 'student_assessment_attempt_id');
+    }
 
     public function UserAccount()
     {

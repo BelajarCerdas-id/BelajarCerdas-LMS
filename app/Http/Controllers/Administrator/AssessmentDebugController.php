@@ -18,6 +18,7 @@ use App\Helpers\TimezoneHelper;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\LmsQuestionBank;
+use App\Models\StudentAssessmentAnticheatViolation;
 use App\Models\LmsQuestionOption;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -1839,6 +1840,19 @@ class AssessmentDebugController extends Controller
                         'tab_switch_count' => (int) ($attempt?->tab_switch_count ?? 0),
                         'start_time' => $attempt?->start_time ? Carbon::parse($attempt->start_time)->setTimezone($timezone)->format('d M Y H:i:s') : '-',
                         'expire_time' => $attempt?->expire_time ? Carbon::parse($attempt->expire_time)->setTimezone($timezone)->format('d M Y H:i:s') : '-',
+                        'anticheat_violations' => $attempt?->id
+                            ? StudentAssessmentAnticheatViolation::where('student_assessment_attempt_id', $attempt->id)
+                                ->orderBy('created_at')
+                                ->get()
+                                ->map(fn ($v) => [
+                                    'reason' => $v->reason,
+                                    'ip' => $v->ip,
+                                    'browser' => trim(($v->browser ?? '') . ' ' . ($v->browser_version ?? '')),
+                                    'device_type' => $v->device_type,
+                                    'platform' => $v->platform,
+                                    'at' => $v->created_at?->setTimezone($timezone)->format('d M Y H:i:s'),
+                                ])->values()
+                            : [],
                     ],
                     'summary' => [
                         'total_questions' => count($items),

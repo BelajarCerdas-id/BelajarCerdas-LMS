@@ -1943,7 +1943,7 @@ $(document).on('click', '#btn-submit-save-answer, #btn-submit-draft-answer', fun
     });
 });
 
-function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout') {
+function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', jitterMs = null) {
 
     examFinished = true;
 
@@ -2007,8 +2007,10 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout') 
         durations: questionDurations,
     };
 
-    // Stagger network traffic with tiny random jitter (0 - 1200ms) to prevent concurrent thundering herd
-    const jitter = Math.floor(Math.random() * 1200);
+    // Stagger network traffic on automatic submits (timer/schedule expiry):
+    // clients fire at the same wall-clock second, so spread each heavy /end
+    // transaction over 0-45s. Manual submits pass jitterMs = 0 and go now.
+    const jitter = jitterMs === 0 ? 0 : Math.floor(Math.random() * 45000);
 
     setTimeout(function () {
         $.ajax({
@@ -2059,7 +2061,7 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
 
             autoSubmitUnSavedQuestions(function () {
                 window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
-            }, 'submitted');
+            }, 'submitted', 0);
 
         }
     });
