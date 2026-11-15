@@ -102,4 +102,4 @@
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-desktop.js') }}?v=6"></script>
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-mobile.js') }}?v=6"></script>
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-ios.js') }}?v=6"></script>
-<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test.js') }}?v=6"></script>
+<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test.js') }}?v=7"></script>

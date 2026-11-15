@@ -30,16 +30,11 @@ function startTimer() {
     const START_KEY = `timer_assessment_test_start_${assessmentId}`;
     const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
 
-    const expireTime = localStorage.getItem(EXPIRE_KEY);
-
-    if (expireTime && parseInt(expireTime) > Date.now()) {
-        const remaining = Math.floor((parseInt(expireTime) - Date.now()) / 1000);
-        runCountdown(remaining);
-    } else {
-        // Jika expireTime di localStorage sudah lewat atau belum ada,
-        // SELALU verifikasi dengan server terlebih dahulu (karena admin bisa saja baru membuka kunci / memperpanjang durasi)
-        startNewCountdown();
-    }
+    // Selalu verifikasi dengan server: firstOrCreate attempt server adalah
+    // satu-satunya sumber kebenaran. Kalau localStorage punya expire yang
+    // masih berjalan tapi attempt server sudah tidak ada (reset/manual),
+    // timer lokal tetap jalan padahal simpan jawaban akan 422 not_started.
+    startNewCountdown();
 
     function startNewCountdown() {
         $.ajax({
