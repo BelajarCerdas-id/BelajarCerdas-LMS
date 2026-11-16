@@ -481,7 +481,7 @@
                     Kembali ke halaman assessment
                 </a>
 
-                <a href="{{ route('lms.studentAssessmentExan.view', [ $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId]) }}">
+                <a href="{{ route('lms.studentAssessmentExam.view', [ $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId]) }}">
                     <button
                             class="w-full border border-gray-300 text-gray-600 px-6 py-3 rounded-xl hover:bg-gray-100 transition font-semibold cursor-pointer">
                         <i class="fa-solid fa-magnifying-glass"></i>

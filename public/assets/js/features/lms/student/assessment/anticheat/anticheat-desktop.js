@@ -94,11 +94,21 @@ window.AntiCheatPlatforms.push({
         document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
         // ---- Keyboard shortcut blocking ----
+        const isWindows = /Windows/.test(navigator.userAgent || '');
+
         document.addEventListener("keydown", function (e) {
             if (shouldSkipAntiCheat()) return;
 
             const isCmdOrCtrl = e.ctrlKey || e.metaKey;
             const key = e.key ? e.key.toLowerCase() : '';
+
+            // Windows key / Super key (e.key 'Meta' on Chromium, 'OS' on older
+            // Firefox). Only struck on Windows: on macOS 'Meta' is Cmd, which
+            // fires constantly for normal copy/paste shortcuts.
+            if ((e.key === 'Meta' || e.key === 'OS') && isWindows) {
+                reportCheating('windows_key');
+                return;
+            }
 
             // DevTools shortcuts (F12, Ctrl/Cmd + Shift + I/J/C)
             if (e.key === "F12" || (isCmdOrCtrl && e.shiftKey && ['i', 'j', 'c'].includes(key))) {
@@ -194,5 +204,24 @@ window.AntiCheatPlatforms.push({
                 antiCheatBlurTimeout = null;
             }
         });
+
+        // ---- Extension detection (Grammarly) ----
+        // Grammarly marks <body>/<html> with data-* attributes and injects an
+        // in-page widget / custom element, so a periodic DOM check catches it
+        // even when nothing loses focus. Struck once per exam; reportCheating's
+        // own debounce handles retries while markers are present.
+        var grammarlyReported = false;
+        function detectGrammarly() {
+            if (grammarlyReported || shouldSkipAntiCheat()) return;
+            if (document.querySelector(
+                'grammarly-desktop-integration, [data-gr-ext-installed], ' +
+                '[data-new-gr-c-s-check-loaded], [data-grammarly-shadow-root]'
+            )) {
+                grammarlyReported = true;
+                reportCheating('grammarly_extension');
+            }
+        }
+        detectGrammarly();
+        setInterval(detectGrammarly, 3000);
     }
 });
