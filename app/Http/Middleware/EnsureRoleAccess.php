@@ -33,9 +33,9 @@ class EnsureRoleAccess
         'school-foundation' => self::ADMIN_ROLES, // FoundationManagementController
         'tka-tryout-management' => self::ADMIN_ROLES, // TkaTryout* management controllers
         'manage-contract' => self::CONTRACT_ROLES, // FinanceContractController / FinanceDashboardController
-        'school-subscription/validate' => self::ADMIN_ROLES, // SchoolPartnerController bulk upload
-        'school-subscription/store' => self::ADMIN_ROLES,
-        'school-subscription/add-users' => self::ADMIN_ROLES,
+        'school-subscription/validate' => self::CONTRACT_ROLES, // SchoolPartnerController bulk upload (Finance console)
+        'school-subscription/store' => self::CONTRACT_ROLES,
+        'school-subscription/add-users' => self::CONTRACT_ROLES,
     ];
 
     /**
