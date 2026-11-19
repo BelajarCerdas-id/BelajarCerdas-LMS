@@ -636,10 +636,8 @@ class TeacherQuestionBankReleaseController extends Controller
                 ]);
             }
 
-            // SIMPAN SOAL KE KOMPOSISI
-            SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->where('sac_id', $compositionId)->whereNotIn('question_bank_id', $questionIds)->update([
-                'sac_id' => null,
-            ]);
+            // HAPUS SOAL YANG TIDAK LAGI DIPILIH DARI KOMPOSISI
+            SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->where('sac_id', $compositionId)->whereNotIn('question_bank_id', $questionIds)->delete();
 
             // Simpan soal beserta komposisinya.
             foreach ($questionIds as $questionId) {
