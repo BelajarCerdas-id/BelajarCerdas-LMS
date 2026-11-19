@@ -1550,8 +1550,8 @@ function renderTeacherQuestionReleaseBankCard(bank) {
         <div class="rounded-2xl border ${expanded ? 'border-[#75BFFF] shadow-sm' : 'border-gray-200'} bg-white overflow-hidden">
             <div class="flex items-center gap-3 px-4 py-3 ${expanded ? 'bg-[#F7FCFF]' : 'bg-white'}">
                 <button type="button" data-question-release-bank-toggle="${escapeTeacherQuestionReleaseHtml(bank.id)}"
-                    class="flex min-w-0 flex-1 items-start gap-3 text-left">
-                    <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${expanded ? 'bg-[#0071BC] text-white' : 'bg-gray-100 text-gray-500'}">
+                    class="flex min-w-0 flex-1 items-start gap-3 text-left cursor-pointer">
+                    <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl cursor-pointer ${expanded ? 'bg-[#0071BC] text-white' : 'bg-gray-100 text-gray-500'}">
                         <i class="fa-solid ${expanded ? 'fa-chevron-down' : 'fa-chevron-right'} text-[10px]"></i>
                     </div>
 
@@ -1685,9 +1685,20 @@ function selectAllTeacherQuestionReleaseBank(bankId) {
         teacherQuestionReleaseSelectedQuestions.has(String(question.id))
     );
 
+    let blockedCount = 0;
+
     if (allSelected) {
         bank.questions.forEach(question => {
             const id = String(question.id);
+
+            const selectedQuestionData = teacherQuestionReleaseSelectedQuestionData.get(id);
+            const hasAnswers = selectedQuestionData?.has_answers === true;
+
+            // PERTAHANKAN SOAL YANG SUDAH DIJAWAB SISWA
+            if (hasAnswers) {
+                blockedCount++;
+                return;
+            }
 
             teacherQuestionReleaseSelectedQuestions.delete(id);
             delete teacherQuestionReleaseSelectedQuestionWeights[id];
@@ -1712,11 +1723,24 @@ function selectAllTeacherQuestionReleaseBank(bankId) {
     if (teacherQuestionReleaseStep === 3) {
         loadTeacherQuestionReleaseStep4();
     }
+
+    // TAMPILKAN ALERT JIKA ADA SOAL YANG TIDAK DAPAT DIHAPUS
+    if (blockedCount > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Beberapa Soal Tidak Dapat Dihapus',
+            text: `${blockedCount} soal tetap dipilih karena sudah pernah dijawab oleh siswa.`,
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#0071BC'
+        });
+    }
 }
 
 function renderTeacherQuestionReleaseQuestionCard(question, index) {
     const id = String(question.id);
     const selected = teacherQuestionReleaseSelectedQuestions.has(id);
+    const selectedQuestionData = teacherQuestionReleaseSelectedQuestionData.get(id);
+    const hasAnswers = selectedQuestionData?.has_answers === true;
 
     const questionType = question.tipe_soal || question.question_type || question.type || 'Soal';
 
@@ -1737,8 +1761,9 @@ function renderTeacherQuestionReleaseQuestionCard(question, index) {
         <label class="group block cursor-pointer rounded-xl border ${selected ? 'border-[#0071BC] bg-[#EAF6FF]/50' : 'border-gray-200 bg-white hover:border-[#B9DDF5] hover:bg-gray-50'} p-3 transition-all duration-200">
             <div class="flex items-start gap-3">
                 <div class="pt-0.5">
-                    <input type="checkbox" class="question-release-question-checkbox h-4 w-4 rounded border-gray-300 text-[#0071BC] focus:ring-[#0071BC]"
+                    <input type="checkbox" class="question-release-question-checkbox h-4 w-4 rounded border-gray-300 text-[#0071BC] focus:ring-[#0071BC] cursor-pointer"
                         data-question-id="${escapeTeacherQuestionReleaseHtml(id)}"
+                        data-question-has-answers="${hasAnswers ? 'true' : 'false'}"
                         ${selected ? 'checked' : ''}>
                 </div>
 
@@ -1801,7 +1826,11 @@ function toggleTeacherQuestionReleaseQuestion(questionId, checked) {
         );
 
         if (question) {
-            teacherQuestionReleaseSelectedQuestionData.set(id, question);
+            teacherQuestionReleaseSelectedQuestionData.set(id, {
+                ...question,
+                has_answers: question.has_answers === true,
+                assignment_id: question.assignment_id ?? null
+            });
         }
     } else {
         teacherQuestionReleaseSelectedQuestions.delete(id);
@@ -1820,6 +1849,8 @@ function toggleTeacherQuestionReleaseQuestion(questionId, checked) {
         loadTeacherQuestionReleaseStep4();
     }
 }
+
+
 
 function renderTeacherQuestionReleaseSelectedQuestions() {
     const list = $('#question-release-selected-question-list');
@@ -1840,25 +1871,29 @@ function renderTeacherQuestionReleaseSelectedQuestions() {
 
     const allQuestions = getTeacherQuestionReleaseAllQuestions();
 
-    const selectedQuestions = Array.from(teacherQuestionReleaseSelectedQuestions).map(id => {
+    const selectedQuestions = selectedIds.map(id => {
+        const key = String(id);
+
         const currentQuestion = allQuestions.find(
-            question => String(question.id) === String(id)
+            question => String(question.id) === key
         );
 
-        if (currentQuestion) {
-            teacherQuestionReleaseSelectedQuestionData.set(
-                String(id),
-                currentQuestion
-            );
+        const savedQuestion = teacherQuestionReleaseSelectedQuestionData.get(key);
 
-            return currentQuestion;
+        if (currentQuestion) {
+            const questionData = {
+                ...currentQuestion,
+                ...(savedQuestion || {}),
+                id: currentQuestion.id
+            };
+
+            teacherQuestionReleaseSelectedQuestionData.set(key, questionData);
+
+            return questionData;
         }
 
-        return teacherQuestionReleaseSelectedQuestionData.get(
-            String(id)
-        ) || null;
-    })
-        .filter(Boolean);
+        return savedQuestion || null;
+    }).filter(Boolean);
 
     list.html(
         selectedQuestions.map((question, index) =>
@@ -1878,6 +1913,14 @@ function renderTeacherQuestionReleaseSelectedQuestionCard(question, index) {
     const bank = getTeacherQuestionReleaseQuestionBankForQuestion(question);
 
     const questionType = question.tipe_soal || question.question_type || question.type || 'Soal';
+    const hasAnswers = question.has_answers === true;
+
+    console.log('DEBUG SELECTED QUESTION:', {
+        id: question.id,
+        assignment_id: question.assignment_id,
+        has_answers: question.has_answers,
+        hasAnswers: hasAnswers
+    });
 
     return `
         <div class="rounded-xl border border-gray-200 bg-white p-3">
@@ -1903,7 +1946,8 @@ function renderTeacherQuestionReleaseSelectedQuestionCard(question, index) {
                 </div>
 
                 <button type="button" data-question-release-remove="${escapeTeacherQuestionReleaseHtml(id)}"
-                    class="shrink-0 text-gray-400 hover:text-red-500">
+                    data-question-has-answers="${hasAnswers ? 'true' : 'false'}"
+                    class="shrink-0 text-gray-400 hover:text-red-500 cursor-pointer">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             </div>
@@ -2778,7 +2822,7 @@ function loadTeacherQuestionReleaseStep3() {
     // Identifikasi komposisi yang sedang dimuat
     const compositionKey = isLegacy ? `${assessment.id}:legacy` : `${assessment.id}:${selectedComposition.composition_id}`;
 
-    // Pulihkan data hanya ketika komposisi berubah
+    // Pulihkan data ketika komposisi berubah
     if (teacherQuestionReleaseLoadedCompositionKey !== compositionKey) {
         teacherQuestionReleaseSelectedQuestions.clear();
         teacherQuestionReleaseSelectedQuestionWeights = {};
@@ -2787,22 +2831,28 @@ function loadTeacherQuestionReleaseStep3() {
         assignedQuestions.forEach(item => {
             const questionId = String(item.question_id);
 
-            // Simpan ID soal
             teacherQuestionReleaseSelectedQuestions.add(questionId);
 
-            // Simpan bobot soal
             teacherQuestionReleaseSelectedQuestionWeights[questionId] = Number(item.weight || 0);
 
-            // Simpan detail soal
             if (item.question) {
-                teacherQuestionReleaseSelectedQuestionData.set(questionId, {
+                const questionData = {
                     ...item.question,
-                    id: item.question.id ?? item.question_id
-                });
+                    id: item.question.id ?? item.question_id,
+                    assignment_id: item.assignment_id,
+                    has_answers: item.has_answers === true
+                };
+
+                teacherQuestionReleaseSelectedQuestionData.set(questionId, questionData);
             }
         });
 
         teacherQuestionReleaseLoadedCompositionKey = compositionKey;
+
+        console.log(
+            'DEBUG RESTORED SELECTED DATA:',
+            Array.from(teacherQuestionReleaseSelectedQuestionData.entries())
+        );
     }
 
     loading.removeClass('hidden');
@@ -3756,12 +3806,28 @@ function bindTeacherQuestionReleaseEvents() {
     $(document).on('change.teacherQuestionRelease', '.question-release-question-checkbox', function (e) {
         e.stopPropagation();
 
-        toggleTeacherQuestionReleaseQuestion(
-            $(this).attr('data-question-id'),
-            $(this).is(':checked')
-        );
-    });
+        const checkbox = $(this);
+        const questionId = checkbox.attr('data-question-id');
+        const checked = checkbox.is(':checked');
+        const hasAnswers = checkbox.attr('data-question-has-answers') === 'true';
 
+        // CEGAH UNCHECK SOAL YANG SUDAH DIJAWAB SISWA
+        if (!checked && hasAnswers) {
+            checkbox.prop('checked', true);
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Soal Tidak Dapat Dihapus',
+                text: 'Soal ini sudah pernah dijawab oleh siswa sehingga tidak dapat dihapus dari komposisi assessment.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#0071BC'
+            });
+
+            return;
+        }
+
+        toggleTeacherQuestionReleaseQuestion(questionId, checked);
+    });
     // RADIO: GANTI JENJANG KELAS
     $(document)
         .off('change.teacherQuestionRelease', '.question-release-class-level-radio')
@@ -3810,20 +3876,31 @@ function bindTeacherQuestionReleaseEvents() {
         }
     });
 
-    // CLICK: HAPUS SOAL TERPILIH
-    $(document).on('click.teacherQuestionRelease', '[data-question-release-remove]', function () {
-        if (teacherQuestionReleaseSelectedAssessmentHasAnswers) {
+    // HAPUS SOAL TERPILIH
+    $(document).on('click.teacherQuestionRelease', '[data-question-release-remove]', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id = String($(this).attr('data-question-release-remove'));
+        const hasAnswers = $(this).attr('data-question-has-answers') === 'true';
+
+        console.log('DEBUG REMOVE BUTTON:', {
+            questionId: id,
+            hasAnswers: hasAnswers,
+            rawValue: $(this).attr('data-question-has-answers')
+        });
+
+        if (hasAnswers) {
             Swal.fire({
                 icon: 'warning',
-                title: 'Assessment Sudah Dikerjakan',
-                text: 'Soal tidak dapat dihapus karena sudah ada siswa yang menjawab assessment ini.',
+                title: 'Soal Tidak Dapat Dihapus',
+                text: 'Soal ini sudah pernah dijawab oleh siswa sehingga tidak dapat dihapus dari komposisi assessment.',
                 confirmButtonText: 'Mengerti',
                 confirmButtonColor: '#0071BC'
             });
+
             return;
         }
-
-        const id = String($(this).attr('data-question-release-remove'));
 
         // Hapus soal dari seluruh state
         teacherQuestionReleaseSelectedQuestions.delete(id);

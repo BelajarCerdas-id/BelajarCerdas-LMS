@@ -98,9 +98,12 @@ class TeacherQuestionBankReleaseController extends Controller
         $assessmentAnswerStatus = StudentAssessmentAnswer::whereIn('school_assessment_id', $allAssessmentIds)->select('school_assessment_id')
         ->distinct()->pluck('school_assessment_id')->map(fn($id) => (int) $id)->flip();
 
-        $allAssignments = SchoolAssessmentQuestion::whereIn('school_assessment_id', $allAssessmentIds)->get(['school_assessment_id', 'sac_id', 
-            'question_bank_id', 'question_weight'])
-        ->groupBy('school_assessment_id');
+        // Ambil ID soal yang sudah pernah dijawab siswa.
+        $answeredAssessmentQuestionIds = StudentAssessmentAnswer::whereIn('school_assessment_id', $allAssessmentIds)->whereNotNull('school_assessment_question_id')
+        ->distinct()->pluck('school_assessment_question_id')->map(fn($id) => (int) $id)->flip();
+
+        $allAssignments = SchoolAssessmentQuestion::whereIn('school_assessment_id', $allAssessmentIds)->get(['id', 'school_assessment_id', 'sac_id', 'question_bank_id', 
+        'question_weight'])->groupBy('school_assessment_id');
 
         $assignedQuestionIds = $allAssignments->flatten()->pluck('question_bank_id')->filter()->map(fn($id) => (int) $id)->unique()->values();
 
@@ -122,16 +125,18 @@ class TeacherQuestionBankReleaseController extends Controller
             ->keyBy(fn($question) => (string) $question->id);
         }
 
-        $buildAssessmentAssignmentData = function ($assessment) use ($allAssignments, $assignedQuestionDetails, $assessmentAnswerStatus) {
+        $buildAssessmentAssignmentData = function ($assessment) use ($allAssignments, $assignedQuestionDetails, $assessmentAnswerStatus, $answeredAssessmentQuestionIds) {
             $assignments = $allAssignments->get($assessment->id, collect());
 
-            $formatAssignedQuestions = function ($items) use ($assignedQuestionDetails) {
-                return $items->map(function ($item) use ($assignedQuestionDetails) {
+            $formatAssignedQuestions = function ($items) use ($assignedQuestionDetails, $answeredAssessmentQuestionIds) {
+                return $items->map(function ($item) use ($assignedQuestionDetails, $answeredAssessmentQuestionIds) {
                     $questionId = (string) $item->question_bank_id;
 
                     return [
+                        'assignment_id' => (int) $item->id,
                         'question_id' => (int) $item->question_bank_id,
                         'weight' => (float) $item->question_weight,
+                        'has_answers' => $answeredAssessmentQuestionIds->has((int) $item->id),
                         'question' => $assignedQuestionDetails->get($questionId),
                     ];
                 })->values()->all();
@@ -153,12 +158,7 @@ class TeacherQuestionBankReleaseController extends Controller
                         'id' => (int) $composition->id,
                         'composition_name' => $composition->composition_name,
                         'assigned_question_count' => $compositionAssignments->count(),
-                        'assigned_total_weight' => round(
-                            $compositionAssignments->sum(
-                                fn($item) => (float) $item->question_weight
-                            ),
-                            2
-                        ),
+                        'assigned_total_weight' => round($compositionAssignments->sum(fn($item) => (float) $item->question_weight), 2),
                         'assigned_questions' => $formatAssignedQuestions($compositionAssignments),
                     ];
                 })->values();
@@ -170,10 +170,7 @@ class TeacherQuestionBankReleaseController extends Controller
             // Total seluruh soal, termasuk soal lama dan seluruh komposisi.
             $assessment->assigned_question_count = $assignments->count();
 
-            $assessment->assigned_total_weight = round(
-                $assignments->sum(fn($item) => (float) $item->question_weight),
-                2
-            );
+            $assessment->assigned_total_weight = round($assignments->sum(fn($item) => (float) $item->question_weight), 2);
 
             $assessment->assigned_questions = $formatAssignedQuestions($assignments);
 
@@ -183,10 +180,7 @@ class TeacherQuestionBankReleaseController extends Controller
             // Soal lama yang belum dikelompokkan ke komposisi.
             $assessment->legacy_assigned_question_count = $legacyAssignments->count();
 
-            $assessment->legacy_assigned_total_weight = round(
-                $legacyAssignments->sum(fn($item) => (float) $item->question_weight),
-                2
-            );
+            $assessment->legacy_assigned_total_weight = round($legacyAssignments->sum(fn($item) => (float) $item->question_weight), 2);
 
             $assessment->legacy_assigned_questions = $formatAssignedQuestions($legacyAssignments);
 
