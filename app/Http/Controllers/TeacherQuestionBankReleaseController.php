@@ -609,17 +609,6 @@ class TeacherQuestionBankReleaseController extends Controller
         );
 
         foreach ($questions as $question) {
-            $questionClassLevel = (int) app(ClassNameService::class)->extractClassLevel(
-                optional($question->Kelas)->kelas
-            );
-
-            if ((int) $question->mapel_id !== (int) $assessment->mapel_id || $questionClassLevel !== $assessmentClassLevel) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Terdapat soal yang tidak sesuai dengan kelas atau mata pelajaran assessment.',
-                ], 422);
-            }
-
             if ($question->school_partner_id !== null && (int) $question->school_partner_id !== (int) $schoolId) {
                 return response()->json([
                     'status' => 'error',
