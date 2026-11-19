@@ -657,10 +657,10 @@ class TeacherQuestionBankReleaseController extends Controller
                 SchoolAssessmentQuestion::updateOrCreate(
                     [
                         'school_assessment_id' => $assessment->id,
+                        'sac_id' => $compositionId,
                         'question_bank_id' => $questionId,
                     ],
                     [
-                        'sac_id' => $compositionId,
                         'question_weight' => $weights->get($questionId),
                     ]
                 );
