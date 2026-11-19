@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\SchoolAssessment;
+use App\Models\SchoolAssessmentComposition;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnswer;
+use App\Models\StudentAssessmentComposition;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\StudentSchoolClass;
@@ -365,6 +367,7 @@ class TeacherAssessmentGradingController extends Controller
         }
     }
 
+    
     public function paginateAssessmentGradingStudentAnswer($role, $schoolName, $schoolId, $assessmentId, $mode, $studentId)
     {
         $baseAssessment = SchoolAssessment::findOrFail($assessmentId);
@@ -374,14 +377,12 @@ class TeacherAssessmentGradingController extends Controller
         $assessment = SchoolAssessment::with(['SchoolClass', 'Mapel'])->where('id', $assessmentId)->where('assessment_category', $mode)->first();
 
         if (!$assessment) {
-            $assessment = SchoolAssessment::with(['SchoolClass', 'Mapel'])
-                ->where(function ($q) use ($rootAssessmentId) {
-                    $q->where('id', $rootAssessmentId)
-                    ->orWhere('parent_assessment_id', $rootAssessmentId);
+            $assessment = SchoolAssessment::with(['SchoolClass', 'Mapel'])->where(function ($q) use ($rootAssessmentId) {
+                $q->where('id', $rootAssessmentId)->orWhere('parent_assessment_id', $rootAssessmentId);
             })->where('assessment_category', $mode)->orderByDesc('id')->firstOrFail();
         }
 
-        // fallback ke parent jika tidak ada soal
+        // FALLBACK KE PARENT JIKA TIDAK ADA SOAL
         $realAssessmentId = $assessment->id;
 
         $hasQuestion = SchoolAssessmentQuestion::where('school_assessment_id', $assessment->id)->exists();
@@ -390,17 +391,50 @@ class TeacherAssessmentGradingController extends Controller
             $realAssessmentId = $assessment->parent_assessment_id;
         }
 
-        // ambil soal + jawaban
-        $schoolAssessmentQuestion = SchoolAssessmentQuestion::with([
-            'LmsQuestionBank.LmsQuestionOption',
-            'StudentAssessmentAnswer' => function ($query) use ($studentId, $assessment) {
-                $query->where('student_id', $studentId)
-                    ->where('school_assessment_id', $assessment->id);
-            }
-        ])->where('school_assessment_id', $realAssessmentId)->get();
+        // CEK APAKAH ASESMEN MEMILIKI KOMPOSISI
+        $hasCompositionData = SchoolAssessmentComposition::where('school_assessment_id', $realAssessmentId)->exists();
 
-        // handle kalau soal kosong
-        if ($schoolAssessmentQuestion->isEmpty()) {
+        // AMBIL KOMPOSISI BERDASARKAN PENETAPAN SISWA
+        if ($hasCompositionData) {
+
+            $studentComposition = StudentAssessmentComposition::where('school_assessment_id', $realAssessmentId)->where('user_id', $studentId)->first();
+
+            if ($studentComposition) {
+                $hasComposition = SchoolAssessmentComposition::with(['SchoolAssessmentQuestion.LmsQuestionBank.LmsQuestionOption',
+                    'SchoolAssessmentQuestion.StudentAssessmentAnswer' => function ($query) use ($studentId, $assessment) {
+                        $query->where('student_id', $studentId)
+                            ->where('school_assessment_id', $assessment->id);
+                    }
+                ])->where('school_assessment_id', $realAssessmentId)->where('id', $studentComposition->sac_id)->get();
+
+            } else {
+
+                // SISWA BELUM MENDAPATKAN KOMPOSISI
+                $hasComposition = collect();
+            }
+
+        } else {
+
+            // ASESMEN LAMA TANPA KOMPOSISI, AMBIL SOAL LEGACY DENGAN sac_id NULL
+            $legacyQuestions = SchoolAssessmentQuestion::with(['LmsQuestionBank.LmsQuestionOption',
+                'StudentAssessmentAnswer' => function ($query) use ($studentId, $assessment) {
+                    $query->where('student_id', $studentId)->where('school_assessment_id', $assessment->id);
+                }
+            ])->where('school_assessment_id', $realAssessmentId)->whereNull('sac_id')->orderBy('id')->get();
+
+            // BENTUK DATA LEGACY AGAR TETAP MEMILIKI STRUKTUR KOMPOSISI
+            $legacyComposition = new SchoolAssessmentComposition();
+            $legacyComposition->setAttribute('composition_name', 'Tanpa Nama');
+            $legacyComposition->setRelation('SchoolAssessmentQuestion', $legacyQuestions);
+
+            $hasComposition = collect([$legacyComposition]);
+        }
+
+        // HANDLE JIKA SOAL KOSONG
+        if ($hasComposition->isEmpty() || $hasComposition->every(function ($composition) {
+                return $composition->SchoolAssessmentQuestion->isEmpty();
+            })) {
+
             return response()->json([
                 'data' => [],
                 'questionsAnswer' => [],
@@ -417,14 +451,13 @@ class TeacherAssessmentGradingController extends Controller
             $rootAssessmentId = $assessment->parent_assessment_id ?? $assessment->id;
 
             $allAssessments = SchoolAssessment::where(function ($q) use ($rootAssessmentId) {
-                $q->where('id', $rootAssessmentId)
-                ->orWhere('parent_assessment_id', $rootAssessmentId);
+                $q->where('id', $rootAssessmentId)->orWhere('parent_assessment_id', $rootAssessmentId);
             })->orderBy('id')->get();
 
             $previousAssessments = $allAssessments->where('id', '<', $assessment->id);
 
-            $allAnswers = StudentAssessmentAnswer::where('student_id', $studentId)->whereIn('school_assessment_id', $allAssessments->pluck('id'))->where('status_answer', 'submitted')->get()
-            ->groupBy('school_assessment_id');
+            $allAnswers = StudentAssessmentAnswer::where('student_id', $studentId)->whereIn('school_assessment_id', $allAssessments->pluck('id'))
+            ->where('status_answer', 'submitted')->get()->groupBy('school_assessment_id');
 
             $latestAnswerPerQuestion = [];
 
@@ -434,23 +467,44 @@ class TeacherAssessmentGradingController extends Controller
 
                 foreach ($answers as $ans) {
                     $qId = $ans->school_assessment_question_id;
-
                     $latestAnswerPerQuestion[$qId] = $ans;
                 }
             }
 
-            $schoolAssessmentQuestion = $schoolAssessmentQuestion->filter(function ($q) use ($latestAnswerPerQuestion) {
+            // FILTER SOAL DI DALAM KOMPOSISI
+            $hasComposition = $hasComposition->map(function ($composition) use ($latestAnswerPerQuestion) {
 
-                $answer = $latestAnswerPerQuestion[$q->id] ?? null;
+                $filteredQuestions = $composition->SchoolAssessmentQuestion->filter(function ($question) use ($latestAnswerPerQuestion) {
+                        $answer = $latestAnswerPerQuestion[$question->id] ?? null;
 
-                if (!$answer) return true;
+                        if (!$answer) {
+                            return true;
+                        }
 
-                if ($answer->question_score <= 0) return true;
+                        return $answer->question_score <= 0;
+                    })->values();
 
-                return false;
+                $composition->setRelation(
+                    'SchoolAssessmentQuestion',
+                    $filteredQuestions
+                );
 
+                return $composition;
+
+            })->filter(function ($composition) {
+                return $composition->SchoolAssessmentQuestion->isNotEmpty();
             })->values();
         }
+
+        // FLATTEN SOAL DARI KOMPOSISI TERPILIH
+        $gradingQuestions = $hasComposition->flatMap(function ($composition) {
+            return $composition->SchoolAssessmentQuestion->map(function ($question) {
+                return [
+                    'id' => $question->id,
+                    'school_assessment_question' => $question,
+                ];
+            });
+        })->values();
 
         // STUDENT ANSWER GLOBAL
         $assessmentIds = [$assessment->id];
@@ -459,30 +513,24 @@ class TeacherAssessmentGradingController extends Controller
             $assessmentIds[] = $assessment->parent_assessment_id;
         }
 
-        $childIds = SchoolAssessment::where('parent_assessment_id', $assessment->parent_assessment_id ?? $assessment->id)
-            ->pluck('id')
-            ->toArray();
+        $childIds = SchoolAssessment::where('parent_assessment_id', $assessment->parent_assessment_id ?? $assessment->id)->pluck('id')->toArray();
 
         $assessmentIds = array_unique(array_merge($assessmentIds, $childIds));
 
-        $questionsAnswer = StudentAssessmentAnswer::where('student_id', $studentId)
-            ->whereIn('school_assessment_id', $assessmentIds)
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [
-                    $item->school_assessment_id . '_' . $item->school_assessment_question_id => $item
-                ];
-            });
+        $questionsAnswer = StudentAssessmentAnswer::where('student_id', $studentId)->whereIn('school_assessment_id', $assessmentIds)->get()->mapWithKeys(function ($item) {
+            return [
+                $item->school_assessment_id . '_' . $item->school_assessment_question_id => $item
+            ];
+        });
 
         // STUDENT DATA
         $student = UserAccount::with(['studentProfile', 'StudentSchoolClass.SchoolClass'])->findOrFail($studentId);
 
-        $students = StudentSchoolClass::with(['UserAccount.StudentProfile'])
-            ->where('school_class_id', $assessment->school_class_id)
-            ->get()
-            ->sortBy(function ($item) {
-                return strtolower($item->UserAccount->StudentProfile->nama_lengkap ?? '');
-            })->values();
+        $students = StudentSchoolClass::with(['UserAccount.StudentProfile'])->where('school_class_id', $assessment->school_class_id)->get()->sortBy(function ($item) {
+            return strtolower(
+                $item->UserAccount->StudentProfile->nama_lengkap ?? ''
+            );
+        })->values();
 
         $currentIndex = $students->search(function ($item) use ($studentId) {
             return (int) $item->student_id === (int) $studentId;
@@ -492,15 +540,19 @@ class TeacherAssessmentGradingController extends Controller
         $nextStudent = null;
 
         if ($currentIndex !== false) {
+
             if ($currentIndex > 0) {
                 $prevItem = $students[$currentIndex - 1];
+
                 $previousStudent = [
                     'id' => $prevItem->student_id,
                     'name' => $prevItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Sebelumnya',
                 ];
             }
+
             if ($currentIndex < $students->count() - 1) {
                 $nextItem = $students[$currentIndex + 1];
+
                 $nextStudent = [
                     'id' => $nextItem->student_id,
                     'name' => $nextItem->UserAccount->StudentProfile->nama_lengkap ?? 'Siswa Selanjutnya',
@@ -511,18 +563,14 @@ class TeacherAssessmentGradingController extends Controller
         $studentIds = $students->pluck('student_id');
 
         $allAssessmentIds = SchoolAssessment::where(function ($q) use ($rootAssessmentId) {
-            $q->where('id', $rootAssessmentId)
-            ->orWhere('parent_assessment_id', $rootAssessmentId);
+            $q->where('id', $rootAssessmentId)->orWhere('parent_assessment_id', $rootAssessmentId);
         })->pluck('id');
 
-        $allAnswers = StudentAssessmentAnswer::whereIn('school_assessment_id', $allAssessmentIds)
-            ->whereIn('student_id', $studentIds)
-            ->where('status_answer', 'submitted')
-            ->get()
-            ->groupBy('student_id');
+        $allAnswers = StudentAssessmentAnswer::whereIn('school_assessment_id', $allAssessmentIds)->whereIn('student_id', $studentIds)->where('status_answer', 'submitted')
+        ->get()->groupBy('student_id');
 
         return response()->json([
-            'data' => $schoolAssessmentQuestion,
+            'data' => $gradingQuestions,
             'questionsAnswer' => $questionsAnswer,
             'assessment' => $assessment,
             'student' => $student,
@@ -530,6 +578,7 @@ class TeacherAssessmentGradingController extends Controller
             'nextStudent' => $nextStudent,
         ]);
     }
+
 
     public function submitAssessmentStudentScore(Request $request, $role, $schoolName, $schoolId, $assessmentId, $studentId, $schoolAssessmentQuestionId)
     {
