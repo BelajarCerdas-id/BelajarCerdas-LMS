@@ -125,9 +125,9 @@ function renderGradingView(response, selectedIndex = 0, options = {}) {
     const teacherFeedback = answerData?.teacher_feedback ?? '';
     const statusAnswer = answerData?.status_answer ?? 'draft';
 
-    const questionType = question?.lms_question_bank?.tipe_soal?.toLowerCase();
-    const optionsList = question?.lms_question_bank?.lms_question_option ?? [];
-    const studentAnswer = question?.student_assessment_answer?.length ? question.student_assessment_answer[0].answer_value : [];
+    const questionType = question?.school_assessment_question?.lms_question_bank?.tipe_soal?.toLowerCase();
+    const optionsList = question?.school_assessment_question?.lms_question_bank?.lms_question_option ?? [];
+    const studentAnswer = question?.school_assessment_question?.student_assessment_answer?.length ? question.school_assessment_question?.student_assessment_answer[0].answer_value : [];
 
     let questionStatus = '';
 
@@ -456,7 +456,7 @@ function renderGradingView(response, selectedIndex = 0, options = {}) {
                     <thead>
                         <tr class="bg-gray-100 text-center">
                             <th class="border px-4 py-2">
-                                ${question.lms_question_bank?.header_item ?? 'Pernyataan'}
+                                ${question.school_assessment_question?.lms_question_bank?.header_item ?? 'Pernyataan'}
                             </th>
                             ${categories.map(category => `
                                 <th class="border px-4 py-2">
@@ -680,7 +680,7 @@ function renderGradingView(response, selectedIndex = 0, options = {}) {
     const nomorSoalHTML = questions.map((item, index) => {
         const itemKey = `${assessment.id}_${item.id}`;
         const answer = questionsAnswer[itemKey];
-        const itemType = item?.lms_question_bank?.tipe_soal?.toLowerCase();
+        const itemType = item?.school_assessment_question?.lms_question_bank?.tipe_soal?.toLowerCase();
         const itemStatus = answer?.status_answer ?? 'draft';
         const itemGradingStatus = answer?.grading_status ?? 'pending';
 
@@ -745,7 +745,7 @@ function renderGradingView(response, selectedIndex = 0, options = {}) {
     }).join('');
 
     // QUESTION SPLIT IMAGE
-    const questionContent = question?.lms_question_bank?.questions ?? '';
+    const questionContent = question?.school_assessment_question?.lms_question_bank?.questions ?? '';
     const splitQuestions = questionContent.split('<img');
     const questionTextOnly = splitQuestions[0] ?? '';
 

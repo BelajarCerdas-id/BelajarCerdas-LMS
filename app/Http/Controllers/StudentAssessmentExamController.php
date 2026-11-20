@@ -229,7 +229,7 @@ class StudentAssessmentExamController extends Controller
             $optionCacheKey = "assessment-option-{$user->id}-{$assessmentId}-{$question->id}-{$publishedOptionIds}-{$semester}-{$shuffleOptions}";
 
             // MCQ / MCMA
-            if (in_array($type, ['MCQ','MCMA'])) {
+            if (in_array($type, ['MCQ', 'MCMA'])) {
 
                 if (Cache::has($optionCacheKey)) {
 
@@ -247,7 +247,7 @@ class StudentAssessmentExamController extends Controller
                     if ($shuffleOptions) {
                         $sorted = $options->shuffle()->values();
                     } else {
-                        $sorted = $options;
+                        $sorted = $options->sortBy('id')->values();
                     }
 
                     Cache::put(
@@ -257,59 +257,82 @@ class StudentAssessmentExamController extends Controller
                     );
                 }
 
-                $question->LmsQuestionBank->setRelation(
-                    'LmsQuestionOption',
-                    $sorted
-                );
+                // LABEL TAMPIL TETAP A, B, C, D, E. options_key asli tidak berubah
+                $sorted = $sorted->values()->map(function ($option, $index) {
+                    $option->setAttribute('display_key', chr(65 + $index));
+
+                    return $option;
+                });
+
+                $question->LmsQuestionBank->setRelation('LmsQuestionOption', $sorted);
             }
 
             // MATCHING
             if ($type === 'MATCHING') {
 
+                // AMBIL LEFT
                 $left = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'left';
                 })->values();
 
+                // AMBIL RIGHT
                 $right = $options->filter(function ($opt) {
-                    return isset($opt->extra_data['side']) 
+                    return isset($opt->extra_data['side'])
                         && $opt->extra_data['side'] === 'right';
                 })->values();
 
+                // CACHE LEFT
+                $publishedLeftIds = $left->sortBy('id')->pluck('id')->implode(',');
+                $leftCacheKey = "assessment-match-left-{$user->id}-{$assessmentId}-{$question->id}-{$publishedLeftIds}-{$semester}-{$shuffleOptions}";
+
+                // CACHE RIGHT
                 $publishedRightIds = $right->sortBy('id')->pluck('id')->implode(',');
+                $rightCacheKey = "assessment-match-right-{$user->id}-{$assessmentId}-{$question->id}-{$publishedRightIds}-{$semester}-{$shuffleOptions}";
 
-                $matchingCacheKey = "assessment-match-{$user->id}-{$assessmentId}-{$question->id}-{$publishedRightIds}-{$semester}-{$shuffleOptions}";
-
+                // FORCE REFRESH KEDUA CACHE
                 if ($forceRefresh) {
-                    Cache::forget($matchingCacheKey);
+                    Cache::forget($leftCacheKey);
+                    Cache::forget($rightCacheKey);
                 }
 
-                if (Cache::has($matchingCacheKey)) {
+                // SHUFFLE LEFT
+                if (Cache::has($leftCacheKey)) {
 
-                    $cachedIds = Cache::get($matchingCacheKey);
+                    $cachedLeftIds = Cache::get($leftCacheKey);
 
-                    $right = $right
-                        ->whereIn('id', $cachedIds)
-                        ->sortBy(function ($opt) use ($cachedIds) {
-                            return array_search($opt->id, $cachedIds);
-                        })
-                        ->values();
+                    $left = $left->whereIn('id', $cachedLeftIds)->sortBy(function ($opt) use ($cachedLeftIds) {
+                        return array_search($opt->id, $cachedLeftIds);
+                    })->values();
+
+                } else {
+
+                    if ($shuffleOptions) {
+                        $left = $left->shuffle()->values();
+                    }
+
+                    Cache::put($leftCacheKey, $left->pluck('id')->toArray(), now()->addHours(3));
+                }
+
+                // SHUFFLE RIGHT
+                if (Cache::has($rightCacheKey)) {
+
+                    $cachedRightIds = Cache::get($rightCacheKey);
+
+                    $right = $right->whereIn('id', $cachedRightIds)->sortBy(function ($opt) use ($cachedRightIds) {
+                        return array_search($opt->id, $cachedRightIds);
+                    })->values();
 
                 } else {
 
                     if ($shuffleOptions) {
                         $right = $right->shuffle()->values();
-                    } else {
-                        $right = $right->values();
                     }
 
-                    Cache::put(
-                        $matchingCacheKey,
-                        $right->pluck('id')->toArray(),
-                        now()->addHours(3)
-                    );
+                    Cache::put($rightCacheKey, $right->pluck('id')->toArray(), now()->addHours(3));
                 }
 
+                // GABUNGKAN LEFT + RIGHT
                 $shuffled = collect();
 
                 foreach ($left as $l) {
@@ -394,21 +417,6 @@ class StudentAssessmentExamController extends Controller
 
                 foreach ($right as $cat) {
                     $shuffled->push($cat);
-                }
-
-                $question->LmsQuestionBank->setRelation(
-                    'LmsQuestionOption',
-                    $shuffled
-                );
-
-                $shuffled = collect();
-
-                foreach ($items as $l) {
-                    $shuffled->push($l);
-                }
-
-                foreach ($right as $r) {
-                    $shuffled->push($r);
                 }
 
                 $question->LmsQuestionBank->setRelation(

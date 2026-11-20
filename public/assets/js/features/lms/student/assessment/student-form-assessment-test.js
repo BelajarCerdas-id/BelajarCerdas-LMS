@@ -384,21 +384,7 @@ function renderAssessmentFormContent(selectedIndex, response) {
                 const isCorrect = isChosen && answerData.is_correct === true;
                 const containsImage = /<img\s+[^>]*src=/.test(item.options_value ?? '');
 
-                let displayLetter = optionLetters[index] || '';
-
-                if (/^[A-Za-z]$/.test(optKey)) {
-                    displayLetter = optKey.toUpperCase();
-                } else if (/^option_?(\d+)$/i.test(optKey)) {
-                    const num = parseInt(optKey.replace(/\D/g, ''), 10);
-
-                    if (num >= 1 && num <= 26) {
-                        displayLetter = String.fromCharCode(64 + num);
-                    }
-                }
-
-                if (!displayLetter) {
-                    displayLetter = optionLetters[index] || optKey;
-                }
+                const displayLetter = item.display_key || optionLetters[index] || optKey;
 
                 let optStyle = 'bg-white text-slate-700 border-slate-200';
                 let optTag = '';
