@@ -19,6 +19,17 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class BankSoalWordImportService
 {
+    // HTML → teks per baris: <br> dan penutup blok jadi newline, karena strip_tags
+    // menghapusnya tanpa newline sehingga baris-baris ANSWER menyatu
+    private function answerLinesToText(string $html): string
+    {
+        $text = html_entity_decode(strip_tags(
+            preg_replace('/<br\s*\/?>|<\/(p|div|li)>/i', "\n", $html)
+        ));
+        // <br> + newline sumber HTML menghasilkan baris kosong; satukan jadi satu newline
+        return trim(preg_replace("/[ \t]*\n[ \t\n]*/", "\n", $text));
+    }
+
     private function parseAndValidate(Request $request)
     {
         $userId = Auth::id();
@@ -315,7 +326,7 @@ class BankSoalWordImportService
                         }
     
                         $pairMap = [];
-                        $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER']));
+                        $answerRaw = $this->answerLinesToText($dataSoal['ANSWER']);
                         
                         foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
                             $parts = preg_split('/\s*,\s*/', trim($line));
@@ -535,7 +546,7 @@ class BankSoalWordImportService
                     }
                 } elseif (in_array($type, ['matching', 'pg_kompleks'])) {
                     $pairMap = [];
-                    $answerRaw = html_entity_decode(strip_tags($dataSoal['ANSWER'] ?? ''));
+                    $answerRaw = $this->answerLinesToText($dataSoal['ANSWER'] ?? '');
                     foreach (preg_split('/\r\n|\r|\n/', $answerRaw) as $line) {
                         if (!trim($line)) continue;
                         [$l, $r] = array_map(fn($v) => strtoupper(trim($v)), preg_split('/\s*,\s*/', $line));

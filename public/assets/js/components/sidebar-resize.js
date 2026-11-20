@@ -39,7 +39,13 @@
      */
     function applySidebarWidth(width) {
         // 1. Set CSS Custom Property
+        // On <html> AND <body>: sidebar.css sets --sidebar-width on body via
+        // body:has(.sidebar-beranda-*) — that shadows an <html>-only inline
+        // value for everything inside body, so content never followed the drag.
         document.documentElement.style.setProperty('--sidebar-width', `${width}px`);
+        if (document.body) {
+            document.body.style.setProperty('--sidebar-width', `${width}px`);
+        }
 
         // 2. Dynamic high-priority stylesheet
         let styleTag = document.getElementById('bc-sidebar-dynamic-styles');

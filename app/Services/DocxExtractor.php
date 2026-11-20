@@ -4,6 +4,7 @@ namespace App\Services;
 use PhpOffice\PhpWord\Element\Image;
 use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\Element\Text;
+use PhpOffice\PhpWord\Element\TextBreak;
 use PhpOffice\PhpWord\Element\TextRun;
 use Illuminate\Support\Facades\Log;
 use ZipArchive;
@@ -148,6 +149,11 @@ class DocxExtractor
                 $content .= $this->getStyledHtmlFromElement($child, $mediaImages);
             }
             $html .= "<p>$content</p>"; // Bungkus semua teks dalam paragraf
+
+        // Soft line break (Shift+Enter) di dalam TextRun — tanpa ini, baris-baris
+        // di dalam cell (mis. baris pasangan di ANSWER) menyatu jadi satu string
+        } elseif ($element instanceof TextBreak) {
+            $html .= '<br>';
 
         // Jika elemen adalah gambar
         } elseif ($element instanceof Image) {
