@@ -36,13 +36,19 @@ class AssessmentAntiCheatController extends Controller
             return response()->json(['status' => 'ignored']);
         }
 
+        // Warnings (reload, alt-tab while typing) are logged only: no strike, no cooldown, no modal
+        if ($request->boolean('warning')) {
+            $this->recordViolation($attempt, $request, $request->input('reason', 'unspecified'), 'warning');
+            return response()->json(['status' => 'ok']);
+        }
+
         // Server-side cooldown dedupes cascading duplicate triggers within 10s
         // (visibilitychange + blur + pagehide firing together). Forced reports
         // (fullscreen exits) bypass it so every exit counts.
         $cooldownKey = $this->cooldownKey($attempt->id);
         $isForced = $request->boolean('force');
         if (!$isForced && !Cache::add($cooldownKey, true, self::COOLDOWN_SECONDS)) {
-            return $this->warningResponse($attempt);
+            return response()->json(['status' => 'ok']);
         }
 
         if ($isForced) {
@@ -51,7 +57,7 @@ class AssessmentAntiCheatController extends Controller
             // strike per reason per 5s is plenty for a real exit sequence.
             $forcedKey = "anticheat_forced_{$attempt->id}_{$request->input('reason', 'unspecified')}";
             if (!Cache::add($forcedKey, true, 5)) {
-                return $this->warningResponse($attempt);
+                return response()->json(['status' => 'ok']);
             }
             // still claim the general cooldown so a cascade of duplicate
             // fullscreen events from a single exit doesn't multiply the strike
@@ -118,6 +124,17 @@ class AssessmentAntiCheatController extends Controller
 
         if ($lastHeartbeat && !$startupGrace && !Cache::has($cooldownKey) && $gap > $maxGap) {
             if (!Cache::add($cooldownKey, true, self::COOLDOWN_SECONDS)) {
+                return response()->json(['status' => 'ok']);
+            }
+
+            // A client report (visibility/blur) already struck this absence; don't strike it twice.
+            // The 2s slack covers second-precision DB timestamps.
+            $struckDuringGap = StudentAssessmentAnticheatViolation::where('student_assessment_attempt_id', $attempt->id)
+                ->where('severity', 'strike')
+                ->where('created_at', '>=', $now->copy()->subSeconds($gap + 2))
+                ->exists();
+            if ($struckDuringGap) {
+                $attempt->update(['last_heartbeat_at' => $now]);
                 return response()->json(['status' => 'ok']);
             }
 
@@ -192,7 +209,7 @@ class AssessmentAntiCheatController extends Controller
     /**
      * Store one violation record with client context: ip, browser, device.
      */
-    private function recordViolation(StudentAssessmentAttempt $attempt, Request $request, string $reason): void
+    private function recordViolation(StudentAssessmentAttempt $attempt, Request $request, string $reason, string $severity = 'strike'): void
     {
         try {
             $ua = (string) $request->userAgent();
@@ -206,6 +223,7 @@ class AssessmentAntiCheatController extends Controller
                 'student_id' => $attempt->student_id,
                 'school_assessment_id' => $attempt->school_assessment_id,
                 'reason' => substr($reason, 0, 50) ?: 'unspecified',
+                'severity' => $severity,
                 'ip' => $ip,
                 'browser' => $parsed['browser'],
                 'browser_version' => $parsed['version'],

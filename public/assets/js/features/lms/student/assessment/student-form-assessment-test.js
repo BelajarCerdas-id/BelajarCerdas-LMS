@@ -1646,7 +1646,11 @@ $(document).ready(function () {
 
     studentFormAssessment(0);
     checkAttemptStatus();
-    initAntiCheatSystem();
+    // before the exam starts, the fullscreen overlay would cover the start dialog;
+    // confirmStartExam() initializes it when the student starts
+    if (hasTimer && !isAlreadyCompleted) {
+        initAntiCheatSystem();
+    }
 
 });
 
@@ -1998,7 +2002,8 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     // transaction over 0-45s. Manual submits pass jitterMs = 0 and go now.
     const jitter = jitterMs === 0 ? 0 : Math.floor(Math.random() * 45000);
 
-    setTimeout(function () {
+    // /end finalizes once on the server, so resending after a lost response is safe
+    const sendFinal = function (attemptNo) {
         $.ajax({
             url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/end`,
             method: 'POST',
@@ -2013,13 +2018,27 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
                 }
             },
             error: function () {
-                studentFormAssessment(currentQuestionIndex);
-                if (typeof onFinish === "function") {
-                    onFinish();
+                if (attemptNo < 3) {
+                    setTimeout(function () { sendFinal(attemptNo + 1); }, 3000);
+                    return;
                 }
+                studentFormAssessment(currentQuestionIndex);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Jawaban Belum Terkirim',
+                    text: 'Jawaban gagal dikirim ke server. Silakan hubungi pengawas.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(function () {
+                    if (typeof onFinish === "function") {
+                        onFinish();
+                    }
+                });
             }
         });
-    }, jitter);
+    };
+
+    setTimeout(function () { sendFinal(1); }, jitter);
 }
 
 $(document).on('click', '#btn-submit-end-assessment-test', function (e) {

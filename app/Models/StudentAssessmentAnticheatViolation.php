@@ -11,6 +11,7 @@ class StudentAssessmentAnticheatViolation extends Model
         'student_id',
         'school_assessment_id',
         'reason',
+        'severity',
         'ip',
         'browser',
         'browser_version',

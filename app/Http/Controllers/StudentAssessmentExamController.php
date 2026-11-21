@@ -78,22 +78,7 @@ class StudentAssessmentExamController extends Controller
 
         if ($assessmentCategory === 'remedial' && $parentAssessmentId) {
 
-            $previousAssessment = null;
-
-            // ambil semua assessment dalam 1 chain + yang SUDAH DIKERJAKAN USER
-            $relatedAssessments = SchoolAssessment::where(function ($q) use ($parentAssessmentId) {
-                $q->where('id', $parentAssessmentId)->orWhere('parent_assessment_id', $parentAssessmentId);
-            })->whereHas('StudentAssessmentAnswer', function ($q) use ($user) {
-                $q->where('student_id', $user->id);
-            })->orderBy('start_date')->pluck('id')->toArray();
-
-            // cari previous
-            $currentIndex = array_search($assessmentId, $relatedAssessments);
-
-            if ($currentIndex !== false && $currentIndex > 0) {
-                $prevAssessmentId = $relatedAssessments[$currentIndex - 1];
-                $previousAssessment = SchoolAssessment::find($prevAssessmentId);
-            }
+            $previousAssessment = $this->remedialPreviousAssessment($schoolAssessment, $user->id);
 
             // CACHE KEY
             $cacheKeyWrong = "assessment-remedial-wrong-{$user->id}-prev-" . ($previousAssessment->id ?? 'none');
@@ -571,7 +556,7 @@ class StudentAssessmentExamController extends Controller
             ->first();
 
         if ($attempt && $attempt->expire_time) {
-            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            $attemptExpire = $attempt->expire_time;
             if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
@@ -647,7 +632,7 @@ class StudentAssessmentExamController extends Controller
             ->first();
 
         if ($attempt && $attempt->expire_time) {
-            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            $attemptExpire = $attempt->expire_time;
             if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
@@ -709,7 +694,7 @@ class StudentAssessmentExamController extends Controller
             ->first();
 
         if ($attempt && $attempt->expire_time) {
-            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            $attemptExpire = $attempt->expire_time;
             if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
@@ -795,21 +780,7 @@ class StudentAssessmentExamController extends Controller
 
         if ($isRemedial && $assessment->parent_assessment_id) {
 
-            $previousAssessment = null;
-
-            // ambil chain yang SUDAH DIKERJAKAN
-            $relatedAssessments = SchoolAssessment::where(function ($q) use ($assessment) {
-                $q->where('id', $assessment->parent_assessment_id)->orWhere('parent_assessment_id', $assessment->parent_assessment_id);
-            })->whereHas('StudentAssessmentAnswer', function ($q) use ($userId) {
-                $q->where('student_id', $userId);
-            })->orderBy('start_date')->pluck('id')->toArray();
-
-            $currentIndex = array_search($assessmentId, $relatedAssessments);
-
-            if ($currentIndex !== false && $currentIndex > 0) {
-                $prevAssessmentId = $relatedAssessments[$currentIndex - 1];
-                $previousAssessment = SchoolAssessment::find($prevAssessmentId);
-            }
+            $previousAssessment = $this->remedialPreviousAssessment($assessment, $userId);
 
             // cache key harus sama dengan form
             $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
@@ -921,7 +892,9 @@ class StudentAssessmentExamController extends Controller
                         })->toArray();
 
                     ksort($correctAnswers);
-                    ksort($answerData);
+                    if (is_array($answerData)) {
+                        ksort($answerData);
+                    }
 
                     if ($correctAnswers === $answerData) {
                         $score = $scorePerQuestion;
@@ -1047,7 +1020,7 @@ class StudentAssessmentExamController extends Controller
                 ->first();
 
             if ($attempt && $attempt->expire_time) {
-                $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+                $attemptExpire = $attempt->expire_time;
                 if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                     $endDate = $attemptExpire->copy()->addMinute();
                 }
@@ -1171,7 +1144,8 @@ class StudentAssessmentExamController extends Controller
 
                 $allQuestionsQuery = SchoolAssessmentQuestion::where('school_assessment_id', $sourceAssessmentId);
                 if ($assessmentCategory === 'remedial' && $assessment->parent_assessment_id) {
-                    $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($assessment->parent_assessment_id);
+                    $previousAssessment = $this->remedialPreviousAssessment($assessment, $userId);
+                    $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
                     $wrongBankIds = Cache::get($cacheKeyWrong, []);
                     if (!empty($wrongBankIds)) {
                         $allQuestionsQuery->whereIn('question_bank_id', $wrongBankIds);
@@ -1231,6 +1205,30 @@ class StudentAssessmentExamController extends Controller
         }
     }
 
+    /**
+     * Assessment before $assessment in its remedial chain (the parent plus remedials
+     * the student has answered, counting $assessment itself). Every wrong-answer
+     * cache key is built from this so form, answer and end always agree.
+     */
+    private function remedialPreviousAssessment(SchoolAssessment $assessment, int $userId): ?SchoolAssessment
+    {
+        $chain = SchoolAssessment::where(function ($q) use ($assessment) {
+            $q->where('id', $assessment->parent_assessment_id)->orWhere('parent_assessment_id', $assessment->parent_assessment_id);
+        })->where(function ($q) use ($assessment, $userId) {
+            $q->where('id', $assessment->id)->orWhereHas('StudentAssessmentAnswer', function ($q) use ($userId) {
+                $q->where('student_id', $userId);
+            });
+        })->orderBy('start_date')->pluck('id')->toArray();
+
+        $currentIndex = array_search($assessment->id, $chain);
+
+        if ($currentIndex === false || $currentIndex === 0) {
+            return null;
+        }
+
+        return SchoolAssessment::find($chain[$currentIndex - 1]);
+    }
+
     private function calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId)
     {
         if ($answerData === null) {
@@ -1241,19 +1239,7 @@ class StudentAssessmentExamController extends Controller
         $isRemedial = $assessmentCategory === 'remedial';
 
         if ($isRemedial && $assessment->parent_assessment_id) {
-            $previousAssessment = null;
-            $relatedAssessments = SchoolAssessment::where(function ($q) use ($assessment) {
-                $q->where('id', $assessment->parent_assessment_id)->orWhere('parent_assessment_id', $assessment->parent_assessment_id);
-            })->whereHas('StudentAssessmentAnswer', function ($q) use ($userId) {
-                $q->where('student_id', $userId);
-            })->orderBy('start_date')->pluck('id')->toArray();
-
-            $currentIndex = array_search($assessment->id, $relatedAssessments);
-            if ($currentIndex !== false && $currentIndex > 0) {
-                $prevAssessmentId = $relatedAssessments[$currentIndex - 1];
-                $previousAssessment = SchoolAssessment::find($prevAssessmentId);
-            }
-
+            $previousAssessment = $this->remedialPreviousAssessment($assessment, $userId);
             $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
             $wrongBankIds = Cache::get($cacheKeyWrong, []);
 
@@ -1334,7 +1320,9 @@ class StudentAssessmentExamController extends Controller
                 })->toArray();
 
                 ksort($correctAnswers);
-                ksort($answerData);
+                if (is_array($answerData)) {
+                    ksort($answerData);
+                }
 
                 if ($correctAnswers === $answerData) {
                     $score = $scorePerQuestion;
@@ -1554,7 +1542,7 @@ class StudentAssessmentExamController extends Controller
         $now = TimezoneHelper::now($timezone);
 
         if ($attempt && $attempt->expire_time) {
-            $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
+            $attemptExpire = $attempt->expire_time;
             if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }

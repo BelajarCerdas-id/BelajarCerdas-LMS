@@ -4,12 +4,12 @@
 //  (includes iPadOS, which masquerades as "Macintosh" with touch)
 //
 //  iOS specifics:
-//   - No Fullscreen API on iPhone → the core releases the
+//   - No usable Fullscreen API on iPhone/iPad → the core releases the
 //     anti-cheat cooldown automatically (isFullscreenSupported())
 //   - Page Lifecycle freeze/resume events don't fire reliably in
 //     Safari → backgrounding is caught by the server heartbeat
 //     gap (core) and the timer's freeze-gap detection
-//   - pagehide/pageshow are the visible signals here
+//   - pagehide and visibilitychange (leave) are the signals; return events never strike
 // ============================================================
 
 function antiCheatIsIOS() {
@@ -31,13 +31,8 @@ window.AntiCheatPlatforms.push({
             reportCheating('page_hide');
         });
 
-        // ---- pageshow persisted: page restored from bfcache (back from
-        // background on iOS Safari) ----
-        window.addEventListener("pageshow", function (e) {
-            if (e.persisted && !shouldSkipAntiCheat()) {
-                reportCheating('page_restored_from_cache');
-            }
-        });
+        // No pageshow strike: a bfcache restore always follows the hide that was
+        // already struck, so reporting it again would count one absence twice.
 
         // ---- visibilitychange: fires on most app switches; the server
         // heartbeat gap is the safety net for the cases it misses

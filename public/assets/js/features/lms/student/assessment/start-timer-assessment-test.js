@@ -93,6 +93,9 @@ function startTimer() {
                         return;
                     }
                 }
+
+                // network / server error (not a business 422): retry, otherwise the timer never starts
+                if (xhr.status !== 422) setTimeout(startNewCountdown, 3000);
             }
         });
     }
@@ -106,10 +109,11 @@ function startTimer() {
         countdown = setInterval(() => {
             const now = Date.now();
 
-            // Freeze detection: if the gap between ticks is > 3 seconds,
+            // Freeze detection: if the gap between ticks is > 10 seconds (a 3s gap
+            // is normal main-thread jank under CKEditor/MathJax),
             // the browser was likely backgrounded (especially iOS Safari).
             // JS execution is suspended when the app goes to background on mobile.
-            if (lastTickTimestamp && (now - lastTickTimestamp) > 3000) {
+            if (lastTickTimestamp && (now - lastTickTimestamp) > 10000) {
                 if (!shouldSkipAntiCheat()) {
                     reportCheating('js_freeze_detected');
                 }

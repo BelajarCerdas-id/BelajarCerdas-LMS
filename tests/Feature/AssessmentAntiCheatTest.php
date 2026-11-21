@@ -175,11 +175,11 @@ class AssessmentAntiCheatTest extends TestCase
         ], $overrides));
     }
 
-    private function callReport(array $seed, string $reason = 'visibility_hidden', bool $force = false)
+    private function callReport(array $seed, string $reason = 'visibility_hidden', bool $force = false, bool $warning = false)
     {
         return app(\App\Http\Controllers\AssessmentAntiCheatController::class)
             ->reportTabSwitch(
-                Request::create('/report', 'POST', ['reason' => $reason, 'force' => $force], [], [], [
+                Request::create('/report', 'POST', ['reason' => $reason, 'force' => $force, 'warning' => $warning], [], [], [
                     'REMOTE_ADDR' => '172.70.143.163',
                     'HTTP_CF_CONNECTING_IP' => '203.0.113.9',
                     'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -258,9 +258,10 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals('warning', $res1->getData(true)['status']);
         $this->assertEquals(1, $res1->getData(true)['count']);
 
-        // duplicate within the 10s cooldown must not increment
+        // duplicate within the 10s cooldown must not increment (and must not re-show a warning)
         $res2 = $this->callReport($seed);
-        $this->assertEquals(1, $res2->getData(true)['count']);
+        $this->assertEquals('ok', $res2->getData(true)['status']);
+        $this->assertEquals(1, $attempt->fresh()->tab_switch_count);
 
         // after the cooldown window a new strike counts
         $this->travel(11)->seconds();
@@ -306,7 +307,8 @@ class AssessmentAntiCheatTest extends TestCase
 
         // event-storm guard: a burst of duplicate exit events within 5s counts once
         $res2 = $this->callReport($seed, 'fullscreen_exit', true);
-        $this->assertEquals(1, $res2->getData(true)['count']);
+        $this->assertEquals('ok', $res2->getData(true)['status']);
+        $this->assertEquals(1, $attempt->fresh()->tab_switch_count);
 
         // but a genuinely new exit (after the 5s window) counts again
         $attemptForceKey = "anticheat_forced_{$attempt->id}_fullscreen_exit";
@@ -392,8 +394,9 @@ class AssessmentAntiCheatTest extends TestCase
         $res = $this->callHeartbeat($seed, isSelectingFile: true);
         $this->assertEquals('ok', $res->getData(true)['status']);
 
-        // but beyond even the grace window it still counts
+        // but beyond even the grace window it still counts (the earlier strike belongs to an earlier absence)
         $this->clearCooldown($seed);
+        \App\Models\StudentAssessmentAnticheatViolation::query()->update(['created_at' => now()->subMinutes(10)]);
         $attempt->update(['last_heartbeat_at' => now()->subSeconds(200)]);
         $res = $this->callHeartbeat($seed, isSelectingFile: true);
         $this->assertEquals('warning', $res->getData(true)['status']);
@@ -604,5 +607,160 @@ class AssessmentAntiCheatTest extends TestCase
         $summary = StudentAssessmentSummary::where('student_id', $seed['student']->id)->first();
         $this->assertEquals(100, $summary->main_score);
         $this->assertEquals(100, $summary->final_score);
+    }
+
+    public function test_absence_already_struck_by_client_report_is_not_struck_again(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $this->callReport($seed, 'visibility_hidden');
+        $this->travel(40)->seconds();
+
+        $res = $this->callHeartbeat($seed);
+        $this->assertEquals('ok', $res->getData(true)['status']);
+        $this->assertEquals(1, $attempt->fresh()->tab_switch_count);
+        $this->assertDatabaseCount('student_assessment_anticheat_violations', 1);
+    }
+
+    public function test_gap_after_a_newer_ping_still_counts_despite_an_older_strike(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $this->callReport($seed, 'visibility_hidden');
+        $this->travel(20)->seconds();
+        $this->assertEquals('ok', $this->callHeartbeat($seed)->getData(true)['status']);
+
+        $this->travel(40)->seconds();
+        $res = $this->callHeartbeat($seed);
+        $this->assertEquals('warning', $res->getData(true)['status']);
+        $this->assertEquals(2, $attempt->fresh()->tab_switch_count);
+    }
+
+    public function test_warnings_are_logged_separately_and_never_count_as_strikes(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        // reload and alt-tab-while-typing: logged as warnings
+        $this->assertEquals('ok', $this->callReport($seed, 'reload_shortcut', false, true)->getData(true)['status']);
+        $this->assertEquals('ok', $this->callReport($seed, 'window_blur', false, true)->getData(true)['status']);
+        $this->assertEquals(0, $attempt->fresh()->tab_switch_count);
+        $this->assertDatabaseCount('student_assessment_anticheat_violations', 2);
+        $this->assertDatabaseHas('student_assessment_anticheat_violations', ['reason' => 'reload_shortcut', 'severity' => 'warning']);
+
+        // a warning does not use up the cooldown: the next real strike still counts at once
+        $res = $this->callReport($seed, 'window_blur');
+        $this->assertEquals('warning', $res->getData(true)['status']);
+        $this->assertEquals(1, $attempt->fresh()->tab_switch_count);
+        $this->assertDatabaseHas('student_assessment_anticheat_violations', ['reason' => 'window_blur', 'severity' => 'strike']);
+    }
+
+    public function test_warning_does_not_suppress_a_heartbeat_strike(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $this->callReport($seed, 'window_blur', false, true);
+        $this->travel(40)->seconds();
+
+        $res = $this->callHeartbeat($seed);
+        $this->assertEquals('warning', $res->getData(true)['status']);
+        $this->assertEquals(1, $attempt->fresh()->tab_switch_count);
+    }
+
+    public function test_attempt_deadline_is_not_shifted_for_non_jakarta_school(): void
+    {
+        $seed = $this->seedData();
+        $seed['partner']->update(['timezone' => 'Asia/Makassar']);
+        $this->actingAs($seed['student']);
+        $this->startAttempt($seed, overrides: ['expire_time' => now()->addMinutes(10)]);
+
+        // the student's timer still has 10 minutes; the server must not cut off 1h early
+        $res = $this->callAnswer($seed);
+        $this->assertEquals(200, $res->getStatusCode());
+    }
+
+    public function test_remedial_end_only_zero_fills_questions_the_student_got_wrong(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $main = $seed['assessment'];
+        $bankA = $seed['question']->lmsQuestionBank;
+        $bankB = $bankA->replicate();
+        $bankB->save();
+        SchoolAssessmentQuestion::create([
+            'school_assessment_id' => $main->id,
+            'question_bank_id' => $bankB->id,
+            'question_weight' => 100,
+        ]);
+
+        $makeRemedial = fn (string $title, $start) => SchoolAssessment::create([
+            'user_id' => $main->user_id,
+            'school_partner_id' => $main->school_partner_id,
+            'school_class_id' => $main->school_class_id,
+            'mapel_id' => $main->mapel_id,
+            'assessment_type_id' => $main->assessment_type_id,
+            'assessment_category' => 'remedial',
+            'parent_assessment_id' => $main->id,
+            'title' => $title,
+            'semester' => 1,
+            'duration' => 60,
+            'start_date' => $start,
+            'end_date' => now()->addDays(2),
+        ]);
+        $remedial1 = $makeRemedial('Remedial 1', now()->subDays(3));
+        $remedial2 = $makeRemedial('Remedial 2', now()->subDay());
+
+        // student answered remedial 1 and got question A wrong; the wrong list is cached under remedial 1
+        $q1 = SchoolAssessmentQuestion::create([
+            'school_assessment_id' => $remedial1->id,
+            'question_bank_id' => $bankA->id,
+            'question_weight' => 100,
+        ]);
+        StudentAssessmentAnswer::create([
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $remedial1->id,
+            'school_assessment_question_id' => $q1->id,
+            'answer_value' => 'B',
+            'question_score' => 0,
+            'status_answer' => 'submitted',
+        ]);
+        Cache::put("assessment-remedial-wrong-{$seed['student']->id}-prev-{$remedial1->id}", [$bankA->id], 3600);
+
+        $seedRemedial2 = array_merge($seed, ['assessment' => $remedial2]);
+        $this->startAttempt($seedRemedial2);
+
+        $res = $this->callEnd($seedRemedial2);
+        $this->assertEquals(200, $res->getStatusCode());
+
+        $filled = StudentAssessmentAnswer::where('student_id', $seed['student']->id)
+            ->where('school_assessment_id', $remedial2->id)
+            ->pluck('school_assessment_question_id')
+            ->all();
+        $this->assertEquals([$seed['question']->id], $filled);
+    }
+
+    public function test_malformed_pg_kompleks_answer_does_not_break_final_submit(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+        LmsQuestionBank::whereKey($seed['question']->question_bank_id)->update(['tipe_soal' => 'PG_KOMPLEKS']);
+
+        $this->assertEquals(200, $this->callAnswer($seed, ['answer_value' => 'hello'])->getStatusCode());
+
+        $res = $this->callEnd($seed, [
+            'current_question_id' => $seed['question']->id,
+            'current_answer_value' => 'hello',
+        ]);
+        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertNotNull($attempt->fresh()->finalized_at);
+        $this->assertEquals('submitted', $attempt->fresh()->status);
     }
 }

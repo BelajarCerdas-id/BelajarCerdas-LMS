@@ -93,6 +93,17 @@ window.AntiCheatPlatforms.push({
         document.addEventListener("fullscreenchange", handleFullscreenChange);
         document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
+        // The page unloads right after a reload key, which cancels a normal ajax
+        // request; sendBeacon still goes out.
+        function logReloadWarning() {
+            if (examFinished) return;
+            const body = new FormData();
+            body.append('_token', $('meta[name="csrf-token"]').attr('content'));
+            body.append('reason', 'reload_shortcut');
+            body.append('warning', '1');
+            navigator.sendBeacon(antiCheatUrl('report-tab-switch'), body);
+        }
+
         // ---- Keyboard shortcut blocking ----
         const isWindows = /Windows/.test(navigator.userAgent || '');
 
@@ -131,8 +142,14 @@ window.AntiCheatPlatforms.push({
                 return;
             }
 
-            // Browser navigation / Tab management shortcuts (Ctrl/Cmd + T, W, N)
-            if (isCmdOrCtrl && (key === 't' || key === 'w' || key === 'n')) {
+            // Reload (F5, Ctrl/Cmd + R) is allowed and logged as a warning, not a strike
+            if (e.key === 'F5' || (isCmdOrCtrl && key === 'r')) {
+                logReloadWarning();
+                return;
+            }
+
+            // Browser navigation / Tab management shortcuts (Ctrl/Cmd + T, W, N, L address bar)
+            if (isCmdOrCtrl && ['t', 'w', 'n', 'l'].includes(key)) {
                 e.preventDefault();
                 reportCheating('tab_shortcut');
                 return;
@@ -163,30 +180,23 @@ window.AntiCheatPlatforms.push({
             if (shouldSkipAntiCheat()) return;
             if (document.hidden) return; // Already handled by visibilitychange
 
-            // Skip if user is interacting with any input or CKEditor
-            if (isInteractingWithInput()) return;
-
-            // Skip if blur was triggered by interactive form elements or modals
+            // Focus inside a text field/button does NOT excuse leaving the window
+            // (alt-tab while typing an essay is exactly the cheat). Only modal/dialog
+            // popups that legitimately take focus are skipped.
             const activeEl = document.activeElement;
-            if (activeEl) {
-                const tag = activeEl.tagName;
-                if (['INPUT', 'SELECT', 'TEXTAREA', 'LABEL', 'BUTTON'].includes(tag) || activeEl.isContentEditable) {
-                    return;
-                }
-                // Skip if inside a modal/dialog or CKEditor
-                if (activeEl.closest && (
-                    activeEl.closest('.swal2-container') ||
-                    activeEl.closest('dialog') ||
-                    activeEl.closest('.modal') ||
-                    activeEl.closest('[role="dialog"]') ||
-                    activeEl.closest('.ck-editor') ||
-                    activeEl.closest('.ck')
-                )) {
-                    return;
-                }
+            if (activeEl && activeEl.closest && (
+                activeEl.closest('.swal2-container') ||
+                activeEl.closest('dialog') ||
+                activeEl.closest('.modal') ||
+                activeEl.closest('[role="dialog"]')
+            )) {
+                return;
             }
 
             if (antiCheatBlurTimeout) clearTimeout(antiCheatBlurTimeout);
+
+            // Leaving the window while typing is logged as a warning, not a strike
+            const typing = isInteractingWithInput();
 
             // 500ms buffer: filter out transient blurs (pickers, dev tools)
             antiCheatBlurTimeout = setTimeout(function () {
@@ -194,7 +204,7 @@ window.AntiCheatPlatforms.push({
                 if (document.hidden) return;
                 if (document.hasFocus && document.hasFocus()) return;
 
-                reportCheating('window_blur');
+                reportCheating('window_blur', false, typing);
             }, 500);
         });
 
@@ -208,8 +218,8 @@ window.AntiCheatPlatforms.push({
         // ---- Extension detection (Grammarly) ----
         // Grammarly marks <body>/<html> with data-* attributes and injects an
         // in-page widget / custom element, so a periodic DOM check catches it
-        // even when nothing loses focus. Struck once per exam; reportCheating's
-        // own debounce handles retries while markers are present.
+        // even when nothing loses focus. Struck once per exam; a report dropped
+        // by the debounce is retried on the next check.
         var grammarlyReported = false;
         function detectGrammarly() {
             if (grammarlyReported || shouldSkipAntiCheat()) return;
@@ -217,8 +227,7 @@ window.AntiCheatPlatforms.push({
                 'grammarly-desktop-integration, [data-gr-ext-installed], ' +
                 '[data-new-gr-c-s-check-loaded], [data-grammarly-shadow-root]'
             )) {
-                grammarlyReported = true;
-                reportCheating('grammarly_extension');
+                grammarlyReported = reportCheating('grammarly_extension');
             }
         }
         detectGrammarly();

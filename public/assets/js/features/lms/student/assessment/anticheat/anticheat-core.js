@@ -23,6 +23,7 @@ var isWarningModalOpen = false;
 var antiCheatInitialized = false;
 var heartbeatInterval = null;
 var fullscreenRequestInFlight = false;
+var fullscreenUnavailable = false;
 
 window.isSelectingFile = false;
 
@@ -45,7 +46,11 @@ function shouldSkipAntiCheat() {
 }
 
 // ---- fullscreen helpers (standard + webkit) ----
+// iPhone/iPad report fullscreenEnabled=true but refuse documentElement fullscreen,
+// so treat them as "no fullscreen" (no overlay, no fullscreen modal).
+// fullscreenUnavailable: a real user click on the overlay was refused by the browser.
 function isFullscreenSupported() {
+    if (fullscreenUnavailable || antiCheatIsIOS()) return false;
     return !!(
         document.fullscreenEnabled ||
         document.webkitFullscreenEnabled
@@ -56,37 +61,42 @@ function getFullscreenElement() {
     return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
 
+// resolves false only when the browser refused the request (callers that need to know: overlay button)
 function enterFullscreen() {
     if (!isFullscreenSupported()) {
         antiCheatCooldown = false;
-        return Promise.resolve();
+        return Promise.resolve(true);
     }
 
     // Browsers reject requestFullscreen while a transition is already in
     // progress (rapid exit->re-enter cycles); guard so requests don't pile up.
     if (getFullscreenElement() || fullscreenRequestInFlight) {
-        return Promise.resolve();
+        return Promise.resolve(true);
     }
 
     const el = document.documentElement;
+    const settle = function () { fullscreenRequestInFlight = false; };
+    const refused = function () { settle(); return false; };
     try {
         fullscreenRequestInFlight = true;
-        const settle = function () { fullscreenRequestInFlight = false; };
         // hard reset in case the promise never settles (some WebKit versions)
         setTimeout(settle, 800);
         if (el.requestFullscreen) {
-            return el.requestFullscreen().then(settle, settle);
+            return el.requestFullscreen().then(function () { settle(); return true; }, refused);
         } else if (el.webkitRequestFullscreen) {
             const p = el.webkitRequestFullscreen();
-            if (p && typeof p.then === 'function') return p.then(settle, settle);
+            if (p && typeof p.then === 'function') {
+                return p.then(function () { settle(); return true; }, refused);
+            }
             setTimeout(settle, 300);
-            return p;
+            return Promise.resolve(true);
         }
+        settle();
+        return Promise.resolve(false);
     } catch (e) {
-        fullscreenRequestInFlight = false;
-        // Suppress unhandled exceptions if user interaction policy rejected request
+        // user-policy rejection thrown synchronously
+        return Promise.resolve(refused());
     }
-    return Promise.resolve();
 }
 
 // ---- endpoint helper ----
@@ -231,17 +241,18 @@ function checkAttemptStatus() {
 // ---- cheat report: central reporting with cooldown & dedup ----
 // force=true bypasses the skip-flags and the 4000ms debounce — used for
 // fullscreen violations where every exit must count.
-function reportCheating(reason, force) {
+// warningOnly=true logs the event without a strike (server stores severity=warning)
+function reportCheating(reason, force, warningOnly) {
     reason = reason || 'unspecified';
-    if (examFinished || isPageReloading) return;
-    if (!force && shouldSkipAntiCheat()) return;
+    if (examFinished || isPageReloading) return false;
+    if (!force && shouldSkipAntiCheat()) return false;
 
     const now = Date.now();
 
     // 4000ms cooldown to avoid cascading/duplicate triggers from related events
     // (e.g. visibilitychange + blur + pagehide can all fire within milliseconds)
     if (!force && now - lastCheatReport < 4000) {
-        return;
+        return false;
     }
 
     lastCheatReport = now;
@@ -255,7 +266,8 @@ function reportCheating(reason, force) {
         },
         data: {
             reason: reason,
-            force: !!force
+            force: !!force,
+            warning: !!warningOnly
         },
         success: function (res) {
             if (examFinished) return;
@@ -267,6 +279,11 @@ function reportCheating(reason, force) {
             if (res.status === 'blocked') {
                 handleBlocked();
             }
+
+            // 'ok' (duplicate inside the server cooldown) or 'ignored': nothing to show, re-arm detection
+            if (res.status !== 'warning' && res.status !== 'blocked' && !isWarningModalOpen) {
+                antiCheatCooldown = false;
+            }
         },
         error: function () {
             // Restore antiCheatCooldown on error so detection can resume
@@ -275,6 +292,7 @@ function reportCheating(reason, force) {
             }, 2000);
         }
     });
+    return true;
 }
 
 // ---- content protection (all platforms) ----
@@ -379,8 +397,8 @@ function enforceFullscreenAfterReload() {
 }
 
 // ---- fullscreen overlay: exam content is hidden until fullscreen is active ----
-// Only created when the browser supports the Fullscreen API (desktop/Android);
-// iPhone has no Fullscreen API so nothing is overlaid there.
+// Only created when the browser really supports the Fullscreen API (desktop/Android);
+// iPhone and iPad (isFullscreenSupported() false) get no overlay.
 function ensureFullscreenOverlay() {
     if (!isFullscreenSupported()) return;
     if (document.getElementById('anticheat-fullscreen-overlay')) return;
@@ -395,7 +413,14 @@ function ensureFullscreenOverlay() {
         '<div style="opacity:.8;max-width:420px;">Ujian hanya dapat dikerjakan dalam mode fullscreen. Klik tombol di bawah untuk melanjutkan.</div>' +
         '<button id="anticheat-fullscreen-btn" style="padding:12px 28px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-size:16px;font-weight:600;cursor:pointer;">Masuk Fullscreen</button>';
     overlay.querySelector('#anticheat-fullscreen-btn').addEventListener('click', function () {
-        enterFullscreen();
+        enterFullscreen().then(function (entered) {
+            // browser refused even a real click: never leave the exam locked behind the overlay
+            if (entered === false) {
+                fullscreenUnavailable = true;
+                antiCheatCooldown = false;
+            }
+            updateFullscreenOverlay();
+        });
         setTimeout(updateFullscreenOverlay, 300);
     });
     document.body.appendChild(overlay);
@@ -410,7 +435,7 @@ function updateFullscreenOverlay() {
     if (!overlay) return;
 
     // visible whenever fullscreen is supported but not currently active
-    const hidden = getFullscreenElement() || examFinished || isPageReloading || window.isSelectingFile;
+    const hidden = getFullscreenElement() || !isFullscreenSupported() || examFinished || isPageReloading || window.isSelectingFile;
     overlay.style.display = hidden ? 'none' : 'flex';
 }
 

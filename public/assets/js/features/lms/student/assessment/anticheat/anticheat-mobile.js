@@ -5,8 +5,10 @@
 //
 //  Detection here:
 //   - visibilitychange (app switch / home screen / tab switch)
-//   - pagehide / pageshow (bfcache restore)
-//   - Page Lifecycle freeze/resume (backgrounding suspends JS)
+//   - pagehide (leaving the page)
+//   - Page Lifecycle freeze (backgrounding suspends JS)
+//   Return events (pageshow / resume) never strike: they close an absence
+//   that the leave event already counted.
 //   - viewport width-ratio heuristic (split-screen detection)
 //  Note: iOS uses anticheat-ios.js instead — Safari's Page
 //  Lifecycle events don't fire reliably there, so iOS relies on
@@ -42,24 +44,12 @@ window.AntiCheatPlatforms.push({
             reportCheating('page_hide');
         });
 
-        // ---- pageshow persisted: page restored from bfcache ----
-        window.addEventListener("pageshow", function (e) {
-            if (e.persisted && !shouldSkipAntiCheat()) {
-                reportCheating('page_restored_from_cache');
-            }
-        });
-
-        // ---- Page Lifecycle: freeze/resume (backgrounding) ----
-        // "freeze" fires when the browser is about to suspend JS
+        // ---- Page Lifecycle: freeze (backgrounding) ----
+        // "freeze" fires when the browser is about to suspend JS. No strike on
+        // pageshow/resume: they close the same absence that the leave event struck.
         document.addEventListener("freeze", function () {
             if (shouldSkipAntiCheat()) return;
             reportCheating('page_freeze');
-        });
-
-        // "resume" fires when JS execution resumes after a freeze
-        document.addEventListener("resume", function () {
-            if (shouldSkipAntiCheat()) return;
-            reportCheating('page_resume');
         });
 
         // ---- Viewport ratio heuristic: split-screen detection ----
