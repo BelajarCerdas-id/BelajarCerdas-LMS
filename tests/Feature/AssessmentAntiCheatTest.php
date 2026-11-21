@@ -230,6 +230,18 @@ class AssessmentAntiCheatTest extends TestCase
             );
     }
 
+    private function callEnd(array $seed, array $payload = [])
+    {
+        return app(\App\Http\Controllers\StudentAssessmentExamController::class)
+            ->studentAssessmentExamEnd(
+                Request::create('/end', 'POST', array_merge([
+                    'status_attempt' => 'submitted',
+                ], $payload)),
+                'student', 'sekolah-test', $seed['partner']->id, $seed['kurikulum']->id,
+                $seed['mapel']->id, $seed['type']->id, 1, $seed['assessment']->id
+            );
+    }
+
     private function clearCooldown(array $seed): void
     {
         $attempt = StudentAssessmentAttempt::where('school_assessment_id', $seed['assessment']->id)->first();
@@ -425,29 +437,126 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals('in_progress', $attempt->fresh()->status);
     }
 
-    public function test_answer_rejected_when_cheating_but_final_autosubmit_is_saved(): void
+    public function test_cheating_answer_rejected_even_with_auto_submit(): void
     {
         $seed = $this->seedData();
         $this->actingAs($seed['student']);
         $this->startAttempt($seed, overrides: ['status' => 'cheating']);
 
-        // normal answer after being flagged: rejected
-        $res = $this->callAnswer($seed);
-        $this->assertEquals(422, $res->getStatusCode());
-
-        // final auto-submit: accepted so the teacher can review answers
+        // no per-question writes are allowed after the attempt is flagged
         $res = $this->callAnswer($seed, [
             'auto_submit' => true,
             'status_attempt' => 'cheating',
+        ]);
+        $this->assertEquals(422, $res->getStatusCode());
+        $this->assertDatabaseMissing('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+        ]);
+        $this->assertEquals('cheating', StudentAssessmentAttempt::first()->status);
+    }
+
+    public function test_answer_rejected_after_submit_or_timeout(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        foreach (['submitted', 'timeout'] as $status) {
+            $attempt->update(['status' => $status]);
+
+            $res = $this->callAnswer($seed);
+            $this->assertEquals(422, $res->getStatusCode());
+        }
+
+        $this->assertDatabaseMissing('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+        ]);
+    }
+
+    public function test_answer_rejected_after_expiry_without_writing(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $this->startAttempt($seed, overrides: ['expire_time' => now()->subMinute()]);
+
+        $res = $this->callAnswer($seed);
+
+        $this->assertEquals(422, $res->getStatusCode());
+        $this->assertEquals('expired', $res->getData(true)['status']);
+        $this->assertDatabaseMissing('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+        ]);
+    }
+
+    public function test_end_is_one_shot_and_blocks_later_answer_writes(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $res = $this->callEnd($seed, [
+            'current_question_id' => $seed['question']->id,
+            'current_answer_value' => 'A',
+        ]);
+        $this->assertEquals(200, $res->getStatusCode());
+
+        $attempt->refresh();
+        $this->assertEquals('submitted', $attempt->status);
+        $this->assertNotNull($attempt->finalized_at);
+        $this->assertDatabaseHas('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'answer_value' => '"A"',
+        ]);
+
+        // per-question writes are closed
+        $this->assertEquals(422, $this->callAnswer($seed)->getStatusCode());
+
+        // replaying the final submit must not rewrite the answer
+        $res = $this->callEnd($seed, [
+            'current_question_id' => $seed['question']->id,
+            'current_answer_value' => 'B',
         ]);
         $this->assertEquals(200, $res->getStatusCode());
         $this->assertDatabaseHas('student_assessment_answers', [
             'student_id' => $seed['student']->id,
             'school_assessment_id' => $seed['assessment']->id,
-            'status_answer' => 'draft',
+            'answer_value' => '"A"',
         ]);
-        // cheating status is preserved, never downgraded by the client
-        $this->assertEquals('cheating', StudentAssessmentAttempt::first()->status);
+    }
+
+    public function test_cheating_final_submit_saves_answers_once(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, overrides: ['status' => 'cheating']);
+
+        $res = $this->callEnd($seed, [
+            'current_question_id' => $seed['question']->id,
+            'current_answer_value' => 'A',
+        ]);
+        $this->assertEquals(200, $res->getStatusCode());
+
+        $attempt->refresh();
+        $this->assertEquals('cheating', $attempt->status);
+        $this->assertNotNull($attempt->finalized_at);
+        $this->assertDatabaseHas('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'answer_value' => '"A"',
+        ]);
+
+        // a replay cannot change the saved answer
+        $res = $this->callEnd($seed, [
+            'current_question_id' => $seed['question']->id,
+            'current_answer_value' => 'B',
+        ]);
+        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertDatabaseHas('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'answer_value' => '"A"',
+        ]);
     }
 
     public function test_cheating_attempt_gets_zero_score_in_summary(): void

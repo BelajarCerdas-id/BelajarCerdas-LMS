@@ -710,27 +710,16 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }
 
         $isExpired = $endDate && $now->greaterThan($endDate);
 
-        if ($isExpired && !$request->auto_submit) {
-
-            // ubah request agar dianggap auto submit
-            $request->merge([
-                'auto_submit' => true,
-                'status_attempt' => 'timeout'
-            ]);
-
-        }
-
-        // Anti-cheat guards: answers require a started attempt, and a
-        // cheating-flagged attempt may only receive the final auto-submit
-        // (so the teacher still gets the answers for review, but the score
-        // is zeroed by the summary service).
+        // Anti-cheat guards: only a live, unfinalized attempt may write answers.
+        // Final auto-submits go through studentAssessmentExamEnd(), which is
+        // allowed once for a cheating/timeout attempt.
         if (!$attempt) {
             return response()->json([
                 'status' => 'not_started',
@@ -738,10 +727,19 @@ class StudentAssessmentExamController extends Controller
             ], 422);
         }
 
-        if ($attempt->status === 'cheating' && !$request->boolean('auto_submit')) {
+        if ($attempt->finalized_at || $attempt->status !== 'in_progress') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Ujian telah dihentikan karena pelanggaran.',
+                'message' => $attempt->status === 'cheating'
+                    ? 'Ujian telah dihentikan karena pelanggaran.'
+                    : 'Ujian sudah selesai. Jawaban tidak dapat diubah.',
+            ], 422);
+        }
+
+        if ($isExpired) {
+            return response()->json([
+                'status' => 'expired',
+                'message' => 'Waktu ujian telah berakhir. Jawaban tidak dapat disimpan.',
             ], 422);
         }
 
@@ -1015,15 +1013,6 @@ class StudentAssessmentExamController extends Controller
 
         }
 
-        if ($isExpired) {
-
-            return response()->json([
-                'status' => 'expired',
-                'message' => 'Waktu ujian telah berakhir. Jawaban otomatis disubmit.'
-            ], 422);
-
-        }
-
         return response()->json([
             'status' => 'success',
             'message' => 'Jawaban berhasil disimpan',
@@ -1059,9 +1048,18 @@ class StudentAssessmentExamController extends Controller
 
             if ($attempt && $attempt->expire_time) {
                 $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
-                if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                     $endDate = $attemptExpire->copy()->addMinute();
                 }
+            }
+
+            // Finalization is one-shot: replaying /end must not rewrite answers.
+            if ($attempt && ($attempt->finalized_at || in_array($attempt->status, ['submitted', 'timeout'], true))) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Assessment sudah diselesaikan.',
+                    'status_attempt' => $attempt->status,
+                ]);
             }
 
             $isExpired = $endDate && $now->greaterThan($endDate);
@@ -1211,11 +1209,11 @@ class StudentAssessmentExamController extends Controller
                     ->first();
 
                 if ($attempt && in_array($attempt->status, ['in_progress', 'cheating'])) {
+                    $updates = ['finalized_at' => now()];
                     if ($attempt->status !== 'cheating') {
-                        $attempt->update([
-                            'status' => $statusAttempt
-                        ]);
+                        $updates['status'] = $statusAttempt;
                     }
+                    $attempt->update($updates);
                 }
 
                 // 7. Update summary nilai akhir siswa (cukup 1 kali)

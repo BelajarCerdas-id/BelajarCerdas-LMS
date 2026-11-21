@@ -307,7 +307,8 @@ class AssessmentDebugController extends Controller
         $attempt->update([
             'status' => 'in_progress',
             'tab_switch_count' => 0,
-            'expire_time' => $expireTime
+            'expire_time' => $expireTime,
+            'finalized_at' => null
         ]);
 
         // Bersihkan jawaban yang kosong (null) akibat auto-submit saat timeout/cheating,
@@ -351,7 +352,8 @@ class AssessmentDebugController extends Controller
 
         $attempt = StudentAssessmentAttempt::with('SchoolAssessment')->findOrFail($id);
         $attempt->update([
-            'status' => $request->status
+            'status' => $request->status,
+            'finalized_at' => $request->status === 'in_progress' ? null : $attempt->finalized_at,
         ]);
 
         if ($request->status === 'in_progress') {
@@ -419,6 +421,10 @@ class AssessmentDebugController extends Controller
             'status' => $request->status,
             'tab_switch_count' => (int) $request->tab_switch_count,
         ];
+
+        if ($request->status === 'in_progress') {
+            $updateData['finalized_at'] = null;
+        }
 
         // Jika menambah durasi menit
         if ($request->filled('add_minutes') && (int) $request->add_minutes > 0) {

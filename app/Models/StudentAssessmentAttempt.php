@@ -12,6 +12,7 @@ class StudentAssessmentAttempt extends Model
         'start_time' => 'datetime',
         'expire_time' => 'datetime',
         'last_heartbeat_at' => 'datetime',
+        'finalized_at' => 'datetime',
     ];
     protected $fillable = [
         'student_id',
@@ -21,6 +22,7 @@ class StudentAssessmentAttempt extends Model
         'tab_switch_count',
         'last_heartbeat_at',
         'status',
+        'finalized_at',
     ];
 
     public function AnticheatViolations()
