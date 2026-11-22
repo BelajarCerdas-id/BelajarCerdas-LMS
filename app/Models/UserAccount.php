@@ -14,6 +14,11 @@ class UserAccount extends Authenticatable
         'no_hp',
         'role',
         'status_akun',
+        'can_approve_unlock',
+    ];
+
+    protected $casts = [
+        'can_approve_unlock' => 'boolean',
     ];
 
     // PROFILE USERS

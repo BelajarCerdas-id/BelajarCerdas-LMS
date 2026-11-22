@@ -6,6 +6,7 @@ use App\Models\SchoolAssessment;
 use App\Models\StudentAssessmentAnticheatViolation;
 use App\Models\StudentAssessmentAttempt;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
+use App\Services\Proctor\ProctorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,18 +83,18 @@ class AssessmentAntiCheatController extends Controller
             return response()->json(['status' => 'error']);
         }
 
-        if ($attempt->status === 'cheating' || $attempt->tab_switch_count >= self::MAX_STRIKES) {
+        if ($attempt->status === 'cheating' || $attempt->tab_switch_count >= $this->strikeLimit($attempt)) {
             return response()->json([
                 'status' => 'blocked',
                 'count' => $attempt->tab_switch_count,
-                'max_count' => self::MAX_STRIKES,
+                'max_count' => $this->strikeLimit($attempt),
             ]);
         }
 
         return response()->json([
             'status' => 'ok',
             'count' => $attempt->tab_switch_count,
-            'max_count' => self::MAX_STRIKES,
+            'max_count' => $this->strikeLimit($attempt),
         ]);
     }
 
@@ -101,7 +102,8 @@ class AssessmentAntiCheatController extends Controller
     {
         $attempt = $this->activeAttempt($assessmentId);
 
-        if (!$attempt) {
+        // paused by the teacher: no clock and no strikes; the gap is reset on resume
+        if (!$attempt || $attempt->SchoolAssessment?->proctor_paused_at) {
             return response()->json(['status' => 'ignored']);
         }
 
@@ -149,6 +151,12 @@ class AssessmentAntiCheatController extends Controller
         // Normal heartbeat: throttle DB writes to once every 15 seconds
         if (!$lastHeartbeat || $gap >= 15) {
             $attempt->update(['last_heartbeat_at' => $now]);
+            app(\App\Services\Proctor\ProctorService::class)->publish([
+                'type' => 'heartbeat',
+                'attempt_id' => $attempt->id,
+                'assessment_id' => $attempt->school_assessment_id,
+                'at' => $now->toIso8601String(),
+            ]);
         }
 
         return response()->json(['status' => 'ok']);
@@ -173,10 +181,17 @@ class AssessmentAntiCheatController extends Controller
 
     private function settleStrike(StudentAssessmentAttempt $attempt, int $assessmentId): JsonResponse
     {
-        if ($attempt->tab_switch_count >= self::MAX_STRIKES) {
+        if ($attempt->tab_switch_count >= $this->strikeLimit($attempt)) {
             $attempt->update([
                 'status' => 'cheating',
                 'last_heartbeat_at' => now(),
+            ]);
+            app(ProctorService::class)->publish([
+                'type' => 'blocked',
+                'attempt_id' => $attempt->id,
+                'assessment_id' => $attempt->school_assessment_id,
+                'count' => $attempt->tab_switch_count,
+                'limit' => $this->strikeLimit($attempt),
             ]);
 
             $assessment = SchoolAssessment::find($assessmentId);
@@ -197,8 +212,13 @@ class AssessmentAntiCheatController extends Controller
         return response()->json([
             'status' => 'warning',
             'count' => $attempt->tab_switch_count,
-            'max_count' => self::MAX_STRIKES,
+            'max_count' => $this->strikeLimit($attempt),
         ]);
+    }
+
+    private function strikeLimit(StudentAssessmentAttempt $attempt): int
+    {
+        return $attempt->strike_limit ?? self::MAX_STRIKES;
     }
 
     private function cooldownKey(int $attemptId): string
@@ -230,6 +250,15 @@ class AssessmentAntiCheatController extends Controller
                 'device_type' => $parsed['deviceType'],
                 'platform' => $parsed['platform'],
                 'user_agent' => $ua,
+            ]);
+
+            app(ProctorService::class)->publish([
+                'type' => $severity === 'warning' ? 'warning' : 'strike',
+                'attempt_id' => $attempt->id,
+                'assessment_id' => $attempt->school_assessment_id,
+                'reason' => substr($reason, 0, 50) ?: 'unspecified',
+                'count' => $attempt->tab_switch_count,
+                'limit' => $this->strikeLimit($attempt),
             ]);
         } catch (\Throwable $e) {
             // never let violation logging break the exam flow

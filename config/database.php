@@ -165,6 +165,19 @@ return [
             'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
         ],
 
+        // Publishing proctor events must never hold a PHP worker: short timeouts, no retries.
+        'proctor' => [
+            'options' => ['prefix' => ''], // Rust subscribes to the bare channel name
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('PROCTOR_REDIS_DB', env('REDIS_DB', '0')),
+            'timeout' => 0.2,
+            'read_timeout' => 0.5,
+            'max_retries' => 0,
+        ],
+
         'cache' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),

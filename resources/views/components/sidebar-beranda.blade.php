@@ -1524,6 +1524,20 @@
                                         ]) }}" class="link-href block py-2 text-[12px]">
                                         Assessment Mangement
                                     </a>
+                                    <a href="{{ route('lms.proctor.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Proctor Ujian
+                                    </a>
+                                    <a href="{{ route('lms.proctor.timeline.view', [
+                                        'role' => Auth::user()->role,
+                                        'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                        'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                    ]) }}" class="link-href block py-2 text-[12px]">
+                                        Timeline Proctor
+                                    </a>
                                     <a href="{{ route('lms.assessmentGradingManagement.view', [
                                             'role' => Auth::user()->role,
                                             'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
@@ -2010,6 +2024,20 @@
                                                 'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
                                             ]) }}" class="link-href block py-2 text-[12px]">
                                             Assessment Mangement
+                                        </a>
+                                        <a href="{{ route('lms.proctor.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                        Proctor Ujian
+                                    </a>
+                                        <a href="{{ route('lms.proctor.timeline.view', [
+                                            'role' => Auth::user()->role,
+                                            'schoolName' => Auth::user()->SchoolStaffProfile->SchoolPartner->nama_sekolah,
+                                            'schoolId' => Auth::user()->SchoolStaffProfile->SchoolPartner->id
+                                        ]) }}" class="link-href block py-2 text-[12px]">
+                                            Timeline Proctor
                                         </a>
                                         <a href="{{ route('lms.assessmentGradingManagement.view', [
                                             'role' => Auth::user()->role,

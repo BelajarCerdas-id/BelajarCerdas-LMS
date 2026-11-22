@@ -44,6 +44,7 @@ class AcademicDashboardController extends Controller
             'lmsTeacherSubjectManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/subject-teacher-management',
             'lmsAssessmentWeightManagement' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/assessment-weight-management',
             'lmsSubjectPassingGradeCriteria' => '/lms/:role/school-subscription/:schoolName/:schoolId/academic-management/subject-passing-grade-criteria-management',
+            'lmsProctorApprovers' => '/administrator/proctor-approvers',
         ]);
     }
 }

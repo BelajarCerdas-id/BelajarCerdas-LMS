@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\AssessmentAntiCheatController;
+use App\Http\Controllers\ProctorController;
+use App\Http\Controllers\ProctorEntryController;
+use App\Http\Controllers\ProctorSessionController;
+use App\Http\Controllers\ProctorTimelineController;
+use App\Http\Controllers\ProctorUnlockController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceContractController;
@@ -166,6 +171,11 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         // 1. ADMINISTRATOR LIBRARY ROUTES
         // =========================================================================
         Route::prefix('administrator')->group(function () {
+
+            // proctor: person in charge (PIC) for unlock approval
+            Route::get('/proctor-approvers', [ProctorController::class, 'approversPage'])->name('admin.proctorApprovers.view');
+            Route::get('/proctor-approvers/data', [ProctorController::class, 'approversData'])->name('admin.proctorApprovers.data');
+            Route::post('/proctor-approvers/{userId}', [ProctorController::class, 'approversToggle'])->name('admin.proctorApprovers.toggle');
             
             // Main & Basic Management
             Route::get('/library', [LibraryController::class, 'administrator'])->name('library.administrator');
@@ -821,6 +831,7 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
     
         // check assessment status (spesifik, taruh sebelum wildcard)
         Route::get('/lms/check-assessment-status/{assessmentId}', [StudentAssessmentController::class, 'checkAssessmentStatus'])->name('lms.checkAssessmentStatus');
+        Route::get('/lms/proctor/exam-token', [ProctorController::class, 'studentToken'])->name('lms.proctor.examToken');
     
         // image essay
         Route::post('/lms/image-essay/store-image/endpoint', [StudentAssessmentExamController::class, 'storeImageEssay'])->name('assessment-test.storeImage');
@@ -938,6 +949,21 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{mode}/{parentAssessmentId}', [TeacherAssessmentController::class, 'teacherAssessmentManagement'])->name('lms.teacherAssessmentManagement.mode.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/{assessmentId}/edit/view', [TeacherAssessmentController::class, 'teacherAssessmentManagementEdit'])->name('lms.teacherAssessmentManagementEdit.view');
+
+        // proctor (realtime exam monitoring); unlock is separate from AssessmentDebugController
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor', [ProctorController::class, 'index'])->name('lms.proctor.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/snapshot', [ProctorController::class, 'snapshot'])->name('lms.proctor.snapshot');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/token', [ProctorController::class, 'token'])->name('lms.proctor.token');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/approvers', [ProctorController::class, 'approverSearch'])->name('lms.proctor.approvers.search');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/approvers/{userId}', [ProctorController::class, 'approverToggle'])->name('lms.proctor.approvers.toggle');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/attempts/{attemptId}/unlock-requests', [ProctorUnlockController::class, 'store'])->name('lms.proctor.unlock.store');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/approve', [ProctorUnlockController::class, 'approve'])->name('lms.proctor.unlock.approve');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/deny', [ProctorUnlockController::class, 'deny'])->name('lms.proctor.unlock.deny');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/assessments/{assessmentId}/{action}', [ProctorSessionController::class, 'control'])->where('action', 'start|pause|resume|stop')->name('lms.proctor.session.control');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/entries/decide', [ProctorEntryController::class, 'decide'])->name('lms.proctor.entries.decide');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline', [ProctorTimelineController::class, 'index'])->name('lms.proctor.timeline.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline/data', [ProctorTimelineController::class, 'data'])->name('lms.proctor.timeline.data');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline/students', [ProctorTimelineController::class, 'students'])->name('lms.proctor.timeline.students');
     
         // form
         Route::get('/lms/{role}/{schoolName}/{schoolId}/teacher-assessment-management/form', [TeacherAssessmentController::class, 'teacherFormAssessmentManagement'])->name('lms.teacherFormAssessmentManagement.form');

@@ -30,11 +30,17 @@ class SchoolAssessment extends Model
         'show_score',
         'show_answer',
         'status',
+        'proctor_started_at',
+        'proctor_paused_at',
+        'proctor_stopped_at',
     ];
 
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'proctor_started_at' => 'datetime',
+        'proctor_paused_at' => 'datetime',
+        'proctor_stopped_at' => 'datetime',
     ];
 
     public function SchoolAssessmentQuestion()

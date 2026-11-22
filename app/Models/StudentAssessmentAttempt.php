@@ -20,6 +20,7 @@ class StudentAssessmentAttempt extends Model
         'start_time',
         'expire_time',
         'tab_switch_count',
+        'strike_limit',
         'last_heartbeat_at',
         'status',
         'finalized_at',

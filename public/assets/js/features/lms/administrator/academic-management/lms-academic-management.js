@@ -96,6 +96,9 @@ function managementAcademic() {
                     const lmsSubjectPassingGradeCriteria = response.lmsSubjectPassingGradeCriteria.replace(':role', role).replace(':schoolName', schoolName)
                         .replace(':schoolId', schoolId);
 
+                    // proctor PIC (unlock approval), administrator only
+                    const lmsProctorApprovers = response.lmsProctorApprovers;
+
                     const academicManagementGroups = [
                         {
                             key: 'role',
@@ -195,6 +198,32 @@ function managementAcademic() {
                             }
                         },
 
+                        ...(role.toLowerCase() === 'administrator' ? [{
+                            key: 'proctor_timeline',
+                            title: 'Timeline Proctor',
+                            icon: 'fa-solid fa-clock-rotate-left',
+                            description: 'Riwayat tindakan proctor, PIC, dan pelanggaran siswa',
+                            items: [
+                                'Semua ujian',
+                                'Per ujian',
+                                'Per siswa',
+                            ],
+                            link: {
+                                href: `/lms/${role}/${schoolName}/${schoolId}/proctor/timeline`,
+                            }
+                        }, {
+                            key: 'proctor_approvers',
+                            title: 'PIC Buka Kunci Ujian',
+                            icon: 'fa-solid fa-unlock-keyhole',
+                            description: 'Tentukan guru yang dapat menyetujui buka kunci ujian',
+                            items: [
+                                'Pilih Guru PIC',
+                                'Cabut Izin PIC',
+                            ],
+                            link: {
+                                href: lmsProctorApprovers,
+                            }
+                        }] : []),
                         {
                             key: 'subject_passing_grade_criteria',
                             title: 'Subject Passing Grade Criteria',

@@ -28,6 +28,7 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
     const timers = [];
     const ajaxCalls = [];
     const beacons = [];
+    const sockets = [];
     const prevented = [];
     const intervals = [];
     const bodyChildren = [];
@@ -77,8 +78,11 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
         clearTimeout: () => {},
         setInterval: (fn) => { intervals.push(fn); return intervals.length; },
         clearInterval: () => {},
-        Swal: { fire: () => ({ then() { return this; } }) },
+        Swal: { fire: () => ({ then() { return this; } }), close: () => { sandbox.swalClosed = true; } },
+        WebSocket: class { constructor(url) { this.url = url; sockets.push(this); } close() { this.closed = true; } },
+        location: { protocol: 'https:', host: 'example.test', href: '' },
         $: () => ({ attr: () => 'csrf' }),
+        getTotalExamDuration: () => 0, // defined by the student form script in the page
         role: 'student', schoolName: 'sekolah', schoolId: 1, curriculumId: 1,
         mapelId: 1, assessmentTypeId: 1, semester: 1, assessmentId: 1,
     };
@@ -102,7 +106,7 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
     const advance = (ms) => { clock += ms; };
 
     return {
-        sandbox, document, ajaxCalls, beacons, prevented, intervals, bodyChildren, fire, runTimers, advance,
+        sandbox, document, ajaxCalls, beacons, sockets, prevented, intervals, bodyChildren, fire, runTimers, advance,
         get: (expr) => vm.runInContext(expr, sandbox),
         run: (code) => vm.runInContext(code, sandbox),
         // full: real initAntiCheatSystem (overlay, heartbeat, cooldown release); otherwise platform layer only
@@ -304,4 +308,45 @@ test('Android freeze/resume cycle counts one strike, not one per return event', 
 
     assert.equal(s.ajaxCalls.length, 1);
     assert.equal(s.lastReason(), 'page_freeze');
+});
+
+test('a blocked attempt stays on the page and opens the unlock socket instead of redirecting', () => {
+    const s = createSandbox();
+    s.init();
+    s.run('handleBlocked()');
+
+    assert.equal(s.get('examFinished'), true);
+    assert.equal(s.sandbox.location.href, '', 'no redirect while waiting for unlock');
+    assert.equal(s.ajaxCalls.length, 1, 'requests a student token');
+    assert.match(s.ajaxCalls[0].url, /exam-token/);
+
+    s.ajaxCalls[0].success({ url: '/proctor/ws', token: 'tok' });
+    assert.equal(s.sockets.length, 1);
+    assert.match(s.sockets[0].url, /^wss:\/\/example\.test\/proctor\/ws\?token=tok$/);
+});
+
+test('an approved unlock resumes the exam in place', () => {
+    const s = createSandbox();
+    s.init();
+    s.run('handleBlocked()');
+    s.ajaxCalls[0].success({ url: '/proctor/ws', token: 'tok' });
+
+    s.sockets[0].onmessage({ data: JSON.stringify({ type: 'unlock_resolved', attempt_id: 1, status: 'approved' }) });
+
+    assert.equal(s.get('examFinished'), false, 'exam continues');
+    assert.equal(s.get('isWarningModalOpen'), false);
+    assert.equal(s.get('antiCheatCooldown'), false, 'detection re-armed');
+    assert.equal(s.sandbox.location.href, '', 'no redirect');
+    assert.notEqual(s.sockets[0].closed, true, 'the exam socket stays open for pause, resume and stop');
+});
+
+test('a denied unlock redirects to the assessment list', () => {
+    const s = createSandbox();
+    s.init();
+    s.run('handleBlocked()');
+    s.ajaxCalls[0].success({ url: '/proctor/ws', token: 'tok' });
+
+    s.sockets[0].onmessage({ data: JSON.stringify({ type: 'unlock_resolved', attempt_id: 1, status: 'denied' }) });
+
+    assert.match(s.sandbox.location.href, /learning\/assessment/);
 });

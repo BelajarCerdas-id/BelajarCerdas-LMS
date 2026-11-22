@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
+use App\Services\Proctor\ProctorService;
 use App\Models\SchoolAssessmentComposition;
 use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolPartner;
@@ -652,20 +653,26 @@ class StudentAssessmentExamController extends Controller
             ], 422);
         }
 
-        $now = now();
+        if ($assessment->proctor_stopped_at) {
+            return response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410);
+        }
+        if ($assessment->proctor_paused_at) {
+            return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202);
+        }
 
-        $attempt = StudentAssessmentAttempt::firstOrCreate(
-            [
-                'student_id' => $userId,
-                'school_assessment_id' => $assessmentId
-            ],
-            [
-                'start_time' => $now,
-                'expire_time' => $now->copy()->addMinutes($assessment->duration),
-                'last_heartbeat_at' => $now,
-                'status' => 'in_progress'
-            ]
-        );
+        // nobody starts until the teacher admits them; an existing attempt (resume) is never gated
+        if (!$attempt) {
+            $entry = app(ProctorService::class)->entryFor($assessment, $userId);
+
+            if ($entry->status === 'denied') {
+                return response()->json(['status' => 'denied', 'message' => 'Guru tidak mengizinkan kamu mengikuti ujian ini.'], 403);
+            }
+            if ($entry->status !== 'admitted') {
+                return response()->json(['status' => 'waiting_teacher', 'message' => 'Menunggu guru memulai ujian.'], 202);
+            }
+        }
+
+        $attempt = app(ProctorService::class)->openAttempt($assessment, $userId);
 
         return response()->json([
             'status' => 'success',
@@ -701,6 +708,13 @@ class StudentAssessmentExamController extends Controller
         }
 
         $isExpired = $endDate && $now->greaterThan($endDate);
+
+        if ($assessment->proctor_stopped_at) {
+            return response()->json(['status' => 'expired', 'message' => 'Ujian dihentikan oleh guru. Jawaban tidak dapat disimpan.'], 422);
+        }
+        if ($assessment->proctor_paused_at) {
+            return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 423);
+        }
 
         // Anti-cheat guards: only a live, unfinalized attempt may write answers.
         // Final auto-submits go through studentAssessmentExamEnd(), which is

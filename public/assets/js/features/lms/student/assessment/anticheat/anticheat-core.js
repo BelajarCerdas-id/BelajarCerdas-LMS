@@ -24,6 +24,9 @@ var antiCheatInitialized = false;
 var heartbeatInterval = null;
 var fullscreenRequestInFlight = false;
 var fullscreenUnavailable = false;
+var examPaused = false;
+var examStopped = false;
+var devtoolsTimer = null;
 
 window.isSelectingFile = false;
 
@@ -42,7 +45,7 @@ window.AntiCheatPlatforms = window.AntiCheatPlatforms || [];
 
 // ---- guard helper: single source of truth for skip conditions ----
 function shouldSkipAntiCheat() {
-    return examFinished || isPageReloading || antiCheatCooldown || isWarningModalOpen || window.isSelectingFile;
+    return examFinished || examPaused || isPageReloading || antiCheatCooldown || isWarningModalOpen || window.isSelectingFile;
 }
 
 // ---- fullscreen helpers (standard + webkit) ----
@@ -128,42 +131,117 @@ function showStrikeWarning(res) {
     });
 }
 
+var unlockSocket = null;
+var lockedPollTimer = null;
+
 function handleBlocked() {
+    // stay on the page and wait for a teacher's unlock instead of redirecting
+    if (examFinished) return;
     examFinished = true;
     finalExamDuration = getTotalExamDuration();
     if (typeof saveQuestionDuration === 'function') saveQuestionDuration();
-    if (typeof stopTimer === 'function') stopTimer();
-    if (typeof stopQuestionTimer === 'function') stopQuestionTimer();
     stopHeartbeat();
-
-    // force redirect once the blocked modal is closed (or the final
-    // auto-submit finished, whichever happens last first)
-    let blockedRedirected = false;
-    const redirectAfterBlock = function () {
-        if (blockedRedirected) return;
-        blockedRedirected = true;
-        window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
-    };
 
     isWarningModalOpen = true;
     Swal.fire({
         icon: 'error',
-        title: 'Ujian dihentikan',
-        text: 'Terlalu sering meninggalkan halaman.',
+        title: 'Ujian terkunci',
+        text: 'Menunggu persetujuan guru. Halaman ini akan terbuka kembali otomatis setelah disetujui.',
         allowOutsideClick: false,
-        allowEscapeKey: false
-    }).then(function () {
-        isWarningModalOpen = false;
-        redirectAfterBlock();
+        allowEscapeKey: false,
+        showConfirmButton: false
     });
 
     updateFullscreenOverlay();
+    connectUnlockSocket();
+    // fallback when the socket is unavailable or drops: 5s status poll
+    if (!lockedPollTimer) lockedPollTimer = setInterval(pollUnlockStatus, 5000);
+}
 
-    if (typeof autoSubmitUnSavedQuestions === 'function') {
-        autoSubmitUnSavedQuestions(redirectAfterBlock, 'cheating');
-    } else {
-        redirectAfterBlock();
+function examTokenUrl() {
+    return '/lms/proctor/exam-token?assessment_id=' + encodeURIComponent(assessmentId);
+}
+
+// One exam socket per attempt: unlock decisions, teacher pause/resume/stop.
+function connectUnlockSocket() {
+    if (unlockSocket || examStopped) return;
+
+    $.ajax({
+        url: examTokenUrl(),
+        method: 'GET',
+        success: function (res) {
+            if (unlockSocket || examStopped) return;
+            var scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            unlockSocket = new WebSocket(scheme + '://' + window.location.host + res.url + '?token=' + encodeURIComponent(res.token));
+
+            unlockSocket.onmessage = function (msg) {
+                var event;
+                try { event = JSON.parse(msg.data); } catch (e) { return; }
+                handleExamSocketEvent(event);
+            };
+            unlockSocket.onclose = function () {
+                unlockSocket = null;
+                setTimeout(connectUnlockSocket, 3000);
+            };
+        },
+        error: function () {
+            // retry; the status poll still covers the unlock
+            setTimeout(connectUnlockSocket, 3000);
+        }
+    });
+}
+
+function handleExamSocketEvent(event) {
+    if (event.type === 'unlock_resolved') {
+        if (event.status === 'approved') resumeAfterUnlock(); else handleUnlockDenied();
+    } else if (event.type === 'exam_paused') {
+        handleExamPaused();
+    } else if (event.type === 'exam_resumed') {
+        handleExamResumed();
+    } else if (event.type === 'exam_stopped') {
+        handleExamStopped();
+    } else if (event.type === 'resync') {
+        pollUnlockStatus();
+        if (examPaused) handleExamResumed();
     }
+}
+
+function pollUnlockStatus() {
+    if (!examFinished) return;
+    $.ajax({
+        url: antiCheatUrl('attempt-status'),
+        method: 'GET',
+        success: function (res) {
+            if (examFinished && res.status && res.status !== 'blocked') resumeAfterUnlock();
+        }
+    });
+}
+
+function closeUnlockSocket() {
+    if (lockedPollTimer) { clearInterval(lockedPollTimer); lockedPollTimer = null; }
+    if (unlockSocket) { unlockSocket.onclose = null; try { unlockSocket.close(); } catch (e) {} unlockSocket = null; }
+}
+
+function resumeAfterUnlock() {
+    if (!examFinished) return;
+    if (lockedPollTimer) { clearInterval(lockedPollTimer); lockedPollTimer = null; }
+    examFinished = false;
+    isWarningModalOpen = false;
+    attemptStatusChecked = false;
+    antiCheatCooldown = false;
+    if (typeof Swal.close === 'function') Swal.close();
+    startHeartbeat();
+    updateFullscreenOverlay();
+    checkAttemptStatus();
+    if (typeof Swal.fire === 'function') {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Kunci dibuka. Lanjutkan ujian.', showConfirmButton: false, timer: 4000 });
+    }
+}
+
+function handleUnlockDenied() {
+    if (!examFinished) return;
+    closeUnlockSocket();
+    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
 }
 
 function handleHeartbeatResponse(res) {

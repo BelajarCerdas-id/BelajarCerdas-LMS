@@ -41,4 +41,4 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/administrator/academic-management/lms-academic-management.js') }}"></script> <!--- paginate academic management ---->
+<script src="{{ asset('assets/js/features/lms/administrator/academic-management/lms-academic-management.js') }}?v=2"></script> <!--- paginate academic management ---->
