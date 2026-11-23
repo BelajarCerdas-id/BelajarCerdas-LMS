@@ -817,8 +817,18 @@ class ProctorTest extends TestCase
         $this->assertEqualsWithDelta($expire->timestamp + 40, $fresh->expire_time->timestamp, 2, 'paused time is not consumed');
     }
 
-    public function test_resume_refused_when_not_suspended(): void
+    public function test_suspended_student_earns_no_strikes(): void
     {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+
+        $this->callAttemptControl($seed, $attempt, 'suspend');
+        $this->callReport($seed, $attempt);
+
+        $this->assertEquals(0, $attempt->fresh()->tab_switch_count, 'no strikes while the proctor holds the student');
+    }
+
+    public function test_resume_refused_when_not_suspended(): void    {
         $seed = $this->seedScenario();
         $attempt = $this->attempt($seed['otherStudent'], $seed['assessment']);
 

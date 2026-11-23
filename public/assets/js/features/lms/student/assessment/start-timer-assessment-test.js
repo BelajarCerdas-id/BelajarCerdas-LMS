@@ -210,14 +210,8 @@ function startTimer() {
         stopHeartbeat();
 
         isWarningModalOpen = true;
-        Swal.fire({
-            icon: 'info',
-            title: 'Ujian dijeda',
-            text: 'Guru menjeda ujian. Waktu berhenti sementara dan akan berjalan lagi otomatis.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showConfirmButton: false
-        });
+        // full-page blockage: no input and no exam content while the proctor pauses this student
+        showPausedBlockage();
         connectUnlockSocket();
     }
 
@@ -230,7 +224,7 @@ function startTimer() {
     function clearPausedState() {
         examPaused = false;
         isWarningModalOpen = false;
-        if (typeof Swal.close === 'function') Swal.close();
+        hidePausedBlockage();
         startHeartbeat();
     }
 
@@ -238,6 +232,7 @@ function startTimer() {
         if (examStopped) return;
         examStopped = true;
         examPaused = false;
+        hidePausedBlockage();
         stopWaitingForTeacher();
         stopHeartbeat();
         clearInterval(countdown);

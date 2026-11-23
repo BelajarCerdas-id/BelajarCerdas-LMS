@@ -229,6 +229,7 @@ function resumeAfterUnlock() {
     isWarningModalOpen = false;
     attemptStatusChecked = false;
     antiCheatCooldown = false;
+    hidePausedBlockage();
     if (typeof Swal.close === 'function') Swal.close();
     startHeartbeat();
     updateFullscreenOverlay();
@@ -240,6 +241,7 @@ function resumeAfterUnlock() {
 
 function handleUnlockDenied() {
     if (!examFinished) return;
+    hidePausedBlockage();
     closeUnlockSocket();
     window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
 }
@@ -515,6 +517,48 @@ function updateFullscreenOverlay() {
     // visible whenever fullscreen is supported but not currently active
     const hidden = getFullscreenElement() || !isFullscreenSupported() || examFinished || isPageReloading || window.isSelectingFile;
     overlay.style.display = hidden ? 'none' : 'flex';
+}
+
+// ---- teacher pause blockage: full-screen, blocks every input until resumed ----
+const PAUSED_INPUT_EVENTS = ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'click', 'dblclick',
+    'contextmenu', 'wheel', 'touchstart', 'touchmove', 'touchend', 'pointerdown', 'pointerup'];
+
+function showPausedBlockage() {
+    if (document.getElementById('anticheat-paused-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'anticheat-paused-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0f172a;color:#fff;' +
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;' +
+        'font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:24px;cursor:not-allowed;';
+    overlay.innerHTML =
+        '<div style="width:44px;height:44px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:anticheat-spin 1s linear infinite;"></div>' +
+        '<div style="font-size:22px;font-weight:700;">Ujian Dijeda oleh Guru</div>' +
+        '<div style="opacity:.85;max-width:460px;font-size:15px;">Waktu berhenti sementara dan akan berjalan lagi otomatis ketika guru melanjutkan ujian.<br>Jangan menutup atau memuat ulang halaman ini.</div>' +
+        '<style>@keyframes anticheat-spin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    PAUSED_INPUT_EVENTS.forEach(function (type) {
+        window.addEventListener(type, blockPausedInput, true);
+    });
+}
+
+// capture-phase: swallow every user input while the pause overlay is on screen
+function blockPausedInput(e) {
+    if (!document.getElementById('anticheat-paused-overlay')) return removePausedInputBlock();
+    e.preventDefault();
+    e.stopImmediatePropagation();
+}
+
+function removePausedInputBlock() {
+    PAUSED_INPUT_EVENTS.forEach(function (type) {
+        window.removeEventListener(type, blockPausedInput, true);
+    });
+}
+
+function hidePausedBlockage() {
+    document.getElementById('anticheat-paused-overlay')?.remove();
+    document.body.style.overflow = '';
+    removePausedInputBlock();
 }
 
 // ---- INIT: orchestrates content protection, heartbeat and platform layers ----

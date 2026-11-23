@@ -34,7 +34,8 @@ class AssessmentAntiCheatController extends Controller
     {
         $attempt = $this->activeAttempt($assessmentId);
 
-        if (!$attempt) {
+        // paused (per student or exam-wide): no strikes while the proctor holds the student
+        if (!$attempt || $attempt->proctor_paused_at || $attempt->SchoolAssessment?->proctor_paused_at) {
             return response()->json(['status' => 'ignored']);
         }
 
