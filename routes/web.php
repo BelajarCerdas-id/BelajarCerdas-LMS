@@ -966,6 +966,8 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/approvers/{userId}', [ProctorController::class, 'approverToggle'])->name('lms.proctor.approvers.toggle');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/attempts/{attemptId}/unlock-requests', [ProctorUnlockController::class, 'store'])->name('lms.proctor.unlock.store');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/attempts/{attemptId}/{action}', [ProctorAttemptController::class, 'control'])->where('action', 'suspend|resume|terminate')->name('lms.proctor.attempt.control');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/pic', [ProctorController::class, 'picView'])->name('lms.proctor.pic.view');
+        Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/pic/data', [ProctorController::class, 'picData'])->name('lms.proctor.pic.data');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/approve', [ProctorUnlockController::class, 'approve'])->name('lms.proctor.unlock.approve');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/deny', [ProctorUnlockController::class, 'deny'])->name('lms.proctor.unlock.deny');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/assessments/{assessmentId}/{action}', [ProctorSessionController::class, 'control'])->where('action', 'start|pause|resume|stop')->name('lms.proctor.session.control');

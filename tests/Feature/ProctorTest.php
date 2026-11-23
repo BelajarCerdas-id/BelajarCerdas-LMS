@@ -754,6 +754,42 @@ class ProctorTest extends TestCase
         );
     }
 
+    public function test_pic_page_is_gated_to_approvers_and_lists_pending_requests(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $attempt->update(['status' => 'cheating']);
+
+        $this->actingAs($seed['teacher']);
+        $store = app(ProctorUnlockController::class)->store('guru', self::SCHOOL, $seed['partner']->id, $attempt->id);
+        $requestId = $store->getData(true)['request_id'];
+
+        // non-PIC teachers cannot open the page or its data
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        app(ProctorController::class)->picView('guru', self::SCHOOL, $seed['partner']->id);
+    }
+
+    public function test_pic_data_lists_pending_unlock_requests(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $attempt->update(['status' => 'cheating']);
+
+        $this->actingAs($seed['teacher']);
+        $store = app(ProctorUnlockController::class)->store('guru', self::SCHOOL, $seed['partner']->id, $attempt->id);
+        $requestId = $store->getData(true)['request_id'];
+
+        $this->actingAs($seed['approver']);
+        // compile the page too: sidebar + PIC blade must render for a PIC
+        app(ProctorController::class)->picView('guru', self::SCHOOL, $seed['partner']->id)->render();
+        $body = app(ProctorController::class)->picData('guru', self::SCHOOL, $seed['partner']->id)->getData(true);
+
+        $this->assertCount(1, $body['requests']);
+        $this->assertEquals($requestId, $body['requests'][0]['request_id']);
+        $this->assertGreaterThan(0, $body['exams'][0]['pending_unlocks']);
+        $this->assertArrayHasKey('class_name', $body['exams'][0], 'PIC can see which class each exam belongs to');
+    }
+
     public function test_suspend_and_resume_pause_only_one_student(): void
     {
         $seed = $this->seedScenario();

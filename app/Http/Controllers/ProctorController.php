@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProctorEntryRequest;
 use App\Models\ProctorUnlockRequest;
 use App\Models\SchoolAssessment;
+use App\Models\SchoolClass;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentProfile;
 use App\Models\StudentSchoolClass;
@@ -121,6 +122,79 @@ class ProctorController extends Controller
             'assessments' => $assessmentCards,
             'students' => $students->take(5000)->values(),
             'canApprove' => (bool) Auth::user()->can_approve_unlock,
+        ]);
+    }
+
+    /**
+     * PIC page: exam overview with pending unlock requests, approves/denies them.
+     * The per-class detail (student table, suspend/terminate) stays on the proctor dashboard.
+     */
+    public function picView($role, $schoolName, $schoolId): View
+    {
+        if (!$this->canView() || !Auth::user()->can_approve_unlock) {
+            abort(403);
+        }
+
+        return view('features.lms.teacher.proctor.proctor-pic', [
+            'role' => $role,
+            'schoolName' => $schoolName,
+            'schoolId' => $schoolId,
+        ]);
+    }
+
+    public function picData($role, $schoolName, $schoolId): JsonResponse
+    {
+        if (!$this->canView() || !Auth::user()->can_approve_unlock) {
+            abort(403);
+        }
+
+        $assessments = SchoolAssessment::whereIn('id', $this->proctor->heldTodayAssessmentIds((int) $schoolId))
+            ->orderBy('start_date')
+            ->get(['id', 'title', 'school_class_id', 'start_date', 'end_date', 'proctor_started_at', 'proctor_paused_at', 'proctor_stopped_at'])
+            ->keyBy('id');
+        $ids = $assessments->keys();
+
+        $classNames = SchoolClass::whereIn('id', $assessments->pluck('school_class_id')->filter())
+            ->pluck('class_name', 'id');
+
+        $attempts = StudentAssessmentAttempt::whereIn('school_assessment_id', $ids)
+            ->get(['id', 'student_id', 'school_assessment_id', 'status', 'tab_switch_count', 'strike_limit'])
+            ->keyBy('id');
+
+        $requests = ProctorUnlockRequest::whereIn('student_assessment_attempt_id', $attempts->pluck('id'))
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->orderBy('expires_at')
+            ->get();
+
+        $names = StudentProfile::whereIn('user_id', $attempts->pluck('student_id')->unique())
+            ->pluck('nama_lengkap', 'user_id');
+
+        $requestsPayload = $requests->map(fn (ProctorUnlockRequest $r) => [
+            'request_id' => $r->id,
+            'attempt_id' => $r->student_assessment_attempt_id,
+            'assessment_id' => $attempts[$r->student_assessment_attempt_id]?->school_assessment_id,
+            'student_name' => $names[$attempts[$r->student_assessment_attempt_id]?->student_id] ?? 'Siswa',
+            'exam_title' => $assessments[$attempts[$r->student_assessment_attempt_id]?->school_assessment_id]?->title,
+            'class_name' => $classNames[$assessments[$attempts[$r->student_assessment_attempt_id]?->school_assessment_id]?->school_class_id] ?? '-',
+            'count' => (int) ($attempts[$r->student_assessment_attempt_id]?->tab_switch_count ?? 0),
+            'limit' => AssessmentAntiCheatController::strikeLimitFor($attempts[$r->student_assessment_attempt_id] ?? null),
+            'expires_in' => $r->expires_at->diffInSeconds(now()),
+            'expires_at' => $r->expires_at->toIso8601String(),
+        ])->values();
+
+        $exams = $assessments->map(fn (SchoolAssessment $a) => [
+            'assessment_id' => $a->id,
+            'assessment_title' => $a->title,
+            'class_name' => $classNames[$a->school_class_id] ?? '-',
+            'time' => $a->start_date->timezone('Asia/Jakarta')->format('H:i').'–'.$a->end_date->timezone('Asia/Jakarta')->format('H:i'),
+            'state' => ProctorService::sessionState($a),
+            'pending_unlocks' => $requestsPayload->where('assessment_id', $a->id)->count(),
+        ])->values();
+
+        return response()->json([
+            'exams' => $exams,
+            'requests' => $requestsPayload,
         ]);
     }
 

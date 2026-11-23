@@ -16,7 +16,7 @@ class ProctorService
     public const CHANNEL = 'proctor:events';
 
     /** Roles that may open the proctor dashboard (the page is also school-scoped by middleware). */
-    public const VIEW_ROLES = ['guru', 'administrator', 'admin sekolah', 'superadmin', 'super admin', 'kurikulum', 'office'];
+    public const VIEW_ROLES = ['guru', 'administrator', 'admin sekolah', 'superadmin', 'super admin', 'kurikulum', 'office', 'kepala sekolah', 'wakil kepala sekolah', 'wakil kesiswaan', 'yayasan'];
 
     /** Roles that may assign the unlock-approver flag. */
     public const APPROVER_ADMIN_ROLES = ['administrator', 'superadmin', 'super admin'];
