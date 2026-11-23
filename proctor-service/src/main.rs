@@ -36,6 +36,7 @@ pub struct Event {
     attempt_id: Option<i64>,
     assessment_id: Option<i64>,
     user_id: Option<i64>,
+    school_id: Option<i64>,
     students_only: bool,
     raw: String,
 }
@@ -45,6 +46,7 @@ struct EventIds {
     attempt_id: Option<i64>,
     assessment_id: Option<i64>,
     user_id: Option<i64>,
+    school_id: Option<i64>,
     audience: Option<String>,
 }
 
@@ -52,7 +54,7 @@ impl Event {
     fn parse(raw: String) -> Option<Self> {
         let ids: EventIds = serde_json::from_str(&raw).ok()?;
         let students_only = ids.audience.as_deref() == Some("students");
-        Some(Self { attempt_id: ids.attempt_id, assessment_id: ids.assessment_id, user_id: ids.user_id, students_only, raw })
+        Some(Self { attempt_id: ids.attempt_id, assessment_id: ids.assessment_id, user_id: ids.user_id, school_id: ids.school_id, students_only, raw })
     }
 }
 
@@ -161,7 +163,7 @@ async fn serve(socket: WebSocket, claims: Claims, mut rx: broadcast::Receiver<Ar
     loop {
         tokio::select! {
             event = rx.recv() => match event {
-                Ok(e) if claims.covers(e.attempt_id, e.assessment_id, e.user_id, e.students_only) => {
+                Ok(e) if claims.covers(e.attempt_id, e.assessment_id, e.user_id, e.school_id, e.students_only) => {
                     if tx.send(Message::Text(e.raw.clone().into())).await.is_err() {
                         break;
                     }

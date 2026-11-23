@@ -1,6 +1,21 @@
 <x-script></x-script>
 
 <link rel="stylesheet" href="{{ asset('assets/css/sidebar.css') }}?v={{ file_exists(public_path('assets/css/sidebar.css')) ? filemtime(public_path('assets/css/sidebar.css')) : time() }}">
+@if (session('sudo_original_id'))
+    <div class="fixed top-0 inset-x-0 z-[9999] bg-amber-500 text-white text-sm shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+            <span>
+                <i class="fa-solid fa-user-secret mr-1"></i>
+                Sesi sudo: kamu masuk sebagai <strong>{{ Auth::user()->email }}</strong> ({{ Auth::user()->role }})
+            </span>
+            <form method="POST" action="{{ route('admin.sudo.leave', [Auth::user()->role]) }}" class="flex items-center gap-2">
+                @csrf
+                <button type="submit" class="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 font-medium">Kembali ke akun admin</button>
+            </form>
+        </div>
+    </div>
+@endif
+
 @if (Auth::user()->role === 'Siswa')
     <aside class="sidebar-beranda-student hidden md:flex flex-col w-72 bg-linear-to-b from-[#0B7FCB] to-[#004f84] text-white">
 

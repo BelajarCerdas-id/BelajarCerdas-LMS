@@ -29,10 +29,14 @@ class ProctorService
 
     /**
      * Fire-and-forget: the exam must never wait on the proctor. Failures are logged only.
+     * Tags the event with its school so teacher tokens issued before the exam was created still match.
      */
     public function publish(array $event): void
     {
         try {
+            if (!isset($event['school_id']) && isset($event['assessment_id'])) {
+                $event['school_id'] = $this->schoolOf((int) $event['assessment_id']);
+            }
             Redis::connection('proctor')->publish(self::CHANNEL, json_encode($event));
         } catch (\Throwable $e) {
             Log::warning('proctor publish failed', ['type' => $event['type'] ?? null, 'error' => $e->getMessage()]);
@@ -43,9 +47,12 @@ class ProctorService
      * Token format is verified by proctor-service/src/token.rs: base64url(json) . hex(hmac_sha256).
      * $examId scopes a student to exam-wide control events (pause, resume, stop) of that exam only.
      */
-    public function token(int $userId, ?int $attemptId, array $assessmentIds, ?int $examId = null): string
+    public function token(int $userId, ?int $attemptId, array $assessmentIds, ?int $examId = null, ?int $schoolId = null): string
     {
         $claims = ['sub' => $userId, 'exp' => now()->addSeconds(config('proctor.token_ttl'))->timestamp];
+        if ($schoolId !== null) {
+            $claims['sch'] = $schoolId;
+        }
         if ($attemptId !== null) {
             $claims['att'] = $attemptId;
         }
@@ -109,6 +116,14 @@ class ProctorService
             ->where('start_date', '<=', $today->copy()->endOfDay())
             ->where('end_date', '>=', $today->copy()->startOfDay())
             ->pluck('id');
+    }
+
+    /** assessment_id -> school_partner_id; assessments never move between schools. */
+    private function schoolOf(int $assessmentId): ?int
+    {
+        static $cache = [];
+
+        return $cache[$assessmentId] ??= SchoolAssessment::whereKey($assessmentId)->value('school_partner_id');
     }
 
     /**

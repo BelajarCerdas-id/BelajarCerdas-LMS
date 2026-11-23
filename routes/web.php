@@ -5,6 +5,7 @@ use App\Http\Controllers\ProctorController;
 use App\Http\Controllers\ProctorEntryController;
 use App\Http\Controllers\ProctorSessionController;
 use App\Http\Controllers\ProctorTimelineController;
+use App\Http\Controllers\SudoController;
 use App\Http\Controllers\ProctorUnlockController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -743,6 +744,9 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
     
         // ROUTES OFFICE MANAGEMENT
         Route::get('/lms/{role}/office-management/manage-user', [OfficeManagementController::class, 'manageUserView'])->name('lms.officeManagement.manage-user.view');
+        // sudo: open a session as another user (administrator only)
+        Route::get('/lms/{role}/sudo/{userId}', [SudoController::class, 'start'])->name('admin.sudo.start');
+        Route::post('/lms/{role}/sudo/leave', [SudoController::class, 'leave'])->name('admin.sudo.leave');
     
         // crud
         Route::post('/lms/{role}/office-management/manage-user/store', [OfficeManagementController::class, 'manageUserStore'])->name('lms.officeManagement.manage-user.store');

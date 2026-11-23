@@ -17,6 +17,8 @@ pub struct Claims {
     pub asm: Vec<i64>,
     #[serde(default)]
     pub ass: Option<i64>,
+    #[serde(default)]
+    pub sch: Option<i64>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -52,12 +54,13 @@ impl Secret {
 
 impl Claims {
     /// A student sees only their own attempt, their own entry decision (user id), and
-    /// exam-wide control events (pause/resume/stop) of their own exam. A teacher sees the assessments they were issued.
-    pub fn covers(&self, attempt_id: Option<i64>, assessment_id: Option<i64>, user_id: Option<i64>, students_only: bool) -> bool {
+    /// exam-wide control events (pause/resume/stop) of their own exam. A teacher sees everything of their school.
+    pub fn covers(&self, attempt_id: Option<i64>, assessment_id: Option<i64>, user_id: Option<i64>, school_id: Option<i64>, students_only: bool) -> bool {
         attempt_id.is_some_and(|a| Some(a) == self.att)
             || assessment_id.is_some_and(|s| self.asm.contains(&s))
             || user_id.is_some_and(|u| u == self.sub)
             || (students_only && assessment_id.is_some() && assessment_id == self.ass)
+            || school_id.is_some_and(|s| Some(s) == self.sch)
     }
 
     pub fn expired(&self, now: u64) -> bool {
@@ -88,9 +91,9 @@ mod tests {
         let token = sign(KEY, r#"{"sub":7,"exp":4102444800,"att":5,"asm":[9]}"#);
         let claims = secret.verify(&token, 1_000).unwrap();
         assert_eq!(claims.sub, 7);
-        assert!(claims.covers(Some(5), None, None, false));
-        assert!(claims.covers(None, Some(9), None, false));
-        assert!(!claims.covers(Some(6), Some(8), None, false));
+        assert!(claims.covers(Some(5), None, None, None, false));
+        assert!(claims.covers(None, Some(9), None, None, false));
+        assert!(!claims.covers(Some(6), Some(8), None, None, false));
     }
 
     #[test]
@@ -98,9 +101,9 @@ mod tests {
         let secret = Secret::new(KEY).unwrap();
         let token = sign(KEY, r#"{"sub":7,"exp":4102444800}"#);
         let claims = secret.verify(&token, 1_000).unwrap();
-        assert!(claims.covers(None, None, Some(7), false));
-        assert!(!claims.covers(None, None, Some(8), false));
-        assert!(!claims.covers(Some(5), Some(9), None, false));
+        assert!(claims.covers(None, None, Some(7), None, false));
+        assert!(!claims.covers(None, None, Some(8), None, false));
+        assert!(!claims.covers(Some(5), Some(9), None, None, false));
     }
 
     #[test]
@@ -108,10 +111,20 @@ mod tests {
         let secret = Secret::new(KEY).unwrap();
         let token = sign(KEY, r#"{"sub":7,"exp":4102444800,"att":5,"ass":9}"#);
         let claims = secret.verify(&token, 1_000).unwrap();
-        assert!(claims.covers(None, Some(9), None, true), "pause/resume/stop of own exam");
-        assert!(!claims.covers(None, Some(9), None, false), "other assessment-wide events stay teacher-only");
-        assert!(!claims.covers(None, Some(8), None, true), "another exam's control event");
-        assert!(!claims.covers(None, None, None, true));
+        assert!(claims.covers(None, Some(9), None, None, true), "pause/resume/stop of own exam");
+        assert!(!claims.covers(None, Some(9), None, None, false), "other assessment-wide events stay teacher-only");
+        assert!(!claims.covers(None, Some(8), None, None, true), "another exam's control event");
+        assert!(!claims.covers(None, None, None, None, true));
+    }
+
+    #[test]
+    fn teacher_sees_their_whole_school_including_exams_created_later() {
+        let secret = Secret::new(KEY).unwrap();
+        let token = sign(KEY, r#"{"sub":7,"exp":4102444800,"asm":[1],"sch":3}"#);
+        let claims = secret.verify(&token, 1_000).unwrap();
+        assert!(claims.covers(None, Some(99), None, Some(3), false), "new exam of the same school");
+        assert!(!claims.covers(None, Some(99), None, Some(4), false), "another school");
+        assert!(claims.covers(None, None, None, Some(3), false), "school-wide events without an exam id");
     }
 
     #[test]

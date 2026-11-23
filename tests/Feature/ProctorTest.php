@@ -425,6 +425,9 @@ class ProctorTest extends TestCase
         $this->assertEquals(hash_hmac('sha256', $payload, str_repeat('k', 32)), $sig);
         $claims = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);
         $this->assertEquals([7, 5, [9]], [$claims['sub'], $claims['att'], $claims['asm']]);
+
+        $withSchool = json_decode(base64_decode(strtr(explode('.', app(ProctorService::class)->token(7, null, [9], null, 3))[0], '-_', '+/')), true);
+        $this->assertEquals(3, $withSchool['sch'], 'teacher tokens carry their school so later exams still match');
     }
 
     public function test_pause_blocks_entry_and_resume_gives_back_the_paused_time(): void

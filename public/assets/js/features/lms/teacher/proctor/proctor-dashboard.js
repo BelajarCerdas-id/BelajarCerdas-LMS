@@ -546,6 +546,7 @@
 
     function onEvent(e) {
         if (e.type === 'resync') return scheduleSnapshot();
+        if (e.type === 'assessment_changed') return scheduleSnapshot();
 
         if (['session_started', 'exam_paused', 'exam_resumed', 'exam_stopped'].includes(e.type)) {
             const a = assessments.get(e.assessment_id);
@@ -634,6 +635,9 @@
             }, 300);
         });
     }
+
+    // Safety net for anything no event covers (missed frames, service restarts, students elsewhere).
+    setInterval(loadSnapshot, 30000);
 
     window.addEventListener('hashchange', render);
     setupApprovers();

@@ -136,7 +136,7 @@ class ProctorController extends Controller
 
         return response()->json([
             'url' => config('proctor.ws_url'),
-            'token' => $this->proctor->token(Auth::id(), null, $assessmentIds),
+            'token' => $this->proctor->token(Auth::id(), null, $assessmentIds, schoolId: (int) $schoolId),
         ]);
     }
 

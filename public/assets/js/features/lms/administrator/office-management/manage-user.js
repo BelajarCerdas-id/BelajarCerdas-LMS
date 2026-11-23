@@ -105,6 +105,10 @@ function paginateManageUser(page = 1, search_account) {
                                         class="btn-edit-manage-user w-10 h-10 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 transition-all cursor-pointer">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
+                                    <a href="/lms/${role}/sudo/${item.user_account?.id}" title="Masuk sebagai pengguna ini"
+                                        class="w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all cursor-pointer flex items-center justify-center">
+                                        <i class="fa-solid fa-user-secret"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

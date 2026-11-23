@@ -400,7 +400,16 @@ class TeacherAssessmentController extends Controller
                 $data['show_score'] = $request->boolean('show_score');
             }
 
-            SchoolAssessment::create($data);
+            $assessment = SchoolAssessment::create($data);
+
+            // the proctor dashboard picks this up live instead of on the next full refresh
+            if ($data['status'] === 'published') {
+                app(\App\Services\Proctor\ProctorService::class)->publish([
+                    'type' => 'assessment_changed',
+                    'assessment_id' => $assessment->id,
+                    'school_id' => (int) $schoolId,
+                ]);
+            }
         }
 
         return response()->json([
@@ -606,6 +615,14 @@ class TeacherAssessmentController extends Controller
 
         $assessment->update($data);
 
+        if (($assessment->status ?? $data['status'] ?? null) === 'published') {
+            app(\App\Services\Proctor\ProctorService::class)->publish([
+                'type' => 'assessment_changed',
+                'assessment_id' => $assessment->id,
+                'school_id' => (int) $schoolId,
+            ]);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Data berhasil diubah.',
@@ -620,7 +637,16 @@ class TeacherAssessmentController extends Controller
         $assessment->update([
             'status' => $request->status,
         ]);
-        
+
+        // publishing or unpublishing changes what the proctor dashboard shows
+        if (in_array($request->status, ['published', 'draft'], true)) {
+            app(\App\Services\Proctor\ProctorService::class)->publish([
+                'type' => 'assessment_changed',
+                'assessment_id' => $assessment->id,
+                'school_id' => (int) $schoolId,
+            ]);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Status berhasil diubah.',
