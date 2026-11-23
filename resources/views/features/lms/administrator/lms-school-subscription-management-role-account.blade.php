@@ -14,10 +14,65 @@
             <main>
 
                 @if (Auth::user()->role === 'Administrator')
+                    <!--- SCHOOL ANTICHEAT SETTINGS --->
+                    <div id="container-anticheat-settings" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-8"
+                        data-school-id="{{ $schoolId }}">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fa-solid fa-shield-halved text-[#0071BC]"></i>
+                            <h3 class="text-sm font-bold text-gray-700">Pengaturan Anti-Cheat</h3>
+                        </div>
+
+                        <form id="form-anticheat-settings" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Batas pelanggaran dianggap curang
+                                    <sup class="text-red-500 font-bold ml-0.5">&#42;</sup>
+                                </label>
+                                <input type="number" name="anticheat_max_strikes" min="1" max="20"
+                                    value="{{ $school?->anticheat_max_strikes ?? 5 }}"
+                                    class="w-full h-11 rounded-xl border border-gray-300 px-3 text-sm outline-none focus:border-[#0071BC]" />
+                                <span id="error-anticheat_max_strikes" class="text-red-500 text-xs"></span>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Kunci otomatis saat melewati batas
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="anticheat_auto_lock"
+                                        {{ ($school?->anticheat_auto_lock ?? true) ? 'checked' : '' }}
+                                        class="w-5 h-5 accent-[#0071BC] cursor-pointer" />
+                                    <span class="text-sm text-gray-600">Aktifkan penguncian otomatis</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Modal peringatan pelanggaran
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="anticheat_warning_modal"
+                                        {{ ($school?->anticheat_warning_modal ?? true) ? 'checked' : '' }}
+                                        class="w-5 h-5 accent-[#0071BC] cursor-pointer" />
+                                    <span class="text-sm text-gray-600">Tampilkan modal peringatan</span>
+                                </label>
+                            </div>
+                        </form>
+
+                        <div class="flex justify-end mt-4">
+                            <button id="btn-save-anticheat-settings" type="button"
+                                class="h-11 px-6 bg-[#0071BC] hover:bg-blue-600 text-white font-semibold rounded-xl text-sm shadow-sm hover:shadow transition-all cursor-pointer disabled:cursor-default disabled:opacity-50">
+                                Simpan Pengaturan
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                @if (Auth::user()->role === 'Administrator')
                     <!--- button bulk upload add users --->
                     <div class="w-full flex justify-end mb-6">
                         <button type="button" onclick="my_modal_1.showModal()"
-                            class="w-max bg-[#0071BC] text-white font-bold h-10 px-6 rounded-lg shadow-md transition-all text-sm flex gap-2 items-center justify-center 
+                            class="w-max bg-[#0071BC] text-white font-bold h-10 px-6 rounded-lg shadow-md transition-all text-sm flex gap-2 items-center justify-center
                                 cursor-pointer">
                             <i class="fa-solid fa-circle-plus"></i>
                             Tambah Pengguna
@@ -247,6 +302,9 @@
 @endif
 
 <script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-role-account.js') }}"></script> <!--- lms subscription management role account ---->
+
+<!--- ANTICHEAT SETTINGS ---->
+<script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-settings.js') }}"></script> <!--- per school anticheat settings ---->
 
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/preview/excel-upload-preview.js') }}"></script> <!--- show excel preview ---->

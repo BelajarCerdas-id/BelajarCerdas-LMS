@@ -16,6 +16,14 @@ class SchoolPartner extends Model
         'jenjang_sekolah',
         'logo',
         'timezone',
+        'anticheat_max_strikes',
+        'anticheat_auto_lock',
+        'anticheat_warning_modal',
+    ];
+
+    protected $casts = [
+        'anticheat_auto_lock' => 'boolean',
+        'anticheat_warning_modal' => 'boolean',
     ];
 
     public function UserAccount()

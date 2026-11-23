@@ -13,6 +13,7 @@ class StudentAssessmentAttempt extends Model
         'expire_time' => 'datetime',
         'last_heartbeat_at' => 'datetime',
         'finalized_at' => 'datetime',
+        'proctor_paused_at' => 'datetime',
     ];
     protected $fillable = [
         'student_id',
@@ -22,6 +23,7 @@ class StudentAssessmentAttempt extends Model
         'tab_switch_count',
         'strike_limit',
         'last_heartbeat_at',
+        'proctor_paused_at',
         'status',
         'finalized_at',
     ];

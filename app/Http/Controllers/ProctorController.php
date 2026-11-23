@@ -57,7 +57,7 @@ class ProctorController extends Controller
 
         $attempts = StudentAssessmentAttempt::whereIn('school_assessment_id', $ids)
             ->limit(self::SNAPSHOT_LIMIT)
-            ->get(['id', 'student_id', 'school_assessment_id', 'status', 'tab_switch_count', 'strike_limit', 'last_heartbeat_at'])
+            ->get(['id', 'student_id', 'school_assessment_id', 'status', 'tab_switch_count', 'strike_limit', 'last_heartbeat_at', 'proctor_paused_at'])
             ->keyBy(fn ($t) => $t->school_assessment_id.':'.$t->student_id);
 
         $entries = ProctorEntryRequest::whereIn('school_assessment_id', $ids)
@@ -103,7 +103,8 @@ class ProctorController extends Controller
                     'unlock_request_id' => $unlock?->id,
                     'unlock_expires_at' => $unlock?->expires_at?->toIso8601String(),
                     'count' => (int) ($attempt?->tab_switch_count ?? 0),
-                    'limit' => $attempt?->strike_limit ?? AssessmentAntiCheatController::MAX_STRIKES,
+                    'limit' => AssessmentAntiCheatController::strikeLimitFor($attempt),
+                    'attempt_paused' => (bool) $attempt?->proctor_paused_at,
                     'last_heartbeat_at' => $attempt?->last_heartbeat_at?->toIso8601String(),
                 ]);
             }

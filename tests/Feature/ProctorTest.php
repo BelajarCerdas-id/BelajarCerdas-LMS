@@ -675,8 +675,7 @@ class ProctorTest extends TestCase
     }
 
     private function callReport(array $seed, StudentAssessmentAttempt $attempt): void
-    {
-        $this->actingAs($seed['student']);
+    {        $this->actingAs($seed['student']);
         app(AssessmentAntiCheatController::class)->reportTabSwitch(
             Request::create('/report', 'POST', ['reason' => 'visibility_hidden'], [], [], [
                 'REMOTE_ADDR' => '203.0.113.9',
@@ -744,6 +743,79 @@ class ProctorTest extends TestCase
         SchoolAssessmentQuestion::create(['school_assessment_id' => $seed['assessment']->id, 'question_bank_id' => $bank->id, 'question_weight' => 100]);
 
         return $seed;
+    }
+
+    private function callAttemptControl(array $seed, StudentAssessmentAttempt $attempt, string $action, $as = 'teacher')
+    {
+        $this->actingAs($seed[$as]);
+
+        return app(\App\Http\Controllers\ProctorAttemptController::class)->control(
+            'guru', self::SCHOOL, $seed['partner']->id, $attempt->id, $action
+        );
+    }
+
+    public function test_suspend_and_resume_pause_only_one_student(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $expire = $attempt->expire_time->copy();
+
+        $this->assertEquals('ok', $this->callAttemptControl($seed, $attempt, 'suspend')->getData(true)['status']);
+        $this->assertNotNull($attempt->fresh()->proctor_paused_at);
+        $event = end($this->proctor->events);
+        $this->assertEquals('exam_paused', $event['type']);
+        $this->assertEquals($attempt->id, $event['attempt_id']);
+        $this->assertArrayNotHasKey('audience', $event, 'no audience: the event is only for this attempt');
+
+        // a paused student gets no strikes from heartbeats and the timer says paused
+        $this->travel(40)->seconds();
+        $this->assertEquals('ignored', app(AssessmentAntiCheatController::class)->heartbeat(
+            Request::create('/heartbeat', 'POST', ['timestamp' => now()->timestamp]),
+            'student', self::SCHOOL, $seed['partner']->id, $seed['kurikulum']->id,
+            $seed['mapel']->id, $seed['type']->id, 1, $seed['assessment']->id
+        )->getData(true)['status']);
+
+        $this->assertEquals('ok', $this->callAttemptControl($seed, $attempt, 'resume')->getData(true)['status']);
+        $fresh = $attempt->fresh();
+        $this->assertNull($fresh->proctor_paused_at);
+        $this->assertEqualsWithDelta($expire->timestamp + 40, $fresh->expire_time->timestamp, 2, 'paused time is not consumed');
+    }
+
+    public function test_resume_refused_when_not_suspended(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['otherStudent'], $seed['assessment']);
+
+        $this->assertEquals(422, $this->callAttemptControl($seed, $attempt, 'resume')->getStatusCode());
+    }
+
+    public function test_terminate_ends_only_that_students_time(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $otherExam = $this->makeAssessment($seed, 'Ujian Sore', now()->subMinutes(30), now()->addHour());
+        $untouched = $this->attempt($seed['otherStudent'], $otherExam);
+
+        $this->assertEquals('ok', $this->callAttemptControl($seed, $attempt, 'terminate')->getData(true)['status']);
+
+        $fresh = $attempt->fresh();
+        $this->assertTrue($fresh->expire_time->lessThanOrEqualTo(now()), 'expired now');
+        $this->assertEquals('in_progress', $fresh->status, 'the client auto-submits, status is untouched');
+        $this->assertTrue($untouched->fresh()->expire_time->isFuture(), 'the other student keeps their time');
+
+        $event = end($this->proctor->events);
+        $this->assertEquals('exam_stopped', $event['type']);
+        $this->assertEquals($attempt->id, $event['attempt_id']);
+        $this->assertArrayNotHasKey('audience', $event);
+    }
+
+    public function test_attempt_controls_are_refused_for_another_school(): void
+    {
+        $seed = $this->seedScenario();
+        $other = $this->makeAssessment($seed, 'Sekolah lain', now()->subHour(), now()->addHour(), otherSchool: true);
+        $attempt = $this->attempt($seed['student'], $other);
+
+        $this->assertEquals(404, $this->callAttemptControl($seed, $attempt, 'suspend')->getStatusCode());
     }
 }
 

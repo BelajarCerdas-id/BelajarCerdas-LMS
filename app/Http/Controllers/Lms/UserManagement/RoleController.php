@@ -11,7 +11,33 @@ class RoleController extends Controller
     // function lms management roles view
     public function lmsManagementRolesView($role, $schoolName, $schoolId)
     {
-        return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('role', 'schoolName', 'schoolId'));
+        $school = SchoolPartner::find($schoolId, [
+            'id',
+            'nama_sekolah',
+            'anticheat_max_strikes',
+            'anticheat_auto_lock',
+            'anticheat_warning_modal',
+        ]);
+
+        return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('role', 'schoolName', 'schoolId', 'school'));
+    }
+
+    // update per-school anticheat settings
+    public function anticheatSettingsUpdate(Request $request, $role, $schoolName, $schoolId)
+    {
+        $validated = $request->validate([
+            'anticheat_max_strikes' => 'required|integer|min:1|max:20',
+            'anticheat_auto_lock' => 'required|boolean',
+            'anticheat_warning_modal' => 'required|boolean',
+        ]);
+
+        $school = SchoolPartner::findOrFail($schoolId);
+        $school->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pengaturan anti-cheat sekolah berhasil disimpan.',
+        ]);
     }
 
     // function paginate lms management roles

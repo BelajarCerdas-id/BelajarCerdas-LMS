@@ -70,6 +70,7 @@
     }
 
     function noticeOf(s) {
+        if (s.attempt_paused && s.status === 'in_progress') return 'Dijeda guru (khusus siswa ini)';
         if (s.status === 'cheating') return s.unlock_request_id ? 'Menunggu persetujuan buka kunci' : 'Terkunci';
         if (s.status === 'waiting') return 'Menunggu izin masuk dari guru';
         if (s.status === 'denied') return 'Tidak diizinkan mengikuti ujian ini';
@@ -105,7 +106,7 @@
     }
 
     function rowChanged(a, b) {
-        const keys = ['status', 'count', 'limit', 'last_heartbeat_at', 'unlock_request_id', 'entry_request_id'];
+        const keys = ['status', 'count', 'limit', 'last_heartbeat_at', 'unlock_request_id', 'entry_request_id', 'attempt_paused'];
         return keys.some((k) => (a[k] ?? null) !== (b[k] ?? null));
     }
 
@@ -390,6 +391,13 @@
             } else {
                 box.append(button('Minta buka kunci', 'bg-blue-600 hover:bg-blue-700 text-white', () => requestUnlock(s)));
             }
+        } else if (s.status === 'in_progress' && openedExam()?.state === 'running') {
+            if (s.attempt_paused) {
+                box.append(button('Lanjutkan', 'bg-blue-600 hover:bg-blue-700 text-white', () => controlAttempt(s, 'resume')));
+            } else {
+                box.append(button('Jeda', 'bg-amber-500 hover:bg-amber-600 text-white', () => controlAttempt(s, 'suspend')));
+                box.append(button('Hentikan', 'bg-red-600 hover:bg-red-700 text-white', () => confirmTerminate(s)));
+            }
         }
         actions.append(box);
         tr.append(actions);
@@ -533,6 +541,30 @@
         scheduleSnapshot();
     }
 
+    // ---- per-student controls: suspend, resume, terminate ----
+
+    async function controlAttempt(s, action) {
+        const { ok, body } = await api(`${cfg.unlockUrl}/${s.attempt_id}/${action}`, { method: 'POST' });
+        if (!ok) return alert(body.message || 'Aksi gagal.');
+        s.attempt_paused = action === 'suspend';
+        renderSoon();
+        scheduleSnapshot();
+    }
+
+    function confirmTerminate(s) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Hentikan ujian siswa ini?',
+            text: `${s.student_name} akan dihentikan waktunya dan jawaban tersimpan dikirim otomatis.`,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hentikan',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+        }).then((res) => {
+            if (res.isConfirmed) controlAttempt(s, 'terminate');
+        });
+    }
+
     // Countdown for pending unlock requests; the server enforces the deadline, this only shows it.
     setInterval(() => {
         document.querySelectorAll('[data-role="actions"][data-expires-at]').forEach((box) => {
@@ -548,7 +580,8 @@
         if (e.type === 'resync') return scheduleSnapshot();
         if (e.type === 'assessment_changed') return scheduleSnapshot();
 
-        if (['session_started', 'exam_paused', 'exam_resumed', 'exam_stopped'].includes(e.type)) {
+        // exam-level pause/resume/stop have no attempt_id; per-student ones do
+        if (['session_started', 'exam_paused', 'exam_resumed', 'exam_stopped'].includes(e.type) && !e.attempt_id) {
             const a = assessments.get(e.assessment_id);
             const next = { session_started: 'running', exam_paused: 'paused', exam_resumed: 'running', exam_stopped: 'stopped' }[e.type];
             if (a) { a.state = next; return renderSoon(); }
@@ -561,6 +594,11 @@
         }
         if (e.type === 'entry_resolved') {
             markBlinkByUser(e.assessment_id, e.user_id);
+            return scheduleSnapshot();
+        }
+
+        if (['exam_paused', 'exam_resumed', 'exam_stopped'].includes(e.type) && e.attempt_id) {
+            markBlinkByAttempt(e.attempt_id);
             return scheduleSnapshot();
         }
 
@@ -581,6 +619,11 @@
 
     function markBlinkByUser(assessmentId, userId) {
         const row = [...students.values()].find((s) => s.assessment_id === assessmentId && s.user_id === userId);
+        if (row) blinkKeys.add(row.key);
+    }
+
+    function markBlinkByAttempt(attemptId) {
+        const row = [...students.values()].find((s) => s.attempt_id === attemptId);
         if (row) blinkKeys.add(row.key);
     }
 

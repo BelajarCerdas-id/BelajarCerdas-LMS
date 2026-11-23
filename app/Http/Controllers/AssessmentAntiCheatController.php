@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SchoolAssessment;
+use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAnticheatViolation;
 use App\Models\StudentAssessmentAttempt;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
@@ -83,7 +84,7 @@ class AssessmentAntiCheatController extends Controller
             return response()->json(['status' => 'error']);
         }
 
-        if ($attempt->status === 'cheating' || $attempt->tab_switch_count >= $this->strikeLimit($attempt)) {
+        if ($attempt->status === 'cheating' || ($this->autoLockEnabled($attempt) && $attempt->tab_switch_count >= $this->strikeLimit($attempt))) {
             return response()->json([
                 'status' => 'blocked',
                 'count' => $attempt->tab_switch_count,
@@ -102,8 +103,8 @@ class AssessmentAntiCheatController extends Controller
     {
         $attempt = $this->activeAttempt($assessmentId);
 
-        // paused by the teacher: no clock and no strikes; the gap is reset on resume
-        if (!$attempt || $attempt->SchoolAssessment?->proctor_paused_at) {
+        // paused by the teacher (per student or exam-wide): no clock and no strikes; the gap is reset on resume
+        if (!$attempt || $attempt->proctor_paused_at || $attempt->SchoolAssessment?->proctor_paused_at) {
             return response()->json(['status' => 'ignored']);
         }
 
@@ -181,7 +182,9 @@ class AssessmentAntiCheatController extends Controller
 
     private function settleStrike(StudentAssessmentAttempt $attempt, int $assessmentId): JsonResponse
     {
-        if ($attempt->tab_switch_count >= $this->strikeLimit($attempt)) {
+        // auto lock disabled: strikes are counted and reported to the proctor,
+        // but the exam is never locked by reaching the limit
+        if ($this->autoLockEnabled($attempt) && $attempt->tab_switch_count >= $this->strikeLimit($attempt)) {
             $attempt->update([
                 'status' => 'cheating',
                 'last_heartbeat_at' => now(),
@@ -209,16 +212,44 @@ class AssessmentAntiCheatController extends Controller
 
     private function warningResponse(StudentAssessmentAttempt $attempt): JsonResponse
     {
-        return response()->json([
-            'status' => 'warning',
+        $data = [
             'count' => $attempt->tab_switch_count,
             'max_count' => $this->strikeLimit($attempt),
-        ]);
+        ];
+
+        // when the school disabled the warning modal the client shows nothing;
+        // strikes and proctor events are still recorded
+        $data['status'] = $this->warningModalEnabled($attempt) ? 'warning' : 'ok';
+
+        return response()->json($data);
     }
 
     private function strikeLimit(StudentAssessmentAttempt $attempt): int
     {
-        return $attempt->strike_limit ?? self::MAX_STRIKES;
+        return self::strikeLimitFor($attempt);
+    }
+
+    public static function strikeLimitFor(?StudentAssessmentAttempt $attempt): int
+    {
+        // attempt-level override (proctor unlock) wins, then the per-school setting
+        return $attempt?->strike_limit
+            ?? $attempt?->SchoolAssessment?->SchoolPartner?->anticheat_max_strikes
+            ?? self::MAX_STRIKES;
+    }
+
+    private function schoolPartner(StudentAssessmentAttempt $attempt): ?SchoolPartner
+    {
+        return $attempt->SchoolAssessment?->SchoolPartner;
+    }
+
+    private function autoLockEnabled(StudentAssessmentAttempt $attempt): bool
+    {
+        return $this->schoolPartner($attempt)?->anticheat_auto_lock ?? true;
+    }
+
+    private function warningModalEnabled(StudentAssessmentAttempt $attempt): bool
+    {
+        return $this->schoolPartner($attempt)?->anticheat_warning_modal ?? true;
     }
 
     private function cooldownKey(int $attemptId): string

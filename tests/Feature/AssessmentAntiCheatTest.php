@@ -763,4 +763,57 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertNotNull($attempt->fresh()->finalized_at);
         $this->assertEquals('submitted', $attempt->fresh()->status);
     }
+
+    public function test_school_strike_limit_is_respected(): void
+    {
+        $seed = $this->seedData();
+        $seed['partner']->update(['anticheat_max_strikes' => 2]);
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $res = null;
+        for ($i = 0; $i < 2; $i++) {
+            $this->clearCooldown($seed);
+            $res = $this->callReport($seed);
+        }
+
+        $this->assertEquals('blocked', $res->getData(true)['status']);
+        $this->assertEquals(2, $attempt->fresh()->tab_switch_count);
+    }
+
+    public function test_auto_lock_disabled_never_flags_cheating(): void
+    {
+        $seed = $this->seedData();
+        $seed['partner']->update(['anticheat_auto_lock' => false, 'anticheat_max_strikes' => 2]);
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed);
+
+        $lastResponse = null;
+        for ($i = 0; $i < 5; $i++) {
+            $this->clearCooldown($seed);
+            $lastResponse = $this->callReport($seed);
+        }
+
+        // over the limit, but the exam keeps running
+        $this->assertEquals('warning', $lastResponse->getData(true)['status']);
+        $this->assertEquals(5, $attempt->fresh()->tab_switch_count);
+        $this->assertEquals('in_progress', $attempt->fresh()->status);
+        $this->assertEquals('ok', $this->callStatus($seed)->getData(true)['status']);
+    }
+
+    public function test_warning_modal_disabled_returns_ok_status(): void
+    {
+        $seed = $this->seedData();
+        $seed['partner']->update(['anticheat_warning_modal' => false]);
+        $this->actingAs($seed['student']);
+        $this->startAttempt($seed);
+
+        $this->clearCooldown($seed);
+        $res = $this->callReport($seed);
+
+        // no modal client-side, but the strike is still recorded
+        $this->assertEquals('ok', $res->getData(true)['status']);
+        $this->assertEquals(1, $res->getData(true)['count']);
+        $this->assertDatabaseCount('student_assessment_anticheat_violations', 1);
+    }
 }

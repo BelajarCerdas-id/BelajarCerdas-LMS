@@ -3,6 +3,7 @@
 use App\Http\Controllers\AssessmentAntiCheatController;
 use App\Http\Controllers\ProctorController;
 use App\Http\Controllers\ProctorEntryController;
+use App\Http\Controllers\ProctorAttemptController;
 use App\Http\Controllers\ProctorSessionController;
 use App\Http\Controllers\ProctorTimelineController;
 use App\Http\Controllers\SudoController;
@@ -486,6 +487,9 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
     
         // route management role account
         Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account', [RoleController::class, 'lmsManagementRolesView'])->name('lms.managementRoles.view');
+
+        // route school anticheat settings (per school)
+        Route::post('/lms/{role}/school-subscription/{schoolName}/{schoolId}/management-settings/anticheat', [RoleController::class, 'anticheatSettingsUpdate'])->name('lms.anticheatSettings.update');
     
         // route management account
         Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-accounts', [AccountController::class, 'lmsManagementAccountView'])->name('lms.managementAccount.view');
@@ -961,6 +965,7 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/approvers', [ProctorController::class, 'approverSearch'])->name('lms.proctor.approvers.search');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/approvers/{userId}', [ProctorController::class, 'approverToggle'])->name('lms.proctor.approvers.toggle');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/attempts/{attemptId}/unlock-requests', [ProctorUnlockController::class, 'store'])->name('lms.proctor.unlock.store');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/attempts/{attemptId}/{action}', [ProctorAttemptController::class, 'control'])->where('action', 'suspend|resume|terminate')->name('lms.proctor.attempt.control');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/approve', [ProctorUnlockController::class, 'approve'])->name('lms.proctor.unlock.approve');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/deny', [ProctorUnlockController::class, 'deny'])->name('lms.proctor.unlock.deny');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/assessments/{assessmentId}/{action}', [ProctorSessionController::class, 'control'])->where('action', 'start|pause|resume|stop')->name('lms.proctor.session.control');

@@ -656,7 +656,7 @@ class StudentAssessmentExamController extends Controller
         if ($assessment->proctor_stopped_at) {
             return response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410);
         }
-        if ($assessment->proctor_paused_at) {
+        if ($assessment->proctor_paused_at || $attempt?->proctor_paused_at) {
             return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202);
         }
 
@@ -712,7 +712,7 @@ class StudentAssessmentExamController extends Controller
         if ($assessment->proctor_stopped_at) {
             return response()->json(['status' => 'expired', 'message' => 'Ujian dihentikan oleh guru. Jawaban tidak dapat disimpan.'], 422);
         }
-        if ($assessment->proctor_paused_at) {
+        if ($assessment->proctor_paused_at || $attempt?->proctor_paused_at) {
             return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 423);
         }
 
