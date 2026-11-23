@@ -988,6 +988,12 @@ class StudentAssessmentExamController extends Controller
 
         $attempt = StudentAssessmentAttempt::where('student_id', Auth::id())->where('school_assessment_id', $assessmentId)->first();
 
+        // answering counts as activity: keeps the proctor's "last active" fresh and
+        // stops the heartbeat-gap rule from striking a student busy writing an answer
+        if ($attempt && $attempt->status === 'in_progress' && !$attempt->proctor_paused_at) {
+            $attempt->update(['last_heartbeat_at' => now()]);
+        }
+
         // Only the explicit auto-submit flows (timer expiry, blocked, manual end)
         // may change the attempt status. Per-question saves embed a hidden
         // status_attempt=submitted field — honoring it here would end the exam

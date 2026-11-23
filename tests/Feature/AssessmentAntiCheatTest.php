@@ -746,6 +746,20 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals([$seed['question']->id], $filled);
     }
 
+    public function test_answering_counts_as_activity(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, null, ['last_heartbeat_at' => now()->subSeconds(30)]);
+
+        $this->assertEquals(200, $this->callAnswer($seed)->getStatusCode());
+
+        $this->assertTrue(
+            $attempt->fresh()->last_heartbeat_at->greaterThan(now()->subSeconds(5)),
+            'an answer save refreshes the attempt activity'
+        );
+    }
+
     public function test_malformed_pg_kompleks_answer_does_not_break_final_submit(): void
     {
         $seed = $this->seedData();
