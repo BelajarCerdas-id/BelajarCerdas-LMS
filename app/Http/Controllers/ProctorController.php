@@ -63,7 +63,7 @@ class ProctorController extends Controller
 
         $entries = ProctorEntryRequest::whereIn('school_assessment_id', $ids)
             ->whereIn('status', ['pending', 'denied'])
-            ->get(['id', 'school_assessment_id', 'student_id', 'status'])
+            ->get(['id', 'school_assessment_id', 'student_id', 'status', 'revoke_status'])
             ->keyBy(fn ($e) => $e->school_assessment_id.':'.$e->student_id);
 
         $unlocks = ProctorUnlockRequest::whereIn('student_assessment_attempt_id', $attempts->pluck('id'))
@@ -101,6 +101,8 @@ class ProctorController extends Controller
                     },
                     'attempt_id' => $attempt?->id,
                     'entry_request_id' => $entry?->status === 'pending' ? $entry->id : null,
+                    'denied_entry_id' => $entry?->status === 'denied' ? $entry->id : null,
+                    'revocation_pending' => $entry?->status === 'denied' && $entry?->revoke_status === 'pending',
                     'unlock_request_id' => $unlock?->id,
                     'unlock_expires_at' => $unlock?->expires_at?->toIso8601String(),
                     'count' => (int) ($attempt?->tab_switch_count ?? 0),
@@ -171,6 +173,7 @@ class ProctorController extends Controller
             ->pluck('nama_lengkap', 'user_id');
 
         $requestsPayload = $requests->map(fn (ProctorUnlockRequest $r) => [
+            'type' => 'unlock',
             'request_id' => $r->id,
             'attempt_id' => $r->student_assessment_attempt_id,
             'assessment_id' => $attempts[$r->student_assessment_attempt_id]?->school_assessment_id,
@@ -182,6 +185,27 @@ class ProctorController extends Controller
             'expires_in' => $r->expires_at->diffInSeconds(now()),
             'expires_at' => $r->expires_at->toIso8601String(),
         ])->values();
+
+        // pending entry-denial revocations (guru asked, PIC decides)
+        $revocations = ProctorEntryRequest::whereIn('school_assessment_id', $ids)
+            ->where('status', 'denied')
+            ->where('revoke_status', 'pending')
+            ->get()
+            ->map(fn (ProctorEntryRequest $e) => [
+                'type' => 'entry_revocation',
+                'request_id' => $e->id,
+                'attempt_id' => null,
+                'assessment_id' => $e->school_assessment_id,
+                'student_name' => $names[$e->student_id] ?? 'Siswa',
+                'exam_title' => $assessments[$e->school_assessment_id]?->title,
+                'class_name' => $classNames[$assessments[$e->school_assessment_id]?->school_class_id] ?? '-',
+                'count' => 0,
+                'limit' => 0,
+                'expires_in' => $e->revoke_expires_at?->diffInSeconds(now()) ?? 0,
+                'expires_at' => $e->revoke_expires_at?->toIso8601String(),
+            ])->values();
+
+        $requestsPayload = $requestsPayload->merge($revocations)->sortBy('expires_at')->values();
 
         $exams = $assessments->map(fn (SchoolAssessment $a) => [
             'assessment_id' => $a->id,

@@ -7,6 +7,7 @@
 
     const cfg = root.dataset;
     const canApprove = cfg.canApprove === '1';
+    const isGuru = cfg.isGuru === '1';
     const students = new Map();    // "examId:userId" -> student row
     const assessments = new Map(); // assessment_id -> { assessment_id, assessment_title, time, state }
     const lateQueue = [];
@@ -73,7 +74,7 @@
         if (s.attempt_paused && s.status === 'in_progress') return 'Dijeda guru (khusus siswa ini)';
         if (s.status === 'cheating') return s.unlock_request_id ? 'Menunggu persetujuan buka kunci' : 'Terkunci';
         if (s.status === 'waiting') return 'Menunggu izin masuk dari guru';
-        if (s.status === 'denied') return 'Tidak diizinkan mengikuti ujian ini';
+        if (s.status === 'denied') return s.revocation_pending ? 'Menunggu PIC menyetujui pembatalan tolakan' : 'Tidak diizinkan mengikuti ujian ini';
         if (s.notice) return s.notice;
         if (s.count) return `Pindah tab (${s.count}/${s.limit})`;
         return '';
@@ -391,6 +392,15 @@
             } else {
                 box.append(button('Minta buka kunci', 'bg-blue-600 hover:bg-blue-700 text-white', () => requestUnlock(s)));
             }
+        } else if (s.status === 'denied') {
+            if (s.revocation_pending) {
+                if (canApprove) {
+                    box.append(button('Setujui', 'bg-green-600 hover:bg-green-700 text-white', () => decideRevocation(s, true)));
+                    box.append(button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decideRevocation(s, false)));
+                }
+            } else if (isGuru) {
+                box.append(button('Minta pembatalan tolakan', 'bg-blue-600 hover:bg-blue-700 text-white', () => requestRevocation(s)));
+            }
         } else if (s.status === 'in_progress' && openedExam()?.state === 'running') {
             if (s.attempt_paused) {
                 box.append(button('Lanjutkan', 'bg-blue-600 hover:bg-blue-700 text-white', () => controlAttempt(s, 'resume')));
@@ -541,8 +551,21 @@
         scheduleSnapshot();
     }
 
-    // ---- per-student controls: suspend, resume, terminate ----
+    // ---- entry-denial revocation (guru requests, PIC decides) ----
 
+    async function requestRevocation(s) {
+        const { ok, body } = await api(`${cfg.entryRequestUrl}/${s.denied_entry_id}/revoke-requests`, { method: 'POST' });
+        if (!ok) return alert(body.message || 'Permintaan gagal dikirim.');
+        scheduleSnapshot();
+    }
+
+    async function decideRevocation(s, approve) {
+        const { ok, body } = await api(`${cfg.entryRevokeUrl}/${s.denied_entry_id}/${approve ? 'approve' : 'deny'}`, { method: 'POST' });
+        if (!ok) alert(body.message || 'Permintaan gagal diproses.');
+        scheduleSnapshot();
+    }
+
+    // ---- per-student controls: suspend, resume, terminate ----
     async function controlAttempt(s, action) {
         const { ok, body } = await api(`${cfg.unlockUrl}/${s.attempt_id}/${action}`, { method: 'POST' });
         if (!ok) return alert(body.message || 'Aksi gagal.');

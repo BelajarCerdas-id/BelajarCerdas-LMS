@@ -15,9 +15,12 @@
                 data-resolve-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/unlock-requests') }}"
                 data-session-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/assessments') }}"
                 data-decide-url="{{ route('lms.proctor.entries.decide', [$role, $schoolName, $schoolId]) }}"
+                data-entry-request-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/entries') }}"
+                data-entry-revoke-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/entry-revocations') }}"
                 data-approvers-url="{{ route('lms.proctor.approvers.search', [$role, $schoolName, $schoolId]) }}"
                 data-approver-toggle-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/approvers') }}"
                 data-can-approve="{{ $canApprove ? '1' : '0' }}"
+                data-is-guru="{{ \App\Services\Proctor\ProctorService::hasRole(Auth::user(), ['guru']) ? '1' : '0' }}"
                 data-is-admin="{{ $isAdmin ? '1' : '0' }}"
                 data-csrf="{{ csrf_token() }}">
 

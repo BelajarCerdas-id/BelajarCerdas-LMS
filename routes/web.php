@@ -972,6 +972,8 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/unlock-requests/{requestId}/deny', [ProctorUnlockController::class, 'deny'])->name('lms.proctor.unlock.deny');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/assessments/{assessmentId}/{action}', [ProctorSessionController::class, 'control'])->where('action', 'start|pause|resume|stop')->name('lms.proctor.session.control');
         Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/entries/decide', [ProctorEntryController::class, 'decide'])->name('lms.proctor.entries.decide');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/entries/{entryId}/revoke-requests', [ProctorEntryController::class, 'requestRevoke'])->name('lms.proctor.entries.revoke.store');
+        Route::post('/lms/{role}/{schoolName}/{schoolId}/proctor/entry-revocations/{entryId}/{decision}', [ProctorEntryController::class, 'decideRevoke'])->where('decision', 'approve|deny')->name('lms.proctor.entries.revoke.decide');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline', [ProctorTimelineController::class, 'index'])->name('lms.proctor.timeline.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline/data', [ProctorTimelineController::class, 'data'])->name('lms.proctor.timeline.data');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/proctor/timeline/students', [ProctorTimelineController::class, 'students'])->name('lms.proctor.timeline.students');

@@ -790,6 +790,65 @@ class ProctorTest extends TestCase
         $this->assertArrayHasKey('class_name', $body['exams'][0], 'PIC can see which class each exam belongs to');
     }
 
+    public function test_denied_entry_can_be_revoked_through_pic(): void
+    {
+        $seed = $this->seedScenario();
+        $assessment = $seed['assessment'];
+        $this->actingAs($seed['teacher']);
+        app(ProctorSessionController::class)->control('guru', self::SCHOOL, $seed['partner']->id, $assessment->id, 'start');
+
+        $entry = \App\Models\ProctorEntryRequest::create([
+            'school_assessment_id' => $assessment->id,
+            'student_id' => $seed['student']->id,
+            'status' => 'denied',
+            'decided_by' => $seed['teacher']->id,
+            'decided_at' => now(),
+        ]);
+
+        // guru asks for revocation
+        $store = app(ProctorEntryController::class)->requestRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id);
+        $this->assertEquals('pending', $store->getData(true)['status']);
+        $this->assertEquals('pending', $entry->fresh()->revoke_status);
+
+        // the requesting guru cannot approve it; the PIC can, and the entry returns to the queue
+        $decide = app(ProctorEntryController::class)->decideRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id, 'approve');
+        $this->assertEquals(403, $decide->getStatusCode());
+
+        $this->actingAs($seed['approver']);
+        $approve = app(ProctorEntryController::class)->decideRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id, 'approve');
+        $this->assertEquals('ok', $approve->getData(true)['status']);
+        $this->assertEquals('pending', $entry->fresh()->status, 'back in the admit queue');
+        $this->assertEquals('approved', $entry->fresh()->revoke_status);
+    }
+
+    public function test_revocation_needs_pic_and_cannot_be_self_approved(): void
+    {
+        $seed = $this->seedScenario();
+        $assessment = $seed['assessment'];
+        $this->actingAs($seed['teacher']);
+        app(ProctorSessionController::class)->control('guru', self::SCHOOL, $seed['partner']->id, $assessment->id, 'start');
+
+        $entry = \App\Models\ProctorEntryRequest::create([
+            'school_assessment_id' => $assessment->id,
+            'student_id' => $seed['student']->id,
+            'status' => 'denied',
+            'decided_by' => $seed['teacher']->id,
+            'decided_at' => now(),
+        ]);
+        app(ProctorEntryController::class)->requestRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id);
+
+        // guru without the PIC flag is refused
+        $decide = app(ProctorEntryController::class)->decideRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id, 'approve');
+        $this->assertEquals(403, $decide->getStatusCode());
+
+        // the requester is also the PIC here: self-approval is refused
+        $seed['teacher']->update(['can_approve_unlock' => true]);
+        $this->actingAs($seed['teacher']);
+        $self = app(ProctorEntryController::class)->decideRevoke('guru', self::SCHOOL, $seed['partner']->id, $entry->id, 'approve');
+        $this->assertEquals(403, $self->getStatusCode());
+        $this->assertEquals('pending', $entry->fresh()->revoke_status);
+    }
+
     public function test_suspend_and_resume_pause_only_one_student(): void
     {
         $seed = $this->seedScenario();

@@ -12,10 +12,17 @@ class ProctorEntryRequest extends Model
         'decided_by',
         'status',
         'decided_at',
+        'revoke_status',
+        'revoke_requested_by',
+        'revoke_expires_at',
+        'revoke_decided_by',
+        'revoke_decided_at',
     ];
 
     protected $casts = [
         'decided_at' => 'datetime',
+        'revoke_expires_at' => 'datetime',
+        'revoke_decided_at' => 'datetime',
     ];
 
     public function assessment()

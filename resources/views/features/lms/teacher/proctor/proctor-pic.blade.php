@@ -23,6 +23,7 @@
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Siswa</th>
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Ujian</th>
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Kelas</th>
+                                    <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Jenis</th>
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Pelanggaran</th>
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Sisa waktu</th>
                                     <th class="border border-gray-200 px-3 py-2 text-xs text-gray-600">Aksi</th>

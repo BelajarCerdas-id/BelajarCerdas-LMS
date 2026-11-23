@@ -39,7 +39,7 @@
             if (a.pending_unlocks > 0) {
                 const pending = document.createElement('span');
                 pending.className = 'text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full';
-                pending.textContent = `${a.pending_unlocks} permintaan buka kunci`;
+                pending.textContent = `${a.pending_unlocks} permintaan menunggu`;
                 foot.append(pending);
             }
             const link = document.createElement('a');
@@ -61,6 +61,7 @@
             const tr = document.createElement('tr');
             tr.className = 'border-b border-gray-100';
             tr.dataset.requestId = r.request_id;
+            tr.dataset.type = r.type;
 
             const name = document.createElement('td');
             name.className = 'px-3 py-2 font-medium text-gray-800';
@@ -74,9 +75,18 @@
             cls.className = 'px-3 py-2 text-gray-600';
             cls.textContent = r.class_name;
 
+            const type = document.createElement('td');
+            type.className = 'px-3 py-2';
+            const badge = document.createElement('span');
+            badge.className = r.type === 'unlock'
+                ? 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-800'
+                : 'text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800';
+            badge.textContent = r.type === 'unlock' ? 'Buka kunci' : 'Batal tolak masuk';
+            type.append(badge);
+
             const count = document.createElement('td');
             count.className = 'px-3 py-2 text-gray-600';
-            count.textContent = `${r.count}/${r.limit}`;
+            count.textContent = r.type === 'unlock' ? `${r.count}/${r.limit}` : '-';
 
             const left = document.createElement('td');
             left.className = 'px-3 py-2 text-amber-700';
@@ -90,7 +100,7 @@
                 button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decide(r, false)),
             );
 
-            tr.append(name, exam, cls, count, left, actions);
+            tr.append(name, exam, cls, type, count, left, actions);
             tbody.append(tr);
         });
     }
@@ -105,7 +115,10 @@
     }
 
     async function decide(r, approve) {
-        const res = await fetch(`${base}/unlock-requests/${r.request_id}/${approve ? 'approve' : 'deny'}`, {
+        const path = r.type === 'unlock'
+            ? `${base}/unlock-requests/${r.request_id}/${approve ? 'approve' : 'deny'}`
+            : `${base}/entry-revocations/${r.request_id}/${approve ? 'approve' : 'deny'}`;
+        const res = await fetch(path, {
             method: 'POST',
             headers: {
                 Accept: 'application/json',
