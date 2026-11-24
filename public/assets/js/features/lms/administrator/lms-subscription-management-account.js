@@ -4,6 +4,7 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
     const schoolId = container.dataset.schoolId;
     const role = container.dataset.role;
     const managedRole = container.dataset.managedRole;
+    const isAdmin = container.dataset.isAdmin === '1';
 
     if (!container) return;
     if (!schoolName) return;
@@ -106,17 +107,24 @@ function managementAccountUsersSchoolSubscription(search_user, page = 1) {
                                 ${totalChildren}
                                 <td class="border border-gray-300 px-3 py-2 text-center">${item.status_akun ?? '-'}</td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="hidden peer toggle-activate-account"
-                                            data-id="${item.id}" data-current-page="${response.current_page}" data-school-id="${schoolId}"
-                                            ${item.status_akun == 'aktif' ? 'checked' : ''} />
-                                        <div
-                                            class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
-                                        </div>
-                                        <div
-                                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5">
-                                        </div>
-                                    </label>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="hidden peer toggle-activate-account"
+                                                data-id="${item.id}" data-current-page="${response.current_page}" data-school-id="${schoolId}"
+                                                ${item.status_akun == 'aktif' ? 'checked' : ''} />
+                                            <div
+                                                class="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full transition-colors duration-300 ease-in-out">
+                                            </div>
+                                            <div
+                                                class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ease-in-out peer-checked:translate-x-5">
+                                            </div>
+                                        </label>
+                                        ${isAdmin ? `
+                                        <a href="/lms/${role}/sudo/${item.id}" title="Masuk sebagai pengguna ini"
+                                            class="w-9 h-9 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all cursor-pointer flex items-center justify-center">
+                                            <i class="fa-solid fa-user-secret"></i>
+                                        </a>` : ''}
+                                    </div>
                                 </td>
                             </tr>
                         `);

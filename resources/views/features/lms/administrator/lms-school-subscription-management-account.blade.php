@@ -30,7 +30,8 @@
                 <!---- table list school staff ---->
                 <section class="relative">
                     <div id="container-management-staff-list" class="overflow-x-auto pb-6"
-                        data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}" data-managed-role="{{ $managedRole }}">
+                        data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}" data-managed-role="{{ $managedRole }}"
+                        data-is-admin="{{ Auth::user()->role === 'Administrator' ? '1' : '0' }}">
 
                         <table id="table-management-staff-list" class="min-w-full text-sm border-collapse">
                             <thead class="thead-table-management-staff-list hidden bg-gray-50 shadow-inner">
