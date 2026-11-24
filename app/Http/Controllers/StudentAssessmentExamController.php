@@ -634,7 +634,9 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = $attempt->expire_time;
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            // same deadline rule as /end and answer-save: the per-attempt clock wins,
+            // so a stale attempt expires instead of silently restarting the exam
+            if ($attemptExpire && (!$endDate || $attemptExpire->copy()->addMinute()->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }
@@ -994,18 +996,6 @@ class StudentAssessmentExamController extends Controller
             $attempt->update(['last_heartbeat_at' => now()]);
         }
 
-        // Only the explicit auto-submit flows (timer expiry, blocked, manual end)
-        // may change the attempt status. Per-question saves embed a hidden
-        // status_attempt=submitted field — honoring it here would end the exam
-        // on the first draft save and permanently disable the anti-cheat.
-        if ($attempt && $attempt->status === 'in_progress' && $request->boolean('auto_submit') && $request->filled('status_attempt')) {
-
-            $attempt->update([
-                'status' => $request->status_attempt
-            ]);
-
-        }
-
         return response()->json([
             'status' => 'success',
             'message' => 'Jawaban berhasil disimpan',
@@ -1057,8 +1047,15 @@ class StudentAssessmentExamController extends Controller
 
             $isExpired = $endDate && $now->greaterThan($endDate);
             $statusAttempt = $request->input('status_attempt', ($isExpired ? 'timeout' : 'submitted'));
-            if (!in_array($statusAttempt, ['timeout', 'submitted', 'cheating'])) {
+            if (!in_array($statusAttempt, ['timeout', 'submitted'], true)) {
                 $statusAttempt = $isExpired ? 'timeout' : 'submitted';
+            }
+            // the server owns the clock: honor a client-claimed timeout only within a
+            // minute before the deadline (device clock skew); anything earlier — and
+            // any 'cheating' claim — is downgraded. Exam time ran out on the server,
+            // or the student submitted; nothing else can finalize an attempt.
+            if ($statusAttempt === 'timeout' && !$isExpired && $endDate && $now->lt($endDate->copy()->subMinute())) {
+                $statusAttempt = 'submitted';
             }
 
             $totalExamDuration = $request->input('total_exam_duration');
@@ -1150,52 +1147,9 @@ class StudentAssessmentExamController extends Controller
                     }
                 }
 
-                // 5. Isi soal yang belum pernah dijawab dengan jawaban kosong (bulk insert)
-                $sourceAssessmentId = $assessment->id;
-                $assessmentCategory = strtolower($assessment->assessment_category ?? '');
-                if (in_array($assessmentCategory, ['remedial', 'susulan']) && $assessment->parent_assessment_id) {
-                    $sourceAssessmentId = $assessment->parent_assessment_id;
-                }
-
-                $existingQuestionIds = StudentAssessmentAnswer::where('student_id', $userId)
-                    ->where('school_assessment_id', $assessmentId)
-                    ->pluck('school_assessment_question_id')
-                    ->toArray();
-
-                $allQuestionsQuery = SchoolAssessmentQuestion::where('school_assessment_id', $sourceAssessmentId);
-                if ($assessmentCategory === 'remedial' && $assessment->parent_assessment_id) {
-                    $previousAssessment = $this->remedialPreviousAssessment($assessment, $userId);
-                    $cacheKeyWrong = "assessment-remedial-wrong-{$userId}-prev-" . ($previousAssessment->id ?? 'none');
-                    $wrongBankIds = Cache::get($cacheKeyWrong, []);
-                    if (!empty($wrongBankIds)) {
-                        $allQuestionsQuery->whereIn('question_bank_id', $wrongBankIds);
-                    }
-                }
-
-                $allQuestionIds = $allQuestionsQuery->pluck('id')->toArray();
-                $missingQuestionIds = array_diff($allQuestionIds, $existingQuestionIds);
-
-                if (!empty($missingQuestionIds)) {
-                    $nowTimestamp = now();
-                    $bulkInsert = [];
-                    foreach ($missingQuestionIds as $missingQId) {
-                        $bulkInsert[] = [
-                            'student_id' => $userId,
-                            'school_assessment_id' => $assessmentId,
-                            'school_assessment_question_id' => $missingQId,
-                            'answer_value' => null,
-                            'question_score' => 0,
-                            'status_answer' => 'submitted',
-                            'grading_status' => null,
-                            'teacher_feedback' => null,
-                            'answer_duration' => 0,
-                            'total_exam_duration' => $totalExamDuration ? (int) $totalExamDuration : null,
-                            'created_at' => $nowTimestamp,
-                            'updated_at' => $nowTimestamp,
-                        ];
-                    }
-                    StudentAssessmentAnswer::insert($bulkInsert);
-                }
+                // 5. Soal yang tidak dijawab sengaja TIDAK diberi baris jawaban kosong:
+                // baris otomatis menyamarkan "tidak dijawab" sebagai "terjawab" (nilai 0)
+                // dan memicu auto-submit palsu saat attempt berakhir lebih awal.
 
                 // 6. Update status attempt dalam 1 query
                 $attempt = StudentAssessmentAttempt::where('student_id', $userId)

@@ -9,6 +9,7 @@ use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentAssessmentSummary;
 use App\Models\StudentProjectSubmission;
 use App\Models\SubjectPassingGradeCriteria;
+use Illuminate\Support\Facades\Cache;
 
 class AssessmentSummaryService
 {
@@ -51,8 +52,11 @@ class AssessmentSummaryService
             // ambil project submission
             $project = StudentProjectSubmission::where('student_id', $studentId)->where('school_assessment_id', $a->id)->orderByDesc('id')->first();
 
-            // skip kalau tidak ada answer DAN tidak ada project
-            if ((!$studentAnswers || $studentAnswers->count() === 0) && !$project) {
+            $attempt = StudentAssessmentAttempt::where('student_id', $studentId)->where('school_assessment_id', $a->id)->first();
+
+            // skip kalau tidak ada answer, tidak ada project, DAN exam belum selesai.
+            // Attempt yang sudah difinalisasi tanpa jawaban tetap dicatat (nilai 0).
+            if ((!$studentAnswers || $studentAnswers->count() === 0) && !$project && (!$attempt || !$attempt->finalized_at)) {
                 continue;
             }
 
@@ -61,11 +65,12 @@ class AssessmentSummaryService
 
             if ($studentAnswers && $studentAnswers->count() > 0) {
 
-                $questionIds = $studentAnswers->pluck('school_assessment_question_id')->unique()->values();
-
                 $totalEarnedWeight = (float) $studentAnswers->sum('question_score');
 
-                $totalQuestionWeight = (float) SchoolAssessmentQuestion::whereIn('id', $questionIds)->sum('question_weight');
+                // pembagi = semua soal yang ditawarkan pada exam ini, bukan hanya yang
+                // terjawab: soal tanpa baris jawaban dihitung 0 (tidak ada lagi baris
+                // jawaban kosong yang di-bulk-insert saat /end)
+                $totalQuestionWeight = (float) $this->offeredQuestionsQuery($a, $studentId)->sum('question_weight');
 
                 $totalScore = $totalQuestionWeight > 0 ? $this->truncateScore(($totalEarnedWeight / $totalQuestionWeight) * 100) : 0;
             }
@@ -183,5 +188,54 @@ class AssessmentSummaryService
                 'last_remedial_assessment_id' => $lastRemedialAssessmentId,
             ]
         );
+    }
+
+    /**
+     * Soal yang ditawarkan pada satu exam: exam biasa memakai soalnya sendiri;
+     * remedial/susulan mengambil soal dari parent (remedial dibatasi bank soal
+     * salah yang jadi dasar examnya). Sama dengan aturan /end sebelum auto-fill
+     * jawaban kosong dihapus.
+     */
+    private function offeredQuestionsQuery(SchoolAssessment $assessment, int $studentId)
+    {
+        $category = strtolower($assessment->assessment_category ?? '');
+        $sourceId = in_array($category, ['remedial', 'susulan']) && $assessment->parent_assessment_id
+            ? $assessment->parent_assessment_id
+            : $assessment->id;
+
+        $query = SchoolAssessmentQuestion::where('school_assessment_id', $sourceId);
+
+        if ($category === 'remedial' && $assessment->parent_assessment_id) {
+            $wrongBankIds = $this->remedialWrongBankIds($assessment, $studentId);
+            if (!empty($wrongBankIds)) {
+                $query->whereIn('question_bank_id', $wrongBankIds);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Bank soal salah dari exam sebelumnya dalam rantai remedial (sumber yang sama
+     * dengan StudentAssessmentExamController saat membangun exam remedial).
+     */
+    private function remedialWrongBankIds(SchoolAssessment $assessment, int $studentId): array
+    {
+        $chain = SchoolAssessment::where(function ($q) use ($assessment) {
+            $q->where('id', $assessment->parent_assessment_id)->orWhere('parent_assessment_id', $assessment->parent_assessment_id);
+        })->where(function ($q) use ($assessment, $studentId) {
+            $q->where('id', $assessment->id)->orWhereHas('StudentAssessmentAnswer', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            });
+        })->orderBy('start_date')->pluck('id')->toArray();
+
+        $currentIndex = array_search($assessment->id, $chain);
+        if ($currentIndex === false || $currentIndex === 0) {
+            return [];
+        }
+
+        $previousId = $chain[$currentIndex - 1];
+
+        return Cache::get("assessment-remedial-wrong-{$studentId}-prev-{$previousId}", []);
     }
 }

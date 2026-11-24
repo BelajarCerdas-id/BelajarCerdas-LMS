@@ -252,7 +252,7 @@ function startTimer() {
             allowEscapeKey: false,
             showConfirmButton: false
         });
-        autoSubmitUnSavedQuestions();
+        autoSubmitUnSavedQuestions(null, 'submitted');
     }
 
     function runCountdown(seconds) {

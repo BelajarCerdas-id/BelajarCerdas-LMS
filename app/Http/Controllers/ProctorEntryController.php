@@ -207,8 +207,9 @@ class ProctorEntryController extends Controller
             ];
 
             if ($approve) {
-                $attempt = $this->proctor->openAttempt($assessment, $entry->student_id);
-                $context['attempt_id'] = $attempt->id;
+                // no attempt here on purpose: the clock (expire_time) only starts when
+                // the student's own start-timer call creates it, after admission
+                $context['attempt_id'] = null;
             }
             $entry->update(['status' => $approve ? 'admitted' : 'denied', 'decided_by' => Auth::id(), 'decided_at' => now()]);
             $this->proctor->audit($approve ? 'entry_admitted' : 'entry_denied', $context);

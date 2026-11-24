@@ -248,6 +248,32 @@ class AssessmentAntiCheatTest extends TestCase
         Cache::forget("tab_switch_cooldown_{$attempt->id}");
     }
 
+    public function test_client_claimed_timeout_is_downgraded_while_time_remains(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->addMinutes(30)]);
+
+        // client claims the timer ran out, but the server clock says 30 minutes left
+        $res = $this->callEnd($seed, ['status_attempt' => 'timeout']);
+        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertEquals('submitted', $res->getData(true)['status_attempt']);
+        $this->assertEquals('submitted', $attempt->fresh()->status);
+        $this->assertNotNull($attempt->fresh()->finalized_at);
+    }
+
+    public function test_real_expiry_still_records_timeout(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->subMinutes(5)]);
+
+        $res = $this->callEnd($seed, ['status_attempt' => 'timeout']);
+        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertEquals('timeout', $res->getData(true)['status_attempt']);
+        $this->assertEquals('timeout', $attempt->fresh()->status);
+    }
+
     public function test_tab_switch_counts_strike_and_cooldowns_duplicates(): void
     {
         $seed = $seed = $this->seedData();
@@ -686,7 +712,7 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals(200, $res->getStatusCode());
     }
 
-    public function test_remedial_end_only_zero_fills_questions_the_student_got_wrong(): void
+    public function test_remedial_end_does_not_auto_fill_unanswered_questions(): void
     {
         $seed = $this->seedData();
         $this->actingAs($seed['student']);
@@ -739,11 +765,13 @@ class AssessmentAntiCheatTest extends TestCase
         $res = $this->callEnd($seedRemedial2);
         $this->assertEquals(200, $res->getStatusCode());
 
+        // /end no longer bulk-inserts blank rows: only what the student actually
+        // answered exists, so "not answered" stays visibly unanswered
         $filled = StudentAssessmentAnswer::where('student_id', $seed['student']->id)
             ->where('school_assessment_id', $remedial2->id)
             ->pluck('school_assessment_question_id')
             ->all();
-        $this->assertEquals([$seed['question']->id], $filled);
+        $this->assertEquals([], $filled);
     }
 
     public function test_answering_counts_as_activity(): void

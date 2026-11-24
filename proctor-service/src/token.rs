@@ -56,9 +56,18 @@ impl Claims {
     /// A student sees only their own attempt, their own entry decision (user id), and
     /// exam-wide control events (pause/resume/stop) of their own exam. A teacher sees everything of their school.
     pub fn covers(&self, attempt_id: Option<i64>, assessment_id: Option<i64>, user_id: Option<i64>, school_id: Option<i64>, students_only: bool) -> bool {
-        attempt_id.is_some_and(|a| Some(a) == self.att)
+        if let Some(a) = attempt_id {
+            // Attempt-scoped event: the owning student via their attempt claim, or
+            // staff (no attempt claim) via school/assessment scope. Other students
+            // of the same exam must NOT match through `asm`, or one per-student
+            // terminate/pause reaches every client of the exam.
+            return Some(a) == self.att
+                || (self.att.is_none()
+                    && (school_id.is_some_and(|s| Some(s) == self.sch)
+                        || assessment_id.is_some_and(|s| self.asm.contains(&s))));
+        }
+        user_id.is_some_and(|u| u == self.sub)
             || assessment_id.is_some_and(|s| self.asm.contains(&s))
-            || user_id.is_some_and(|u| u == self.sub)
             || (students_only && assessment_id.is_some() && assessment_id == self.ass)
             || school_id.is_some_and(|s| Some(s) == self.sch)
     }
@@ -134,6 +143,27 @@ mod tests {
         assert_eq!(claims.sub, 7);
         assert_eq!(claims.att, Some(5));
         assert_eq!(claims.asm, vec![9]);
+    }
+
+    #[test]
+    fn attempt_scoped_event_does_not_reach_other_students_of_the_same_exam() {
+        let secret = Secret::new(KEY).unwrap();
+        // terminate event for attempt 5 of exam 9 (as ProctorAttemptController publishes it)
+        let event = |c: &Claims| c.covers(Some(5), Some(9), None, None, false);
+
+        // the owning student receives it
+        let owner = secret.verify(&sign(KEY, r#"{"sub":7,"exp":4102444800,"att":5,"asm":[9]}"#), 1_000).unwrap();
+        assert!(event(&owner), "owning student gets their own attempt event");
+
+        // another student of the same exam does NOT
+        let other = secret.verify(&sign(KEY, r#"{"sub":8,"exp":4102444800,"att":6,"asm":[9]}"#), 1_000).unwrap();
+        assert!(!event(&other), "exam-wide asm scope must not leak attempt-scoped events");
+
+        // staff (no attempt claim) still receives it via school or assessment scope
+        let teacher = secret.verify(&sign(KEY, r#"{"sub":1,"exp":4102444800,"asm":[9],"sch":3}"#), 1_000).unwrap();
+        assert!(event(&teacher), "staff with assessment scope");
+        let pic = secret.verify(&sign(KEY, r#"{"sub":2,"exp":4102444800,"sch":3}"#), 1_000).unwrap();
+        assert!(pic.covers(Some(5), Some(9), None, Some(3), false), "staff with school scope");
     }
 
     #[test]
