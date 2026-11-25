@@ -128,6 +128,15 @@ class ProctorService
 
     /**
      * The attempt a student gets when they are admitted (or find the exam already open for them).
+     *
+     * THE expire_time INVARIANT: an attempt's deadline is always the student's own
+     * start_time + duration, computed here and nowhere else. The only legal
+     * adjustments afterwards are pause shifts (resume adds the exact paused
+     * seconds, because a pause must not consume exam time). Proctor stop /
+     * terminate paths must never rewrite it: production data from 2026-11-25
+     * showed stop-rewritten deadlines (expire == proctor_stopped_at) mistaken
+     * for a second 'proctor_started_at + duration' computation; no such second
+     * computation exists or is allowed.
      */
     public function openAttempt(SchoolAssessment $assessment, int $userId): StudentAssessmentAttempt
     {
