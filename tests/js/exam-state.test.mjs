@@ -12,6 +12,13 @@ import { fileURLToPath } from 'node:url';
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../public/assets/js/features/lms/student/assessment');
 
+const examFiles = {
+    core: 'anticheat/anticheat-core.js',
+    timer: 'start-timer-assessment-test.js',
+    perQuestion: 'start-timer-assessment-test-by-question.js',
+    form: 'student-form-assessment-test.js',
+};
+
 function createStorage(initial = {}) {
     const store = new Map(Object.entries(initial));
     return {
@@ -23,14 +30,66 @@ function createStorage(initial = {}) {
     };
 }
 
-const timerEl = { textContent: '-' };
+// minimal chainable jQuery stand-in: enough for the exam files' top-level
+// statements ($(...).off().on(...), $(document).ready(...)) and the runtime
+// calls used by the flows under test
+function jqFactory(document, containerData, onAjax) {
+    const containerJq = {
+        length: 1,
+        data: (name) => (name in containerData ? containerData[name] : null),
+        attr: () => 'csrf',
+        off() { return this; },
+        on() { return this; },
+    };
+    const generic = () => {
+        const obj = {
+            length: 0,
+            off() { return obj; },
+            on() { return obj; },
+            ready() {},
+            attr: () => 'csrf',
+            data: () => null,
+            val() { return obj; },
+            text() { return obj; },
+            html() { return obj; },
+            hide() { return obj; },
+            show() { return obj; },
+            addClass() { return obj; },
+            removeClass() { return obj; },
+            removeProp() { return obj; },
+            prop() { return obj; },
+            empty() { return obj; },
+            append() { return obj; },
+            each() { return obj; },
+            find: () => generic(),
+            offAll: null,
+        };
+        return obj;
+    };
+    const docJq = { off() { return docJq; }, on() { return docJq; }, ready() {} };
+    const $ = (sel) => {
+        if (sel === document) return docJq;
+        if (typeof sel === 'string' && sel.includes('container-assessment-test-form')) return containerJq;
+        return generic();
+    };
+    $.ajax = (opts) => onAjax(opts);
+    return $;
+}
 
-// userId: data-user-id exposed by the exam blade containers
+const containerData = {
+    'role': 'student', 'school-name': 'sekolah', 'school-id': 1,
+    'curriculum-id': 1, 'mapel-id': 1, 'assessment-type-id': 1,
+    'semester': 1, 'assessment-id': 516, 'user-id': '42',
+};
+
+// timer-only sandbox: anticheat-core + start-timer (the countdown flows)
 function createSandbox({ userId = '42', storage = createStorage(), clockStart = 1_000_000 } = {}) {
     const ajaxCalls = [];
     const timers = [];
     const intervals = [];
+    const swalShots = [];
     const swalTitles = [];
+    const timerEl = { textContent: '-' };
     let clock = clockStart;
     let submitCount = 0;
 
@@ -58,7 +117,7 @@ function createSandbox({ userId = '42', storage = createStorage(), clockStart = 
         setInterval: (fn, ms) => { intervals.push(fn); return intervals.length; },
         clearInterval: () => {},
         Swal: {
-            fire: (opts) => { swalTitles.push(opts && opts.title); return { then() { return this; } }; },
+            fire: (opts) => { swalShots.push(opts); swalTitles.push(opts && opts.title); return { then() { return this; } }; },
             close: () => {},
         },
         $: (sel) => ({ attr: () => 'csrf', length: 1 }),
@@ -76,19 +135,84 @@ function createSandbox({ userId = '42', storage = createStorage(), clockStart = 
     sandbox.removeEventListener = () => {};
     vm.createContext(sandbox);
 
-    vm.runInContext(fs.readFileSync(path.join(dir, 'anticheat/anticheat-core.js'), 'utf8'), sandbox, { filename: 'anticheat-core.js' });
-    vm.runInContext(fs.readFileSync(path.join(dir, 'start-timer-assessment-test.js'), 'utf8'), sandbox, { filename: 'start-timer-assessment-test.js' });
+    vm.runInContext(fs.readFileSync(path.join(dir, examFiles.core), 'utf8'), sandbox, { filename: examFiles.core });
+    vm.runInContext(fs.readFileSync(path.join(dir, examFiles.timer), 'utf8'), sandbox, { filename: examFiles.timer });
 
     const runTimers = () => { for (const t of timers.splice(0)) t.fn(); };
     const timerRequests = () => ajaxCalls.filter((c) => /start-timer$/.test(c.url));
 
     return {
-        sandbox, storage, ajaxCalls, intervals, swalTitles, timerEl,
+        sandbox, storage, ajaxCalls, intervals, swalShots, swalTitles, timerEl,
         get submitCount() { return submitCount; },
         advance: (ms) => { clock += ms; },
         get clock() { return clock; },
         runTimers,
         timerRequests,
+        get: (expr) => vm.runInContext(expr, sandbox),
+        run: (code) => vm.runInContext(code, sandbox),
+    };
+}
+
+// full exam sandbox: anticheat-core + start-timer + per-question timer +
+// student-form, so autoSubmitUnSavedQuestions / the /end flow run for real
+function createExamSandbox({ userId = '42', storage = createStorage(), clockStart = 1_000_000 } = {}) {
+    const ajaxCalls = [];
+    const timers = [];
+    const intervals = [];
+    const swalShots = [];
+    const swalTitles = [];
+    const timerEl = { textContent: '-' };
+    let clock = clockStart;
+
+    const document = {
+        getElementById: (id) => {
+            if (id === 'timer-assessment-test') return timerEl;
+            if (id === 'container-assessment-test-form' || id === 'container-timer-assessment-test') {
+                return { getAttribute: (name) => (name === 'data-user-id' ? userId : null) };
+            }
+            return null;
+        },
+        addEventListener() {},
+    };
+
+    const sandbox = {
+        console,
+        document,
+        navigator: { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0' },
+        localStorage: storage,
+        sessionStorage: createStorage(),
+        Date: { now: () => clock },
+        performance: { now: () => clock },
+        setTimeout: (fn, ms) => { timers.push({ fn, at: clock + (ms || 0) }); return timers.length; },
+        clearTimeout: () => {},
+        setInterval: (fn, ms) => { intervals.push(fn); return intervals.length; },
+        clearInterval: () => {},
+        Swal: {
+            fire: (opts) => { swalShots.push(opts); swalTitles.push(opts && opts.title); return { then() { return this; } }; },
+            close: () => {},
+        },
+        location: { protocol: 'https:', host: 'example.test', href: '' },
+        history: { pushState() {}, go() {} },
+    };
+    sandbox.$ = jqFactory(document, containerData, (opts) => { ajaxCalls.push(opts); });
+    sandbox.window = sandbox;
+    sandbox.addEventListener = () => {};
+    sandbox.removeEventListener = () => {};
+    vm.createContext(sandbox);
+
+    for (const key of ['core', 'timer', 'perQuestion', 'form']) {
+        vm.runInContext(fs.readFileSync(path.join(dir, examFiles[key]), 'utf8'), sandbox, { filename: examFiles[key] });
+    }
+
+    const runTimers = () => { for (const t of timers.splice(0)) t.fn(); };
+    const timerRequests = () => ajaxCalls.filter((c) => /start-timer$/.test(c.url));
+    const endRequests = () => ajaxCalls.filter((c) => /\/end$/.test(c.url));
+
+    return {
+        sandbox, storage, ajaxCalls, intervals, swalShots, swalTitles, timerEl,
+        advance: (ms) => { clock += ms; },
+        get clock() { return clock; },
+        runTimers, timerRequests, endRequests,
         get: (expr) => vm.runInContext(expr, sandbox),
         run: (code) => vm.runInContext(code, sandbox),
     };
@@ -235,4 +359,74 @@ test('when the server is unreachable the fail-safe still submits after retries',
 
     assert.equal(s.submitCount, 1, 'answers are sent even when the server cannot confirm');
     assert.equal(s.timerEl.textContent, 'Waktu Habis');
+});
+
+// ---- /end 422 still_running: the server refused a premature timeout claim ----
+
+test('/end 422 still_running resumes the exam instead of retrying or finishing', () => {
+    const s = createExamSandbox();
+    s.run('window.__endFinished = 0');
+
+    s.run('autoSubmitUnSavedQuestions(function () { window.__endFinished++; }, "timeout", 0)');
+    s.runTimers(); // jitterMs 0 → the /end POST goes out immediately
+
+    assert.equal(s.endRequests().length, 1);
+    assert.equal(s.get('examFinished'), true, 'locally finished while the claim is in flight');
+
+    s.endRequests()[0].error({
+        status: 422,
+        responseJSON: {
+            status: 'still_running',
+            message: 'Waktu ujian masih berjalan menurut jam server. Ujian dilanjutkan.',
+            expire_time: s.clock + 30 * 60 * 1000,
+            remaining_seconds: 1800,
+        },
+    });
+
+    assert.equal(s.get('examFinished'), false, 'exam is live again');
+    assert.equal(s.get('isWarningModalOpen'), false);
+    assert.ok(s.swalTitles.includes('Waktu belum habis — ujian dilanjutkan.'), 'short toast shown');
+    assert.equal(s.endRequests().length, 1, 'no /end retry loop');
+    assert.equal(s.run('window.__endFinished'), 0, 'onFinish not called — the exam continues');
+    assert.notEqual(s.get('heartbeatInterval'), null, 'heartbeat resumed');
+    assert.notEqual(s.timerEl.textContent, 'Waktu Habis');
+
+    // the countdown resyncs from the server (fresh expire + clock anchor)
+    const resync = s.timerRequests().at(-1);
+    assert.ok(resync, 'start-timer resync requested');
+    resync.success({
+        status: 'success', start_time: s.clock, expire_time: s.clock + 30 * 60 * 1000,
+        duration: 90, user_id: 42, server_now_ms: s.clock,
+    });
+    assert.ok(s.intervals.length > 0, 'countdown running again');
+    assert.equal(s.storage.getItem('timer_assessment_test_start_516_u42'), String(s.clock));
+    assert.equal(s.get('examFinished'), false);
+});
+
+test('/end success still finishes the exam and reports onFinish', () => {
+    const s = createExamSandbox();
+    s.run('window.__endFinished = 0');
+
+    s.run('autoSubmitUnSavedQuestions(function () { window.__endFinished++; }, "timeout", 0)');
+    s.runTimers();
+    s.endRequests()[0].success({ status: 'success' });
+
+    assert.equal(s.run('window.__endFinished'), 1);
+    assert.equal(s.get('examFinished'), true, 'real expiry is untouched');
+});
+
+test('/end network failure still retries before giving up', () => {
+    const s = createExamSandbox();
+
+    s.run('autoSubmitUnSavedQuestions(null, "timeout", 0)');
+    s.runTimers();
+
+    for (let i = 0; i < 3; i++) {
+        s.endRequests().at(-1).error({ status: 0 });
+        s.runTimers();
+    }
+
+    assert.equal(s.endRequests().length, 3, 'three attempts, then the give-up modal');
+    assert.ok(s.swalTitles.includes('Jawaban Belum Terkirim'));
+    assert.equal(s.get('examFinished'), true);
 });

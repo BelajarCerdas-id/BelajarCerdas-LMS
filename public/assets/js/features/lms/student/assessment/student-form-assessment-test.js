@@ -2014,6 +2014,36 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     // transaction over 0-45s. Manual submits pass jitterMs = 0 and go now.
     const jitter = jitterMs === 0 ? 0 : Math.floor(Math.random() * 45000);
 
+    // /end refused the timeout claim (422 still_running): the server clock
+    // says the exam is still live. Undo the local "finished" state and
+    // continue — never loop the /end POST, never call onFinish, never set
+    // examFinished. The countdown resyncs through startTimer, which
+    // re-fetches the authoritative expire + server_now_ms anchor (the
+    // remaining_seconds in the refusal is only an early-exit signal).
+    function resumeAfterStillRunning() {
+        examFinished = false;
+        isWarningModalOpen = false;
+        if (typeof Swal.close === 'function') Swal.close();
+
+        startHeartbeat();
+        if (currentQuestionIdToSend) startQuestionTimer(currentQuestionIdToSend);
+
+        const timerExam = document.getElementById('timer-assessment-test');
+        if (timerExam) timerExam.textContent = '-';
+
+        startTimer();
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Waktu belum habis — ujian dilanjutkan.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+    }
+
     // /end finalizes once on the server, so resending after a lost response is safe
     const sendFinal = function (attemptNo) {
         $.ajax({
@@ -2029,7 +2059,14 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
                     onFinish();
                 }
             },
-            error: function () {
+            error: function (xhr) {
+                // the server owns the clock: a timeout claimed too early is
+                // refused with the real remaining time — resume instead of retry
+                if (xhr.status === 422 && xhr.responseJSON?.status === 'still_running') {
+                    resumeAfterStillRunning();
+                    return;
+                }
+
                 if (attemptNo < 3) {
                     setTimeout(function () { sendFinal(attemptNo + 1); }, 3000);
                     return;
