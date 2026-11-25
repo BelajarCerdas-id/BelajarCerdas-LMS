@@ -691,6 +691,12 @@ class StudentAssessmentExamController extends Controller
 
         return ExamStateHeaders::noStore(response()->json([
             'status' => 'success',
+            // explicit user anchor: exam timer/answer state in the browser MUST be
+            // scoped per user (the 2026-11-25 'switching ID breaks the next exam'
+            // reports came from localStorage keys that only carry assessmentId and
+            // therefore leak one student's timer to the next account on the same
+            // device). Front-end should key its storage with this user_id.
+            'user_id' => $userId,
             'start_time' => $attempt->start_time->timestamp * 1000,
             'expire_time' => $attempt->expire_time->timestamp * 1000,
             'duration' => $assessment->duration,

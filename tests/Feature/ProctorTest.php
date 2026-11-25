@@ -392,6 +392,7 @@ class ProctorTest extends TestCase
         // the client must be able to drive its countdown from the server clock
         // instead of the device clock (skewed devices ended live exams early)
         $this->assertEquals('success', $body['status']);
+        $this->assertEquals($seed['student']->id, $body['user_id'], 'timer state must be scopabel per user for the client');
         $this->assertEqualsWithDelta(now()->getTimestamp() * 1000, $body['server_now'], 5000);
         $this->assertGreaterThan(0, $body['remaining_seconds']);
         $this->assertFalse($body['expired']);
