@@ -701,6 +701,9 @@ class StudentAssessmentExamController extends Controller
             'expire_time' => $attempt->expire_time->timestamp * 1000,
             'duration' => $assessment->duration,
             'server_now' => $schoolNow->timestamp * 1000,
+            // exact key the client's applyExamServerClock() consumes to anchor
+            // its clock; keep server_now as an alias
+            'server_now_ms' => $schoolNow->timestamp * 1000,
             'remaining_seconds' => $remaining,
             'expired' => $remaining === 0,
         ]));

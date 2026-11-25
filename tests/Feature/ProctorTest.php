@@ -393,7 +393,7 @@ class ProctorTest extends TestCase
         // instead of the device clock (skewed devices ended live exams early)
         $this->assertEquals('success', $body['status']);
         $this->assertEquals($seed['student']->id, $body['user_id'], 'timer state must be scopabel per user for the client');
-        $this->assertEqualsWithDelta(now()->getTimestamp() * 1000, $body['server_now'], 5000);
+        $this->assertEqualsWithDelta(now()->getTimestamp() * 1000, $body['server_now_ms'], 5000, 'the client anchors its clock on this field');
         $this->assertGreaterThan(0, $body['remaining_seconds']);
         $this->assertFalse($body['expired']);
         $this->assertStringContainsString('no-store', $res->headers->get('Cache-Control'), 'exam state must never be cached');
