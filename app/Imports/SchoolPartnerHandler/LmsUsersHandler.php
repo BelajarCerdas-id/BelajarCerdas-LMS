@@ -10,6 +10,7 @@ use App\Models\SchoolClass;
 use App\Models\SchoolMajor;
 use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
+use App\Helpers\AllowedEmailRule;
 use App\Models\StudentProfile;
 use App\Models\StudentSchoolClass;
 use App\Models\UserAccount;
@@ -397,7 +398,7 @@ class LmsUsersHandler
     // Mengembalikan array error validasi berdasarkan index baris
     private function getBulkValidationErrors(array $rowsArray): array
     {
-        $emailDomainRegex = '/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/';
+        $emailDomainRegex = AllowedEmailRule::regex('login');
 
         $rules = [
             '*.enrollment_type' => 'required',

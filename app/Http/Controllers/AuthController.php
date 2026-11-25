@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UserAccount;
 use App\Services\SchoolContract\SchoolContractService;
+use App\Helpers\AllowedEmailRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +26,7 @@ class AuthController extends Controller
             'email' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+                AllowedEmailRule::regex('login'),
             ],
             'password' => 'required',
         ], [

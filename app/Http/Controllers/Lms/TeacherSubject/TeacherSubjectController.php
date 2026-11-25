@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\SchoolPartner;
 use App\Models\SchoolStaffProfile;
 use App\Models\TeacherMapel;
+use App\Helpers\AllowedEmailRule;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Validator;
@@ -127,7 +128,7 @@ class TeacherSubjectController extends Controller
             'teacher' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+                AllowedEmailRule::regex('login'),
                 Rule::unique('teacher_mapels', 'user_id')->where('school_class_id', $request->school_class_id),
             ],
         ], [
@@ -194,7 +195,7 @@ class TeacherSubjectController extends Controller
             'teacher' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+                AllowedEmailRule::regex('login'),
             ],
         ], [
             'teacher.required' => 'Harap isi nama guru.',

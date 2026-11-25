@@ -10,6 +10,7 @@ use App\Models\SchContract;
 use App\Models\SchContractTerm;
 use App\Models\SchoolMapel;
 use App\Models\SchoolPartner;
+use App\Helpers\AllowedEmailRule;
 use App\Models\SchoolStaffProfile;
 use App\Models\UserAccount;
 use Carbon\Carbon;
@@ -422,7 +423,7 @@ class LmsHandler
             '*.email_user' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+                AllowedEmailRule::regex('login'),
             ],
             '*.no_hp' => [
                 'required',
@@ -431,7 +432,7 @@ class LmsHandler
             '*.email_akun' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(' . implode('|', array_map('preg_quote', config('email-domains.allowed_domains'))) . ')$/',
+                AllowedEmailRule::regex('login'),
             ],
             '*.timezone' => [
                 'required',
