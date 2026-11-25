@@ -266,6 +266,6 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/student/assessment/student-form-assessment-test.js') }}?v=4"></script> <!--- student form assessment test ---->
+<script src="{{ asset('assets/js/features/lms/student/assessment/student-form-assessment-test.js') }}?v=5"></script> <!--- student form assessment test ---->
 <script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test-by-question.js') }}?v=2"></script> <!--- start timer assessment test by question ---->
 <script src="{{ asset('assets/js/features/lms/student/components/question-types/matching-question-renderer.js') }}"></script> <!--- matching question renderer ---->

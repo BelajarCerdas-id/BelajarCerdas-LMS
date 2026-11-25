@@ -430,3 +430,55 @@ test('/end network failure still retries before giving up', () => {
     assert.ok(s.swalTitles.includes('Jawaban Belum Terkirim'));
     assert.equal(s.get('examFinished'), true);
 });
+
+// ---- pre-start window: stay on the page, poll, never redirect ----
+
+test('a not_started exam keeps the student on the page with a dismissible dialog and a 10s poll', () => {
+    const s = createSandbox();
+
+    s.run('startTimer()');
+    s.timerRequests()[0].error({ status: 422, responseJSON: { status: 'not_started', message: 'Assessment belum dimulai.' } });
+
+    const modal = s.swalShots.find((o) => o.title === 'Assessment Belum Dimulai');
+    assert.ok(modal, 'pre-start dialog shown');
+    assert.equal(modal.allowOutsideClick, true, 'dismissible');
+    assert.equal(modal.allowEscapeKey, true);
+    assert.ok(s.intervals.length > 0, '10s poll registered');
+
+    // still not started: keep waiting silently, no dialog spam
+    s.intervals.at(-1)();
+    s.ajaxCalls.find((c) => /check-assessment-status/.test(c.url)).success({ status: 'not_started' });
+    assert.equal(s.swalShots.filter((o) => o.title === 'Assessment Belum Dimulai').length, 1);
+
+    // the window opens: hand off to the normal start flow (student-form is
+    // not loaded in this sandbox, so the fallback drives the countdown)
+    s.intervals.at(-1)();
+    s.ajaxCalls.filter((c) => /check-assessment-status/.test(c.url)).at(-1).success({ status: 'active' });
+    const resync = s.timerRequests().at(-1);
+    assert.ok(resync, 'the start flow takes over');
+    resync.success({
+        status: 'success', start_time: s.clock, expire_time: s.clock + 90 * 60 * 1000,
+        duration: 90, user_id: 42, server_now_ms: s.clock,
+    });
+
+    assert.ok(s.intervals.length > 0, 'countdown running');
+    assert.equal(s.get('examFinished'), false);
+    assert.equal(s.get('isWarningModalOpen'), false, 'pre-start dialog closed');
+});
+
+test('a pre-start poll that reports expired stops waiting without redirecting', () => {
+    const s = createSandbox();
+
+    s.run('startTimer()');
+    s.timerRequests()[0].error({ status: 422, responseJSON: { status: 'not_started', message: 'Assessment belum dimulai.' } });
+    s.intervals.at(-1)();
+    s.ajaxCalls.find((c) => /check-assessment-status/.test(c.url)).success({ status: 'expired' });
+
+    assert.ok(s.swalShots.some((o) => o.title === 'Assessment Telah Berakhir'));
+    assert.equal(s.get('isWarningModalOpen'), true);
+
+    // the poll stopped: firing the interval again issues no new request
+    const checks = s.ajaxCalls.filter((c) => /check-assessment-status/.test(c.url)).length;
+    s.intervals.at(-1)();
+    assert.equal(s.ajaxCalls.filter((c) => /check-assessment-status/.test(c.url)).length, checks);
+});

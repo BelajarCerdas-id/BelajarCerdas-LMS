@@ -23,6 +23,79 @@ function emptyTime() {
     });
 }
 
+// ---- pre-start wait: the exam window has not opened yet ----
+// The student stays on the exam page: a dismissible dialog explains the
+// wait and a 10s poll (same cadence as waitForTeacher) watches for the
+// assessment to open, then the normal start flow takes over. No redirect
+// ping-pong with the assessment list, no dead-end dialog.
+let preStartWait = null; // { poll } while the assessment has not started yet
+
+function waitForExamStart() {
+    if (examFinished || preStartWait) return;
+    isWarningModalOpen = true;
+    Swal.fire({
+        icon: 'info',
+        title: 'Assessment Belum Dimulai',
+        text: 'Ujian belum dibuka. Halaman ini memeriksa otomatis setiap 10 detik dan ujian akan terbuka sendiri saat sudah dimulai — jangan tutup halaman ini.',
+        confirmButtonText: 'OK',
+        allowOutsideClick: true,
+        allowEscapeKey: true
+    }).then(function () {
+        // dismissing the dialog is not terminal: the poll below keeps running
+        isWarningModalOpen = false;
+    });
+    preStartWait = { poll: setInterval(pollExamStart, 10000) };
+}
+
+// status check only: unlike start-timer this never opens an attempt, so the
+// background poll cannot start the student's clock without their consent
+function pollExamStart() {
+    if (!preStartWait) return;
+    $.ajax({
+        url: `/lms/check-assessment-status/${assessmentId}`,
+        method: 'GET',
+        success: function (res) {
+            if (!preStartWait) return;
+            if (res.status === 'active') {
+                stopWaitingForExamStart();
+                // hand off to the normal start flow: a fresh form render
+                // drives the "Mulai Assessment" confirmation (which opens
+                // the attempt server-side)
+                if (typeof studentFormAssessment === 'function') {
+                    studentFormAssessment(0, true);
+                } else {
+                    startTimer();
+                }
+                return;
+            }
+            if (res.status === 'expired') {
+                stopWaitingForExamStart();
+                isWarningModalOpen = true;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Assessment Telah Berakhir',
+                    text: res.message || 'Waktu pengerjaan Assessment telah berakhir.',
+                    confirmButtonText: 'OK'
+                }).then(function () {
+                    isWarningModalOpen = false;
+                });
+            }
+            // not_started (or anything else): keep waiting silently
+        },
+        error: function () {
+            // transient failure: the 10s poll simply tries again
+        }
+    });
+}
+
+function stopWaitingForExamStart() {
+    if (!preStartWait) return;
+    clearInterval(preStartWait.poll);
+    preStartWait = null;
+    isWarningModalOpen = false;
+    if (typeof Swal.close === 'function') Swal.close();
+}
+
 function startTimer() {
     if (!containerFormAssessment.length) return;
     if (countdown !== null) return;
@@ -49,6 +122,7 @@ function startTimer() {
                 if (response.status === 'paused') return handleExamPaused();
                 if (response.status === 'waiting_teacher') return waitForTeacher();
                 stopWaitingForTeacher();
+                stopWaitingForExamStart();
                 if (examPaused) clearPausedState();
                 applyExamServerClock(response);
 
@@ -82,16 +156,9 @@ function startTimer() {
                 if (xhr.status === 422) {
                     const response = xhr.responseJSON;
                     if (response?.status === 'not_started') {
-                        isWarningModalOpen = true;
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Assessment Belum Dimulai',
-                            text: response.message,
-                            confirmButtonText: 'OK'
-                        }).then(() => {
-                            isWarningModalOpen = false;
-                        });
-                        return;
+                        // stay on the page and keep polling every 10s until the
+                        // assessment opens — never bounce the student away
+                        return waitForExamStart();
                     }
 
                     if (response?.status === 'expired') {
@@ -116,6 +183,7 @@ function startTimer() {
 
     function waitForTeacher() {
         if (examPaused) clearPausedState();
+        stopWaitingForExamStart();
         if (teacherWait) return;
         isWarningModalOpen = true;
         Swal.fire({
@@ -181,6 +249,7 @@ function startTimer() {
 
     function deniedByTeacher() {
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         isWarningModalOpen = true;
         Swal.fire({
             icon: 'error',
@@ -311,6 +380,7 @@ function startTimer() {
     function handleExamPaused() {
         if (examFinished || examStopped || examPaused) return;
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         examPaused = true;
         clearInterval(countdown);
         countdown = null;
@@ -341,6 +411,7 @@ function startTimer() {
         examPaused = false;
         hidePausedBlockage();
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         stopHeartbeat();
         clearInterval(countdown);
         countdown = null;

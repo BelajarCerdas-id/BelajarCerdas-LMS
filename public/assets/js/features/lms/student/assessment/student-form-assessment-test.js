@@ -1595,19 +1595,10 @@ $(document).ready(function () {
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {
 
         if (response.status === 'not_started') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Assessment Belum Dimulai',
-                text: 'Sesi Assessment belum dimulai. Silakan kembali saat waktu Assessment telah dimulai.',
-                confirmButtonText: 'OK',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
-                }
-            });
-            return;
+            // stay on the page: the pre-start wait (waitForExamStart in
+            // start-timer) checks every 10s and opens the exam automatically —
+            // no redirect ping-pong between this page and the assessment list
+            return waitForExamStart();
         }
 
         if (response.status === 'expired') {
