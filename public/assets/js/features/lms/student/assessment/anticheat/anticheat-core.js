@@ -28,6 +28,95 @@ var examPaused = false;
 var examStopped = false;
 var devtoolsTimer = null;
 
+// ---- exam browser state is scoped per user ----
+// Lab machines are shared between students. State keyed only by
+// assessment/question id lets the next login inherit a previous
+// student's timer, completion flag or durations. The exam blades expose
+// the authenticated user id via data-user-id; every persisted exam key
+// is suffixed with it and foreign/legacy keys are purged on page open.
+var EXAM_USER_ID = '';
+(function readExamUserId() {
+    try {
+        var el = document.getElementById('container-assessment-test-form')
+            || document.getElementById('container-timer-assessment-test');
+        if (el && el.getAttribute) {
+            var raw = el.getAttribute('data-user-id');
+            if (raw !== null && raw !== undefined && String(raw) !== '') EXAM_USER_ID = String(raw);
+        }
+    } catch (e) {}
+})();
+
+function examStateKey(base) {
+    return EXAM_USER_ID ? base + '_u' + EXAM_USER_ID : base;
+}
+function examStartKey() {
+    return examStateKey('timer_assessment_test_start_' + assessmentId);
+}
+function examExpireKey() {
+    return examStateKey('timer_assessment_test_expire_' + assessmentId);
+}
+function examCompletedKey() {
+    return examStateKey('assessment_' + assessmentId + '_all_answered');
+}
+function examDurationKey(questionId) {
+    return examStateKey('duration_' + questionId);
+}
+
+// true when the key holds exam state belonging to another user (or to the
+// pre-scoping legacy format) that must not leak into this session
+function isForeignExamStateKey(key) {
+    if (!EXAM_USER_ID) return false;
+    var isExamState =
+        /^timer_assessment_test_(start|expire)_\d+/.test(key) ||
+        /^assessment_\d+_all_answered/.test(key) ||
+        /^duration_\d+/.test(key);
+    if (!isExamState) return false;
+    var match = /_u(.+)$/.exec(key);
+    return !match || match[1] !== EXAM_USER_ID;
+}
+
+function purgeForeignExamState() {
+    try {
+        var doomed = [];
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (key && isForeignExamStateKey(key)) doomed.push(key);
+        }
+        doomed.forEach(function (key) { localStorage.removeItem(key); });
+    } catch (e) {}
+}
+
+// ---- server clock anchor ----
+// Lab machine clocks can be minutes (or more) off, which used to shorten
+// real exams: remaining time was always computed as server expire minus a
+// possibly skewed Date.now(). Anchor the client to the server clock
+// (form response server_now_iso, or start-timer server_now_ms) and use
+// the corrected "now" for every expiry decision.
+var examClockOffsetMs = null;
+
+function setExamClockOffset(serverNowMs, clientNowMs) {
+    if (typeof serverNowMs !== 'number' || !isFinite(serverNowMs)) return;
+    examClockOffsetMs = serverNowMs - (typeof clientNowMs === 'number' ? clientNowMs : Date.now());
+}
+function examClockTrusted() {
+    return typeof examClockOffsetMs === 'number';
+}
+function serverNowMs() {
+    return Date.now() + (examClockOffsetMs || 0);
+}
+// accepts a server response carrying server_now_ms (epoch ms) or
+// server_now_iso (ISO 8601) and anchors the clock to it
+function applyExamServerClock(response) {
+    if (!response) return;
+    if (typeof response.server_now_ms === 'number') {
+        return setExamClockOffset(response.server_now_ms, Date.now());
+    }
+    if (response.server_now_iso) {
+        var parsed = Date.parse(response.server_now_iso);
+        if (!isNaN(parsed)) setExamClockOffset(parsed, Date.now());
+    }
+}
+
 window.isSelectingFile = false;
 
 window.setSelectingFile = function (active) {
@@ -454,8 +543,7 @@ function enforceFullscreenAfterReload() {
     if (examFinished) return;
     if (!isFullscreenSupported()) return; // Skip for devices without Fullscreen API (e.g. iPhone)
 
-    const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-    const examWasStarted = localStorage.getItem(START_KEY);
+    const examWasStarted = localStorage.getItem(examStartKey());
 
     if (!examWasStarted) return;
     if (getFullscreenElement()) return;
@@ -589,8 +677,7 @@ function initAntiCheatSystem() {
 
     // If device doesn't support HTML5 fullscreen (e.g. iPhone), activate anti-cheat after brief buffer
     setTimeout(function () {
-        const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-        if (!isFullscreenSupported() && localStorage.getItem(START_KEY)) {
+        if (!isFullscreenSupported() && localStorage.getItem(examStartKey())) {
             antiCheatCooldown = false;
         }
     }, 1500);

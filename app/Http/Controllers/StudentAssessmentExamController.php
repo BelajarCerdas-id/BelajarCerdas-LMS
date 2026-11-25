@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ExamStateHeaders;
 use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
 use App\Services\Proctor\ProctorService;
@@ -558,7 +559,12 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = $attempt->expire_time;
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            // same deadline rule as /answer, /end and start-timer: the per-attempt
+            // clock wins when it ends EARLIER than the school window. The old gt()
+            // kept the page status 'active' (answers clickable) after the student's
+            // own clock had died while answer saves were rejected as expired — the
+            // mid-exam "Waktu Habis" loop reported on 2026-11-25.
+            if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }
@@ -588,7 +594,7 @@ class StudentAssessmentExamController extends Controller
             }
         });
 
-        return response()->json([
+        return ExamStateHeaders::noStore(response()->json([
             'data' => $questions,
             'questionsAnswer' => $questionsAnswer,
             'schoolAssessment' => $schoolAssessment,
@@ -611,7 +617,7 @@ class StudentAssessmentExamController extends Controller
             'assessment_title' => $assessment->SchoolAssessmentType->name,
             'semester' => $assessment->semester,
             'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test'
-        ]);
+        ]));
     }
 
     public function startTImer($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
@@ -642,24 +648,24 @@ class StudentAssessmentExamController extends Controller
         }
 
         if ($startDate && $schoolNow->lt($startDate)) {
-            return response()->json([
+            return ExamStateHeaders::noStore(response()->json([
                 'status' => 'not_started',
                 'message' => 'Assessment belum dimulai.'
-            ], 422);
+            ], 422));
         }
 
         if ($endDate && $schoolNow->gt($endDate)) {
-            return response()->json([
+            return ExamStateHeaders::noStore(response()->json([
                 'status' => 'expired',
                 'message' => 'Assessment sudah berakhir.'
-            ], 422);
+            ], 422));
         }
 
         if ($assessment->proctor_stopped_at) {
-            return response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410);
+            return ExamStateHeaders::noStore(response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410));
         }
         if ($assessment->proctor_paused_at || $attempt?->proctor_paused_at) {
-            return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202);
+            return ExamStateHeaders::noStore(response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202));
         }
 
         // nobody starts until the teacher admits them; an existing attempt (resume) is never gated
@@ -667,21 +673,46 @@ class StudentAssessmentExamController extends Controller
             $entry = app(ProctorService::class)->entryFor($assessment, $userId);
 
             if ($entry->status === 'denied') {
-                return response()->json(['status' => 'denied', 'message' => 'Guru tidak mengizinkan kamu mengikuti ujian ini.'], 403);
+                return ExamStateHeaders::noStore(response()->json(['status' => 'denied', 'message' => 'Guru tidak mengizinkan kamu mengikuti ujian ini.'], 403));
             }
             if ($entry->status !== 'admitted') {
-                return response()->json(['status' => 'waiting_teacher', 'message' => 'Menunggu guru memulai ujian.'], 202);
+                // per-school auto-admit (school_partners.proctor_auto_admit): some
+                // schools let students in without the teacher admitting each one,
+                // but only while the proctor session is RUNNING and never over a
+                // teacher denial; disabled (default) keeps the waiting_teacher gate
+                if (!app(ProctorService::class)->autoAdmitEntry($assessment, $entry, $schoolPartner)) {
+                    return ExamStateHeaders::noStore(response()->json(['status' => 'waiting_teacher', 'message' => 'Menunggu guru memulai ujian.'], 202));
+                }
             }
         }
 
         $attempt = app(ProctorService::class)->openAttempt($assessment, $userId);
 
-        return response()->json([
+        // Authoritative clock for the client: the countdown must be driven from the
+        // server's "now", not the device clock (skewed devices ended live exams with
+        // a premature "Waktu Habis" on 2026-11-25). remaining_seconds is clamped at
+        // 0 so a past expire can never present itself as a running exam; the client
+        // keeps responsibility for the auto-submit on a genuinely expired attempt.
+        $remaining = max(0, (int) ($attempt->expire_time->getTimestamp() - $schoolNow->getTimestamp()));
+
+        return ExamStateHeaders::noStore(response()->json([
             'status' => 'success',
+            // explicit user anchor: exam timer/answer state in the browser MUST be
+            // scoped per user (the 2026-11-25 'switching ID breaks the next exam'
+            // reports came from localStorage keys that only carry assessmentId and
+            // therefore leak one student's timer to the next account on the same
+            // device). Front-end should key its storage with this user_id.
+            'user_id' => $userId,
             'start_time' => $attempt->start_time->timestamp * 1000,
             'expire_time' => $attempt->expire_time->timestamp * 1000,
-            'duration' => $assessment->duration
-        ]);
+            'duration' => $assessment->duration,
+            'server_now' => $schoolNow->timestamp * 1000,
+            // exact key the client's applyExamServerClock() consumes to anchor
+            // its clock; keep server_now as an alias
+            'server_now_ms' => $schoolNow->timestamp * 1000,
+            'remaining_seconds' => $remaining,
+            'expired' => $remaining === 0,
+        ]));
     }
 
     
@@ -1036,8 +1067,14 @@ class StudentAssessmentExamController extends Controller
                 }
             }
 
-            // Finalization is one-shot: replaying /end must not rewrite answers.
+            // Finalization is one-shot: replaying /end must not re-finalize the
+            // attempt. The in-flight answer it carries must not be lost either:
+            // a teacher terminate finalizes server-side while the student's
+            // client is still live, and that client's /end lands here holding
+            // the last unsaved answer.
             if ($attempt && ($attempt->finalized_at || in_array($attempt->status, ['submitted', 'timeout'], true))) {
+                $this->persistInFlightAnswer($userId, $assessmentId, $assessment, $request);
+
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Assessment sudah diselesaikan.',
@@ -1050,69 +1087,40 @@ class StudentAssessmentExamController extends Controller
             if (!in_array($statusAttempt, ['timeout', 'submitted'], true)) {
                 $statusAttempt = $isExpired ? 'timeout' : 'submitted';
             }
-            // the server owns the clock: honor a client-claimed timeout only within a
-            // minute before the deadline (device clock skew); anything earlier — and
-            // any 'cheating' claim — is downgraded. Exam time ran out on the server,
-            // or the student submitted; nothing else can finalize an attempt.
+            // The server owns the clock. A client that claims its timer ran out while
+            // the server still shows more than the 1-minute skew grace must NOT be
+            // finalized: a wrong device clock (or a stale cached timer) then ends a
+            // live exam silently, which is exactly what happened on 2026-11-25
+            // (attempts 3062/3070/3074/3077/3085 finalized 42-52 minutes early and
+            // downgraded to 'submitted' while the students were still answering).
+            // Refuse, hand back the real remaining time, and let the client resync
+            // and continue. Real timeouts stay accepted: the grace band covers the
+            // client's auto-submit jitter (0-45s) and second-precision DB timestamps.
+            // A voluntary early submit ('submitted') is always honored.
             if ($statusAttempt === 'timeout' && !$isExpired && $endDate && $now->lt($endDate->copy()->subMinute())) {
-                $statusAttempt = 'submitted';
+                $lock->release();
+
+                // $endDate carries the +60s skew grace whenever the attempt's own
+                // expire_time binds, so computing the remaining time from it
+                // overstated the countdown by up to a minute. Report the time to
+                // the student's real deadline instead.
+                $bindingDeadline = ($attempt && $attempt->expire_time && $attempt->expire_time->lt($endDate))
+                    ? $attempt->expire_time
+                    : $endDate;
+
+                return response()->json([
+                    'status' => 'still_running',
+                    'message' => 'Waktu ujian masih berjalan menurut jam server. Ujian dilanjutkan.',
+                    'expire_time' => $attempt->expire_time ? $attempt->expire_time->timestamp * 1000 : null,
+                    'remaining_seconds' => max(0, (int) abs($bindingDeadline->getTimestamp() - $now->getTimestamp())),
+                ], 422);
             }
 
             $totalExamDuration = $request->input('total_exam_duration');
 
             DB::transaction(function () use ($userId, $assessmentId, $assessment, $request, $statusAttempt, $totalExamDuration) {
                 // 1. Simpan jawaban aktif saat ini jika ada yang dikirim dan belum tersimpan
-                $currentQuestionId = $request->input('current_question_id');
-                $currentAnswerValue = $request->input('current_answer_value');
-                $currentAnswerDuration = $request->input('current_answer_duration', 0);
-
-                if ($currentQuestionId) {
-                    $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->find($currentQuestionId);
-                    if ($schoolQuestion && $schoolQuestion->lmsQuestionBank) {
-                        $question = $schoolQuestion->lmsQuestionBank;
-
-                        $answerData = $currentAnswerValue;
-                        if (is_string($answerData)) {
-                            $decoded = json_decode($answerData, true);
-                            if (json_last_error() === JSON_ERROR_NONE) {
-                                $answerData = $decoded;
-                            }
-                        }
-                        if ($answerData === '' || $answerData === [] || $answerData === null) {
-                            $answerData = null;
-                        }
-
-                        $score = $this->calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId);
-
-                        $existingCurrentAnswer = StudentAssessmentAnswer::where('student_id', $userId)
-                            ->where('school_assessment_id', $assessmentId)
-                            ->where('school_assessment_question_id', $currentQuestionId)
-                            ->first();
-
-                        if ($existingCurrentAnswer) {
-                            $updateData = [
-                                'status_answer' => 'submitted',
-                                'answer_duration' => $currentAnswerDuration ?: $existingCurrentAnswer->answer_duration,
-                            ];
-                            if ($answerData !== null) {
-                                $updateData['answer_value'] = $answerData;
-                                $updateData['question_score'] = $score;
-                            }
-                            $existingCurrentAnswer->update($updateData);
-                        } else {
-                            StudentAssessmentAnswer::create([
-                                'student_id' => $userId,
-                                'school_assessment_id' => $assessmentId,
-                                'school_assessment_question_id' => $currentQuestionId,
-                                'answer_value' => $answerData,
-                                'question_score' => $score,
-                                'answer_duration' => $currentAnswerDuration,
-                                'status_answer' => 'submitted',
-                                'grading_status' => $question->tipe_soal === 'ESSAY' ? 'pending' : null,
-                            ]);
-                        }
-                    }
-                }
+                $this->saveInFlightAnswer($userId, $assessmentId, $assessment, $request);
 
                 // 2. Ubah semua jawaban 'draft' menjadi 'submitted' sekaligus dalam 1 query
                 StudentAssessmentAnswer::where('student_id', $userId)
@@ -1177,6 +1185,101 @@ class StudentAssessmentExamController extends Controller
         } finally {
             $lock->release();
         }
+    }
+
+    /**
+     * Persist the in-flight answer carried by a /end that arrives AFTER the
+     * attempt was already finalized (teacher terminate, replayed submit).
+     * Create-only: an answer row that already exists is left untouched (a
+     * replayed submit must not rewrite saved answers), but an answer that was
+     * never saved — the work in flight when a terminate landed — is stored,
+     * scored and counted in the summary. Never re-finalizes the attempt.
+     */
+    private function persistInFlightAnswer(int $userId, int $assessmentId, SchoolAssessment $assessment, Request $request): void
+    {
+        if (!$request->input('current_question_id')) {
+            return;
+        }
+
+        DB::transaction(function () use ($userId, $assessmentId, $assessment, $request) {
+            $saved = $this->saveInFlightAnswer($userId, $assessmentId, $assessment, $request, createOnly: true);
+            if ($saved) {
+                $this->summaryService->updateStudentAssessmentSummary($userId, $assessment);
+            }
+        });
+    }
+
+    /**
+     * Upsert the current_question_id / current_answer_value pair a /end payload
+     * carries: decode the value, score the question, update the existing row
+     * (value + score only when a real answer arrived) or create a submitted one.
+     * With $createOnly the existing-row branch is skipped entirely so already
+     * saved answers can never be rewritten. Returns whether a row was written.
+     */
+    private function saveInFlightAnswer(int $userId, int $assessmentId, SchoolAssessment $assessment, Request $request, bool $createOnly = false): bool
+    {
+        $currentQuestionId = $request->input('current_question_id');
+        $currentAnswerValue = $request->input('current_answer_value');
+        $currentAnswerDuration = $request->input('current_answer_duration', 0);
+
+        if (!$currentQuestionId) {
+            return false;
+        }
+
+        $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->find($currentQuestionId);
+        if (!($schoolQuestion && $schoolQuestion->lmsQuestionBank)) {
+            return false;
+        }
+
+        $existingCurrentAnswer = StudentAssessmentAnswer::where('student_id', $userId)
+            ->where('school_assessment_id', $assessmentId)
+            ->where('school_assessment_question_id', $currentQuestionId)
+            ->first();
+
+        if ($existingCurrentAnswer && $createOnly) {
+            // already saved: a late /end must not rewrite it
+            return false;
+        }
+
+        $question = $schoolQuestion->lmsQuestionBank;
+
+        $answerData = $currentAnswerValue;
+        if (is_string($answerData)) {
+            $decoded = json_decode($answerData, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $answerData = $decoded;
+            }
+        }
+        if ($answerData === '' || $answerData === [] || $answerData === null) {
+            $answerData = null;
+        }
+
+        $score = $this->calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId);
+
+        if ($existingCurrentAnswer) {
+            $updateData = [
+                'status_answer' => 'submitted',
+                'answer_duration' => $currentAnswerDuration ?: $existingCurrentAnswer->answer_duration,
+            ];
+            if ($answerData !== null) {
+                $updateData['answer_value'] = $answerData;
+                $updateData['question_score'] = $score;
+            }
+            $existingCurrentAnswer->update($updateData);
+        } else {
+            StudentAssessmentAnswer::create([
+                'student_id' => $userId,
+                'school_assessment_id' => $assessmentId,
+                'school_assessment_question_id' => $currentQuestionId,
+                'answer_value' => $answerData,
+                'question_score' => $score,
+                'answer_duration' => $currentAnswerDuration,
+                'status_answer' => 'submitted',
+                'grading_status' => $question->tipe_soal === 'ESSAY' ? 'pending' : null,
+            ]);
+        }
+
+        return true;
     }
 
     /**
@@ -1517,7 +1620,10 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = $attempt->expire_time;
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            // same deadline rule as /answer, /end and start-timer: an attempt whose
+            // own clock has died must not be bounced back into the exam while the
+            // school window is technically still open.
+            if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }

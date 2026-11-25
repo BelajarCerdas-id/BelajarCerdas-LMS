@@ -8,6 +8,7 @@
 
 let countdown = null;
 let lastTickTimestamp = 0;
+let verifyingExpiry = false;
 let teacherWait = null; // { poll, socket } while the teacher has not admitted this student
 
 // Function to display modal when exam time expires
@@ -22,14 +23,90 @@ function emptyTime() {
     });
 }
 
+// ---- pre-start wait: the exam window has not opened yet ----
+// The student stays on the exam page: a dismissible dialog explains the
+// wait and a 10s poll (same cadence as waitForTeacher) watches for the
+// assessment to open, then the normal start flow takes over. No redirect
+// ping-pong with the assessment list, no dead-end dialog.
+let preStartWait = null; // { poll } while the assessment has not started yet
+
+function waitForExamStart() {
+    if (examFinished || preStartWait) return;
+    isWarningModalOpen = true;
+    Swal.fire({
+        icon: 'info',
+        title: 'Assessment Belum Dimulai',
+        text: 'Ujian belum dibuka. Halaman ini memeriksa otomatis setiap 10 detik dan ujian akan terbuka sendiri saat sudah dimulai — jangan tutup halaman ini.',
+        confirmButtonText: 'OK',
+        allowOutsideClick: true,
+        allowEscapeKey: true
+    }).then(function () {
+        // dismissing the dialog is not terminal: the poll below keeps running
+        isWarningModalOpen = false;
+    });
+    preStartWait = { poll: setInterval(pollExamStart, 10000) };
+}
+
+// status check only: unlike start-timer this never opens an attempt, so the
+// background poll cannot start the student's clock without their consent
+function pollExamStart() {
+    if (!preStartWait) return;
+    $.ajax({
+        url: `/lms/check-assessment-status/${assessmentId}`,
+        method: 'GET',
+        success: function (res) {
+            if (!preStartWait) return;
+            if (res.status === 'active') {
+                stopWaitingForExamStart();
+                // hand off to the normal start flow: a fresh form render
+                // drives the "Mulai Assessment" confirmation (which opens
+                // the attempt server-side)
+                if (typeof studentFormAssessment === 'function') {
+                    studentFormAssessment(0, true);
+                } else {
+                    startTimer();
+                }
+                return;
+            }
+            if (res.status === 'expired') {
+                stopWaitingForExamStart();
+                isWarningModalOpen = true;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Assessment Telah Berakhir',
+                    text: res.message || 'Waktu pengerjaan Assessment telah berakhir.',
+                    confirmButtonText: 'OK'
+                }).then(function () {
+                    isWarningModalOpen = false;
+                });
+            }
+            // not_started (or anything else): keep waiting silently
+        },
+        error: function () {
+            // transient failure: the 10s poll simply tries again
+        }
+    });
+}
+
+function stopWaitingForExamStart() {
+    if (!preStartWait) return;
+    clearInterval(preStartWait.poll);
+    preStartWait = null;
+    isWarningModalOpen = false;
+    if (typeof Swal.close === 'function') Swal.close();
+}
+
 function startTimer() {
     if (!containerFormAssessment.length) return;
     if (countdown !== null) return;
-    if (examFinished) return;
+    if (examFinished || verifyingExpiry) return;
 
     const timerExam = document.getElementById('timer-assessment-test');
-    const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-    const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
+    // scoped per user: a shared lab machine must not inherit another
+    // student's timer state (see anticheat-core examStateKey)
+    const START_KEY = examStartKey();
+    const EXPIRE_KEY = examExpireKey();
+    const TIMER_URL = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/start-timer`;
 
     // Selalu verifikasi dengan server: firstOrCreate attempt server adalah
     // satu-satunya sumber kebenaran. Kalau localStorage punya expire yang
@@ -39,36 +116,37 @@ function startTimer() {
 
     function startNewCountdown() {
         $.ajax({
-            url: `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}/semester/${semester}/form/${assessmentId}/start-timer`,
+            url: TIMER_URL,
             method: 'GET',
             success: function (response) {
                 if (response.status === 'paused') return handleExamPaused();
                 if (response.status === 'waiting_teacher') return waitForTeacher();
                 stopWaitingForTeacher();
+                stopWaitingForExamStart();
                 if (examPaused) clearPausedState();
+                applyExamServerClock(response);
 
                 const startTime = response.start_time;
                 const expireTime = response.expire_time;
                 localStorage.setItem(START_KEY, startTime);
                 localStorage.setItem(EXPIRE_KEY, expireTime);
 
-                const remaining = Math.ceil((expireTime - Date.now()) / 1000);
+                // server expire vs the server-anchored clock, not raw Date.now()
+                const remaining = Math.ceil((expireTime - serverNowMs()) / 1000);
                 if (remaining > 0) {
                     connectUnlockSocket();
                     runCountdown(remaining);
-                } else {
+                } else if (examClockTrusted()) {
+                    // fresh server expire + trusted server clock: real expiry
+                    // (server admits within a 1-minute grace of attempt expiry)
                     clearInterval(countdown);
                     countdown = null;
-
-                    if (timerExam) timerExam.textContent = 'Waktu Habis';
-
-                    finalExamDuration = getTotalExamDuration();
-                    saveQuestionDuration();
-                    emptyTime();
-                    autoSubmitUnSavedQuestions();
-
-                    localStorage.removeItem(EXPIRE_KEY);
-                    localStorage.removeItem(START_KEY);
+                    finishExpiredExam();
+                } else {
+                    // clock not anchored yet: never decide expiry locally
+                    clearInterval(countdown);
+                    countdown = null;
+                    verifyTimeUp(0);
                 }
             },
             error: function (xhr) {
@@ -78,16 +156,9 @@ function startTimer() {
                 if (xhr.status === 422) {
                     const response = xhr.responseJSON;
                     if (response?.status === 'not_started') {
-                        isWarningModalOpen = true;
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Assessment Belum Dimulai',
-                            text: response.message,
-                            confirmButtonText: 'OK'
-                        }).then(() => {
-                            isWarningModalOpen = false;
-                        });
-                        return;
+                        // stay on the page and keep polling every 10s until the
+                        // assessment opens — never bounce the student away
+                        return waitForExamStart();
                     }
 
                     if (response?.status === 'expired') {
@@ -112,6 +183,7 @@ function startTimer() {
 
     function waitForTeacher() {
         if (examPaused) clearPausedState();
+        stopWaitingForExamStart();
         if (teacherWait) return;
         isWarningModalOpen = true;
         Swal.fire({
@@ -177,6 +249,7 @@ function startTimer() {
 
     function deniedByTeacher() {
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         isWarningModalOpen = true;
         Swal.fire({
             icon: 'error',
@@ -201,9 +274,113 @@ function startTimer() {
         }, 1000);
     }
 
+    // ---- expiry decision: the server confirms before the exam ends ----
+    // The local countdown can hit zero early (skewed machine clock, stale
+    // state). "Waktu Habis" + auto-submit only happen once the server
+    // itself says the time is up; if the server still sees time remaining
+    // the countdown resyncs to the server's expire and the exam continues.
+    function finishExpiredExam() {
+        if (examFinished) return;
+        examFinished = true;
+
+        if (timerExam) timerExam.textContent = 'Waktu Habis';
+
+        saveQuestionDuration();
+        finalExamDuration = getTotalExamDuration();
+        emptyTime();
+        autoSubmitUnSavedQuestions();
+
+        localStorage.removeItem(EXPIRE_KEY);
+        localStorage.removeItem(START_KEY);
+    }
+
+    function closeVerifyModal() {
+        verifyingExpiry = false;
+        isWarningModalOpen = false;
+        if (typeof Swal.close === 'function') Swal.close();
+    }
+
+    function verifyTimeUp(attempt) {
+        verifyingExpiry = true;
+        // visible while the remaining time is being confirmed — never a
+        // silent freeze of the page
+        isWarningModalOpen = true;
+        Swal.fire({
+            icon: 'info',
+            title: 'Memeriksa sisa waktu',
+            text: 'Mengonfirmasi sisa waktu ujian ke server sebentar lagi.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false
+        });
+
+        $.ajax({
+            url: TIMER_URL,
+            method: 'GET',
+            success: function (response) {
+                if (response.status === 'paused') { closeVerifyModal(); return handleExamPaused(); }
+                if (response.status === 'waiting_teacher') { closeVerifyModal(); return waitForTeacher(); }
+                stopWaitingForTeacher();
+                if (examPaused) clearPausedState();
+                applyExamServerClock(response);
+
+                if (typeof response.start_time !== 'number' || typeof response.expire_time !== 'number') {
+                    // unexpected shape: same treatment as a network failure
+                    if (attempt < 5) { setTimeout(function () { verifyTimeUp(attempt + 1); }, 3000); return; }
+                    closeVerifyModal();
+                    finishExpiredExam();
+                    return;
+                }
+
+                const remaining = Math.ceil((response.expire_time - serverNowMs()) / 1000);
+                if (remaining > 0) {
+                    // the server says time remains: continue, never submit
+                    localStorage.setItem(START_KEY, response.start_time);
+                    localStorage.setItem(EXPIRE_KEY, response.expire_time);
+                    closeVerifyModal();
+                    connectUnlockSocket();
+                    runCountdown(remaining);
+                    return;
+                }
+
+                if (examClockTrusted()) {
+                    // trusted server-anchored clock + fresh server expire:
+                    // real expiry (within the server's 1-minute grace)
+                    closeVerifyModal();
+                    finishExpiredExam();
+                    return;
+                }
+
+                // clock not anchored yet: never submit off local state
+                // alone — re-check after a short grace pulse
+                closeVerifyModal();
+                runCountdown(60);
+            },
+            error: function (xhr) {
+                if (xhr.status === 422 && xhr.responseJSON?.status === 'expired') {
+                    closeVerifyModal();
+                    return finishExpiredExam();
+                }
+                if (xhr.status === 410) { closeVerifyModal(); return handleExamStopped(); }
+                if (xhr.status === 403 && xhr.responseJSON?.status === 'denied') { closeVerifyModal(); return deniedByTeacher(); }
+
+                if (attempt < 5) {
+                    setTimeout(function () { verifyTimeUp(attempt + 1); }, 3000);
+                    return;
+                }
+
+                // server unreachable for ~15s: fail-safe and send the
+                // answers; /end on the server stays the final authority
+                closeVerifyModal();
+                finishExpiredExam();
+            }
+        });
+    }
+
     function handleExamPaused() {
         if (examFinished || examStopped || examPaused) return;
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         examPaused = true;
         clearInterval(countdown);
         countdown = null;
@@ -234,6 +411,7 @@ function startTimer() {
         examPaused = false;
         hidePausedBlockage();
         stopWaitingForTeacher();
+        stopWaitingForExamStart();
         stopHeartbeat();
         clearInterval(countdown);
         countdown = null;
@@ -280,20 +458,12 @@ function startTimer() {
             updateTimerDisplay(seconds);
 
             if (seconds <= 0 && !examFinished) {
-                examFinished = true;
-
                 clearInterval(countdown);
                 countdown = null;
 
-                if (timerExam) timerExam.textContent = 'Waktu Habis';
-
-                saveQuestionDuration();
-                finalExamDuration = getTotalExamDuration();
-                emptyTime();
-                autoSubmitUnSavedQuestions();
-
-                localStorage.removeItem(START_KEY);
-                localStorage.removeItem(EXPIRE_KEY);
+                // never end the exam off the local countdown alone —
+                // confirm with the server first
+                verifyTimeUp(0);
             }
         }, 1000);
     }
@@ -314,11 +484,8 @@ function stopTimer() {
 }
 
 function getTotalExamDuration() {
-    const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-    const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
-
-    const startTime = parseInt(localStorage.getItem(START_KEY));
-    const expireTime = parseInt(localStorage.getItem(EXPIRE_KEY));
+    const startTime = parseInt(localStorage.getItem(examStartKey()));
+    const expireTime = parseInt(localStorage.getItem(examExpireKey()));
     if (!startTime || !expireTime) return 0;
 
     const now = Date.now();

@@ -7,7 +7,7 @@
         <!-- HEADER -->
         <header class="bg-white shadow-md">
             <div id="container-timer-assessment-test" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-curriculum-id="{{ $curriculumId }}"
-                data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}" data-semester="{{ $semester }}" data-assessment-id="{{ $assessmentId }}"
+                data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}" data-semester="{{ $semester }}" data-assessment-id="{{ $assessmentId }}" data-user-id="{{ Auth::id() }}"
                 class="w-full h-27.5 mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative">
 
                 <!-- TOP ROW -->
@@ -98,8 +98,8 @@
 @endif
 
 
-<script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-core.js') }}?v=6"></script>
+<script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-core.js') }}?v=7"></script>
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-desktop.js') }}?v=7"></script>
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-mobile.js') }}?v=6"></script>
 <script src="{{ asset('assets/js/features/lms/student/assessment/anticheat/anticheat-ios.js') }}?v=6"></script>
-<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test.js') }}?v=7"></script>
+<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test.js') }}?v=9"></script>

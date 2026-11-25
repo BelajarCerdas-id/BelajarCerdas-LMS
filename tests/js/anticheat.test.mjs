@@ -25,6 +25,11 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
         (listeners[target] ||= {})[type] ||= [];
         listeners[target][type].push(fn);
     };
+    const removeListener = (target) => (type, fn) => {
+        const list = (listeners[target] || {})[type];
+        const i = list ? list.indexOf(fn) : -1;
+        if (i !== -1) list.splice(i, 1);
+    };
     const timers = [];
     const ajaxCalls = [];
     const beacons = [];
@@ -56,7 +61,7 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
         getElementById: (id) => bodyChildren.find((el) => el.id === id) || null,
         createElement: () => makeElement(),
         head: { appendChild() {} },
-        body: { appendChild: (el) => bodyChildren.push(el) },
+        body: { appendChild: (el) => bodyChildren.push(el), style: {} },
     };
 
     const sandbox = {
@@ -89,6 +94,7 @@ function createSandbox({ ua = UA.windows, touch = 0, started = false } = {}) {
     sandbox.$.ajax = (opts) => { ajaxCalls.push(opts); };
     sandbox.window = sandbox;
     sandbox.addEventListener = addListener('window');
+    sandbox.removeEventListener = removeListener('window');
     vm.createContext(sandbox);
 
     for (const file of ['anticheat-core.js', 'anticheat-desktop.js', 'anticheat-mobile.js', 'anticheat-ios.js']) {

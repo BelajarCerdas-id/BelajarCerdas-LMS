@@ -12,7 +12,10 @@ const assessmentTypeId = containerFormAssessment.data('assessment-type-id');
 const semester = containerFormAssessment.data('semester');
 const assessmentId = containerFormAssessment.data('assessment-id');
 
-const START_KEY = `timer_assessment_test_start_${assessmentId}`;
+// scoped per user (see anticheat-core examStateKey): shared lab machines
+// must not inherit another student's timer state; guard keeps the file
+// loadable even if anticheat-core failed to load first
+const START_KEY = (typeof examStartKey === 'function') ? examStartKey() : `timer_assessment_test_start_${assessmentId}`;
 
 const questionDurations = {};
 let currentQuestionId = null;
@@ -1514,6 +1517,9 @@ function studentFormAssessment(selectedIndex = 0, forceFetch = false) {
         url: refreshUrl,
         method: 'GET',
         success: function (response) {
+            // anchor the client clock to the server (lab machine clocks can
+            // be skewed; every expiry decision uses the corrected "now")
+            applyExamServerClock(response);
             cachedFormResponse = response;
             renderAssessmentFormContent(selectedIndex, cachedFormResponse);
         }
@@ -1546,6 +1552,7 @@ $(document).on('click', '#btn-refresh-exam-questions, .btn-refresh-questions-act
         url: refreshUrl,
         method: 'GET',
         success: function (response) {
+            applyExamServerClock(response);
             cachedFormResponse = response;
             const validIndex = (response.data && targetIndex < response.data.length) ? targetIndex : 0;
             currentQuestionIndex = validIndex;
@@ -1588,19 +1595,10 @@ $(document).ready(function () {
     $.getJSON(`/lms/check-assessment-status/${assessmentId}`, function (response) {
 
         if (response.status === 'not_started') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Assessment Belum Dimulai',
-                text: 'Sesi Assessment belum dimulai. Silakan kembali saat waktu Assessment telah dimulai.',
-                confirmButtonText: 'OK',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;
-                }
-            });
-            return;
+            // stay on the page: the pre-start wait (waitForExamStart in
+            // start-timer) checks every 10s and opens the exam automatically —
+            // no redirect ping-pong between this page and the assessment list
+            return waitForExamStart();
         }
 
         if (response.status === 'expired') {
@@ -1631,24 +1629,29 @@ $(document).ready(function () {
         history.go(1);
     };
 
-    const hasTimer = localStorage.getItem(START_KEY);
-    const isAlreadyCompleted = localStorage.getItem(`assessment_${assessmentId}_all_answered`);
+    // purge exam state left by another student on this shared machine
+    // (previous user's timer/completion/duration keys) before reading any
+    purgeForeignExamState();
 
-    if (hasTimer && !isAlreadyCompleted) {
+    // A previous "Akhiri Assessment" on this browser left a completion
+    // flag. It must never silently finish the exam (examFinished = true
+    // would no-op startTimer with no visible feedback and kill the
+    // countdown for a fresh attempt): completion is decided by the
+    // server-driven form render, which shows the visible end-of-exam UI.
+    localStorage.removeItem(examCompletedKey());
+
+    const hasTimer = localStorage.getItem(START_KEY);
+
+    if (hasTimer) {
         examStarted = true;
         startTimer();
-    } else if (isAlreadyCompleted) {
-        // Exam was already completed — clean up any leftover timer state
-        examFinished = true;
-        localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-        localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
     }
 
     studentFormAssessment(0);
     checkAttemptStatus();
     // before the exam starts, the fullscreen overlay would cover the start dialog;
     // confirmStartExam() initializes it when the student starts
-    if (hasTimer && !isAlreadyCompleted) {
+    if (hasTimer) {
         initAntiCheatSystem();
     }
 
@@ -1785,7 +1788,7 @@ function resetQuestionDuration(questionId) {
     delete questionDurations[questionId];
 
     // hapus dari localStorage
-    localStorage.removeItem('duration_' + questionId);
+    localStorage.removeItem(examDurationKey(questionId));
 
     // reset input
     $('#answer_duration').val(0);
@@ -1942,8 +1945,8 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     stopHeartbeat();
 
     // reset timer storage
-    localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-    localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
+    localStorage.removeItem(examStartKey());
+    localStorage.removeItem(examExpireKey());
 
     // simpan durasi terakhir
     if (currentQuestionId && questionStartTime) {
@@ -1980,7 +1983,7 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     if (questions && questions.length) {
         questions.forEach((q) => {
             if (!questionDurations[q.id]) {
-                const saved = localStorage.getItem('duration_' + q.id);
+                const saved = localStorage.getItem(examDurationKey(q.id));
                 if (saved) {
                     questionDurations[q.id] = parseInt(saved);
                 }
@@ -2002,6 +2005,36 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     // transaction over 0-45s. Manual submits pass jitterMs = 0 and go now.
     const jitter = jitterMs === 0 ? 0 : Math.floor(Math.random() * 45000);
 
+    // /end refused the timeout claim (422 still_running): the server clock
+    // says the exam is still live. Undo the local "finished" state and
+    // continue — never loop the /end POST, never call onFinish, never set
+    // examFinished. The countdown resyncs through startTimer, which
+    // re-fetches the authoritative expire + server_now_ms anchor (the
+    // remaining_seconds in the refusal is only an early-exit signal).
+    function resumeAfterStillRunning() {
+        examFinished = false;
+        isWarningModalOpen = false;
+        if (typeof Swal.close === 'function') Swal.close();
+
+        startHeartbeat();
+        if (currentQuestionIdToSend) startQuestionTimer(currentQuestionIdToSend);
+
+        const timerExam = document.getElementById('timer-assessment-test');
+        if (timerExam) timerExam.textContent = '-';
+
+        startTimer();
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'info',
+            title: 'Waktu belum habis — ujian dilanjutkan.',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+    }
+
     // /end finalizes once on the server, so resending after a lost response is safe
     const sendFinal = function (attemptNo) {
         $.ajax({
@@ -2017,7 +2050,14 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
                     onFinish();
                 }
             },
-            error: function () {
+            error: function (xhr) {
+                // the server owns the clock: a timeout claimed too early is
+                // refused with the real remaining time — resume instead of retry
+                if (xhr.status === 422 && xhr.responseJSON?.status === 'still_running') {
+                    resumeAfterStillRunning();
+                    return;
+                }
+
                 if (attemptNo < 3) {
                     setTimeout(function () { sendFinal(attemptNo + 1); }, 3000);
                     return;
@@ -2062,7 +2102,7 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
             saveQuestionDuration();
             finalExamDuration = getTotalExamDuration();
 
-            localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
+            localStorage.setItem(examCompletedKey(), '1');
 
             autoSubmitUnSavedQuestions(function () {
                 window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;

@@ -248,18 +248,42 @@ class AssessmentAntiCheatTest extends TestCase
         Cache::forget("tab_switch_cooldown_{$attempt->id}");
     }
 
-    public function test_client_claimed_timeout_is_downgraded_while_time_remains(): void
+    public function test_bogus_client_timeout_is_refused_while_server_time_remains(): void
     {
         $seed = $this->seedData();
         $this->actingAs($seed['student']);
         $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->addMinutes(30)]);
 
-        // client claims the timer ran out, but the server clock says 30 minutes left
+        // 2026-11-25 incident: a client whose countdown was wrong claimed timeout
+        // with half the exam left; the server downgraded it to 'submitted' and
+        // FINALIZED anyway, destroying a live exam. Now it must refuse and leave
+        // the attempt untouched so the student can resync and continue.
+        $res = $this->callEnd($seed, ['status_attempt' => 'timeout']);
+        $body = $res->getData(true);
+        $this->assertEquals(422, $res->getStatusCode());
+        $this->assertEquals('still_running', $body['status']);
+        $this->assertGreaterThan(0, $body['remaining_seconds']);
+        $this->assertNotNull($body['expire_time']);
+        // remaining must track the attempt's real deadline (30 minutes out),
+        // not the expire_time + 60s grace band that also used to leak here
+        $this->assertLessThanOrEqual(1800, $body['remaining_seconds'], 'remaining_seconds must not include the 60s skew grace');
+
+        $fresh = $attempt->fresh();
+        $this->assertEquals('in_progress', $fresh->status, 'a bogus timeout must not finalize the attempt');
+        $this->assertNull($fresh->finalized_at);
+    }
+
+    public function test_timeout_claim_inside_the_skew_grace_band_is_honored(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        // expired 30s ago: inside the 1-minute grace (auto-submit jitter is 0-45s)
+        $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->subSeconds(30)]);
+
         $res = $this->callEnd($seed, ['status_attempt' => 'timeout']);
         $this->assertEquals(200, $res->getStatusCode());
-        $this->assertEquals('submitted', $res->getData(true)['status_attempt']);
-        $this->assertEquals('submitted', $attempt->fresh()->status);
-        $this->assertNotNull($attempt->fresh()->finalized_at);
+        $this->assertEquals('timeout', $res->getData(true)['status_attempt']);
+        $this->assertEquals('timeout', $attempt->fresh()->status);
     }
 
     public function test_real_expiry_still_records_timeout(): void
@@ -272,6 +296,18 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals(200, $res->getStatusCode());
         $this->assertEquals('timeout', $res->getData(true)['status_attempt']);
         $this->assertEquals('timeout', $attempt->fresh()->status);
+    }
+
+    public function test_voluntary_submit_is_still_honored_before_time_is_up(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->addMinutes(30)]);
+
+        $res = $this->callEnd($seed, ['status_attempt' => 'submitted']);
+        $this->assertEquals(200, $res->getStatusCode());
+        $this->assertEquals('submitted', $attempt->fresh()->status);
+        $this->assertNotNull($attempt->fresh()->finalized_at);
     }
 
     public function test_tab_switch_counts_strike_and_cooldowns_duplicates(): void
@@ -841,6 +877,46 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals(5, $attempt->fresh()->tab_switch_count);
         $this->assertEquals('in_progress', $attempt->fresh()->status);
         $this->assertEquals('ok', $this->callStatus($seed)->getData(true)['status']);
+    }
+
+    public function test_attempt_status_reports_expired_clock_and_is_never_cacheable(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        $attempt = $this->startAttempt($seed, overrides: ['expire_time' => now()->subMinute()]);
+
+        $res = $this->callStatus($seed);
+        $body = $res->getData(true);
+
+        // a dead attempt clock must not read as a healthy running exam
+        $this->assertEquals('ok', $body['status'], 'the anticheat contract keeps its ok/blocked statuses');
+        $this->assertTrue($body['expired']);
+        $this->assertEquals(0, $body['remaining_seconds']);
+        $this->assertEquals('in_progress', $body['attempt_status']);
+
+        // exam state must never be servable from a shared cache
+        $this->assertStringContainsString('no-store', $res->headers->get('Cache-Control'));
+
+        // and a running attempt reports its real remaining time
+        $attempt->update(['expire_time' => now()->addMinutes(45)]);
+        $body = $this->callStatus($seed)->getData(true);
+        $this->assertFalse($body['expired']);
+        $this->assertGreaterThan(40 * 60, $body['remaining_seconds']);
+    }
+
+    public function test_assessment_status_follows_the_attempt_clock_not_the_school_window(): void
+    {
+        $seed = $this->seedData();
+        $this->actingAs($seed['student']);
+        // the school window is open for another hour, but this student's own
+        // 90 minutes are up: the status poll must say expired, not active
+        $this->startAttempt($seed, overrides: ['expire_time' => now()->subMinute()]);
+        $seed['assessment']->update(['end_date' => now()->addHour()]);
+
+        $res = app(\App\Http\Controllers\StudentAssessmentController::class)->checkAssessmentStatus($seed['assessment']->id);
+
+        $this->assertEquals('expired', $res->getData(true)['status']);
+        $this->assertStringContainsString('no-store', $res->headers->get('Cache-Control'));
     }
 
     public function test_warning_modal_disabled_returns_ok_status(): void

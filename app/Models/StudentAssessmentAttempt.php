@@ -5,6 +5,17 @@ namespace App\Models;
 use App\Models\StudentAssessmentAnticheatViolation;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * One student's run of one exam.
+ *
+ * expire_time invariant: it is ONLY ever written as the attempt's own
+ * start_time + assessment duration (ProctorService::openAttempt), plus
+ * pause shifts on proctor resume (paused seconds are given back). The
+ * proctor stop/terminate paths finalize attempts but never rewrite
+ * expire_time — a rewritten deadline destroyed the audit trail and left
+ * stuck in_progress rows (incident 2026-11-25). The exam debugger
+ * (AssessmentDebugController) is the single sanctioned manual override.
+ */
 class StudentAssessmentAttempt extends Model
 {
 

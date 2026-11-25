@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ExamStateHeaders;
 use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
 use App\Models\SchoolAssessmentQuestion;
@@ -208,9 +209,13 @@ class StudentAssessmentController extends Controller
                 ->where('school_assessment_id', $assessmentId)
                 ->first();
 
+            // same deadline rule as the exam page, /answer, /end and start-timer:
+            // the per-attempt clock wins when it ends EARLIER than the school
+            // window, so a reload after the student's own time ran out reports
+            // 'expired' instead of 'active'.
             if ($attempt && $attempt->expire_time) {
                 $attemptExpire = TimezoneHelper::parse($attempt->expire_time, $timezone);
-                if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+                if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                     $endDate = $attemptExpire->copy()->addMinute();
                 }
             }
@@ -224,7 +229,7 @@ class StudentAssessmentController extends Controller
             $status = 'expired';
         }
 
-        return response()->json([
+        return ExamStateHeaders::noStore(response()->json([
             'status' => $status,
             'start_date' => $startDate?->format('Y-m-d H:i'),
             'end_date' => $endDate?->format('Y-m-d H:i'),
@@ -234,6 +239,6 @@ class StudentAssessmentController extends Controller
             'timezone_label' => TimezoneHelper::getTimezoneLabel($timezone),
             'server_now' => $now->format('Y-m-d H:i:s'),
             'server_now_iso' => $now->format('Y-m-d\TH:i:sP'),
-        ]);
+        ]));
     }
 }
