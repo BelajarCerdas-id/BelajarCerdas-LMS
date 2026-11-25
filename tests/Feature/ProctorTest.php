@@ -23,6 +23,7 @@ use App\Models\SchoolAssessmentQuestion;
 use App\Models\SchoolAssessmentType;
 use App\Models\SchoolClass;
 use App\Models\SchoolPartner;
+use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\SubBab;
 use App\Models\UserAccount;
@@ -458,19 +459,56 @@ class ProctorTest extends TestCase
         $this->assertEquals(422, $this->sessionAction($seed, 'resume')->getStatusCode(), 'cannot resume a running exam');
     }
 
-    public function test_stop_ends_running_attempts_and_blocks_new_entries(): void
+    public function test_stop_leaves_attempts_intact_and_blocks_new_entries(): void
     {
         $seed = $this->seedScenario();
         $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $expire = $attempt->expire_time->copy();
         $this->startSessionAs($seed);
 
         $res = $this->sessionAction($seed, 'stop');
         $this->assertEquals(200, $res->getStatusCode());
-        $this->assertTrue($attempt->fresh()->expire_time->lte(now()->addSecond()), 'running attempts end now');
+
+        // incident 2026-11-25: the stop path used to rewrite expire_time to the stop
+        // instant, leaving offline clients' attempts stuck in_progress with a fake
+        // deadline (e.g. attempt 3068: expire 11:07:12 == proctor_stopped_at).
+        $fresh = $attempt->fresh();
+        $this->assertTrue($fresh->expire_time->equalTo($expire), 'stop must never rewrite the attempt deadline');
+        $this->assertEquals('in_progress', $fresh->status, 'the client finalizes via /end on exam_stopped; the stop itself leaves the attempt alone');
+        $this->assertNull($fresh->finalized_at);
 
         $this->assertEquals(410, $this->startExam($seed, $seed['student'])->getStatusCode());
         $this->assertEquals(410, $this->startExam($seed, $seed['otherStudent'])->getStatusCode());
         $this->assertEquals(422, $this->sessionAction($seed, 'resume')->getStatusCode(), 'a stopped exam cannot resume');
+    }
+
+    public function test_student_end_still_finalizes_after_the_teacher_stops_the_exam(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $question = SchoolAssessmentQuestion::where('school_assessment_id', $seed['assessment']->id)->first();
+        $this->startSessionAs($seed);
+        $this->sessionAction($seed, 'stop');
+
+        // the client's exam_stopped handler posts /end with the in-flight answer;
+        // this is the normal end path and must keep working after a stop
+        $res = $this->callEnd($seed, $attempt, [
+            'status_attempt' => 'submitted',
+            'current_question_id' => $question->id,
+            'current_answer_value' => 'A',
+        ]);
+
+        $this->assertEquals('success', $res->getData(true)['status']);
+        $fresh = $attempt->fresh();
+        $this->assertEquals('submitted', $fresh->status);
+        $this->assertNotNull($fresh->finalized_at);
+        $this->assertDatabaseHas('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'school_assessment_question_id' => $question->id,
+            // the answer model json-casts answer_value
+            'answer_value' => '"A"',
+        ]);
     }
 
     public function test_every_proctor_and_approver_action_is_audited(): void
@@ -745,6 +783,17 @@ class ProctorTest extends TestCase
         return $seed;
     }
 
+    private function callEnd(array $seed, StudentAssessmentAttempt $attempt, array $payload = [])
+    {
+        $this->actingAs($attempt->student_id === $seed['student']->id ? $seed['student'] : $seed['otherStudent']);
+
+        return app(StudentAssessmentExamController::class)->studentAssessmentExamEnd(
+            Request::create('/end', 'POST', array_merge(['status_attempt' => 'submitted'], $payload)),
+            'Siswa', self::SCHOOL, $seed['partner']->id, $seed['kurikulum']->id,
+            $seed['mapel']->id, $seed['type']->id, 1, $attempt->school_assessment_id
+        );
+    }
+
     private function callAttemptControl(array $seed, StudentAssessmentAttempt $attempt, string $action, $as = 'teacher')
     {
         $this->actingAs($seed[$as]);
@@ -894,24 +943,59 @@ class ProctorTest extends TestCase
         $this->assertEquals(422, $this->callAttemptControl($seed, $attempt, 'resume')->getStatusCode());
     }
 
-    public function test_terminate_ends_only_that_students_time(): void
+    public function test_terminate_finalizes_through_the_normal_end_path(): void
     {
         $seed = $this->seedScenario();
         $attempt = $this->attempt($seed['student'], $seed['assessment']);
+        $expire = $attempt->expire_time->copy();
         $otherExam = $this->makeAssessment($seed, 'Ujian Sore', now()->subMinutes(30), now()->addHour());
         $untouched = $this->attempt($seed['otherStudent'], $otherExam);
 
+        $question = SchoolAssessmentQuestion::where('school_assessment_id', $seed['assessment']->id)->first();
+        StudentAssessmentAnswer::create([
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'school_assessment_question_id' => $question->id,
+            'answer_value' => 'A',
+            'question_score' => 0,
+            'status_answer' => 'draft',
+        ]);
+
         $this->assertEquals('ok', $this->callAttemptControl($seed, $attempt, 'terminate')->getData(true)['status']);
 
+        // expire_time keeps the real deadline; the attempt is closed properly
         $fresh = $attempt->fresh();
-        $this->assertTrue($fresh->expire_time->lessThanOrEqualTo(now()), 'expired now');
-        $this->assertEquals('in_progress', $fresh->status, 'the client auto-submits, status is untouched');
+        $this->assertTrue($fresh->expire_time->equalTo($expire), 'terminate must never rewrite the attempt deadline');
+        $this->assertEquals('submitted', $fresh->status, 'the teacher ends the exam now: saved answers are submitted');
+        $this->assertNotNull($fresh->finalized_at);
+        $this->assertNull($fresh->proctor_paused_at);
+        $this->assertDatabaseHas('student_assessment_answers', [
+            'student_id' => $seed['student']->id,
+            'school_assessment_id' => $seed['assessment']->id,
+            'status_answer' => 'submitted',
+        ]);
+        $this->assertNotNull(
+            \App\Models\StudentAssessmentSummary::where('student_id', $seed['student']->id)->first(),
+            'the summary is recomputed on terminate'
+        );
         $this->assertTrue($untouched->fresh()->expire_time->isFuture(), 'the other student keeps their time');
+        $this->assertEquals('in_progress', $untouched->fresh()->status);
 
         $event = end($this->proctor->events);
         $this->assertEquals('exam_stopped', $event['type']);
         $this->assertEquals($attempt->id, $event['attempt_id']);
         $this->assertArrayNotHasKey('audience', $event);
+    }
+
+    public function test_terminate_of_an_already_expired_attempt_records_timeout(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment'], [
+            'expire_time' => now()->subMinutes(10),
+        ]);
+
+        $this->assertEquals('ok', $this->callAttemptControl($seed, $attempt, 'terminate')->getData(true)['status']);
+        $this->assertEquals('timeout', $attempt->fresh()->status);
     }
 
     public function test_attempt_controls_are_refused_for_another_school(): void

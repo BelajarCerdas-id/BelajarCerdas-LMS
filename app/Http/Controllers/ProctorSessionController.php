@@ -11,7 +11,15 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Teacher controls for one exam: start, pause, resume, stop.
- * A pause does not consume time: resume pushes every running attempt's expire_time out by the pause length.
+ *
+ * Invariant: expire_time is only ever written as start_time + duration
+ * (ProctorService::openAttempt) and shifted forward by the exact pause
+ * length on resume. A stop NEVER touches attempts: every live client
+ * receives the exam_stopped event and finalizes itself through the normal
+ * /end path (which also saves the answer the student was typing when the
+ * stop hit). Rewriting expire_time to the stop instant corrupted
+ * in_progress attempts whose client was offline (stuck rows with a fake
+ * deadline) and destroyed the audit trail of the real deadline.
  */
 class ProctorSessionController extends Controller
 {
@@ -65,9 +73,11 @@ class ProctorSessionController extends Controller
                 $assessment->update(['proctor_paused_at' => null]);
                 $this->proctor->audit('session_resumed', $context + ['detail' => ['paused_seconds' => $seconds, 'attempts' => $extended]]);
             } else {
-                $ended = $this->endRunningAttempts($assessment->id, $now);
+                // attempts are finalized by their own clients through /end (triggered by
+                // the exam_stopped event); the server must not rewrite their deadline
+                $running = $this->runningAttempts($assessment->id)->count();
                 $assessment->update(['proctor_stopped_at' => $now, 'proctor_paused_at' => null]);
-                $this->proctor->audit('session_stopped', $context + ['detail' => ['attempts' => $ended]]);
+                $this->proctor->audit('session_stopped', $context + ['detail' => ['attempts' => $running]]);
             }
 
             return ['state' => ProctorService::sessionState($assessment->fresh())];
@@ -108,11 +118,6 @@ class ProctorSessionController extends Controller
         });
 
         return $count;
-    }
-
-    private function endRunningAttempts(int $assessmentId, $now): int
-    {
-        return $this->runningAttempts($assessmentId)->update(['expire_time' => $now]);
     }
 
     private function runningAttempts(int $assessmentId)

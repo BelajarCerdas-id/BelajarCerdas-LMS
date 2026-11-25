@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StudentAssessmentAnswer;
 use App\Models\StudentAssessmentAttempt;
 use App\Services\Proctor\ProctorService;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,11 @@ use Illuminate\Support\Facades\DB;
  * Per-student controls for one attempt: suspend, resume, terminate.
  * Mirrors ProctorSessionController but scoped to a single student.
  * Unlock is separate (ProctorUnlockController): a request that only the PIC can approve.
+ *
+ * Invariant: expire_time is never rewritten here. It is only ever
+ * start_time + duration (ProctorService::openAttempt) plus pause shifts on
+ * resume. Terminate finalizes the attempt through the normal end steps
+ * instead of corrupting the deadline.
  */
 class ProctorAttemptController extends Controller
 {
@@ -59,12 +65,31 @@ class ProctorAttemptController extends Controller
                 ]);
                 $this->proctor->audit('attempt_resumed', $context + ['detail' => ['paused_seconds' => $seconds]]);
             } else {
-                // terminate: same as the exam-wide stop, but for one student.
-                // Their countdown ends and the client auto-submits the saved answers.
+                // terminate: same intent as the exam-wide stop, but for one student the
+                // teacher wants the exam closed NOW, even if that student's client is
+                // gone. Finalize through the same steps the student's own /end would
+                // run: drafts become submitted, the attempt is finalized, the summary
+                // is recomputed. expire_time is NEVER rewritten: it stays the real
+                // start_time + duration deadline for the audit trail.
                 if ($attempt->status !== 'in_progress' || $attempt->finalized_at) {
                     return ['error' => 'Siswa ini tidak sedang mengerjakan.', 'code' => 422];
                 }
-                $attempt->update(['expire_time' => $now, 'proctor_paused_at' => null, 'last_heartbeat_at' => $now]);
+
+                StudentAssessmentAnswer::where('student_id', $attempt->student_id)
+                    ->where('school_assessment_id', $attempt->school_assessment_id)
+                    ->where('status_answer', 'draft')
+                    ->update(['status_answer' => 'submitted']);
+
+                $attempt->update([
+                    'status' => $attempt->expire_time && $attempt->expire_time->isPast() ? 'timeout' : 'submitted',
+                    'finalized_at' => $now,
+                    'proctor_paused_at' => null,
+                    'last_heartbeat_at' => $now,
+                ]);
+
+                app(\App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService::class)
+                    ->updateStudentAssessmentSummary($attempt->student_id, $attempt->SchoolAssessment);
+
                 $this->proctor->audit('attempt_terminated', $context);
             }
 
