@@ -1642,24 +1642,25 @@ $(document).ready(function () {
     // (previous user's timer/completion/duration keys) before reading any
     purgeForeignExamState();
 
-    const hasTimer = localStorage.getItem(START_KEY);
-    const isAlreadyCompleted = localStorage.getItem(examCompletedKey());
+    // A previous "Akhiri Assessment" on this browser left a completion
+    // flag. It must never silently finish the exam (examFinished = true
+    // would no-op startTimer with no visible feedback and kill the
+    // countdown for a fresh attempt): completion is decided by the
+    // server-driven form render, which shows the visible end-of-exam UI.
+    localStorage.removeItem(examCompletedKey());
 
-    if (hasTimer && !isAlreadyCompleted) {
+    const hasTimer = localStorage.getItem(START_KEY);
+
+    if (hasTimer) {
         examStarted = true;
         startTimer();
-    } else if (isAlreadyCompleted) {
-        // Exam was already completed — clean up any leftover timer state
-        examFinished = true;
-        localStorage.removeItem(examStartKey());
-        localStorage.removeItem(examExpireKey());
     }
 
     studentFormAssessment(0);
     checkAttemptStatus();
     // before the exam starts, the fullscreen overlay would cover the start dialog;
     // confirmStartExam() initializes it when the student starts
-    if (hasTimer && !isAlreadyCompleted) {
+    if (hasTimer) {
         initAntiCheatSystem();
     }
 
