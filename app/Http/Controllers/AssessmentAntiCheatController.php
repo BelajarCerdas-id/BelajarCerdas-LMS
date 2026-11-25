@@ -8,6 +8,7 @@ use App\Models\StudentAssessmentAnticheatViolation;
 use App\Models\StudentAssessmentAttempt;
 use App\Services\LMS\AssessmentSummaryService\AssessmentSummaryService;
 use App\Services\Proctor\ProctorService;
+use App\Helpers\ExamStateHeaders;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,22 +83,31 @@ class AssessmentAntiCheatController extends Controller
             ->first();
 
         if (!$attempt) {
-            return response()->json(['status' => 'error']);
+            return ExamStateHeaders::noStore(response()->json(['status' => 'error']));
         }
 
         if ($attempt->status === 'cheating' || ($this->autoLockEnabled($attempt) && $attempt->tab_switch_count >= $this->strikeLimit($attempt))) {
-            return response()->json([
+            return ExamStateHeaders::noStore(response()->json([
                 'status' => 'blocked',
                 'count' => $attempt->tab_switch_count,
                 'max_count' => $this->strikeLimit($attempt),
-            ]);
+            ]));
         }
 
-        return response()->json([
+        // never present a dead attempt clock as a healthy running exam: the
+        // unlock poll and any status consumer must see expired + remaining 0
+        $remaining = $attempt->expire_time
+            ? max(0, (int) ($attempt->expire_time->getTimestamp() - now()->getTimestamp()))
+            : null;
+
+        return ExamStateHeaders::noStore(response()->json([
             'status' => 'ok',
             'count' => $attempt->tab_switch_count,
             'max_count' => $this->strikeLimit($attempt),
-        ]);
+            'attempt_status' => $attempt->status,
+            'expired' => $remaining === 0,
+            'remaining_seconds' => $remaining,
+        ]));
     }
 
     public function heartbeat(Request $request, $role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId): JsonResponse

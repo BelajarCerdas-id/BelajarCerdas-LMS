@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ExamStateHeaders;
 use App\Helpers\TimezoneHelper;
 use App\Models\SchoolAssessment;
 use App\Services\Proctor\ProctorService;
@@ -558,7 +559,12 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = $attempt->expire_time;
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            // same deadline rule as /answer, /end and start-timer: the per-attempt
+            // clock wins when it ends EARLIER than the school window. The old gt()
+            // kept the page status 'active' (answers clickable) after the student's
+            // own clock had died while answer saves were rejected as expired — the
+            // mid-exam "Waktu Habis" loop reported on 2026-11-25.
+            if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }
@@ -588,7 +594,7 @@ class StudentAssessmentExamController extends Controller
             }
         });
 
-        return response()->json([
+        return ExamStateHeaders::noStore(response()->json([
             'data' => $questions,
             'questionsAnswer' => $questionsAnswer,
             'schoolAssessment' => $schoolAssessment,
@@ -611,7 +617,7 @@ class StudentAssessmentExamController extends Controller
             'assessment_title' => $assessment->SchoolAssessmentType->name,
             'semester' => $assessment->semester,
             'resultTestHref' => '/lms/:role/:schoolName/:schoolId/curriculum/:curriculumId/subject/:mapelId/learning/assessment/:assessmentTypeId/semester/:semester/assessment/:assessmentId/result-test'
-        ]);
+        ]));
     }
 
     public function startTImer($role, $schoolName, $schoolId, $curriculumId, $mapelId, $assessmentTypeId, $semester, $assessmentId)
@@ -676,12 +682,22 @@ class StudentAssessmentExamController extends Controller
 
         $attempt = app(ProctorService::class)->openAttempt($assessment, $userId);
 
-        return response()->json([
+        // Authoritative clock for the client: the countdown must be driven from the
+        // server's "now", not the device clock (skewed devices ended live exams with
+        // a premature "Waktu Habis" on 2026-11-25). remaining_seconds is clamped at
+        // 0 so a past expire can never present itself as a running exam; the client
+        // keeps responsibility for the auto-submit on a genuinely expired attempt.
+        $remaining = max(0, (int) ($attempt->expire_time->getTimestamp() - $schoolNow->getTimestamp()));
+
+        return ExamStateHeaders::noStore(response()->json([
             'status' => 'success',
             'start_time' => $attempt->start_time->timestamp * 1000,
             'expire_time' => $attempt->expire_time->timestamp * 1000,
-            'duration' => $assessment->duration
-        ]);
+            'duration' => $assessment->duration,
+            'server_now' => $schoolNow->timestamp * 1000,
+            'remaining_seconds' => $remaining,
+            'expired' => $remaining === 0,
+        ]));
     }
 
     
@@ -1050,12 +1066,25 @@ class StudentAssessmentExamController extends Controller
             if (!in_array($statusAttempt, ['timeout', 'submitted'], true)) {
                 $statusAttempt = $isExpired ? 'timeout' : 'submitted';
             }
-            // the server owns the clock: honor a client-claimed timeout only within a
-            // minute before the deadline (device clock skew); anything earlier — and
-            // any 'cheating' claim — is downgraded. Exam time ran out on the server,
-            // or the student submitted; nothing else can finalize an attempt.
+            // The server owns the clock. A client that claims its timer ran out while
+            // the server still shows more than the 1-minute skew grace must NOT be
+            // finalized: a wrong device clock (or a stale cached timer) then ends a
+            // live exam silently, which is exactly what happened on 2026-11-25
+            // (attempts 3062/3070/3074/3077/3085 finalized 42-52 minutes early and
+            // downgraded to 'submitted' while the students were still answering).
+            // Refuse, hand back the real remaining time, and let the client resync
+            // and continue. Real timeouts stay accepted: the grace band covers the
+            // client's auto-submit jitter (0-45s) and second-precision DB timestamps.
+            // A voluntary early submit ('submitted') is always honored.
             if ($statusAttempt === 'timeout' && !$isExpired && $endDate && $now->lt($endDate->copy()->subMinute())) {
-                $statusAttempt = 'submitted';
+                $lock->release();
+
+                return response()->json([
+                    'status' => 'still_running',
+                    'message' => 'Waktu ujian masih berjalan menurut jam server. Ujian dilanjutkan.',
+                    'expire_time' => $attempt->expire_time ? $attempt->expire_time->timestamp * 1000 : null,
+                    'remaining_seconds' => max(0, (int) abs($endDate->getTimestamp() - $now->getTimestamp())),
+                ], 422);
             }
 
             $totalExamDuration = $request->input('total_exam_duration');
@@ -1517,7 +1546,10 @@ class StudentAssessmentExamController extends Controller
 
         if ($attempt && $attempt->expire_time) {
             $attemptExpire = $attempt->expire_time;
-            if ($attemptExpire && (!$endDate || $attemptExpire->gt($endDate))) {
+            // same deadline rule as /answer, /end and start-timer: an attempt whose
+            // own clock has died must not be bounced back into the exam while the
+            // school window is technically still open.
+            if ($attemptExpire && (!$endDate || $attemptExpire->lt($endDate))) {
                 $endDate = $attemptExpire->copy()->addMinute();
             }
         }

@@ -379,6 +379,76 @@ class ProctorTest extends TestCase
         $this->assertDatabaseHas('student_assessment_attempts', ['student_id' => $seed['student']->id, 'status' => 'in_progress']);
     }
 
+    public function test_start_timer_hands_out_the_authoritative_server_clock(): void
+    {
+        $seed = $this->seedScenario();
+        $this->startExam($seed, $seed['student']);
+        $started = $this->startSessionAs($seed);
+        $this->decideEntries($seed, [['request_id' => $started['pending'][0]['request_id'], 'approve' => true]]);
+
+        $res = $this->startExam($seed, $seed['student']);
+        $body = $res->getData(true);
+
+        // the client must be able to drive its countdown from the server clock
+        // instead of the device clock (skewed devices ended live exams early)
+        $this->assertEquals('success', $body['status']);
+        $this->assertEqualsWithDelta(now()->getTimestamp() * 1000, $body['server_now'], 5000);
+        $this->assertGreaterThan(0, $body['remaining_seconds']);
+        $this->assertFalse($body['expired']);
+        $this->assertStringContainsString('no-store', $res->headers->get('Cache-Control'), 'exam state must never be cached');
+    }
+
+    public function test_start_timer_never_presents_a_past_expire_as_running(): void
+    {
+        $seed = $this->seedScenario();
+        $this->startExam($seed, $seed['student']);
+        $started = $this->startSessionAs($seed);
+        $this->decideEntries($seed, [['request_id' => $started['pending'][0]['request_id'], 'approve' => true]]);
+
+        // first call after admission creates the attempt
+        $first = $this->startExam($seed, $seed['student']);
+        $this->assertEquals('success', $first->getData(true)['status']);
+
+        $attempt = StudentAssessmentAttempt::where('student_id', $seed['student']->id)
+            ->where('school_assessment_id', $seed['assessment']->id)
+            ->first();
+
+        // inside the 1-minute skew grace: success contract is kept (the client
+        // auto-submits a genuinely expired attempt), but the state is explicit
+        $attempt->update(['expire_time' => now()->subSeconds(30)]);
+        $body = $this->startExam($seed, $seed['student'])->getData(true);
+        $this->assertEquals('success', $body['status']);
+        $this->assertTrue($body['expired']);
+        $this->assertEquals(0, $body['remaining_seconds']);
+
+        // well past the deadline the start-timer guard refuses to hand out a
+        // clock at all — a reload after expiry must never look like a running exam
+        $attempt->update(['expire_time' => now()->subMinutes(5)]);
+        $res = $this->startExam($seed, $seed['student']);
+        $this->assertEquals(422, $res->getStatusCode());
+        $this->assertEquals('expired', $res->getData(true)['status']);
+    }
+
+    public function test_exam_form_status_follows_the_attempt_clock_not_the_school_window(): void
+    {
+        $seed = $this->seedScenario();
+        $attempt = $this->attempt($seed['student'], $seed['assessment'], [
+            'expire_time' => now()->subMinute(),
+        ]);
+        // the school window is still wide open
+        $seed['assessment']->update(['end_date' => now()->addHour()]);
+
+        $this->actingAs($seed['student']);
+        $res = app(StudentAssessmentExamController::class)->studentAssessmentExamForm(
+            'Siswa', self::SCHOOL, $seed['partner']->id, $seed['kurikulum']->id,
+            $seed['mapel']->id, $seed['type']->id, 1, $seed['assessment']->id
+        );
+
+        $body = $res->getData(true);
+        $this->assertEquals('expired', $body['status'], 'the exam page must lock once the attempt clock dies');
+        $this->assertStringContainsString('no-store', $res->headers->get('Cache-Control'));
+    }
+
     public function test_denied_student_cannot_enter_the_exam(): void
     {
         $seed = $this->seedScenario();
