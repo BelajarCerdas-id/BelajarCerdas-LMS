@@ -22,5 +22,3 @@
 
 <script src="{{ asset('assets/js/features/lms/components/question-bank-management/form-action-question-bank-edit.js') }}"></script> <!--- form action question bank edit ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/question-bank/review-question-pg-listener.js') }}"></script> <!--- pusher listener insert bank soal and edit soal in bankSoal detail ---->

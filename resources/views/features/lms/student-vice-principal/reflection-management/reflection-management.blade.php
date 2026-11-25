@@ -211,5 +211,3 @@
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/reflection-management/paginate-reflection-management-history-recent.js') }}"></script> <!--- paginate reflection management history recent ---->
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/reflection-management/daily-reflection-live-preview.js') }}"></script> <!--- paginate reflection management history recent ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/student-vice-principal/daily-reflection/daily-reflection-live-preview-listener.js') }}"></script> <!--- pusher listener daily reflection live preview ---->

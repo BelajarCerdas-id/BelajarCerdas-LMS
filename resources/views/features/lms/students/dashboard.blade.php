@@ -1246,8 +1246,6 @@
 <script src="{{ asset('assets/js/features/lms/student/dashboard/paginate-student-assessment-cheating-history.js') }}"></script>
 <script src="{{ asset('assets/js/features/lms/student/dashboard/daily-reflection/daily-reflection-form.js') }}"></script>
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/student/daily-reflection/daily-reflection-form-listener.js') }}"></script> <!--- pusher listener student daily reflection form ---->
 
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }

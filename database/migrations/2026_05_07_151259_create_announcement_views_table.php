@@ -17,13 +17,16 @@ return new class extends Migration
             // Relasi ke tabel pengumuman (kalau pengumuman dihapus, riwayat bacanya ikut terhapus)
             $table->foreignId('announcement_id')->constrained('announcements')->onDelete('cascade');
             
-            // ID Siswa yang membaca
-            $table->unsignedBigInteger('student_id');
+            // ID user (siswa/guru) yang membaca — AnnouncementView, isReadBy()
+            // and both mark-read endpoints all write user_id; the column was
+            // mistakenly created as student_id, which made the qualified
+            // announcement_views.user_id queries fail on fresh databases
+            $table->unsignedBigInteger('user_id');
             
             $table->timestamps();
 
-            // KUNCI PENTING: Mencegah 1 siswa dihitung 2 kali di pengumuman yang sama
-            $table->unique(['announcement_id', 'student_id']);
+            // KUNCI PENTING: Mencegah 1 user dihitung 2 kali di pengumuman yang sama
+            $table->unique(['announcement_id', 'user_id']);
         });
     }
 

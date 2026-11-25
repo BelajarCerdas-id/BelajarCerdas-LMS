@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Administrator;
 
+use App\Helpers\AllowedEmailRule;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolFoundation;
 use App\Models\SchoolFoundationFinanceAccess;
@@ -180,7 +181,7 @@ class FoundationManagementController extends Controller
             'email' => [
                 'required',
                 'unique:user_accounts,email',
-                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+                AllowedEmailRule::regex('foundation_management'),
             ],
             'password' => 'required',
 

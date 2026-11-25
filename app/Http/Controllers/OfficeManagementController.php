@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OfficeAccountManagement;
+use App\Helpers\AllowedEmailRule;
 use App\Models\OfficeProfile;
 use App\Models\UserAccount;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class OfficeManagementController extends Controller
                 'required',
                 'email',
                 'unique:user_accounts,email',
-                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+                AllowedEmailRule::regex('office_management'),
             ],
             'no_hp' => 'required',
             'password' => 'required',
@@ -93,7 +94,7 @@ class OfficeManagementController extends Controller
             'email' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._-]+@(belajar|belajarcerdas|gmail)\.(id|com)$/',
+                AllowedEmailRule::regex('office_management'),
                 Rule::unique('user_accounts', 'email')->ignore($userAccountId),
             ],
             'no_hp' => [

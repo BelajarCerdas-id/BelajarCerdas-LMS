@@ -115,5 +115,3 @@
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/syllabus-services/list-kelas-listener.js') }}"></script> <!--- pusher listener list kelas ---->

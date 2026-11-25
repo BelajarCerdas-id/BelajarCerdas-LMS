@@ -355,5 +355,3 @@
 <script src="{{ asset('assets/js/components/dependent-dropdown/kurikulum-service-dropdown.js') }}"></script> <!--- dependent dropdown service ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/content-management/lms-content-management-listener.js') }}"></script>

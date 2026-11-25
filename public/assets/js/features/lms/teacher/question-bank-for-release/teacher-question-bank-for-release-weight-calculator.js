@@ -1,15 +1,28 @@
 function calculateTotal() {
     const totalWeightEl = document.getElementById('total-weight'); // Elemen tampilan total
+
+    // Halaman ini sudah memakai UI bobot di form-teacher-question-bank-for-release.js
+    // (#question-release-total-weight-label). Jika elemen lama tidak ada, no-op saja.
+    if (!totalWeightEl) {
+        return;
+    }
+
     const totalWeightInput = document.getElementById('total-weight-input'); // Input hidden total
     const errorWeight = document.getElementById('error-total_weight'); // Elemen error total
     const progressBar = document.getElementById('weight-progress'); // Bar progress
 
+    if (!totalWeightInput || !errorWeight || !progressBar) {
+        return;
+    }
+
     let total = 0; // Inisialisasi total
 
-    selectedQuestions.forEach(val => {
-        const weight = parseInt(val) || 0;
-        total += weight;
-    });
+    if (typeof selectedQuestions !== 'undefined') {
+        selectedQuestions.forEach(val => {
+            const weight = parseInt(val) || 0;
+            total += weight;
+        });
+    }
 
     totalWeightEl.textContent = total >= 1000 ? "999+" : total; // Update text total
     totalWeightInput.value = total; // Update input hidden total
@@ -68,5 +81,9 @@ $(document).on('input', '.question-weight-input', function () {
 
 // Hitung awal saat load halaman
 $(document).ready(function () {
+    if (!document.getElementById('total-weight')) {
+        return; // Elemen UI lama tidak ada di halaman ini; tidak ada yang perlu dihitung.
+    }
+
     calculateTotal();
 });

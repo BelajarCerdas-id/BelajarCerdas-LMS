@@ -4,7 +4,7 @@
 # /www/server/panel/plugin/supervisor/profile/laravel-octane-demo.ini).
 # Tuned flags live in that ini; use supervisor for start/stop so frankenphp
 # is killed with its parent (stopasgroup/killasgroup).
-# Run as root on the server, or: ssh www-admin@82.197.69.63 'sudo -S ...'
+# Run as root on the server, or: ssh <user>@<server> 'sudo -S ...'
 SUP=/www/server/panel/pyenv/bin/supervisorctl
 $SUP restart laravel-octane-demo:laravel-octane-demo_00
 sleep 3

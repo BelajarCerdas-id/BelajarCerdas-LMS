@@ -1915,13 +1915,6 @@ function renderTeacherQuestionReleaseSelectedQuestionCard(question, index) {
     const questionType = question.tipe_soal || question.question_type || question.type || 'Soal';
     const hasAnswers = question.has_answers === true;
 
-    console.log('DEBUG SELECTED QUESTION:', {
-        id: question.id,
-        assignment_id: question.assignment_id,
-        has_answers: question.has_answers,
-        hasAnswers: hasAnswers
-    });
-
     return `
         <div class="rounded-xl border border-gray-200 bg-white p-3">
             <div class="flex items-start gap-3">
@@ -2848,11 +2841,6 @@ function loadTeacherQuestionReleaseStep3() {
         });
 
         teacherQuestionReleaseLoadedCompositionKey = compositionKey;
-
-        console.log(
-            'DEBUG RESTORED SELECTED DATA:',
-            Array.from(teacherQuestionReleaseSelectedQuestionData.entries())
-        );
     }
 
     loading.removeClass('hidden');
@@ -3883,12 +3871,6 @@ function bindTeacherQuestionReleaseEvents() {
 
         const id = String($(this).attr('data-question-release-remove'));
         const hasAnswers = $(this).attr('data-question-has-answers') === 'true';
-
-        console.log('DEBUG REMOVE BUTTON:', {
-            questionId: id,
-            hasAnswers: hasAnswers,
-            rawValue: $(this).attr('data-question-has-answers')
-        });
 
         if (hasAnswers) {
             Swal.fire({

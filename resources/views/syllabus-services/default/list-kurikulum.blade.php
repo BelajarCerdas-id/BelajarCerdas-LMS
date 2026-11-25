@@ -318,5 +318,3 @@
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 <script src="{{ asset('assets/js/components/preview/excel-upload-preview.js') }}"></script> <!--- show excel ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/syllabus-services/list-kurikulum-listener.js') }}"></script> <!--- pusher listener list kurikulum ---->

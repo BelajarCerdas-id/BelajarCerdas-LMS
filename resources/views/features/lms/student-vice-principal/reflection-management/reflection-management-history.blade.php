@@ -200,5 +200,3 @@
 
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/reflection-management/paginate-reflection-management-history.js') }}"></script> <!--- paginate reflection management history ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/student-vice-principal/daily-reflection/daily-reflection-history-listener.js') }}"></script> <!--- pusher listener daily reflection history ---->

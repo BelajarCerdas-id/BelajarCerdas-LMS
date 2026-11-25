@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lms\Academic;
 
 use App\Events\LmsManagementClass;
+use App\Helpers\AllowedEmailRule;
 use App\Services\ClassName\ClassNameService;
 use App\Http\Controllers\Controller;
 use App\Models\Fase;
@@ -110,7 +111,7 @@ class ClassController extends Controller
         $rules = [
             'fase_id' => 'required',
             'kelas_id' => 'required',
-            'akun_wali_kelas' => 'required|email|regex:/^[A-Za-z0-9._%+-]+@belajarcerdas\.id$/',
+            'akun_wali_kelas' => 'required|email|' . AllowedEmailRule::regex('class_wali_kelas'),
             'tahun_ajaran' => 'required',
         ];
 
@@ -188,7 +189,7 @@ class ClassController extends Controller
         $rules = [
             'fase_id' => 'required',
             'kelas_id' => 'required',
-            'akun_wali_kelas' => 'required|email|regex:/^[A-Za-z0-9._%+-]+@belajarcerdas\.id$/',
+            'akun_wali_kelas' => 'required|email|' . AllowedEmailRule::regex('class_wali_kelas'),
             'tahun_ajaran' => 'required',
         ];
 

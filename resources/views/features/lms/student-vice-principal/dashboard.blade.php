@@ -286,5 +286,3 @@
 
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/dashboard/load-student-reflection-chart.js') }}"></script> <!--- load student reflection chart ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/student-vice-principal/daily-reflection/daily-reflection-live-preview-dashboard-listener.js') }}"></script> <!--- pusher listener daily reflection dashboard ---->

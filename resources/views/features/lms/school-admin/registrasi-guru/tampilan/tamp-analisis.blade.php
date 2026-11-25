@@ -3182,14 +3182,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (text) text.textContent = 'Sembunyikan Komentar';
         }
 
-        console.log(
-            'CELL TERPILIH:',
-            {
-                cellId: cellId,
-                coordinate: coordinate
-            }
-        );
-
     }
 
 
@@ -4017,48 +4009,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             );
 
                         }
-
-
-                        /*
-                        |----------------------------------------------------------
-                        | DEBUG
-                        |----------------------------------------------------------
-                        */
-
-                        console.log(
-                            'COMMENT DATA:',
-                            {
-                                academic_document_cell_id:
-                                    formData.get(
-                                        'academic_document_cell_id'
-                                    ),
-
-                                comment_text:
-                                    formData.get(
-                                        'comment_text'
-                                    ),
-
-                                coordinate:
-                                    formData.get(
-                                        'coordinate'
-                                    ),
-
-                                selected_text:
-                                    formData.get(
-                                        'selected_text'
-                                    ),
-
-                                anchor_key:
-                                    formData.get(
-                                        'anchor_key'
-                                    ),
-
-                                is_revision:
-                                    formData.get(
-                                        'is_revision'
-                                    )
-                            }
-                        );
 
 
                         /*

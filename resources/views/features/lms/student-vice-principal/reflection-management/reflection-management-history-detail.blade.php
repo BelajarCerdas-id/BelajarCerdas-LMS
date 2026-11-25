@@ -468,5 +468,3 @@
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/reflection-management/history-detail/load-reflection-detail-chart.js') }}"></script> <!--- load detail chart ---->
 <script src="{{ asset('assets/js/features/lms/student-vice-principal/reflection-management/history-detail/paginate-reflection-detail-student-answer.js') }}"></script> <!--- load detail student answer ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/student-vice-principal/daily-reflection/daily-reflection-history-detail-listener.js') }}"></script> <!--- pusher listener daily reflection history detail ---->

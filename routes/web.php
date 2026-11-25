@@ -186,13 +186,7 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
             Route::put('/library/update/{id}', [LibraryController::class, 'update']); // Fallback method
             Route::get('/library/row/{id}', [LibraryController::class, 'row'])->name('library.row');
 
-            // PPT Management
-            Route::post('/library/ppt/store', [LibraryController::class, 'storePpt'])->name('ppt.store');
-            Route::put('/library/ppt/update/{id}', [LibraryController::class, 'updatePpt'])->name('ppt.update');
-            Route::delete('/library/ppt/delete/{id}', [LibraryController::class, 'deletePpt'])->name('ppt.delete');
-
             // Chapter & Topik Management
-            Route::post('/library/chapter/store', [LibraryController::class, 'storeChapter'])->name('library.chapter.store');
             Route::post('/library/topik/store', [LibraryController::class, 'storeTopik'])->name('library.topik.store');
             Route::put('/library/topik/update/{id}', [LibraryController::class, 'updateTopik'])->name('library.topik.update');
             Route::get('/library/get-topik', [LibraryController::class, 'getTopikByMapel']);
@@ -238,8 +232,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/student/library/video', [LibraryController::class, 'videoLibrary'])->name('student.library.video');
 
         Route::get('/lms/student/library/read/{id}', [LibraryController::class, 'readBook'])->name('student.library.read');
-
-        Route::post('/lms/student/library/submit', [LibraryController::class, 'submitTask'])->name('student.library.submit');
 
         Route::get('/lms/student/library/mapel/{mapel}', [LibraryController::class, 'mapelDetail'])->where('mapel', '[0-9]+')->name('student.library.mapel');
 
@@ -380,6 +372,7 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
             Route::post('/assessment/{assessmentId}/student/{studentId}/question/{questionId}/update', [AssessmentDebugController::class, 'updateQuestionGradeAndAnswer'])->name('admin.assessmentDebug.updateQuestionGradeAndAnswer');
             Route::post('/assessment/{assessmentId}/student/{studentId}/update-exam-grades', [AssessmentDebugController::class, 'updateExamGradesAndAnswers'])->name('admin.assessmentDebug.updateExamGradesAndAnswers');
             Route::post('/attempt/{id}/update-exam-grades', [AssessmentDebugController::class, 'updateAttemptExamGrades'])->name('admin.assessmentDebug.updateAttemptExamGrades');
+            Route::post('/{id}/reset-answers', [AssessmentDebugController::class, 'resetAnswers'])->name('admin.assessmentDebug.resetAnswers');
             Route::delete('/{id}', [AssessmentDebugController::class, 'deleteAttempt'])->name('admin.assessmentDebug.delete');
         });
     
@@ -528,9 +521,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::put('/lms/school-subscription/management-class/{id}/activate-class', [ClassController::class, 'lmsActivateClass'])->name('lms.class.activate');
         Route::put('/lms/school-subscription/management-class/{id}/activate-student-in-class', [StudentSchoolClassController::class, 'lmsActivateStudentInClass'])->name('lms.studentInClass.activate');
 
-        // routes load subject conversion
-        Route::get('/lms/{role}/school-subscription/{schoolName}/{schoolId}/academic-management/management-role-account/{managedRole}/management-class/{classId}/management-students/load-subject-conversion', [StudentSchoolClassController::class, 'loadSubjectConversion'])->name('lms.managementStudents.loadSubjectConversion');
-    
         // routes promote class, repeat class, move class, move major
         Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/promote-class', [StudentSchoolClassController::class, 'lmsManagementPromoteClass'])->name('lms.managementPromoteClass.create');
         Route::post('/lms/school-subscription/{schoolName}/{schoolId}/management-role-account/{role}/management-class/{classId}/repeat-class', [StudentSchoolClassController::class, 'lmsManagementRepeatClass'])->name('lms.managementRepeatClass.create');
@@ -776,7 +766,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/activate-account/{userId}', [FoundationManagementController::class, 'schoolFoundationAccessControlActivate'])->name('lms.schoolFoundation.access-control.activate'); 
         Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/toggle-access/{profileId}', [FoundationManagementController::class, 'toggleSchoolFoundationAccessControl'])->name('lms.school-foundation.access-control.toggle'); 
         Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/create-user-account', [FoundationManagementController::class, 'foundationCreateUser'])->name('lms.schoolFoundation.access-control.create-user'); 
-        Route::post('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user-account', [FoundationManagementController::class, 'foundationAssignUser'])->name('lms.schoolFoundation.access-control.assign-user'); 
         Route::put('/lms/{role}/school-foundation/manage/access-control/{schoolFoundationId}/assign-user/{userId}', [FoundationManagementController::class, 'assignExistingAccount']);
         Route::post('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/create-link', [FoundationManagementController::class, 'schoolFoundationFinanceAccessStore'])->name('lms.schoolFoundation.finance-access-control.store'); 
         Route::put('/lms/{role}/school-foundation/manage/finance-access-control/{schoolFoundationId}/status-access-control/activate/{linkId}', [FoundationManagementController::class, 'schoolFoundationFinanceAccessActivate'])->name('lms.schoolFoundation.finance-access-control.activate'); 
@@ -894,7 +883,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         // results
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/result-test', [StudentAssessmentExamController::class, 'studentResultAssessment'])->name('lms.studentAssessment.result');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/curriculum/{curriculumId}/subject/{mapelId}/learning/assessment/{assessmentTypeId}/semester/{semester}/assessment/{assessmentId}/project-result', [StudentAssessmentExamController::class, 'studentProjectResult'])->name('lms.studentProjectAssessment.result');
-        Route::get('/lms/{schoolId}/teacher-schedule/get-data/{classId}', [\App\Http\Controllers\TeacherInformationController::class, 'getScheduleDataAjax']);
         
         // polling siswa
         Route::post('/lms/student/polling/vote', [StudentDashboardController::class, 'submitVote'])->name('lms.studentPolling.vote');
@@ -1022,9 +1010,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list', [SubjectAttendanceController::class, 'subjectAttendanceMeetingList'])->name('lms.teacherSubjectAttendanceMeetingList.view');
         Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management', [SubjectAttendanceController::class, 'subjectAttendanceMeetingManagement'])->name('lms.teacherSubjectAttendanceMeetingManagement.view');
     
-        // subject attendance data
-        Route::get('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/data', [SubjectAttendanceController::class, 'getSubjectAttendanceData'])->name('lms.teacherSubjectAttendance.data');
-    
         // crud
         // announcement
         Route::post('/lms/{role}/{schoolName}/{schoolId}/subject-attendance/classes/subject-teacher/{subjectTeacherId}/meeting-list/{meetingNumber}/semester/{semester}/meeting-management/announcement-store', [SubjectAttendanceController::class, 'announcementStore'])->name('lms.teacherSubjectAttendanceMeetingManagement.announcement.store');
@@ -1111,7 +1096,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/guru/api/get-students/{classId}', [\App\Http\Controllers\LmsController::class, 'getStudentsForAttendance'])
             ->name('lms.guru.get_students');
         Route::post('/lms/teacher/pengumuman/store', [App\Http\Controllers\LmsController::class, 'storePengumuman'])->name('lms.teacher.pengumuman.store');
-        Route::post('/lms/student/announcement/mark-as-read', [App\Http\Controllers\LmsController::class, 'markAsRead'])->name('lms.student.announcement.read');
         Route::get('/lms/{role}/sekolah/{schoolName}/{schoolId}/kelas/{scheduleId}', [\App\Http\Controllers\LmsController::class, 'classDetailView'])
             ->name('lms.teacher.class.detail');
         Route::post('/lms/teacher/attendance/store', [App\Http\Controllers\LmsController::class, 'saveAttendance'])->name('lms.teacher.attendance.store');
@@ -1201,9 +1185,6 @@ Route::middleware([AuthMiddleware::class, EnsureRoleAccess::class])->group(funct
         Route::get('/lms/{role}/foundation/school-user/chart-by-school/{foundationId?}', [SchoolUserController::class, 'schoolUserChartBySchool'])->name('lms.foundation.schoolUser.chartBySchool');
         Route::get('/lms/{role}/foundation/school-user/chart-by-role/{foundationId?}', [SchoolUserController::class, 'schoolUserChartByRole'])->name('lms.foundation.schoolUser.chartByRole');
         Route::get('/lms/{role}/foundation/school-user/chart-by-status/{foundationId?}', [SchoolUserController::class, 'schoolUserChartByStatus'])->name('lms.foundation.schoolUser.chartByStatus');
-
-        // filtering endpoint
-        Route::get('/lms/{role}/foundation/school-user/filter/{foundationId?}', [SchoolUserController::class, 'filterSchoolUser'])->name('lms.foundation.schoolUser.filter');
 
         // paginate
         Route::get('/lms/{role}/foundation/school-teacher-performance/paginate/{foundationId?}', [TeacherPerformanceController::class, 'paginateSchoolTeacherPerformance'])->name('lms.foundation.teacherPerformance.paginate');
@@ -1712,22 +1693,6 @@ Route::prefix(
 
     /*
     |--------------------------------------------------------------------------
-    | GET COMMENTS BAGAN ANALISIS
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/bagan-analisis/cells/{cell}/comments',
-        [
-            AcademicDocumentController::class,
-            'baganAnalisisComments'
-        ]
-    )
-        ->whereNumber('cell')
-        ->name('baganAnalisis.comments');
-
-    /*
-    |--------------------------------------------------------------------------
     | RESOLVE COMMENT / REVISI
     |--------------------------------------------------------------------------
     */
@@ -1757,22 +1722,6 @@ Route::prefix(
     )
         ->whereNumber('document')
         ->name('baganAnalisis.delete');
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHOW BAGAN ANALISIS
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/bagan-analisis/{document}',
-        [
-            AcademicDocumentController::class,
-            'showBaganAnalisis'
-        ]
-    )
-        ->whereNumber('document')
-        ->name('baganAnalisis.show');
 
 
     /*

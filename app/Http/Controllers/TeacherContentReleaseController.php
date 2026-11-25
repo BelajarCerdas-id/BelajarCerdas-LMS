@@ -451,7 +451,7 @@ class TeacherContentReleaseController extends Controller
         ]);
     }
 
-    public function TeacherContentForReleaseReviewContent($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId, $meetingContentId)
+    public function teacherContentForReleaseReviewContent($role, $schoolName, $schoolId, $schoolClassId, $mapelId, $semester, $serviceId, $meetingContentId)
     {
         $items = LmsMeetingContent::with('LmsContent.LmsContentItem.ServiceRule', 'LmsContent.Service')->where('id', $meetingContentId)->get();
 

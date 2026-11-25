@@ -3733,6 +3733,55 @@ public function browseAcademicDocuments(
     ]);
 }
 
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW SHARED DOCUMENT - WORD
+    |--------------------------------------------------------------------------
+    */
+
+    public function viewSharedDocument(
+        Request $request,
+        string $role,
+        string $schoolName,
+        string $schoolId,
+        string $type,
+        string $documentId
+    ) {
+        $this->abortIfCannotView();
+
+        $user = Auth::user();
+
+        abort_unless(
+            $user,
+            401,
+            'Pengguna belum login.'
+        );
+
+        $documentType = match (strtolower(trim($type))) {
+            'rppm' => self::RPPM_TYPE,
+            'refleksi-guru' => self::REFLEKSI_TYPE,
+            default => abort(404, 'Jenis dokumen tidak ditemukan.'),
+        };
+
+        $document =
+            $this->getTypedDocumentOrFail(
+                (int) $documentId,
+                (int) $schoolId,
+                $documentType
+            );
+
+        return $this->renderWordEditor(
+            $document,
+            $user,
+            $role,
+            $schoolName,
+            (int) $schoolId,
+            $documentType === self::RPPM_TYPE
+                ? self::RPPM_VIEW
+                : self::REFLEKSI_VIEW
+        );
+    }
+
 public function saveArchive(
     Request $request,
     string $role,
