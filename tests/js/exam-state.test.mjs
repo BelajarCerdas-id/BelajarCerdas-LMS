@@ -482,3 +482,48 @@ test('a pre-start poll that reports expired stops waiting without redirecting', 
     s.intervals.at(-1)();
     assert.equal(s.ajaxCalls.filter((c) => /check-assessment-status/.test(c.url)).length, checks);
 });
+
+// ---- cache-flush preserver (components/script.blade.php) ----
+
+test('the cache-flush preserver keeps only the current user\'s exam keys', () => {
+    const blade = fs.readFileSync(
+        path.join(path.dirname(fileURLToPath(import.meta.url)), '../../resources/views/components/script.blade.php'),
+        'utf8');
+    const match = blade.match(/bcExamKeysToPreserve:start[^\n]*\n([\s\S]*?)bcExamKeysToPreserve:end/);
+    assert.ok(match, 'the preserver function is inlined in the blade');
+
+    const ctx = {};
+    vm.createContext(ctx);
+    vm.runInContext(match[1], ctx);
+    const preserve = vm.runInContext('bcExamKeysToPreserve', ctx);
+
+    const seed = {
+        // current user's exam state — preserved
+        'timer_assessment_test_start_516_u42': '6000',
+        'timer_assessment_test_expire_516_u42': '7000',
+        'duration_9_u42': '7',
+        'assessment_516_all_answered_u42': '1',
+        // UI key — preserved
+        'bc_sidebar_width': '280',
+        // legacy and other-user exam state — purged by the flush
+        'timer_assessment_test_start_516': '1000',
+        'timer_assessment_test_expire_516_u7': '4000',
+        'duration_9': '5',
+        'duration_9_u7': '6',
+        'assessment_516_all_answered': '1',
+        'assessment_516_all_answered_u7': '1',
+        // re-set by the blade after the flush anyway
+        'app_client_cache_version': '3',
+    };
+    const kept = preserve(createStorage(seed), '42');
+
+    for (const [k, v] of Object.entries(seed)) {
+        const expectKept = k.endsWith('_u42') || k === 'bc_sidebar_width';
+        assert.equal(k in kept, expectKept, `key ${k}`);
+        if (expectKept) assert.equal(kept[k], v);
+    }
+
+    // not logged in (login page): only the UI key survives, never exam state
+    const anon = preserve(createStorage(seed), '');
+    assert.deepEqual(Object.keys(anon), ['bc_sidebar_width']);
+});

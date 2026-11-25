@@ -32,14 +32,32 @@
                     });
                 }
 
-                // Preserve active exam timer if user is in an active test
-                var preservedKeys = {};
-                for (var i = 0; i < localStorage.length; i++) {
-                    var k = localStorage.key(i);
-                    if (k && (k.indexOf('timer_assessment_test_') === 0 || k.indexOf('duration_') === 0 || k === 'bc_sidebar_width')) {
-                        preservedKeys[k] = localStorage.getItem(k);
+                // Preserve the CURRENT user's active exam state across the flush.
+                // Exam keys are user-scoped (examStateKey in anticheat-core:
+                // timer_assessment_test_*_u<id>, assessment_*_all_answered_u<id>,
+                // duration_*_u<id>). Keep only this user's suffixed keys; foreign
+                // and legacy (unsuffixed) exam keys fall through to the clear()
+                // below, so a shared lab machine never carries one student's exam
+                // state into the next login.
+                // --- bcExamKeysToPreserve:start (unit-tested in tests/js/exam-state.test.mjs) ---
+                function bcExamKeysToPreserve(storage, userId) {
+                    var suffix = userId ? '_u' + userId : null;
+                    var preserved = {};
+                    for (var i = 0; i < storage.length; i++) {
+                        var k = storage.key(i);
+                        if (!k) continue;
+                        var keep = (k === 'bc_sidebar_width');
+                        if (!keep && suffix && k.indexOf(suffix) === k.length - suffix.length) {
+                            keep = k.indexOf('timer_assessment_test_') === 0
+                                || k.indexOf('duration_') === 0
+                                || /^assessment_\d+_all_answered/.test(k);
+                        }
+                        if (keep) preserved[k] = storage.getItem(k);
                     }
+                    return preserved;
                 }
+                // --- bcExamKeysToPreserve:end ---
+                var preservedKeys = bcExamKeysToPreserve(localStorage, '{{ Auth::check() ? Auth::id() : '' }}');
 
                 localStorage.clear();
                 sessionStorage.clear();
