@@ -86,6 +86,37 @@ function purgeForeignExamState() {
     } catch (e) {}
 }
 
+// ---- server clock anchor ----
+// Lab machine clocks can be minutes (or more) off, which used to shorten
+// real exams: remaining time was always computed as server expire minus a
+// possibly skewed Date.now(). Anchor the client to the server clock
+// (form response server_now_iso, or start-timer server_now_ms) and use
+// the corrected "now" for every expiry decision.
+var examClockOffsetMs = null;
+
+function setExamClockOffset(serverNowMs, clientNowMs) {
+    if (typeof serverNowMs !== 'number' || !isFinite(serverNowMs)) return;
+    examClockOffsetMs = serverNowMs - (typeof clientNowMs === 'number' ? clientNowMs : Date.now());
+}
+function examClockTrusted() {
+    return typeof examClockOffsetMs === 'number';
+}
+function serverNowMs() {
+    return Date.now() + (examClockOffsetMs || 0);
+}
+// accepts a server response carrying server_now_ms (epoch ms) or
+// server_now_iso (ISO 8601) and anchors the clock to it
+function applyExamServerClock(response) {
+    if (!response) return;
+    if (typeof response.server_now_ms === 'number') {
+        return setExamClockOffset(response.server_now_ms, Date.now());
+    }
+    if (response.server_now_iso) {
+        var parsed = Date.parse(response.server_now_iso);
+        if (!isNaN(parsed)) setExamClockOffset(parsed, Date.now());
+    }
+}
+
 window.isSelectingFile = false;
 
 window.setSelectingFile = function (active) {

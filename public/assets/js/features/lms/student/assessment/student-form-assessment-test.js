@@ -1517,6 +1517,9 @@ function studentFormAssessment(selectedIndex = 0, forceFetch = false) {
         url: refreshUrl,
         method: 'GET',
         success: function (response) {
+            // anchor the client clock to the server (lab machine clocks can
+            // be skewed; every expiry decision uses the corrected "now")
+            applyExamServerClock(response);
             cachedFormResponse = response;
             renderAssessmentFormContent(selectedIndex, cachedFormResponse);
         }
@@ -1549,6 +1552,7 @@ $(document).on('click', '#btn-refresh-exam-questions, .btn-refresh-questions-act
         url: refreshUrl,
         method: 'GET',
         success: function (response) {
+            applyExamServerClock(response);
             cachedFormResponse = response;
             const validIndex = (response.data && targetIndex < response.data.length) ? targetIndex : 0;
             currentQuestionIndex = validIndex;

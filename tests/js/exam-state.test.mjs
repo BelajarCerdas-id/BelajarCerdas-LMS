@@ -141,3 +141,98 @@ test('exam state keys are written scoped to the current user', () => {
     assert.equal(s.storage.getItem('timer_assessment_test_start_516'), null, 'no unscoped key written');
     assert.equal(s.swalTitles.length, 0, 'no modal when time remains');
 });
+
+test('countdown hitting zero does not auto-submit while the server says time remains', () => {
+    const s = createSandbox();
+    const expire = s.clock + 90 * 60 * 1000;
+
+    s.run('startTimer()');
+    s.timerRequests()[0].success({ status: 'success', start_time: s.clock, expire_time: expire, duration: 90 });
+    const countdown = s.intervals.at(-1);
+    assert.ok(countdown, 'countdown registered');
+
+    // the lab machine clock runs 60 minutes fast; the countdown drains
+    // while the server still has half the exam left
+    s.advance(60 * 60 * 1000);
+    // the form fetch anchors the client clock to the server mid-exam
+    s.run(`setExamClockOffset(${s.clock - 60 * 60 * 1000}, ${s.clock})`);
+    for (let i = 0; i < 5401; i++) countdown();
+
+    assert.ok(s.swalTitles.includes('Memeriksa sisa waktu'), 'visible verification modal');
+    s.timerRequests()[1].success({ status: 'success', start_time: s.clock - 60 * 60 * 1000, expire_time: expire, duration: 90 });
+
+    assert.equal(s.submitCount, 0, 'no auto-submit while the server says time remains');
+    assert.notEqual(s.timerEl.textContent, 'Waktu Habis');
+    assert.equal(s.get('examFinished'), false);
+    assert.ok(s.intervals.at(-1), 'countdown resynced to the server expire');
+    assert.equal(s.get('verifyingExpiry'), false);
+    assert.equal(s.get('isWarningModalOpen'), false, 'verification modal closed');
+});
+
+test('an unanchored clock never ends the exam off local state alone (grace pulse)', () => {
+    const s = createSandbox();
+
+    // expire already past on the client, server still within its
+    // 1-minute admit grace, and no server clock anchor yet
+    s.run('startTimer()');
+    const expire = s.clock - 30 * 1000;
+    s.timerRequests()[0].success({ status: 'success', start_time: s.clock - 60 * 1000, expire_time: expire, duration: 90 });
+
+    s.timerRequests()[1].success({ status: 'success', start_time: s.clock - 60 * 1000, expire_time: expire, duration: 90 });
+
+    assert.equal(s.submitCount, 0, 'no auto-submit without a server confirmation');
+    assert.notEqual(s.timerEl.textContent, 'Waktu Habis');
+    assert.ok(s.intervals.at(-1), 'grace pulse re-checks instead of submitting');
+});
+
+test('auto-submit still fires when the server confirms real expiry', () => {
+    const s = createSandbox();
+    const expire = s.clock + 60 * 1000;
+
+    s.run(`setExamClockOffset(${s.clock}, ${s.clock})`); // trusted clock
+    s.run('startTimer()');
+    s.timerRequests()[0].success({ status: 'success', start_time: s.clock, expire_time: expire, duration: 1 });
+    const countdown = s.intervals.at(-1);
+
+    for (let i = 0; i < 61; i++) countdown();
+
+    // the re-check: the server itself reports the assessment as expired
+    s.timerRequests()[1].error({ status: 422, responseJSON: { status: 'expired', message: 'Assessment sudah berakhir.' } });
+
+    assert.equal(s.submitCount, 1, 'auto-submit fires on confirmed expiry');
+    assert.equal(s.get('examFinished'), true);
+    assert.equal(s.timerEl.textContent, 'Waktu Habis');
+    assert.ok(s.swalTitles.includes('Oops...'), 'the "Waktu Habis" modal is shown');
+    assert.equal(s.storage.getItem('timer_assessment_test_start_516_u42'), null, 'timer state cleaned');
+    assert.equal(s.storage.getItem('timer_assessment_test_expire_516_u42'), null);
+});
+
+test('a trusted server-anchored clock past a fresh server expire finishes immediately', () => {
+    const s = createSandbox();
+    const expire = s.clock - 30 * 1000;
+
+    s.run(`setExamClockOffset(${s.clock}, ${s.clock})`);
+    s.run('startTimer()');
+    s.timerRequests()[0].success({ status: 'success', start_time: s.clock - 60 * 1000, expire_time: expire, duration: 90 });
+
+    assert.equal(s.submitCount, 1, 'real expiry at open still auto-submits');
+    assert.equal(s.timerEl.textContent, 'Waktu Habis');
+    assert.equal(s.timerRequests().length, 1, 'no extra roundtrip needed when the clock is trusted');
+});
+
+test('when the server is unreachable the fail-safe still submits after retries', () => {
+    const s = createSandbox();
+
+    s.run('startTimer()');
+    const expire = s.clock - 30 * 1000;
+    s.timerRequests()[0].success({ status: 'success', start_time: s.clock - 60 * 1000, expire_time: expire, duration: 90 });
+
+    // six failed verification attempts (~15s) then the fail-safe fires
+    for (let i = 0; i < 6; i++) {
+        s.timerRequests().at(-1).error({ status: 0 });
+        s.runTimers();
+    }
+
+    assert.equal(s.submitCount, 1, 'answers are sent even when the server cannot confirm');
+    assert.equal(s.timerEl.textContent, 'Waktu Habis');
+});
