@@ -283,5 +283,3 @@
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/assessment-type-management/lms-assessment-type-management-listener.js') }}"></script>

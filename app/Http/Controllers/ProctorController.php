@@ -6,6 +6,7 @@ use App\Models\ProctorEntryRequest;
 use App\Models\ProctorUnlockRequest;
 use App\Models\SchoolAssessment;
 use App\Models\SchoolClass;
+use App\Models\SchoolPartner;
 use App\Models\StudentAssessmentAttempt;
 use App\Models\StudentProfile;
 use App\Models\StudentSchoolClass;
@@ -24,7 +25,7 @@ class ProctorController extends Controller
 
     public function index($role, $schoolName, $schoolId): View|JsonResponse
     {
-        if (!$this->canView()) {
+        if (!$this->canView() || !$this->canCrossSchool((int) $schoolId)) {
             abort(403);
         }
 
@@ -40,17 +41,35 @@ class ProctorController extends Controller
     /**
      * One row per student per exam: the class roster, plus anyone who has an attempt or an entry request.
      * Live changes arrive over WebSocket; this is the resync source.
+     *
+     * schoolId 0 = every school (platform admins only): each card carries its
+     * own school_partner_id and school_name, so per-card actions can target
+     * the exam's real school. ?date=YYYY-MM-DD reviews another day.
      */
-    public function snapshot($role, $schoolName, $schoolId): JsonResponse
+    public function snapshot(Request $request, $role, $schoolName, $schoolId): JsonResponse
     {
-        if (!$this->canView()) {
+        if (!$this->canView() || !$this->canCrossSchool((int) $schoolId)) {
             abort(403);
         }
 
-        $assessments = SchoolAssessment::whereIn('id', $this->proctor->heldTodayAssessmentIds((int) $schoolId))
+        $crossSchool = (int) $schoolId === 0;
+        $day = ProctorService::reviewDayFrom($request);
+
+        $ids = $crossSchool
+            ? $this->proctor->heldAssessmentIdsAllSchools($day)
+            : $this->proctor->heldTodayAssessmentIds((int) $schoolId, $day);
+
+        $assessments = SchoolAssessment::whereIn('id', $ids)
             ->orderBy('start_date')
-            ->get(['id', 'title', 'school_class_id', 'start_date', 'end_date', 'proctor_started_at', 'proctor_paused_at', 'proctor_stopped_at']);
+            ->get(['id', 'title', 'school_class_id', 'school_partner_id', 'start_date', 'end_date', 'status', 'proctor_started_at', 'proctor_paused_at', 'proctor_stopped_at']);
         $ids = $assessments->pluck('id');
+        $school = SchoolPartner::find((int) $schoolId);
+
+        // one query for the whole cross-school view: each assessment is
+        // evaluated in its own school's context (auto-start, timezone)
+        $schoolById = $crossSchool
+            ? SchoolPartner::whereIn('id', $assessments->pluck('school_partner_id')->filter()->unique())->get()->keyBy('id')
+            : collect();
 
         $roster = StudentSchoolClass::whereIn('school_class_id', $assessments->pluck('school_class_id')->filter())
             ->where('student_class_status', 'active')
@@ -113,17 +132,43 @@ class ProctorController extends Controller
             }
         }
 
-        $assessmentCards = $assessments->map(fn (SchoolAssessment $a) => [
-            'assessment_id' => $a->id,
-            'assessment_title' => $a->title,
-            'time' => $a->start_date->timezone('Asia/Jakarta')->format('H:i').'–'.$a->end_date->timezone('Asia/Jakarta')->format('H:i'),
-            'state' => ProctorService::sessionState($a),
-        ])->values();
+        $assessmentCards = $assessments->map(function (SchoolAssessment $a) use ($school, $schoolById, $crossSchool) {
+            // the cross-school view evaluates each exam in its own school's
+            // context; the single-school view keeps the URL's school
+            $aSchool = $crossSchool ? ($schoolById[$a->school_partner_id] ?? null) : $school;
+
+            $card = [
+                'assessment_id' => $a->id,
+                'assessment_title' => $a->title,
+                'time' => $a->start_date->timezone('Asia/Jakarta')->format('H:i').'–'.$a->end_date->timezone('Asia/Jakarta')->format('H:i'),
+                // effective state: a proctor_auto_start school is 'running' while the
+                // schedule window is open, even with no teacher 'Mulai'
+                'state' => ProctorService::effectiveSessionState($a, $aSchool),
+                // true when the running state came from the schedule, not the
+                // teacher; the dashboard badges it so the two are never confused
+                'virtual_running' => ProctorService::virtualRunning($a, $aSchool),
+            ];
+
+            if ($crossSchool) {
+                // the frontend passes this id on every per-card action URL;
+                // the name labels which school each row belongs to
+                $card['school_partner_id'] = (int) $a->school_partner_id;
+                $card['school_name'] = $schoolById[$a->school_partner_id]?->nama_sekolah ?? '-';
+            }
+
+            return $card;
+        })->values();
 
         return response()->json([
             'assessments' => $assessmentCards,
             'students' => $students->take(5000)->values(),
             'canApprove' => (bool) Auth::user()->can_approve_unlock,
+            // per-school auto-admit is active: the dashboard may show an
+            // 'auto-admit' badge instead of the per-student admit buttons
+            'auto_admit' => (bool) $school?->proctor_auto_admit,
+            // per-school auto-start is active: the dashboard may show the
+            // schedule banner instead of the 'Mulai' button
+            'auto_start' => (bool) $school?->proctor_auto_start,
         ]);
     }
 
@@ -152,9 +197,10 @@ class ProctorController extends Controller
 
         $assessments = SchoolAssessment::whereIn('id', $this->proctor->heldTodayAssessmentIds((int) $schoolId))
             ->orderBy('start_date')
-            ->get(['id', 'title', 'school_class_id', 'start_date', 'end_date', 'proctor_started_at', 'proctor_paused_at', 'proctor_stopped_at'])
+            ->get(['id', 'title', 'school_class_id', 'start_date', 'end_date', 'status', 'proctor_started_at', 'proctor_paused_at', 'proctor_stopped_at'])
             ->keyBy('id');
         $ids = $assessments->keys();
+        $school = SchoolPartner::find((int) $schoolId);
 
         $classNames = SchoolClass::whereIn('id', $assessments->pluck('school_class_id')->filter())
             ->pluck('class_name', 'id');
@@ -212,7 +258,13 @@ class ProctorController extends Controller
             'assessment_title' => $a->title,
             'class_name' => $classNames[$a->school_class_id] ?? '-',
             'time' => $a->start_date->timezone('Asia/Jakarta')->format('H:i').'–'.$a->end_date->timezone('Asia/Jakarta')->format('H:i'),
-            'state' => ProctorService::sessionState($a),
+            // effective state: a proctor_auto_start school is 'running' while the
+            // schedule window is open, so the PIC page no longer shows 'Belum
+            // dimulai' while students are already flowing on a virtual session
+            'state' => ProctorService::effectiveSessionState($a, $school),
+            // true when the running state came from the schedule, not the
+            // teacher's Mulai; the PIC UI can badge it like the dashboard does
+            'virtual_running' => ProctorService::virtualRunning($a, $school),
             'pending_unlocks' => $requestsPayload->where('assessment_id', $a->id)->count(),
         ])->values();
 
@@ -233,6 +285,8 @@ class ProctorController extends Controller
 
         $assessmentIds = $this->proctor->heldTodayAssessmentIds((int) $schoolId)->all();
 
+        // Contract: a schoolId=0 token carries sch=0, which the Rust service's covers() exact-match never matches
+        // (0 is not a school), so the all-schools dashboard intentionally runs on snapshot polling, not live WS events.
         return response()->json([
             'url' => config('proctor.ws_url'),
             'token' => $this->proctor->token(Auth::id(), null, $assessmentIds, schoolId: (int) $schoolId),
@@ -332,5 +386,11 @@ class ProctorController extends Controller
     private function canView(): bool
     {
         return ProctorService::hasRole(Auth::user(), ProctorService::VIEW_ROLES);
+    }
+
+    /** schoolId=0 (all schools) is a platform-admin-only view. */
+    private function canCrossSchool(int $schoolId): bool
+    {
+        return ProctorService::canCrossSchool(Auth::user(), $schoolId);
     }
 }

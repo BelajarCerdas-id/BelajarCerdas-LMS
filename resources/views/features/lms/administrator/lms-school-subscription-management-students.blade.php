@@ -20,7 +20,8 @@
                 <section id="container-management-lms-students-list" class="relative pb-6"
                     data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}"
                     data-managed-role="{{ $managedRole }}" data-class-id="{{ $classId }}"
-                    data-major-id="{{ $majorId }}">
+                    data-major-id="{{ $majorId }}"
+                    data-is-admin="{{ \App\Services\Proctor\ProctorService::hasRole(Auth::user(), \App\Services\Proctor\ProctorService::APPROVER_ADMIN_ROLES) ? '1' : '0' }}">
                     <div class="overflow-x-auto pb-14">
                         <!-- DETAIL SEKOLAH -->
                         <div id="school-detail-card"
@@ -48,6 +49,7 @@
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Enrollment Type</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Status Siswa di Kelas</th>
                                     <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Keterangan</th>
+                                    <th class="border border-gray-300 px-3 py-2 opacity-70 text-xs">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-management-lms-students-list">
@@ -433,5 +435,3 @@
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/management-student-in-class.js') }}"></script> <!--- pusher listener pada saat activate siswa di kelas ---->

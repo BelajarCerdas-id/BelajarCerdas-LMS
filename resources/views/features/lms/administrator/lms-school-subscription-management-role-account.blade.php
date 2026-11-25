@@ -57,6 +57,44 @@
                                     <span class="text-sm text-gray-600">Tampilkan modal peringatan</span>
                                 </label>
                             </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Admisi Otomatis Ujian (Proctor)
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="proctor_auto_admit"
+                                        {{ ($school?->proctor_auto_admit ?? false) ? 'checked' : '' }}
+                                        class="w-5 h-5 accent-[#0071BC] cursor-pointer" />
+                                    <span class="text-sm text-gray-600">Siswa masuk tanpa persetujuan per siswa</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1.5">
+                                    Saat aktif, siswa langsung masuk ke ujian berproctor begitu guru memulai sesi
+                                    proctor. Guru tetap mengatur kapan ujian dimulai, dan siswa yang ditolak
+                                    secara eksplisit oleh guru tetap tidak dapat masuk.
+                                </p>
+                                <span id="error-proctor_auto_admit" class="text-red-500 text-xs"></span>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Mulai Otomatis Ujian (Jadwal)
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="proctor_auto_start"
+                                        {{ ($school?->proctor_auto_start ?? false) ? 'checked' : '' }}
+                                        class="w-5 h-5 accent-[#0071BC] cursor-pointer" />
+                                    <span class="text-sm text-gray-600">Ujian terbuka otomatis sesuai jadwal</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1.5">
+                                    Saat aktif, ujian terbuka otomatis pada jadwal yang sudah ditentukan —
+                                    tombol "Mulai" dari guru menjadi opsional. Waktu pengerjaan tiap siswa
+                                    tetap dimulai saat siswa membuka halaman ujian. Guru masih dapat menjeda
+                                    atau menghentikan ujian, dan ujian yang sudah dihentikan tidak dibuka
+                                    kembali oleh jadwal.
+                                </p>
+                                <span id="error-proctor_auto_start" class="text-red-500 text-xs"></span>
+                            </div>
                         </form>
 
                         <div class="flex justify-end mt-4">
@@ -310,5 +348,3 @@
 <script src="{{ asset('assets/js/components/preview/excel-upload-preview.js') }}"></script> <!--- show excel preview ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/bulk-upload-create-account.js') }}"></script> <!--- pusher listener pada saat bulkupload create account ---->

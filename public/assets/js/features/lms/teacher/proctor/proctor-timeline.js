@@ -14,6 +14,11 @@
     let studentId = null;
     let searchTimer = null;
     let loadToken = 0;
+    // The dashboard's date filter links here with ?date=YYYY-MM-DD; the data endpoint
+    // defaults to today when it is absent or malformed.
+    const filterDate = /^\d{4}-\d{2}-\d{2}$/.test(new URLSearchParams(location.search).get('date') || '')
+        ? new URLSearchParams(location.search).get('date')
+        : '';
 
     async function getJson(url) {
         const res = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
@@ -68,6 +73,7 @@
             }
             params.set('student_id', studentId);
         }
+        if (filterDate) params.set('date', filterDate);
 
         status.textContent = 'Memuat...';
         const { ok, body } = await getJson(`${cfg.dataUrl}?${params}`);

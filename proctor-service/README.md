@@ -61,6 +61,11 @@ stderr_logfile=/www/server/panel/plugin/supervisor/log/proctor.err.log
 
 Then `supervisorctl reread && supervisorctl update`. The program also appears in the AAPanel Supervisor UI.
 
+**Gotcha:** the ini filename must equal the `[program:...]` name (e.g. `proctor.ini`
+for `[program:proctor]`). AAPanel's plugin builds the ini path from the program
+name; a mismatch makes `GetProcessList` throw `FileNotFoundError` and the Supervisor
+UI shows "Error found during request!" while `supervisorctl status` stays green.
+
 ## Nginx (AAPanel site config)
 
 ```nginx

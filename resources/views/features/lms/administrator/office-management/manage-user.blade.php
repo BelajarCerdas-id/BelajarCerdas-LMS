@@ -632,5 +632,3 @@
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 <script src="{{ asset('assets/js/components/show-password-input.js') }}"></script> <!--- show password input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/office-account-management/office-account-management-listener.js') }}"></script> <!--- pusher listener manage user ---->

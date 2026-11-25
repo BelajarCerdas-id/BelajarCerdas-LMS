@@ -161,5 +161,3 @@
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/crud-major-listener.js') }}"></script> <!--- pusher listener pada saat crud major ---->

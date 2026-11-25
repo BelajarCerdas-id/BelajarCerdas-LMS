@@ -11,12 +11,11 @@
 <div id="proctor-root" class="space-y-6"
                 data-snapshot-url="{{ route('lms.proctor.snapshot', [$role, $schoolName, $schoolId]) }}"
                 data-token-url="{{ route('lms.proctor.token', [$role, $schoolName, $schoolId]) }}"
-                data-unlock-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/attempts') }}"
-                data-resolve-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/unlock-requests') }}"
+                data-action-base="{{ url('/lms/'.$role.'/{schoolName}/{schoolId}/proctor') }}"
                 data-session-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/assessments') }}"
-                data-decide-url="{{ route('lms.proctor.entries.decide', [$role, $schoolName, $schoolId]) }}"
-                data-entry-request-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/entries') }}"
-                data-entry-revoke-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/entry-revocations') }}"
+                data-school-name="{{ $schoolName }}"
+                data-school-id="{{ $schoolId }}"
+                data-timeline-url="{{ route('lms.proctor.timeline.view', [$role, $schoolName, $schoolId]) }}"
                 data-approvers-url="{{ route('lms.proctor.approvers.search', [$role, $schoolName, $schoolId]) }}"
                 data-approver-toggle-url="{{ url('/lms/'.$role.'/'.$schoolName.'/'.$schoolId.'/proctor/approvers') }}"
                 data-can-approve="{{ $canApprove ? '1' : '0' }}"
@@ -27,7 +26,13 @@
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Proctor Ujian</h1>
                     <p class="text-gray-500 mt-1 text-sm">Ringkasan ujian hari ini. Buka satu ujian untuk memantau siswa dan mengendalikan sesinya.</p>
-                    <a href="{{ route('lms.proctor.timeline.view', [$role, $schoolName, $schoolId]) }}" class="inline-block mt-2 text-sm text-blue-700 hover:underline">Lihat timeline →</a>
+                    <a id="proctor-timeline-link" href="{{ route('lms.proctor.timeline.view', [$role, $schoolName, $schoolId]) }}" class="inline-block mt-2 text-sm text-blue-700 hover:underline">Lihat timeline →</a>
+                </div>
+
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                    <label for="proctor-date">Tanggal</label>
+                    <input id="proctor-date" type="date" value="{{ date('Y-m-d') }}"
+                        class="border border-gray-300 rounded-lg px-2 py-1 text-sm bg-white">
                 </div>
 
                 <div id="proctor-status" class="text-sm text-gray-500">Menghubungkan...</div>

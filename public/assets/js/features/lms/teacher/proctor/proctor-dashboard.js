@@ -8,6 +8,8 @@
     const cfg = root.dataset;
     const canApprove = cfg.canApprove === '1';
     const isGuru = cfg.isGuru === '1';
+    // The page's own school segment: actions on cards without school context (legacy payloads) fall back to it.
+    const pageSchool = { name: cfg.schoolName, id: cfg.schoolId };
     const students = new Map();    // "examId:userId" -> student row
     const assessments = new Map(); // assessment_id -> { assessment_id, assessment_title, time, state }
     const lateQueue = [];
@@ -16,6 +18,8 @@
     let snapshotTimer = null;
     let renderTimer = null;
     let sortMode = 'status';
+    let autoAdmit = false; // per-school auto-admit; older snapshots omit the field
+    let autoStart = false; // per-school schedule auto-start; older snapshots omit the field
     const blinkKeys = new Set();
 
     const REASONS = {
@@ -29,6 +33,29 @@
         fullscreen_exit: 'keluar dari layar penuh',
     };
     const reasonLabel = (r) => REASONS[r] || 'aktivitas mencurigakan';
+
+    // ---- per-card school context ----
+    // The all-schools admin view (schoolId=0) carries school_partner_id/school_name on each
+    // assessment; action endpoints need the assessment's real school per call. Older snapshots
+    // have neither field and keep using the page globals.
+    function schoolOf(a) {
+        if (a && (a.school_partner_id != null || a.school_name != null)) return { name: a.school_name, id: a.school_partner_id };
+        return pageSchool;
+    }
+
+    // The page's schoolName is interpolated raw into these paths, so card names follow the same convention.
+    function actionBase(a) {
+        const s = schoolOf(a);
+        const template = cfg.actionBase || String(cfg.sessionUrl || '').replace(/\/assessments$/, '');
+        return template.replace('{schoolName}', s.name).replace('{schoolId}', s.id);
+    }
+
+    // The all-schools view always labels the school; school-scoped users only see a label when
+    // a card names a school other than their own.
+    function foreignSchool(a) {
+        if (!a.school_name) return false;
+        return String(cfg.schoolId) === '0' || a.school_name !== cfg.schoolName;
+    }
 
     const STATUS_LABEL = {
         waiting: 'Menunggu izin',
@@ -80,16 +107,39 @@
         return '';
     }
 
+    let filterDate = null; // null -> today, the server default
+
     async function loadSnapshot() {
-        const { ok, body } = await api(cfg.snapshotUrl);
+        const url = filterDate ? `${cfg.snapshotUrl}?date=${encodeURIComponent(filterDate)}` : cfg.snapshotUrl;
+        const { ok, body } = await api(url);
         if (!ok) return setStatus('Gagal memuat data siswa.');
         applySnapshot(body);
         render();
     }
 
+    // ---- date filter: today by default; snapshot and timeline both accept ?date= ----
+
+    function setDateFilter(value) {
+        // Invalid or cleared input simply refetches with the default.
+        filterDate = /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime())
+            ? value
+            : null;
+        const link = document.getElementById('proctor-timeline-link');
+        if (link) link.href = filterDate ? `${cfg.timelineUrl}?date=${encodeURIComponent(filterDate)}` : cfg.timelineUrl;
+        loadSnapshot();
+    }
+
+    function setupDateFilter() {
+        const input = document.getElementById('proctor-date');
+        if (!input) return;
+        input.addEventListener('change', () => setDateFilter(input.value));
+    }
+
     function applySnapshot(body) {
         const next = new Map();
         assessments.clear();
+        autoAdmit = !!body.auto_admit;
+        autoStart = !!body.auto_start;
         body.assessments.forEach((a) => assessments.set(a.assessment_id, a));
         body.students.forEach((s) => next.set(s.key, s));
 
@@ -121,6 +171,9 @@
     function render() {
         const box = document.getElementById('proctor-cards');
         box.replaceChildren();
+        // schedule auto-start is school-wide, so the banner shows on both views
+        if (autoStart) box.append(text('span', 'Dibuka otomatis sesuai jadwal — tanpa Mulai guru',
+            'inline-block w-max text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800', 'auto-start-badge'));
         const exam = openedExam();
         box.append(exam ? examDetailEl(exam) : dashboardEl());
         applyBlink();
@@ -202,8 +255,14 @@
         const head = document.createElement('div');
         head.className = 'flex items-start justify-between gap-2';
         head.append(text('h3', a.assessment_title || 'Ujian', 'font-semibold text-gray-800'));
-        head.append(stateBadge(a.state));
+        const headBadges = document.createElement('div');
+        headBadges.className = 'flex items-center gap-1';
+        headBadges.append(stateBadge(a.state));
+        // virtual_running: opened by the schedule, not by the teacher's Mulai button
+        if (a.virtual_running) headBadges.append(virtualChip());
+        head.append(headBadges);
         el.append(head);
+        if (foreignSchool(a)) el.append(text('p', a.school_name, 'text-xs font-medium text-blue-700 mt-1', 'school-label'));
         el.append(text('p', a.time || '', 'text-xs text-gray-500 mt-1'));
 
         const mini = document.createElement('div');
@@ -224,6 +283,11 @@
         return text('span', label, `shrink-0 text-xs px-2 py-1 rounded-full ${badge}`);
     }
 
+    // marks an exam the schedule opened on its own, so it is not confused with a teacher-started one
+    function virtualChip() {
+        return text('span', 'jadwal', 'shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200', 'virtual-chip');
+    }
+
     function examDetailEl(a) {
         const s = examStats(a);
         const wrap = document.createElement('div');
@@ -237,8 +301,10 @@
         title.className = 'flex flex-wrap items-center gap-2 mt-1';
         title.append(text('h2', a.assessment_title || 'Ujian', 'text-xl font-bold text-gray-800'));
         title.append(stateBadge(a.state));
+        if (a.virtual_running) title.append(virtualChip());
         titleBox.append(title);
         titleBox.append(text('p', a.time || '', 'text-sm text-gray-500'));
+        if (foreignSchool(a)) titleBox.append(text('p', a.school_name, 'text-xs font-medium text-blue-700', 'school-label'));
         top.append(titleBox);
 
         const actions = document.createElement('div');
@@ -258,15 +324,22 @@
             ['Total siswa', s.rows.length],
         ]));
 
-        if (s.waiting.length) wrap.append(waitingEl(a, s.waiting));
+        // auto-admit may come from the school (snapshot top level) or per assessment
+        const admitAuto = autoAdmit || !!a.auto_admit;
+        if (s.waiting.length || admitAuto) wrap.append(waitingEl(a, s.waiting, admitAuto));
         wrap.append(tableEl(s.rows));
         return wrap;
     }
 
-    function waitingEl(a, waiting) {
+    function waitingEl(a, waiting, admitAuto) {
         const box = document.createElement('div');
         box.className = 'rounded-lg bg-amber-50 border border-amber-200 p-3 space-y-2';
-        box.append(text('p', `Menunggu masuk: ${waiting.length} siswa`, 'text-sm font-medium text-amber-800'));
+
+        if (admitAuto) {
+            box.append(text('span', 'Admisi otomatis aktif — siswa masuk tanpa persetujuan',
+                'inline-block text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800', 'auto-admit-notice'));
+        }
+        if (waiting.length) box.append(text('p', `Menunggu masuk: ${waiting.length} siswa`, 'text-sm font-medium text-amber-800'));
 
         if (a.state !== 'running') {
             const note = a.state === 'paused' ? 'Izin masuk ditangguhkan selama ujian dijeda.' : 'Siswa diperiksa setelah ujian dimulai.';
@@ -280,8 +353,8 @@
             row.append(text('span', e.student_name, 'text-sm text-gray-800'));
             const actions = document.createElement('div');
             actions.className = 'flex gap-2';
-            actions.append(button('Izinkan', 'bg-green-600 hover:bg-green-700 text-white', () => decideEntries([{ request_id: e.entry_request_id, approve: true }])));
-            actions.append(button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decideEntries([{ request_id: e.entry_request_id, approve: false }])));
+            actions.append(button('Izinkan', 'bg-green-600 hover:bg-green-700 text-white', () => decideEntries([{ request_id: e.entry_request_id, approve: true }], a)));
+            actions.append(button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decideEntries([{ request_id: e.entry_request_id, approve: false }], a)));
             row.append(actions);
             box.append(row);
         });
@@ -376,8 +449,9 @@
         box.className = 'flex flex-wrap gap-2';
         box.dataset.role = 'actions';
         if (s.entry_request_id && openedExam()?.state === 'running') {
-            box.append(button('Izinkan', 'bg-green-600 hover:bg-green-700 text-white', () => decideEntries([{ request_id: s.entry_request_id, approve: true }])));
-            box.append(button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decideEntries([{ request_id: s.entry_request_id, approve: false }])));
+            const exam = assessments.get(s.assessment_id);
+            box.append(button('Izinkan', 'bg-green-600 hover:bg-green-700 text-white', () => decideEntries([{ request_id: s.entry_request_id, approve: true }], exam)));
+            box.append(button('Tolak', 'bg-gray-200 hover:bg-gray-300 text-gray-800', () => decideEntries([{ request_id: s.entry_request_id, approve: false }], exam)));
         } else if (s.status === 'cheating') {
             if (s.unlock_request_id && s.unlock_expires_at && new Date(s.unlock_expires_at) > Date.now()) {
                 if (canApprove) {
@@ -434,7 +508,7 @@
     // ---- exam session: start, pause, resume, stop ----
 
     async function control(a, action) {
-        const { ok, body } = await api(`${cfg.sessionUrl}/${a.assessment_id}/${action}`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(a)}/assessments/${a.assessment_id}/${action}`, { method: 'POST' });
         if (!ok) return alert(body.message || 'Aksi gagal.');
 
         a.state = body.state;
@@ -493,7 +567,7 @@
             decideEntries(waiting.map((e) => ({
                 request_id: e.entry_request_id,
                 approve: list.querySelector(`[data-request-id="${e.entry_request_id}"]`).checked,
-            })));
+            })), a);
         });
     }
 
@@ -524,15 +598,15 @@
             allowEscapeKey: false,
         }).then(async (res) => {
             if (res.isConfirmed || res.isDenied) {
-                await decideEntries([{ request_id: row.entry_request_id, approve: res.isConfirmed }]);
+                await decideEntries([{ request_id: row.entry_request_id, approve: res.isConfirmed }], assessments.get(row.assessment_id));
             }
             showingLate = false;
             showNextLate();
         });
     }
 
-    async function decideEntries(decisions) {
-        const { ok, body } = await api(cfg.decideUrl, { method: 'POST', body: JSON.stringify({ decisions }) });
+    async function decideEntries(decisions, a) {
+        const { ok, body } = await api(`${actionBase(a)}/entries/decide`, { method: 'POST', body: JSON.stringify({ decisions }) });
         if (!ok) alert(body.message || 'Keputusan gagal disimpan.');
         scheduleSnapshot();
     }
@@ -540,13 +614,13 @@
     // ---- unlock (strike-locked students) ----
 
     async function requestUnlock(s) {
-        const { ok, body } = await api(`${cfg.unlockUrl}/${s.attempt_id}/unlock-requests`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(assessments.get(s.assessment_id))}/attempts/${s.attempt_id}/unlock-requests`, { method: 'POST' });
         if (!ok) return alert(body.message || 'Permintaan gagal dikirim.');
         scheduleSnapshot();
     }
 
     async function resolveUnlock(s, action) {
-        const { ok, body } = await api(`${cfg.resolveUrl}/${s.unlock_request_id}/${action}`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(assessments.get(s.assessment_id))}/unlock-requests/${s.unlock_request_id}/${action}`, { method: 'POST' });
         if (!ok) alert(body.message || 'Permintaan gagal diproses.');
         scheduleSnapshot();
     }
@@ -554,20 +628,20 @@
     // ---- entry-denial revocation (guru requests, PIC decides) ----
 
     async function requestRevocation(s) {
-        const { ok, body } = await api(`${cfg.entryRequestUrl}/${s.denied_entry_id}/revoke-requests`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(assessments.get(s.assessment_id))}/entries/${s.denied_entry_id}/revoke-requests`, { method: 'POST' });
         if (!ok) return alert(body.message || 'Permintaan gagal dikirim.');
         scheduleSnapshot();
     }
 
     async function decideRevocation(s, approve) {
-        const { ok, body } = await api(`${cfg.entryRevokeUrl}/${s.denied_entry_id}/${approve ? 'approve' : 'deny'}`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(assessments.get(s.assessment_id))}/entry-revocations/${s.denied_entry_id}/${approve ? 'approve' : 'deny'}`, { method: 'POST' });
         if (!ok) alert(body.message || 'Permintaan gagal diproses.');
         scheduleSnapshot();
     }
 
     // ---- per-student controls: suspend, resume, terminate ----
     async function controlAttempt(s, action) {
-        const { ok, body } = await api(`${cfg.unlockUrl}/${s.attempt_id}/${action}`, { method: 'POST' });
+        const { ok, body } = await api(`${actionBase(assessments.get(s.assessment_id))}/attempts/${s.attempt_id}/${action}`, { method: 'POST' });
         if (!ok) return alert(body.message || 'Aksi gagal.');
         s.attempt_paused = action === 'suspend';
         renderSoon();
@@ -707,5 +781,6 @@
 
     window.addEventListener('hashchange', render);
     setupApprovers();
+    setupDateFilter();
     connect();
 })();

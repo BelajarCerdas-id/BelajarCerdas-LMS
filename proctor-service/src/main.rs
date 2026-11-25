@@ -139,21 +139,56 @@ async fn ws_handler(
     let Ok(claims) = state.secret.verify(&query.token, now_unix()) else {
         return StatusCode::UNAUTHORIZED.into_response();
     };
-    if state.connections.fetch_add(1, Ordering::AcqRel) >= state.max_connections {
-        state.connections.fetch_sub(1, Ordering::AcqRel);
+    // Reserve a slot for the whole handshake attempt, not just the live
+    // session. axum 0.8 never invokes the on_upgrade callback when the
+    // handshake fails or is abandoned mid-flight (a client that stalls or
+    // vanishes before finishing the upgrade) — it drops the never-called
+    // callback instead. ConnSlot moves into the callback, so the slot is
+    // released on every outcome instead of leaking until restart; repeated
+    // abandoned handshakes can no longer exhaust PROCTOR_MAX_CONNECTIONS.
+    let Some(slot) = ConnSlot::reserve(&state) else {
         return StatusCode::SERVICE_UNAVAILABLE.into_response();
-    }
+    };
 
     let rx = state.events.subscribe();
-    let connections = state.connections.clone();
     ws.max_message_size(MAX_FRAME_BYTES)
         .read_buffer_size(SOCKET_BUFFER_BYTES)
         .write_buffer_size(SOCKET_BUFFER_BYTES)
+        .on_failed_upgrade(|e| warn!("ws handshake failed: {e}"))
         .on_upgrade(move |socket| async move {
             serve(socket, claims, rx).await;
-            connections.fetch_sub(1, Ordering::AcqRel);
+            // session over: release the reserved slot
+            drop(slot);
         })
         .into_response()
+}
+
+/// One reserved WS connection slot.
+///
+/// Invariant: every handshake attempt that reserves a slot releases it
+/// exactly once, whatever the outcome. `ws_handler` moves the guard into the
+/// `on_upgrade` callback: on a completed handshake the callback runs and the
+/// guard is dropped when the session future finishes; on a failed or
+/// abandoned handshake axum drops the uncalled callback, dropping the guard
+/// with it. The decrement therefore happens exactly once either way.
+struct ConnSlot(Arc<AtomicUsize>);
+
+impl ConnSlot {
+    /// Reserve one slot, or `None` when the service is at its connection
+    /// limit (the 503 path in `ws_handler`).
+    fn reserve(state: &AppState) -> Option<Self> {
+        if state.connections.fetch_add(1, Ordering::AcqRel) >= state.max_connections {
+            state.connections.fetch_sub(1, Ordering::AcqRel);
+            return None;
+        }
+        Some(Self(state.connections.clone()))
+    }
+}
+
+impl Drop for ConnSlot {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::AcqRel);
+    }
 }
 
 async fn serve(socket: WebSocket, claims: Claims, mut rx: broadcast::Receiver<Arc<Event>>) {
@@ -192,4 +227,83 @@ async fn serve(socket: WebSocket, claims: Claims, mut rx: broadcast::Receiver<Ar
 
 fn now_unix() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A full end-to-end "abandoned handshake" test is not practical here: the
+    // leak depends on axum/hyper dropping the upgrade task mid-flight, which
+    // needs a real socket and cannot be driven deterministically offline. The
+    // tests below pin the ConnSlot mechanics that make the handler leak-free:
+    // the slot is released both when the callback runs to completion and when
+    // the callback is dropped uncalled (axum's failed/abandoned-handshake
+    // path), and the 503-at-limit path does not itself hold a slot.
+
+    fn test_state(max: usize) -> (AppState, Arc<AtomicUsize>) {
+        let connections = Arc::new(AtomicUsize::new(0));
+        let (events, _) = broadcast::channel(BROADCAST_BACKLOG);
+        let state = AppState {
+            secret: Arc::new(Secret::new("0123456789abcdef0123456789abcdef").unwrap()),
+            events,
+            max_connections: max,
+            connections: connections.clone(),
+        };
+        (state, connections)
+    }
+
+    #[test]
+    fn reserve_refuses_at_capacity_without_leaking_a_slot() {
+        let (state, connections) = test_state(1);
+
+        let first = ConnSlot::reserve(&state);
+        assert!(first.is_some(), "first client gets the only slot");
+        assert_eq!(connections.load(Ordering::Acquire), 1);
+
+        // at the limit the next attempt is refused (ws_handler returns 503)
+        // and must not leave a slot behind
+        assert!(ConnSlot::reserve(&state).is_none());
+        assert_eq!(connections.load(Ordering::Acquire), 1, "refused reservation leaked a slot");
+
+        drop(first);
+        assert!(ConnSlot::reserve(&state).is_some(), "released slot is reusable");
+    }
+
+    #[test]
+    fn abandoned_handshake_releases_its_slot() {
+        // axum 0.8 drops the never-invoked on_upgrade callback when the
+        // handshake fails or is abandoned; the ConnSlot captured by the
+        // closure must be released by that drop.
+        let connections = Arc::new(AtomicUsize::new(0));
+        connections.fetch_add(1, Ordering::AcqRel); // ws_handler reserved a slot
+
+        let on_upgrade = {
+            let slot = ConnSlot(connections.clone());
+            move |_socket: ()| async move { drop(slot) }
+        };
+        assert_eq!(connections.load(Ordering::Acquire), 1);
+
+        drop(on_upgrade); // handshake abandoned: callback dropped uncalled
+        assert_eq!(connections.load(Ordering::Acquire), 0, "abandoned handshake leaked its slot");
+    }
+
+    #[test]
+    fn slot_is_held_for_the_session_and_released_afterwards() {
+        let connections = Arc::new(AtomicUsize::new(0));
+        connections.fetch_add(1, Ordering::AcqRel);
+
+        let on_upgrade = {
+            let slot = ConnSlot(connections.clone());
+            move |_socket: ()| async move { drop(slot) }
+        };
+        let session = on_upgrade(());
+        assert_eq!(connections.load(Ordering::Acquire), 1, "slot must be held while the session runs");
+
+        tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(session);
+        assert_eq!(connections.load(Ordering::Acquire), 0, "finished session must release its slot");
+    }
 }

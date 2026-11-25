@@ -7,6 +7,7 @@ function managementStudentSchoolSubscription() {
     const managedRole = container.dataset.managedRole;
     const majorId = container.dataset.majorId;
     const classId = container.dataset.classId;
+    const isAdmin = container.dataset.isAdmin === '1';
 
     if (!container) return;
     if (!schoolName) return;
@@ -251,6 +252,13 @@ function managementStudentSchoolSubscription() {
                                 </td>
                                 <td class="border border-gray-300 px-3 py-2 text-center">
                                     ${status_academic_action}
+                                </td>
+                                <td class="border border-gray-300 px-3 py-2 text-center">
+                                    ${isAdmin ? `
+                                    <a href="/lms/${role}/sudo/${item.user_account?.id}" title="Masuk sebagai pengguna ini"
+                                        class="w-9 h-9 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all cursor-pointer flex items-center justify-center">
+                                        <i class="fa-solid fa-user-secret"></i>
+                                    </a>` : ''}
                                 </td>
                             </tr>
                         `);

@@ -23,6 +23,14 @@ class ProctorEntryController extends Controller
             abort(403);
         }
 
+        // schoolId=0 is the platform-admin all-schools view, not a real school.
+        // Every sibling action (session control, terminate, unlock, revoke)
+        // 404s on a bogus school, so this endpoint must not hide behind an
+        // empty held-id list and answer 'skipped everything' with a 200.
+        if ((int) $schoolId === 0) {
+            return response()->json(['message' => 'Permintaan masuk tidak ditemukan.'], 404);
+        }
+
         $validated = $request->validate([
             'decisions' => 'required|array|min:1|max:500',
             'decisions.*.request_id' => 'required|integer',
@@ -140,7 +148,7 @@ class ProctorEntryController extends Controller
                 return ['error' => 'Waktu persetujuan habis, permintaan ditolak otomatis.', 'code' => 422];
             }
 
-            if ($approve && ProctorService::sessionState($entry->assessment) !== 'running') {
+            if ($approve && ProctorService::effectiveSessionState($entry->assessment) !== 'running') {
                 $entry->update(['revoke_status' => 'denied', 'revoke_decided_by' => $user->id, 'revoke_decided_at' => now()]);
                 $this->proctor->audit('entry_revocation_denied', ['school_partner_id' => (int) $schoolId, 'detail' => ['request_id' => $entry->id]]);
                 return ['error' => 'Ujian sudah tidak menerima siswa.', 'code' => 422];
@@ -195,7 +203,10 @@ class ProctorEntryController extends Controller
             }
 
             $assessment = $entry->assessment;
-            if ($approve && (ProctorService::sessionState($assessment) !== 'running' || $assessment->end_date?->isPast())) {
+            // effective state: with proctor_auto_start the exam may be running
+            // on schedule with no teacher 'Mulai', and the teacher must still
+            // be able to admit queued students by hand
+            if ($approve && (ProctorService::effectiveSessionState($assessment) !== 'running' || $assessment->end_date?->isPast())) {
                 return null;
             }
 

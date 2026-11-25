@@ -66,5 +66,3 @@
 <!--- COMPONENTS ---->
 <script src="{{ asset('assets/js/components/preview/excel-upload-preview.js') }}"></script> <!--- show excel preview ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/management-school-subscription.js') }}"></script> <!--- pusher listener pada saat crud school subscription ---->

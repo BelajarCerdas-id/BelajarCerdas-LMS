@@ -11,7 +11,15 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Teacher controls for one exam: start, pause, resume, stop.
- * A pause does not consume time: resume pushes every running attempt's expire_time out by the pause length.
+ *
+ * Invariant: expire_time is only ever written as start_time + duration
+ * (ProctorService::openAttempt) and shifted forward by the exact pause
+ * length on resume. A stop NEVER touches attempts: every live client
+ * receives the exam_stopped event and finalizes itself through the normal
+ * /end path (which also saves the answer the student was typing when the
+ * stop hit). Rewriting expire_time to the stop instant corrupted
+ * in_progress attempts whose client was offline (stuck rows with a fake
+ * deadline) and destroyed the audit trail of the real deadline.
  */
 class ProctorSessionController extends Controller
 {
@@ -44,11 +52,19 @@ class ProctorSessionController extends Controller
 
         $result = DB::transaction(function () use ($schoolId, $assessmentId, $action) {
             $assessment = SchoolAssessment::lockForUpdate()->findOrFail($assessmentId);
-            $state = ProctorService::sessionState($assessment);
+            // effective state: proctor_auto_start schools are 'running' while the
+            // schedule window is open, so a teacher can pause or stop the virtual
+            // session; a teacher pressing start on it is a no-op 422 (the window
+            // is already open). Real rows always win: stopped/paused stay so.
+            $state = ProctorService::effectiveSessionState($assessment);
 
             if (!in_array($state, self::ALLOWED_FROM[$action], true)) {
                 return ['error' => "Aksi tidak tersedia saat ujian {$state}.", 'code' => 422];
             }
+
+            // the action targets a schedule-opened (virtual) session when the
+            // teacher rows say nobody ever started it
+            $virtual = $state === 'running' && $assessment->proctor_started_at === null;
 
             $context = ['school_partner_id' => $schoolId, 'school_assessment_id' => $assessment->id];
             $now = now();
@@ -58,19 +74,23 @@ class ProctorSessionController extends Controller
                 $this->proctor->audit('session_started', $context);
             } elseif ($action === 'pause') {
                 $assessment->update(['proctor_paused_at' => $now]);
-                $this->proctor->audit('session_paused', $context);
+                // no audit row exists for the virtual open itself; the first
+                // teacher action against it records that it was schedule-driven
+                $this->proctor->audit('session_paused', $context + ($virtual ? ['detail' => ['auto_start' => true]] : []));
             } elseif ($action === 'resume') {
                 $seconds = max(0, $now->timestamp - $assessment->proctor_paused_at->timestamp);
                 $extended = $this->extendRunningAttempts($assessment->id, $seconds, $now);
                 $assessment->update(['proctor_paused_at' => null]);
                 $this->proctor->audit('session_resumed', $context + ['detail' => ['paused_seconds' => $seconds, 'attempts' => $extended]]);
             } else {
-                $ended = $this->endRunningAttempts($assessment->id, $now);
+                // attempts are finalized by their own clients through /end (triggered by
+                // the exam_stopped event); the server must not rewrite their deadline
+                $running = $this->runningAttempts($assessment->id)->count();
                 $assessment->update(['proctor_stopped_at' => $now, 'proctor_paused_at' => null]);
-                $this->proctor->audit('session_stopped', $context + ['detail' => ['attempts' => $ended]]);
+                $this->proctor->audit('session_stopped', $context + ['detail' => ['attempts' => $running] + ($virtual ? ['auto_start' => true] : [])]);
             }
 
-            return ['state' => ProctorService::sessionState($assessment->fresh())];
+            return ['state' => ProctorService::effectiveSessionState($assessment->fresh())];
         });
 
         if (isset($result['error'])) {
@@ -108,11 +128,6 @@ class ProctorSessionController extends Controller
         });
 
         return $count;
-    }
-
-    private function endRunningAttempts(int $assessmentId, $now): int
-    {
-        return $this->runningAttempts($assessmentId)->update(['expire_time' => $now]);
     }
 
     private function runningAttempts(int $assessmentId)

@@ -31,7 +31,7 @@
                 <section class="relative">
                     <div id="container-management-staff-list" class="overflow-x-auto pb-6"
                         data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-role="{{ $role }}" data-managed-role="{{ $managedRole }}"
-                        data-is-admin="{{ Auth::user()->role === 'Administrator' ? '1' : '0' }}">
+                        data-is-admin="{{ \App\Services\Proctor\ProctorService::hasRole(Auth::user(), \App\Services\Proctor\ProctorService::APPROVER_ADMIN_ROLES) ? '1' : '0' }}">
 
                         <table id="table-management-staff-list" class="min-w-full text-sm border-collapse">
                             <thead class="thead-table-management-staff-list hidden bg-gray-50 shadow-inner">
@@ -75,5 +75,3 @@
 
 <script src="{{ asset('assets/js/features/lms/administrator/lms-subscription-management-account.js') }}"></script> <!--- lms subscription management account ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/administrator/management-account.js') }}"></script> <!--- pusher listener pada saat manage account ---->

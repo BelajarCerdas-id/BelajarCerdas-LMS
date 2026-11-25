@@ -22,6 +22,8 @@ $(document).ready(function () {
                 anticheat_max_strikes: $('#form-anticheat-settings [name="anticheat_max_strikes"]').val(),
                 anticheat_auto_lock: $('#form-anticheat-settings [name="anticheat_auto_lock"]').is(':checked') ? 1 : 0,
                 anticheat_warning_modal: $('#form-anticheat-settings [name="anticheat_warning_modal"]').is(':checked') ? 1 : 0,
+                proctor_auto_admit: $('#form-anticheat-settings [name="proctor_auto_admit"]').is(':checked') ? 1 : 0,
+                proctor_auto_start: $('#form-anticheat-settings [name="proctor_auto_start"]').is(':checked') ? 1 : 0,
             },
             success: function (response) {
                 $('#alert-success-insert-add-users').html(`

@@ -19,11 +19,15 @@ class SchoolPartner extends Model
         'anticheat_max_strikes',
         'anticheat_auto_lock',
         'anticheat_warning_modal',
+        'proctor_auto_admit',
+        'proctor_auto_start',
     ];
 
     protected $casts = [
         'anticheat_auto_lock' => 'boolean',
         'anticheat_warning_modal' => 'boolean',
+        'proctor_auto_admit' => 'boolean',
+        'proctor_auto_start' => 'boolean',
     ];
 
     public function UserAccount()

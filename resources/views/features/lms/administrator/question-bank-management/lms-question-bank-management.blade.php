@@ -439,6 +439,3 @@
 <script src="{{ asset('assets/js/components/clear-error-on-input.js') }}"></script> <!--- clear error on input ---->
 <script src="{{ asset('assets/js/components/preview/word-upload-preview.js') }}"></script> <!--- show word ---->
 
-<!--- PUSHER LISTENER ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/question-bank/bulk-upload-question-pg-listener.js') }}"></script> <!--- pusher listener pada saat create bank soal ---->
-<script src="{{ asset('assets/js/pusher-listener/lms/question-bank/activate-question-pg-listener.js') }}"></script> <!--- pusher listener pada saat activate bank soal ---->

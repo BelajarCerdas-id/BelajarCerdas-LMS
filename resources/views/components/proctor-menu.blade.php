@@ -48,6 +48,13 @@
                     @endif
 
                     @if ($isApproverAdmin && !$proctorSchool)
+                        <a href="{{ route('lms.proctor.view', [
+                                'role' => $user->role,
+                                'schoolName' => 'semua',
+                                'schoolId' => 0
+                            ]) }}" class="link-href block py-2 text-[12px]">
+                            Proctor — Semua Sesi
+                        </a>
                         <a href="{{ route('admin.proctorApprovers.view') }}" class="link-href block py-2 text-[12px]">
                             Kelola PIC Buka Kunci
                         </a>

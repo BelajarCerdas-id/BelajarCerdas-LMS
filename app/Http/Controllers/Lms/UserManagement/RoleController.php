@@ -17,6 +17,8 @@ class RoleController extends Controller
             'anticheat_max_strikes',
             'anticheat_auto_lock',
             'anticheat_warning_modal',
+            'proctor_auto_admit',
+            'proctor_auto_start',
         ]);
 
         return view('features.lms.administrator.lms-school-subscription-management-role-account', compact('role', 'schoolName', 'schoolId', 'school'));
@@ -29,6 +31,14 @@ class RoleController extends Controller
             'anticheat_max_strikes' => 'required|integer|min:1|max:20',
             'anticheat_auto_lock' => 'required|boolean',
             'anticheat_warning_modal' => 'required|boolean',
+            // per-school proctor auto-admit: students enter a running proctored
+            // exam without the teacher admitting each one. Optional so forms
+            // that do not send it (older clients) keep working.
+            'proctor_auto_admit' => 'sometimes|boolean',
+            // per-school proctor auto-start: the exam window opens by itself
+            // while the schedule window is open, without the teacher pressing
+            // 'Mulai'. Optional so forms that do not send it keep working.
+            'proctor_auto_start' => 'sometimes|boolean',
         ]);
 
         $school = SchoolPartner::findOrFail($schoolId);
