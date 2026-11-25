@@ -3,7 +3,7 @@ function startQuestionTimer(soalId) {
 
     currentQuestionId = soalId;
 
-    const savedDuration = localStorage.getItem('duration_' + soalId);
+    const savedDuration = localStorage.getItem(examDurationKey(soalId));
 
     if (savedDuration) {
         questionDurations[soalId] = parseInt(savedDuration);
@@ -64,7 +64,7 @@ function saveQuestionDuration() {
     questionDurations[currentQuestionId] = totalDuration;
 
     localStorage.setItem(
-        'duration_' + currentQuestionId,
+        examDurationKey(currentQuestionId),
         totalDuration
     );
 

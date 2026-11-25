@@ -12,7 +12,10 @@ const assessmentTypeId = containerFormAssessment.data('assessment-type-id');
 const semester = containerFormAssessment.data('semester');
 const assessmentId = containerFormAssessment.data('assessment-id');
 
-const START_KEY = `timer_assessment_test_start_${assessmentId}`;
+// scoped per user (see anticheat-core examStateKey): shared lab machines
+// must not inherit another student's timer state; guard keeps the file
+// loadable even if anticheat-core failed to load first
+const START_KEY = (typeof examStartKey === 'function') ? examStartKey() : `timer_assessment_test_start_${assessmentId}`;
 
 const questionDurations = {};
 let currentQuestionId = null;
@@ -1631,8 +1634,12 @@ $(document).ready(function () {
         history.go(1);
     };
 
+    // purge exam state left by another student on this shared machine
+    // (previous user's timer/completion/duration keys) before reading any
+    purgeForeignExamState();
+
     const hasTimer = localStorage.getItem(START_KEY);
-    const isAlreadyCompleted = localStorage.getItem(`assessment_${assessmentId}_all_answered`);
+    const isAlreadyCompleted = localStorage.getItem(examCompletedKey());
 
     if (hasTimer && !isAlreadyCompleted) {
         examStarted = true;
@@ -1640,8 +1647,8 @@ $(document).ready(function () {
     } else if (isAlreadyCompleted) {
         // Exam was already completed — clean up any leftover timer state
         examFinished = true;
-        localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-        localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
+        localStorage.removeItem(examStartKey());
+        localStorage.removeItem(examExpireKey());
     }
 
     studentFormAssessment(0);
@@ -1785,7 +1792,7 @@ function resetQuestionDuration(questionId) {
     delete questionDurations[questionId];
 
     // hapus dari localStorage
-    localStorage.removeItem('duration_' + questionId);
+    localStorage.removeItem(examDurationKey(questionId));
 
     // reset input
     $('#answer_duration').val(0);
@@ -1942,8 +1949,8 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     stopHeartbeat();
 
     // reset timer storage
-    localStorage.removeItem(`timer_assessment_test_start_${assessmentId}`);
-    localStorage.removeItem(`timer_assessment_test_expire_${assessmentId}`);
+    localStorage.removeItem(examStartKey());
+    localStorage.removeItem(examExpireKey());
 
     // simpan durasi terakhir
     if (currentQuestionId && questionStartTime) {
@@ -1980,7 +1987,7 @@ function autoSubmitUnSavedQuestions(onFinish = null, statusAttempt = 'timeout', 
     if (questions && questions.length) {
         questions.forEach((q) => {
             if (!questionDurations[q.id]) {
-                const saved = localStorage.getItem('duration_' + q.id);
+                const saved = localStorage.getItem(examDurationKey(q.id));
                 if (saved) {
                     questionDurations[q.id] = parseInt(saved);
                 }
@@ -2062,7 +2069,7 @@ $(document).on('click', '#btn-submit-end-assessment-test', function (e) {
             saveQuestionDuration();
             finalExamDuration = getTotalExamDuration();
 
-            localStorage.setItem(`assessment_${assessmentId}_all_answered`, '1');
+            localStorage.setItem(examCompletedKey(), '1');
 
             autoSubmitUnSavedQuestions(function () {
                 window.location.href = `/lms/${role}/${schoolName}/${schoolId}/curriculum/${curriculumId}/subject/${mapelId}/learning/assessment/${assessmentTypeId}`;

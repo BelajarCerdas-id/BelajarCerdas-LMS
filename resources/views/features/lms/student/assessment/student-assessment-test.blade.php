@@ -3,7 +3,7 @@
 @if (Auth::user()->role === 'Siswa')
     <main translate="no" class="notranslate">
         <section id="container-assessment-test-form" translate="no" class="notranslate" data-role="{{ $role }}" data-school-name="{{ $schoolName }}" data-school-id="{{ $schoolId }}" data-curriculum-id="{{ $curriculumId }}" 
-            data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}" data-semester="{{ $semester }}" data-assessment-id="{{ $assessmentId }}"
+            data-mapel-id="{{ $mapelId }}" data-assessment-type-id="{{ $assessmentTypeId }}" data-semester="{{ $semester }}" data-assessment-id="{{ $assessmentId }}" data-user-id="{{ Auth::id() }}"
             data-upload-url="{{ route('assessment-test.storeImage', ['_token' => csrf_token()]) }}"
             data-delete-url="{{ route('assessment-test.deleteImage') }}">
             
@@ -266,6 +266,6 @@
     </div>
 @endif
 
-<script src="{{ asset('assets/js/features/lms/student/assessment/student-form-assessment-test.js') }}"></script> <!--- student form assessment test ---->
-<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test-by-question.js') }}"></script> <!--- start timer assessment test by question ---->
+<script src="{{ asset('assets/js/features/lms/student/assessment/student-form-assessment-test.js') }}?v=2"></script> <!--- student form assessment test ---->
+<script src="{{ asset('assets/js/features/lms/student/assessment/start-timer-assessment-test-by-question.js') }}?v=2"></script> <!--- start timer assessment test by question ---->
 <script src="{{ asset('assets/js/features/lms/student/components/question-types/matching-question-renderer.js') }}"></script> <!--- matching question renderer ---->

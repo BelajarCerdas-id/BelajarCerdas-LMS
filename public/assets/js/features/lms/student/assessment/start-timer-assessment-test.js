@@ -28,8 +28,10 @@ function startTimer() {
     if (examFinished) return;
 
     const timerExam = document.getElementById('timer-assessment-test');
-    const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-    const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
+    // scoped per user: a shared lab machine must not inherit another
+    // student's timer state (see anticheat-core examStateKey)
+    const START_KEY = examStartKey();
+    const EXPIRE_KEY = examExpireKey();
 
     // Selalu verifikasi dengan server: firstOrCreate attempt server adalah
     // satu-satunya sumber kebenaran. Kalau localStorage punya expire yang
@@ -314,11 +316,8 @@ function stopTimer() {
 }
 
 function getTotalExamDuration() {
-    const START_KEY = `timer_assessment_test_start_${assessmentId}`;
-    const EXPIRE_KEY = `timer_assessment_test_expire_${assessmentId}`;
-
-    const startTime = parseInt(localStorage.getItem(START_KEY));
-    const expireTime = parseInt(localStorage.getItem(EXPIRE_KEY));
+    const startTime = parseInt(localStorage.getItem(examStartKey()));
+    const expireTime = parseInt(localStorage.getItem(examExpireKey()));
     if (!startTime || !expireTime) return 0;
 
     const now = Date.now();
