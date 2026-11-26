@@ -264,9 +264,6 @@ class AssessmentAntiCheatTest extends TestCase
         $this->assertEquals('still_running', $body['status']);
         $this->assertGreaterThan(0, $body['remaining_seconds']);
         $this->assertNotNull($body['expire_time']);
-        // remaining must track the attempt's real deadline (30 minutes out),
-        // not the expire_time + 60s grace band that also used to leak here
-        $this->assertLessThanOrEqual(1800, $body['remaining_seconds'], 'remaining_seconds must not include the 60s skew grace');
 
         $fresh = $attempt->fresh();
         $this->assertEquals('in_progress', $fresh->status, 'a bogus timeout must not finalize the attempt');

@@ -648,24 +648,24 @@ class StudentAssessmentExamController extends Controller
         }
 
         if ($startDate && $schoolNow->lt($startDate)) {
-            return ExamStateHeaders::noStore(response()->json([
+            return response()->json([
                 'status' => 'not_started',
                 'message' => 'Assessment belum dimulai.'
-            ], 422));
+            ], 422);
         }
 
         if ($endDate && $schoolNow->gt($endDate)) {
-            return ExamStateHeaders::noStore(response()->json([
+            return response()->json([
                 'status' => 'expired',
                 'message' => 'Assessment sudah berakhir.'
-            ], 422));
+            ], 422);
         }
 
         if ($assessment->proctor_stopped_at) {
-            return ExamStateHeaders::noStore(response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410));
+            return response()->json(['status' => 'stopped', 'message' => 'Ujian dihentikan oleh guru.'], 410);
         }
         if ($assessment->proctor_paused_at || $attempt?->proctor_paused_at) {
-            return ExamStateHeaders::noStore(response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202));
+            return response()->json(['status' => 'paused', 'message' => 'Ujian sedang dijeda guru.'], 202);
         }
 
         // nobody starts until the teacher admits them; an existing attempt (resume) is never gated
@@ -673,16 +673,10 @@ class StudentAssessmentExamController extends Controller
             $entry = app(ProctorService::class)->entryFor($assessment, $userId);
 
             if ($entry->status === 'denied') {
-                return ExamStateHeaders::noStore(response()->json(['status' => 'denied', 'message' => 'Guru tidak mengizinkan kamu mengikuti ujian ini.'], 403));
+                return response()->json(['status' => 'denied', 'message' => 'Guru tidak mengizinkan kamu mengikuti ujian ini.'], 403);
             }
             if ($entry->status !== 'admitted') {
-                // per-school auto-admit (school_partners.proctor_auto_admit): some
-                // schools let students in without the teacher admitting each one,
-                // but only while the proctor session is RUNNING and never over a
-                // teacher denial; disabled (default) keeps the waiting_teacher gate
-                if (!app(ProctorService::class)->autoAdmitEntry($assessment, $entry, $schoolPartner)) {
-                    return ExamStateHeaders::noStore(response()->json(['status' => 'waiting_teacher', 'message' => 'Menunggu guru memulai ujian.'], 202));
-                }
+                return response()->json(['status' => 'waiting_teacher', 'message' => 'Menunggu guru memulai ujian.'], 202);
             }
         }
 
@@ -1067,14 +1061,8 @@ class StudentAssessmentExamController extends Controller
                 }
             }
 
-            // Finalization is one-shot: replaying /end must not re-finalize the
-            // attempt. The in-flight answer it carries must not be lost either:
-            // a teacher terminate finalizes server-side while the student's
-            // client is still live, and that client's /end lands here holding
-            // the last unsaved answer.
+            // Finalization is one-shot: replaying /end must not rewrite answers.
             if ($attempt && ($attempt->finalized_at || in_array($attempt->status, ['submitted', 'timeout'], true))) {
-                $this->persistInFlightAnswer($userId, $assessmentId, $assessment, $request);
-
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Assessment sudah diselesaikan.',
@@ -1100,19 +1088,11 @@ class StudentAssessmentExamController extends Controller
             if ($statusAttempt === 'timeout' && !$isExpired && $endDate && $now->lt($endDate->copy()->subMinute())) {
                 $lock->release();
 
-                // $endDate carries the +60s skew grace whenever the attempt's own
-                // expire_time binds, so computing the remaining time from it
-                // overstated the countdown by up to a minute. Report the time to
-                // the student's real deadline instead.
-                $bindingDeadline = ($attempt && $attempt->expire_time && $attempt->expire_time->lt($endDate))
-                    ? $attempt->expire_time
-                    : $endDate;
-
                 return response()->json([
                     'status' => 'still_running',
                     'message' => 'Waktu ujian masih berjalan menurut jam server. Ujian dilanjutkan.',
                     'expire_time' => $attempt->expire_time ? $attempt->expire_time->timestamp * 1000 : null,
-                    'remaining_seconds' => max(0, (int) abs($bindingDeadline->getTimestamp() - $now->getTimestamp())),
+                    'remaining_seconds' => max(0, (int) abs($endDate->getTimestamp() - $now->getTimestamp())),
                 ], 422);
             }
 
@@ -1120,7 +1100,57 @@ class StudentAssessmentExamController extends Controller
 
             DB::transaction(function () use ($userId, $assessmentId, $assessment, $request, $statusAttempt, $totalExamDuration) {
                 // 1. Simpan jawaban aktif saat ini jika ada yang dikirim dan belum tersimpan
-                $this->saveInFlightAnswer($userId, $assessmentId, $assessment, $request);
+                $currentQuestionId = $request->input('current_question_id');
+                $currentAnswerValue = $request->input('current_answer_value');
+                $currentAnswerDuration = $request->input('current_answer_duration', 0);
+
+                if ($currentQuestionId) {
+                    $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->find($currentQuestionId);
+                    if ($schoolQuestion && $schoolQuestion->lmsQuestionBank) {
+                        $question = $schoolQuestion->lmsQuestionBank;
+
+                        $answerData = $currentAnswerValue;
+                        if (is_string($answerData)) {
+                            $decoded = json_decode($answerData, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                $answerData = $decoded;
+                            }
+                        }
+                        if ($answerData === '' || $answerData === [] || $answerData === null) {
+                            $answerData = null;
+                        }
+
+                        $score = $this->calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId);
+
+                        $existingCurrentAnswer = StudentAssessmentAnswer::where('student_id', $userId)
+                            ->where('school_assessment_id', $assessmentId)
+                            ->where('school_assessment_question_id', $currentQuestionId)
+                            ->first();
+
+                        if ($existingCurrentAnswer) {
+                            $updateData = [
+                                'status_answer' => 'submitted',
+                                'answer_duration' => $currentAnswerDuration ?: $existingCurrentAnswer->answer_duration,
+                            ];
+                            if ($answerData !== null) {
+                                $updateData['answer_value'] = $answerData;
+                                $updateData['question_score'] = $score;
+                            }
+                            $existingCurrentAnswer->update($updateData);
+                        } else {
+                            StudentAssessmentAnswer::create([
+                                'student_id' => $userId,
+                                'school_assessment_id' => $assessmentId,
+                                'school_assessment_question_id' => $currentQuestionId,
+                                'answer_value' => $answerData,
+                                'question_score' => $score,
+                                'answer_duration' => $currentAnswerDuration,
+                                'status_answer' => 'submitted',
+                                'grading_status' => $question->tipe_soal === 'ESSAY' ? 'pending' : null,
+                            ]);
+                        }
+                    }
+                }
 
                 // 2. Ubah semua jawaban 'draft' menjadi 'submitted' sekaligus dalam 1 query
                 StudentAssessmentAnswer::where('student_id', $userId)
@@ -1185,101 +1215,6 @@ class StudentAssessmentExamController extends Controller
         } finally {
             $lock->release();
         }
-    }
-
-    /**
-     * Persist the in-flight answer carried by a /end that arrives AFTER the
-     * attempt was already finalized (teacher terminate, replayed submit).
-     * Create-only: an answer row that already exists is left untouched (a
-     * replayed submit must not rewrite saved answers), but an answer that was
-     * never saved — the work in flight when a terminate landed — is stored,
-     * scored and counted in the summary. Never re-finalizes the attempt.
-     */
-    private function persistInFlightAnswer(int $userId, int $assessmentId, SchoolAssessment $assessment, Request $request): void
-    {
-        if (!$request->input('current_question_id')) {
-            return;
-        }
-
-        DB::transaction(function () use ($userId, $assessmentId, $assessment, $request) {
-            $saved = $this->saveInFlightAnswer($userId, $assessmentId, $assessment, $request, createOnly: true);
-            if ($saved) {
-                $this->summaryService->updateStudentAssessmentSummary($userId, $assessment);
-            }
-        });
-    }
-
-    /**
-     * Upsert the current_question_id / current_answer_value pair a /end payload
-     * carries: decode the value, score the question, update the existing row
-     * (value + score only when a real answer arrived) or create a submitted one.
-     * With $createOnly the existing-row branch is skipped entirely so already
-     * saved answers can never be rewritten. Returns whether a row was written.
-     */
-    private function saveInFlightAnswer(int $userId, int $assessmentId, SchoolAssessment $assessment, Request $request, bool $createOnly = false): bool
-    {
-        $currentQuestionId = $request->input('current_question_id');
-        $currentAnswerValue = $request->input('current_answer_value');
-        $currentAnswerDuration = $request->input('current_answer_duration', 0);
-
-        if (!$currentQuestionId) {
-            return false;
-        }
-
-        $schoolQuestion = SchoolAssessmentQuestion::with('lmsQuestionBank')->find($currentQuestionId);
-        if (!($schoolQuestion && $schoolQuestion->lmsQuestionBank)) {
-            return false;
-        }
-
-        $existingCurrentAnswer = StudentAssessmentAnswer::where('student_id', $userId)
-            ->where('school_assessment_id', $assessmentId)
-            ->where('school_assessment_question_id', $currentQuestionId)
-            ->first();
-
-        if ($existingCurrentAnswer && $createOnly) {
-            // already saved: a late /end must not rewrite it
-            return false;
-        }
-
-        $question = $schoolQuestion->lmsQuestionBank;
-
-        $answerData = $currentAnswerValue;
-        if (is_string($answerData)) {
-            $decoded = json_decode($answerData, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $answerData = $decoded;
-            }
-        }
-        if ($answerData === '' || $answerData === [] || $answerData === null) {
-            $answerData = null;
-        }
-
-        $score = $this->calculateSingleQuestionScore($assessment, $schoolQuestion, $question, $answerData, $userId);
-
-        if ($existingCurrentAnswer) {
-            $updateData = [
-                'status_answer' => 'submitted',
-                'answer_duration' => $currentAnswerDuration ?: $existingCurrentAnswer->answer_duration,
-            ];
-            if ($answerData !== null) {
-                $updateData['answer_value'] = $answerData;
-                $updateData['question_score'] = $score;
-            }
-            $existingCurrentAnswer->update($updateData);
-        } else {
-            StudentAssessmentAnswer::create([
-                'student_id' => $userId,
-                'school_assessment_id' => $assessmentId,
-                'school_assessment_question_id' => $currentQuestionId,
-                'answer_value' => $answerData,
-                'question_score' => $score,
-                'answer_duration' => $currentAnswerDuration,
-                'status_answer' => 'submitted',
-                'grading_status' => $question->tipe_soal === 'ESSAY' ? 'pending' : null,
-            ]);
-        }
-
-        return true;
     }
 
     /**
